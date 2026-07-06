@@ -22,7 +22,11 @@ jobs:
 
       - name: Sync files to S3
         run: |
-          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude ".git*" --exclude ".github*"
+          # 1. 先同步所有檔案（排除 SVG）
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "*.svg" --exclude ".git*" --exclude ".github*"
+          
+          # 2. 單獨同步 SVG 檔案，並強制指定正確的 MIME 類型
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --exclude "*" --include "*.svg" --content-type "image/svg+xml"
 
       - name: Invalidate CloudFront Cache
         run: |
