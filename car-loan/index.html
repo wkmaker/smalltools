@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>車貸計算器</title>
     <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
-    <meta name="description" content="專業的汽車貸款計算機，支援車價與自備款成數連動、本息/本金均攤、寬限期試算與實質年利率 (APR) 評估，助您輕鬆規劃購車預算。">
+    <meta name="description" content="專業的汽車貸款計算機，支援車價與自備款成數連動、本息/本金均攤、寬限期與階梯還款、氣球貸尾款保留試算與實質年利率 (APR) 評估。">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="車貸計算器">
-    <meta property="og:description" content="專業的汽車貸款計算機，支援自備款成數試算、寬限期與實質年利率 (APR) 評估。">
+    <meta property="og:description" content="專業的汽車貸款計算機，支援多種還款方案（一般型、寬限期、階梯式低月付、尾款氣球貸）與實質年利率評估。">
     <meta property="og:url" content="https://tools.cjkuo.net/car-loan/index.html">
     <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
 
@@ -214,6 +214,19 @@
             box-shadow: 0 0 15px rgba(255, 0, 85, 0.1);
         }
 
+        /* 條件式欄位容器 */
+        .conditional-group {
+            margin-bottom: 1.5rem;
+            border-left: 2px solid rgba(255, 0, 85, 0.3);
+            padding-left: 1rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* 單位選擇器 */
         .unit-selector {
             position: absolute;
@@ -342,6 +355,7 @@
             color: var(--text-secondary);
             margin-top: 4px;
             display: block;
+            line-height: 1.3;
         }
 
         /* 圖表區塊 */
@@ -496,6 +510,22 @@
         <div class="calculator-grid">
             <!-- 左側表單 -->
             <div class="form-section">
+                <!-- 貸款方案選擇 -->
+                <div class="input-group">
+                    <label>貸款方案</label>
+                    <div class="toggle-buttons-container" id="loan-scheme-selector" style="grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-bottom: 0.5rem;">
+                        <button class="unit-btn active" data-unit="standard">一般方案</button>
+                        <button class="unit-btn" data-unit="grace">寬限期方案</button>
+                        <button class="unit-btn" data-unit="stepped">階梯式方案</button>
+                        <button class="unit-btn" data-unit="balloon">尾款保留案</button>
+                    </div>
+                </div>
+
+                <!-- 方案說明與警語區 -->
+                <div id="scheme-description" style="font-size: 0.78rem; line-height: 1.5; color: var(--text-secondary); background: rgba(255, 0, 85, 0.03); border: 1px solid rgba(255, 0, 85, 0.1); border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1.5rem; transition: all 0.3s ease;">
+                    <!-- JS 動態寫入內容 -->
+                </div>
+
                 <!-- 車款總價 -->
                 <div class="input-group">
                     <label for="input-car-price">車款總價</label>
@@ -531,6 +561,52 @@
                     </div>
                 </div>
 
+                <!-- 條件式：寬限期 -->
+                <div class="conditional-group" id="group-grace" style="display: none;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="input-grace-period">寬限期 (月)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="input-grace-period" value="12" min="0" max="120" placeholder="例如：12">
+                            <div class="unit-selector" style="pointer-events: none; background: transparent; border: none; right: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">月</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 條件式：階梯還款 -->
+                <div class="conditional-group" id="group-stepped" style="display: none;">
+                    <div class="input-group">
+                        <label for="input-step-payment">首期每月低付款額</label>
+                        <div class="input-wrapper">
+                            <input type="text" inputmode="numeric" id="input-step-payment" value="8,888" placeholder="例如：8,888">
+                            <div class="unit-selector">
+                                <button class="unit-btn active" style="pointer-events: none;">元</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="input-step-periods">低付款期數 (月)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="input-step-periods" value="12" min="1" max="120" placeholder="例如：12">
+                            <div class="unit-selector" style="pointer-events: none; background: transparent; border: none; right: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">月</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 條件式：尾款保留 -->
+                <div class="conditional-group" id="group-balloon" style="display: none;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="input-balloon-amount">
+                            保留尾款金額 <span class="badge" id="balloon-ratio-badge"><span id="balloon-ratio-span">33.3</span>%</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="text" inputmode="numeric" id="input-balloon-amount" value="300,000" placeholder="例如：300,000">
+                            <div class="unit-selector">
+                                <button class="unit-btn active" style="pointer-events: none;">元</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 貸款年利率 -->
                 <div class="input-group">
                     <label for="input-rate">年利率 (%)</label>
@@ -552,15 +628,6 @@
                     </div>
                 </div>
 
-                <!-- 寬限期 -->
-                <div class="input-group">
-                    <label for="input-grace-period">寬限期 (月)</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="input-grace-period" value="0" min="0" max="120" placeholder="0 ~ 12 (月)">
-                        <div class="unit-selector" style="pointer-events: none; background: transparent; border: none; right: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">月</div>
-                    </div>
-                </div>
-
                 <!-- 動保費 / 設定費 -->
                 <div class="input-group">
                     <label for="input-fee">動保設定費 / 手續費</label>
@@ -571,7 +638,7 @@
                 </div>
 
                 <!-- 還款方式 -->
-                <div class="input-group">
+                <div class="input-group" style="margin-bottom: 0;">
                     <label>還款方式</label>
                     <div class="toggle-buttons-container" id="repay-type-selector">
                         <button class="unit-btn active" data-unit="equal-total">本息均攤</button>
@@ -653,11 +720,50 @@
             });
         }
 
+        let loanScheme = 'standard';   // 'standard', 'grace', 'stepped', 'balloon'
         let periodUnit = 'year';       // 'year' or 'month'
         let repayType = 'equal-total'; // 'equal-total' or 'equal-principal'
 
-        setupSelector('period-unit-selector', (unit) => { periodUnit = unit; calculateLoan(); });
-        setupSelector('repay-type-selector', (type) => { repayType = type; calculateLoan(); });
+        // 方案解析與風險警告
+        const schemeDescriptions = {
+            standard: `<strong>一般還款方案 (基礎型，最安全)</strong><br>
+                       <span style="color: #8892b0;">• 優點：利息支出最少，每月還款金額穩定，本金持續遞減。<br>
+                       • 缺點：無彈性緩衝，適合預算穩定充裕的買車人。<br>
+                       • 風險：低風險。建議做為購車時的首選對照基準。</span>`,
+            grace: `<strong>寬限期方案 (前息後本，適合前期手頭緊)</strong><br>
+                    <span style="color: #ffb800;">• 優點：寬限期內只需繳納利息，每月負擔極小，有資金調度空間。<br>
+                    • 缺點：寬限期結束後，由於本金攤還期數縮短，月付額將大幅攀升，總利息支出較多。<br>
+                    • 風險：中風險。請確保寬限期結束後，個人收入能夠負擔倍增的月付金。</span>`,
+            stepped: `<strong>階梯式還款方案 (首年超低月付)</strong><br>
+                      <span style="color: #ff5e3a;">• 優點：前 12 期（或自訂期數）每月僅繳納自訂的超低金額，利於購車初期做資金配置。<br>
+                      • 缺點：前期若付低於利息會產生本金反向增加（負攤還），且剩餘本金將在後期被快速攤還，後期月付額變高。<br>
+                      • 風險：中高風險。適合社會新鮮人或預計未來收入有顯著成長者，需注意後期本息還款壓力。</span>`,
+            balloon: `<strong>尾款保留/氣球貸方案 (理財型 / 高頻率換車)</strong><br>
+                      <span style="color: #ff0055;">• 優點：將大筆本金（尾款，通常為 20%-40%）留到最後一期，因此期間的月付額非常低，能開好車。<br>
+                      • 缺點：最後一期需一次付清龐大的尾款，且因期間本金還得少，累積總利息是所有方案中最高的。<br>
+                      • 風險：高風險（需精算）。最後一期若無力繳清，需有轉貸或賣車（利用原廠保值回收殘值）的準備。</span>`
+        };
+
+        function updateSchemeUI() {
+            // 隱藏所有條件欄位
+            document.getElementById('group-grace').style.display = 'none';
+            document.getElementById('group-stepped').style.display = 'none';
+            document.getElementById('group-balloon').style.display = 'none';
+
+            // 顯示當前方案之欄位
+            if (loanScheme === 'grace') {
+                document.getElementById('group-grace').style.display = 'block';
+            } else if (loanScheme === 'stepped') {
+                document.getElementById('group-stepped').style.display = 'block';
+            } else if (loanScheme === 'balloon') {
+                document.getElementById('group-balloon').style.display = 'block';
+            }
+
+            // 更新方案描述
+            document.getElementById('scheme-description').innerHTML = schemeDescriptions[loanScheme];
+
+            calculateLoan();
+        }
 
         // ==========================================
         // 車貸計算核心與圖表渲染
@@ -701,25 +807,53 @@
             const loanAmount = parseVal('input-loan-amount');
             const ratePercent = parseFloat(document.getElementById('input-rate').value) || 0;
             const periodVal = parseFloat(document.getElementById('input-period').value) || 0;
-            let gracePeriodInput = parseInt(document.getElementById('input-grace-period').value, 10) || 0;
             const fee = parseVal('input-fee');
 
             // 1. 計算總期數
             const totalMonths = Math.max(0, periodUnit === 'year' ? periodVal * 12 : periodVal);
 
-            // 2. 限制與防呆寬限期 (不能大於等於總月數，且至少大於等於 0)
-            if (gracePeriodInput < 0) gracePeriodInput = 0;
-            if (totalMonths > 0 && gracePeriodInput >= totalMonths) {
-                gracePeriodInput = totalMonths - 1;
-                document.getElementById('input-grace-period').value = gracePeriodInput;
+            // 2. 提取與防呆參數
+            let graceMonths = 0;
+            let stepPayment = 0;
+            let stepPeriods = 0;
+            let balloonAmount = 0;
+
+            if (loanScheme === 'grace') {
+                let graceInput = parseInt(document.getElementById('input-grace-period').value, 10) || 0;
+                if (graceInput < 0) graceInput = 0;
+                if (totalMonths > 0 && graceInput >= totalMonths) {
+                    graceInput = totalMonths - 1;
+                    document.getElementById('input-grace-period').value = graceInput;
+                }
+                graceMonths = graceInput;
+            } else if (loanScheme === 'stepped') {
+                stepPayment = parseVal('input-step-payment');
+                let stepPeriodsInput = parseInt(document.getElementById('input-step-periods').value, 10) || 0;
+                if (stepPeriodsInput < 0) stepPeriodsInput = 0;
+                if (totalMonths > 0 && stepPeriodsInput >= totalMonths) {
+                    stepPeriodsInput = totalMonths - 1;
+                    document.getElementById('input-step-periods').value = stepPeriodsInput;
+                }
+                stepPeriods = stepPeriodsInput;
+            } else if (loanScheme === 'balloon') {
+                let balloonInput = parseVal('input-balloon-amount');
+                if (balloonInput < 0) balloonInput = 0;
+                if (balloonInput > loanAmount) {
+                    balloonInput = loanAmount;
+                    formatElementValue('input-balloon-amount', balloonInput);
+                }
+                balloonAmount = balloonInput;
+
+                // 更新尾款百分比
+                const balloonRatio = loanAmount > 0 ? (balloonAmount / loanAmount * 100) : 0;
+                document.getElementById('balloon-ratio-span').textContent = balloonRatio.toFixed(1);
             }
-            const graceMonths = gracePeriodInput;
 
             // 3. 準備數據模型
             const resultData = [];
             let totalInterest = 0;
             let firstPayment = 0;
-            let afterGracePayment = 0;
+            let afterSpecialPayment = 0; // 用於展示寬限期或低付期過後的月付額
 
             // 初始狀態
             resultData.push({
@@ -729,7 +863,7 @@
                 interestPaid: 0,
                 totalPayment: 0,
                 endBalance: loanAmount,
-                isGrace: false
+                statusTag: ''
             });
 
             if (totalMonths > 0 && loanAmount > 0) {
@@ -737,51 +871,199 @@
                 const paymentArray = [];
                 let remainingBalance = loanAmount;
 
-                // 寬限期內月付額 (只付利息)
-                const interestOnlyPayment = loanAmount * monthlyRate;
+                if (loanScheme === 'standard') {
+                    // === 1. 一般方案 ===
+                    if (repayType === 'equal-total') {
+                        let monthlyPayment = 0;
+                        if (monthlyRate === 0) {
+                            monthlyPayment = loanAmount / totalMonths;
+                        } else {
+                            monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+                        }
+                        firstPayment = monthlyPayment;
 
-                // 寬限期後賸餘期數
-                const amortizeMonths = totalMonths - graceMonths;
+                        for (let m = 1; m <= totalMonths; m++) {
+                            const startBal = remainingBalance;
+                            const interestThisMonth = remainingBalance * monthlyRate;
+                            const principalThisMonth = monthlyPayment - interestThisMonth;
+                            remainingBalance -= principalThisMonth;
+                            if (m === totalMonths) remainingBalance = 0;
 
-                if (repayType === 'equal-total') {
-                    // 本息平均攤還
+                            totalInterest += interestThisMonth;
+                            paymentArray.push(monthlyPayment);
+
+                            resultData.push({
+                                period: m,
+                                startBalance: startBal,
+                                principalPaid: principalThisMonth,
+                                interestPaid: interestThisMonth,
+                                totalPayment: monthlyPayment,
+                                endBalance: Math.max(0, remainingBalance),
+                                statusTag: ''
+                            });
+                        }
+                    } else {
+                        // 本金均攤
+                        const principalPerMonth = loanAmount / totalMonths;
+                        for (let m = 1; m <= totalMonths; m++) {
+                            const startBal = remainingBalance;
+                            const interestThisMonth = remainingBalance * monthlyRate;
+                            const totalPaymentThisMonth = principalPerMonth + interestThisMonth;
+                            remainingBalance -= principalPerMonth;
+                            if (m === totalMonths) remainingBalance = 0;
+
+                            if (m === 1) firstPayment = totalPaymentThisMonth;
+                            totalInterest += interestThisMonth;
+                            paymentArray.push(totalPaymentThisMonth);
+
+                            resultData.push({
+                                period: m,
+                                startBalance: startBal,
+                                principalPaid: principalPerMonth,
+                                interestPaid: interestThisMonth,
+                                totalPayment: totalPaymentThisMonth,
+                                endBalance: Math.max(0, remainingBalance),
+                                statusTag: ''
+                            });
+                        }
+                    }
+                } else if (loanScheme === 'grace') {
+                    // === 2. 寬限期方案 ===
+                    const interestOnlyPayment = loanAmount * monthlyRate;
+                    const amortizeMonths = totalMonths - graceMonths;
+
                     let amortizedMonthlyPayment = 0;
                     if (amortizeMonths > 0) {
-                        if (monthlyRate === 0) {
-                            amortizedMonthlyPayment = loanAmount / amortizeMonths;
-                        } else {
-                            amortizedMonthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, amortizeMonths)) / (Math.pow(1 + monthlyRate, amortizeMonths) - 1);
+                        if (repayType === 'equal-total') {
+                            if (monthlyRate === 0) {
+                                amortizedMonthlyPayment = loanAmount / amortizeMonths;
+                            } else {
+                                amortizedMonthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, amortizeMonths)) / (Math.pow(1 + monthlyRate, amortizeMonths) - 1);
+                            }
                         }
                     }
 
-                    firstPayment = graceMonths > 0 ? interestOnlyPayment : amortizedMonthlyPayment;
-                    afterGracePayment = amortizedMonthlyPayment;
+                    firstPayment = graceMonths > 0 ? interestOnlyPayment : (repayType === 'equal-total' ? amortizedMonthlyPayment : (loanAmount / amortizeMonths + loanAmount * monthlyRate));
+                    afterSpecialPayment = repayType === 'equal-total' ? amortizedMonthlyPayment : (loanAmount / amortizeMonths + loanAmount * monthlyRate);
 
-                    // 歷期試算
+                    const principalPerMonth = (repayType === 'equal-principal' && amortizeMonths > 0) ? loanAmount / amortizeMonths : 0;
+
                     for (let m = 1; m <= totalMonths; m++) {
                         const startBal = remainingBalance;
                         let interestThisMonth = remainingBalance * monthlyRate;
                         let principalThisMonth = 0;
                         let totalPaymentThisMonth = 0;
-                        let isGrace = false;
+                        let statusTag = '';
 
                         if (m <= graceMonths) {
-                            // 寬限期：只付息，不還本
-                            isGrace = true;
+                            // 寬限期
                             principalThisMonth = 0;
-                            interestThisMonth = startBal * monthlyRate;
-                            totalPaymentThisMonth = interestThisMonth;
+                            totalPaymentThisMonth = interestOnlyPayment;
+                            statusTag = '[寬限]';
                         } else {
-                            // 攤還期：本息均攤
-                            totalPaymentThisMonth = amortizedMonthlyPayment;
-                            interestThisMonth = remainingBalance * monthlyRate;
+                            // 攤還期
+                            if (repayType === 'equal-total') {
+                                totalPaymentThisMonth = amortizedMonthlyPayment;
+                                principalThisMonth = totalPaymentThisMonth - interestThisMonth;
+                                remainingBalance -= principalThisMonth;
+                            } else {
+                                principalThisMonth = principalPerMonth;
+                                totalPaymentThisMonth = principalThisMonth + interestThisMonth;
+                                remainingBalance -= principalThisMonth;
+                                if (m === graceMonths + 1) {
+                                    afterSpecialPayment = totalPaymentThisMonth; // 本金均攤首期最大
+                                }
+                            }
+                        }
+
+                        if (m === totalMonths) remainingBalance = 0;
+
+                        totalInterest += interestThisMonth;
+                        paymentArray.push(totalPaymentThisMonth);
+
+                        resultData.push({
+                            period: m,
+                            startBalance: startBal,
+                            principalPaid: principalThisMonth,
+                            interestPaid: interestThisMonth,
+                            totalPayment: totalPaymentThisMonth,
+                            endBalance: Math.max(0, remainingBalance),
+                            statusTag: statusTag
+                        });
+                    }
+                } else if (loanScheme === 'stepped') {
+                    // === 3. 階梯式方案 ===
+                    // 前 stepPeriods 期支付 stepPayment
+                    for (let m = 1; m <= stepPeriods; m++) {
+                        const startBal = remainingBalance;
+                        let interestThisMonth = remainingBalance * monthlyRate;
+                        let principalThisMonth = 0;
+                        let totalPaymentThisMonth = 0;
+
+                        if (remainingBalance <= 0) {
+                            interestThisMonth = 0;
+                            principalThisMonth = 0;
+                            totalPaymentThisMonth = 0;
+                        } else {
+                            totalPaymentThisMonth = Math.min(stepPayment, remainingBalance + interestThisMonth);
                             principalThisMonth = totalPaymentThisMonth - interestThisMonth;
                             remainingBalance -= principalThisMonth;
                         }
 
-                        if (m === totalMonths) {
-                            remainingBalance = 0; // 消除浮點數誤差
+                        totalInterest += interestThisMonth;
+                        paymentArray.push(totalPaymentThisMonth);
+
+                        resultData.push({
+                            period: m,
+                            startBalance: startBal,
+                            principalPaid: principalThisMonth,
+                            interestPaid: interestThisMonth,
+                            totalPayment: totalPaymentThisMonth,
+                            endBalance: Math.max(0, remainingBalance),
+                            statusTag: '[低付]'
+                        });
+                    }
+
+                    // 剩餘攤還期數與本金
+                    const amortizeMonths = totalMonths - stepPeriods;
+                    const balanceAfterStep = Math.max(0, remainingBalance);
+
+                    let amortizedMonthlyPayment = 0;
+                    if (amortizeMonths > 0 && balanceAfterStep > 0) {
+                        if (repayType === 'equal-total') {
+                            if (monthlyRate === 0) {
+                                amortizedMonthlyPayment = balanceAfterStep / amortizeMonths;
+                            } else {
+                                amortizedMonthlyPayment = balanceAfterStep * (monthlyRate * Math.pow(1 + monthlyRate, amortizeMonths)) / (Math.pow(1 + monthlyRate, amortizeMonths) - 1);
+                            }
                         }
+                    }
+
+                    firstPayment = stepPeriods > 0 ? stepPayment : (repayType === 'equal-total' ? amortizedMonthlyPayment : (balanceAfterStep / amortizeMonths + balanceAfterStep * monthlyRate));
+                    afterSpecialPayment = repayType === 'equal-total' ? amortizedMonthlyPayment : (balanceAfterStep / amortizeMonths + balanceAfterStep * monthlyRate);
+
+                    const principalPerMonth = (repayType === 'equal-principal' && amortizeMonths > 0) ? balanceAfterStep / amortizeMonths : 0;
+
+                    for (let m = stepPeriods + 1; m <= totalMonths; m++) {
+                        const startBal = remainingBalance;
+                        let interestThisMonth = remainingBalance * monthlyRate;
+                        let principalThisMonth = 0;
+                        let totalPaymentThisMonth = 0;
+
+                        if (repayType === 'equal-total') {
+                            totalPaymentThisMonth = amortizedMonthlyPayment;
+                            principalThisMonth = totalPaymentThisMonth - interestThisMonth;
+                            remainingBalance -= principalThisMonth;
+                        } else {
+                            principalThisMonth = principalPerMonth;
+                            totalPaymentThisMonth = principalThisMonth + interestThisMonth;
+                            remainingBalance -= principalThisMonth;
+                            if (m === stepPeriods + 1) {
+                                afterSpecialPayment = totalPaymentThisMonth;
+                            }
+                        }
+
+                        if (m === totalMonths) remainingBalance = 0;
 
                         totalInterest += interestThisMonth;
                         paymentArray.push(totalPaymentThisMonth);
@@ -793,45 +1075,51 @@
                             interestPaid: interestThisMonth,
                             totalPayment: totalPaymentThisMonth,
                             endBalance: Math.max(0, remainingBalance),
-                            isGrace: isGrace
+                            statusTag: ''
                         });
                     }
-                } else {
-                    // 本金平均攤還
-                    const principalPerMonth = amortizeMonths > 0 ? loanAmount / amortizeMonths : 0;
+                } else if (loanScheme === 'balloon') {
+                    // === 4. 尾款保留方案 (氣球貸) ===
+                    let balloonMonthlyPayment = 0;
+                    if (repayType === 'equal-total') {
+                        if (monthlyRate === 0) {
+                            balloonMonthlyPayment = (loanAmount - balloonAmount) / totalMonths;
+                        } else {
+                            balloonMonthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, totalMonths) - balloonAmount * monthlyRate) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+                        }
+                    }
+                    
+                    const principalPerMonth = (loanAmount - balloonAmount) / totalMonths;
+                    firstPayment = repayType === 'equal-total' ? balloonMonthlyPayment : (principalPerMonth + loanAmount * monthlyRate);
 
-                    // 歷期試算
                     for (let m = 1; m <= totalMonths; m++) {
                         const startBal = remainingBalance;
                         let interestThisMonth = remainingBalance * monthlyRate;
                         let principalThisMonth = 0;
                         let totalPaymentThisMonth = 0;
-                        let isGrace = false;
+                        let statusTag = '';
 
-                        if (m <= graceMonths) {
-                            // 寬限期：只付息
-                            isGrace = true;
-                            principalThisMonth = 0;
-                            interestThisMonth = startBal * monthlyRate;
-                            totalPaymentThisMonth = interestThisMonth;
+                        if (m < totalMonths) {
+                            // 1 至 N-1 期
+                            if (repayType === 'equal-total') {
+                                totalPaymentThisMonth = balloonMonthlyPayment;
+                                principalThisMonth = totalPaymentThisMonth - interestThisMonth;
+                                remainingBalance -= principalThisMonth;
+                            } else {
+                                principalThisMonth = principalPerMonth;
+                                totalPaymentThisMonth = principalThisMonth + interestThisMonth;
+                                remainingBalance -= principalThisMonth;
+                            }
                         } else {
-                            // 攤還期：本金均攤
-                            principalThisMonth = principalPerMonth;
-                            interestThisMonth = remainingBalance * monthlyRate;
+                            // 最後一期 (繳清剩餘，含尾款)
+                            principalThisMonth = startBal;
                             totalPaymentThisMonth = principalThisMonth + interestThisMonth;
-                            remainingBalance -= principalThisMonth;
-                        }
-
-                        if (m === totalMonths) {
                             remainingBalance = 0;
+                            statusTag = '[含尾款]';
                         }
 
-                        if (m === 1) {
-                            firstPayment = totalPaymentThisMonth;
-                        } else if (m === graceMonths + 1) {
-                            // 寬限期剛結束的第一期月付額
-                            afterGracePayment = totalPaymentThisMonth;
-                        }
+                        if (m === totalMonths) remainingBalance = 0;
+
                         totalInterest += interestThisMonth;
                         paymentArray.push(totalPaymentThisMonth);
 
@@ -842,12 +1130,8 @@
                             interestPaid: interestThisMonth,
                             totalPayment: totalPaymentThisMonth,
                             endBalance: Math.max(0, remainingBalance),
-                            isGrace: isGrace
+                            statusTag: statusTag
                         });
-                    }
-
-                    if (graceMonths === 0) {
-                        afterGracePayment = firstPayment; // 無寬限期則一致
                     }
                 }
 
@@ -863,12 +1147,30 @@
             
             // 首期月付額副標提示
             const methodText = repayType === 'equal-total' ? '本息均攤' : '本金均攤';
-            if (graceMonths > 0) {
-                document.getElementById('val-monthly-caption').innerHTML = 
-                    `<span style="color:#ff0055;">前 ${graceMonths} 期寬限付息</span>，第 ${graceMonths + 1} 期起月付 $${formatCurrency(afterGracePayment)}`;
-            } else {
+            if (loanScheme === 'standard') {
                 document.getElementById('val-monthly-caption').textContent = 
-                    `${methodText}${repayType === 'equal-principal' ? '（首月最高，逐月遞減）' : ''}`;
+                    `採用${methodText}${repayType === 'equal-principal' ? '（首月最高，逐月遞減）' : ''}`;
+            } else if (loanScheme === 'grace') {
+                if (graceMonths > 0) {
+                    document.getElementById('val-monthly-caption').innerHTML = 
+                        `<span style="color:#ff0055;">前 ${graceMonths} 期寬限付息</span>，第 ${graceMonths + 1} 期起首月繳 $${formatCurrency(afterSpecialPayment)}`;
+                } else {
+                    document.getElementById('val-monthly-caption').textContent = `採用${methodText}（未設定寬限期）`;
+                }
+            } else if (loanScheme === 'stepped') {
+                if (stepPeriods > 0) {
+                    document.getElementById('val-monthly-caption').innerHTML = 
+                        `<span style="color:#ff0055;">前 ${stepPeriods} 期低付 $${formatCurrency(stepPayment)}</span>，第 ${stepPeriods + 1} 期起首月繳 $${formatCurrency(afterSpecialPayment)}`;
+                } else {
+                    document.getElementById('val-monthly-caption').textContent = `採用${methodText}（未設定低付期）`;
+                }
+            } else if (loanScheme === 'balloon') {
+                if (balloonAmount > 0) {
+                    document.getElementById('val-monthly-caption').innerHTML = 
+                        `月付額 $${formatCurrency(firstPayment)}，<span style="color:#ff0055;">最後一期需付尾款 $${formatCurrency(balloonAmount)}</span>`;
+                } else {
+                    document.getElementById('val-monthly-caption').textContent = `採用${methodText}（未保留尾款）`;
+                }
             }
 
             document.getElementById('val-interest').textContent = formatCurrency(totalInterest);
@@ -883,8 +1185,8 @@
                 const isInitial = item.period === 0;
                 
                 let periodLabel = isInitial ? '初始' : `第 ${item.period} 期`;
-                if (item.isGrace) {
-                    periodLabel += ' <span style="font-size:0.75rem; color:#ff0055; padding-left:2px;">[寬限]</span>';
+                if (item.statusTag) {
+                    periodLabel += ` <span style="font-size:0.75rem; color:#ff0055; padding-left:2px;">${item.statusTag}</span>`;
                 }
 
                 tr.innerHTML = `
@@ -898,7 +1200,7 @@
                 tbody.appendChild(tr);
             });
 
-            // 6. 更新 Chart.js 圖表 (賫餘本金折線圖)
+            // 6. 更新 Chart.js 圖表 (賸餘本金折線圖)
             const labels = resultData.map(item => isNaN(item.period) || item.period === 0 ? '初始' : `第 ${item.period} 期`);
             const balanceDataset = resultData.map(item => item.endBalance);
 
@@ -987,7 +1289,6 @@
 
             if (changedId === 'input-car-price') {
                 if (carPrice < 0) carPrice = 0;
-                // 若車款變更，如果自備款大於車價，則自備款等於車價
                 if (downPayment > carPrice) {
                     downPayment = carPrice;
                     formatElementValue('input-down-payment', downPayment);
@@ -996,7 +1297,6 @@
                 formatElementValue('input-loan-amount', loanAmount);
             } else if (changedId === 'input-down-payment') {
                 if (downPayment < 0) downPayment = 0;
-                // 自備款不能大於車款
                 if (downPayment > carPrice) {
                     downPayment = carPrice;
                     formatElementValue('input-down-payment', downPayment);
@@ -1005,7 +1305,6 @@
                 formatElementValue('input-loan-amount', loanAmount);
             } else if (changedId === 'input-loan-amount') {
                 if (loanAmount < 0) loanAmount = 0;
-                // 貸款金額不能大於車款
                 if (loanAmount > carPrice) {
                     loanAmount = carPrice;
                     formatElementValue('input-loan-amount', loanAmount);
@@ -1017,6 +1316,17 @@
             // 計算貸款成數百分比
             const ratio = carPrice > 0 ? (loanAmount / carPrice * 100) : 0;
             document.getElementById('loan-ratio-span').textContent = ratio.toFixed(1);
+
+            // 若尾款金額大於新的貸款金額，需限制之
+            if (loanScheme === 'balloon') {
+                let balloonVal = parseVal('input-balloon-amount');
+                if (balloonVal > loanAmount) {
+                    balloonVal = loanAmount;
+                    formatElementValue('input-balloon-amount', balloonVal);
+                }
+                const balloonRatio = loanAmount > 0 ? (balloonVal / loanAmount * 100) : 0;
+                document.getElementById('balloon-ratio-span').textContent = balloonRatio.toFixed(1);
+            }
 
             calculateLoan();
         }
@@ -1060,7 +1370,7 @@
             });
         }
 
-        // 單獨格式化非連動之金額輸入框 (如設定費)
+        // 單獨格式化非連動之金額輸入框
         function initFormattedInput(inputId) {
             const input = document.getElementById(inputId);
             input.addEventListener('input', () => {
@@ -1100,17 +1410,68 @@
             bindSyncedInput('input-loan-amount');
             initFormattedInput('input-fee');
 
+            // 綁定階梯低月付額
+            initFormattedInput('input-step-payment');
+
+            // 尾款保留金額單獨綁定，因為不能大於貸款金額，且需要即時更新百分比
+            const balloonInput = document.getElementById('input-balloon-amount');
+            balloonInput.addEventListener('input', () => {
+                let value = balloonInput.value.replace(/,/g, '');
+                if (value === '') {
+                    balloonInput.value = '';
+                    document.getElementById('balloon-ratio-span').textContent = '0.0';
+                    calculateLoan();
+                    return;
+                }
+                let num = parseInt(value, 10);
+                if (!isNaN(num)) {
+                    const loanAmount = parseVal('input-loan-amount');
+                    if (num > loanAmount) {
+                        num = loanAmount;
+                    }
+                    
+                    const originalCursor = balloonInput.selectionStart;
+                    const originalCommaCount = (balloonInput.value.substring(0, originalCursor).match(/,/g) || []).length;
+                    
+                    const formatted = num.toLocaleString('zh-TW');
+                    balloonInput.value = formatted;
+                    
+                    const newCommaCount = (formatted.substring(0, originalCursor).match(/,/g) || []).length;
+                    const cursorOffset = newCommaCount - originalCommaCount;
+                    balloonInput.setSelectionRange(originalCursor + cursorOffset, originalCursor + cursorOffset);
+                }
+                
+                const curBalloon = parseVal('input-balloon-amount');
+                const loanAmount = parseVal('input-loan-amount');
+                const balloonRatio = loanAmount > 0 ? (curBalloon / loanAmount * 100) : 0;
+                document.getElementById('balloon-ratio-span').textContent = balloonRatio.toFixed(1);
+                
+                calculateLoan();
+            });
+
             // 格式化預設值
             formatElementValue('input-car-price', parseVal('input-car-price'));
             formatElementValue('input-down-payment', parseVal('input-down-payment'));
             formatElementValue('input-loan-amount', parseVal('input-loan-amount'));
+            formatElementValue('input-step-payment', parseVal('input-step-payment'));
+            formatElementValue('input-balloon-amount', parseVal('input-balloon-amount'));
             
             document.getElementById('input-rate').addEventListener('input', calculateLoan);
             document.getElementById('input-period').addEventListener('input', calculateLoan);
             document.getElementById('input-grace-period').addEventListener('input', calculateLoan);
+            document.getElementById('input-step-periods').addEventListener('input', calculateLoan);
             
+            // 初始化方案選擇器與 UI
+            setupSelector('loan-scheme-selector', (scheme) => {
+                loanScheme = scheme;
+                updateSchemeUI();
+            });
+            setupSelector('period-unit-selector', (unit) => { periodUnit = unit; calculateLoan(); });
+            setupSelector('repay-type-selector', (type) => { repayType = type; calculateLoan(); });
+
             // 初次計算
             syncInputs('input-car-price');
+            updateSchemeUI();
         });
     </script>
 
