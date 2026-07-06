@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>複利計算機</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="精緻且專業的複利計算機，支援年/月利率與定期定額，附帶動態圖表與明細表。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="複利計算機">
+    <meta property="og:description" content="精緻且專業的複利計算機，支援年/月利率與定期定額，附帶動態圖表與明細表。">
+    <meta property="og:url" content="https://tools.cjkuo.net/compound-interest/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+    
+    <!-- 引入 Google Fonts & Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(255, 184, 0, 0.6); /* 金色發光 */
+            --accent-green: rgba(76, 217, 100, 0.6); /* 翡翠綠 */
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 1100px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 回首頁按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 184, 0, 0.1);
+            color: #ffb800;
+            border-color: #ffb800;
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.2);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 3rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* 雙欄版面 */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.9fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        /* ====== 左側表單樣式 ====== */
+        .form-section {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.8rem 1rem;
+            padding-right: 4.5rem;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: rgba(255, 184, 0, 0.6);
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.1);
+        }
+
+        /* 單位切換選擇器 (貼齊輸入框右側) */
+        .unit-selector {
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            bottom: 4px;
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .unit-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .unit-btn.active {
+            background: rgba(255, 184, 0, 0.15);
+            color: #ffb800;
+        }
+
+        /* 獨立切換按鈕組樣式 */
+        .toggle-buttons-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            width: 100%;
+        }
+
+        .toggle-buttons-container .unit-btn {
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: auto;
+            display: block;
+        }
+
+        .toggle-buttons-container .unit-btn.active {
+            background: rgba(255, 184, 0, 0.12);
+            border: 1px solid rgba(255, 184, 0, 0.3);
+            box-shadow: 0 0 10px rgba(255, 184, 0, 0.1);
+        }
+
+        /* 普通 Select 樣式 */
+        select.custom-select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238892b0'%3e%3cpath d='M7 10l5 5 5-5H7z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/1.25rem auto;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.8rem 1.5rem 0.8rem 1rem;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select.custom-select:focus {
+            border-color: rgba(255, 184, 0, 0.6);
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.1);
+        }
+
+        .btn-calculate {
+            background: transparent;
+            color: #ffb800;
+            border: 1px solid rgba(255, 184, 0, 0.4);
+            padding: 1rem;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .btn-calculate:hover {
+            background: rgba(255, 184, 0, 0.08);
+            border-color: rgba(255, 184, 0, 0.8);
+            box-shadow: 0 0 20px rgba(255, 184, 0, 0.2);
+            text-shadow: 0 0 5px rgba(255, 184, 0, 0.3);
+        }
+
+        /* ====== 右側結果樣式 ====== */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .results-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 三大指標看板 */
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+        }
+
+        .indicator-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.005);
+            transition: all 0.3s ease;
+        }
+
+        .indicator-card:hover {
+            border-color: rgba(255, 184, 0, 0.2);
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .indicator-card h4 {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+        }
+
+        .indicator-card .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 184, 0, 0.2);
+        }
+
+        .indicator-card.total-value .value {
+            color: #ffb800;
+            text-shadow: 0 0 15px rgba(255, 184, 0, 0.4);
+        }
+
+        /* 圖表區塊 */
+        .chart-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+
+        /* 明細表格區塊 */
+        .table-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .table-container h3 {
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.85rem;
+        }
+
+        table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-family: 'JetBrains Mono', monospace;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ffffff;
+        }
+
+        /* 自訂滾動條 */
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 184, 0, 0.2);
+            border-radius: 3px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 184, 0, 0.4);
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 900px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .indicators-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 回首頁 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59-1.42-1.42L4 12l8 8 1.42-1.42L7.83 13H20v-2z"/></svg>
+            工具庫首頁
+        </a>
+
+        <h1>複利計算機</h1>
+        <div class="subtitle-top">Compound Interest Calculator</div>
+
+        <div class="calculator-grid">
+            <!-- 左側表單 -->
+            <div class="form-section">
+                <!-- 本金 -->
+                <div class="input-group">
+                    <label for="input-principal">初始本金</label>
+                    <div class="input-wrapper">
+                        <input type="text" inputmode="numeric" id="input-principal" value="100,000" placeholder="例如：100,000">
+                        <div class="unit-selector">
+                            <button class="unit-btn active" style="pointer-events: none;">元</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 定期定額投入 -->
+                <div class="input-group">
+                    <label for="input-contribution">定期定額投入金額</label>
+                    <div class="input-wrapper">
+                        <input type="text" inputmode="numeric" id="input-contribution" value="5,000" placeholder="0 為不追加">
+                        <div class="unit-selector" style="pointer-events: none; background: transparent; border: none; right: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">元</div>
+                    </div>
+                </div>
+
+                <!-- 定期定額頻率 (獨立按鈕) -->
+                <div class="input-group">
+                    <label>定期定額頻率</label>
+                    <div class="toggle-buttons-container" id="contrib-unit-selector">
+                        <button class="unit-btn active" data-unit="month">月</button>
+                        <button class="unit-btn" data-unit="year">年</button>
+                    </div>
+                </div>
+
+                <!-- 利率 -->
+                <div class="input-group">
+                    <label for="input-rate">年 / 月利率 (%)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="input-rate" value="6" min="0" step="0.01" placeholder="例如：6">
+                        <div class="unit-selector" id="rate-unit-selector">
+                            <button class="unit-btn active" data-unit="year">年%</button>
+                            <button class="unit-btn" data-unit="month">月%</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 期間 -->
+                <div class="input-group">
+                    <label for="input-period">存款期間</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="input-period" value="10" min="1" placeholder="例如：10">
+                        <div class="unit-selector" id="period-unit-selector">
+                            <button class="unit-btn active" data-unit="year">年</button>
+                            <button class="unit-btn" data-unit="month">月</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 複利計息頻率 -->
+                <div class="input-group">
+                    <label for="select-compound">複利計息頻率</label>
+                    <select id="select-compound" class="custom-select">
+                        <option value="12">按月複利 (每月滾利)</option>
+                        <option value="4">按季複利 (每三月滾利)</option>
+                        <option value="1" selected>按年複利 (每年滾利)</option>
+                        <option value="0">單利計息 (不滾利)</option>
+                    </select>
+                </div>
+
+                <button class="btn-calculate" id="btn-calc">開始計算</button>
+            </div>
+
+            <!-- 右側結果與圖表 -->
+            <div class="results-section" id="results-sec">
+                <!-- 看板 -->
+                <div class="indicators-grid">
+                    <div class="indicator-card total-value">
+                        <h4>累積總金額</h4>
+                        <div class="value" id="val-total">0</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h4>總投入本金</h4>
+                        <div class="value" id="val-principal">0</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h4>累積利息收益</h4>
+                        <div class="value" id="val-interest">0</div>
+                    </div>
+                </div>
+
+                <!-- 圖表 -->
+                <div class="chart-container">
+                    <canvas id="growth-chart"></canvas>
+                </div>
+
+                <!-- 明細表格 -->
+                <div class="table-container">
+                    <h3 id="table-title">本利和明細</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;" id="th-period">時間</th>
+                                <th>期初金額</th>
+                                <th>當期投入</th>
+                                <th>當期利息</th>
+                                <th>累計投入本金</th>
+                                <th>本利和累計</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- 明細行由 JS 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 介面按鈕交互 (單位切換)
+        // ==========================================
+        function setupSelector(containerId, callback) {
+            const container = document.getElementById(containerId);
+            const buttons = container.querySelectorAll('.unit-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (callback) callback(btn.getAttribute('data-unit'));
+                });
+            });
+        }
+
+        let contribUnit = 'month'; // 'month' or 'year'
+        let rateUnit = 'year';     // 'year' or 'month'
+        let periodUnit = 'year';   // 'year' or 'month'
+
+        setupSelector('contrib-unit-selector', (unit) => { contribUnit = unit; });
+        setupSelector('rate-unit-selector', (unit) => { rateUnit = unit; });
+        setupSelector('period-unit-selector', (unit) => { periodUnit = unit; });
+
+        // ==========================================
+        // 複利計算核心與圖表渲染
+        // ==========================================
+        let chartInstance = null;
+
+        function formatCurrency(num) {
+            return Math.round(num).toLocaleString('zh-TW');
+        }
+
+        function calculateCompoundInterest() {
+            const principal = parseFloat(document.getElementById('input-principal').value.replace(/,/g, '')) || 0;
+            const contribution = parseFloat(document.getElementById('input-contribution').value.replace(/,/g, '')) || 0;
+            const ratePercent = parseFloat(document.getElementById('input-rate').value) || 0;
+            const periodVal = parseFloat(document.getElementById('input-period').value) || 0;
+            const compoundFreq = parseInt(document.getElementById('select-compound').value); // 12, 4, 1, 0 (單利)
+
+            // 1. 計算總月數
+            const totalMonths = periodUnit === 'year' ? periodVal * 12 : periodVal;
+            if (totalMonths <= 0) return;
+
+            // 2. 計算月利率 (做為模擬基本步長)
+            // 若為年利率，則月利率 = (年利率 / 100) / 12; 若為月利率，則月利率 = (月利率 / 100)
+            const monthlyRate = rateUnit === 'year' ? (ratePercent / 100) / 12 : (ratePercent / 100);
+
+            // 3. 模擬計算
+            let currentBalance = principal;
+            let currentPrincipal = principal;
+            let currentAccruedInterest = 0; // 尚未滾入本金的利息 (在計息期未滿時)
+            let totalInterestEarned = 0;
+
+            const monthlyData = [];
+
+            for (let month = 1; month <= totalMonths; month++) {
+                // 期初追加定期定額 (第一個月是否直接追加？這裡設計為在每月第一天，即每期初追加)
+                let addedContrib = 0;
+                if (contribUnit === 'month') {
+                    addedContrib = contribution;
+                } else if (contribUnit === 'year') {
+                    // 若是年繳定期定額，則在第1個月、第13個月等期初加入
+                    if ((month - 1) % 12 === 0) {
+                        addedContrib = contribution;
+                    }
+                }
+                currentBalance += addedContrib;
+                currentPrincipal += addedContrib;
+
+                // 利息計算方式
+                let interestThisMonth = 0;
+                if (compoundFreq === 0) {
+                    // 單利：利息基數 = 已繳本金
+                    interestThisMonth = currentPrincipal * monthlyRate;
+                    totalInterestEarned += interestThisMonth;
+                    currentBalance += interestThisMonth;
+                } else {
+                    // 複利：按月計算產生的利息
+                    interestThisMonth = currentBalance * monthlyRate;
+                    currentAccruedInterest += interestThisMonth;
+                    totalInterestEarned += interestThisMonth;
+
+                    // 依複利頻率，判斷是否於當月底將累計利息滾入本金中
+                    // 12 (月複利)：每期都滾入
+                    // 4 (季複利)：每3個月滾入一次
+                    // 1 (年複利)：每12個月滾入一次
+                    const isCompoundingTerm = 
+                        (compoundFreq === 12) || 
+                        (compoundFreq === 4 && month % 3 === 0) || 
+                        (compoundFreq === 1 && month % 12 === 0) || 
+                        (month === totalMonths); // 最後一個月強迫滾入以顯示最終值
+
+                    if (isCompoundingTerm) {
+                        currentBalance += currentAccruedInterest;
+                        currentAccruedInterest = 0; // 清空暫存利息
+                    }
+                }
+
+                monthlyData.push({
+                    month: month,
+                    totalPrincipal: currentPrincipal,
+                    totalInterest: totalInterestEarned,
+                    balance: currentBalance + currentAccruedInterest // 本月餘額加上當期尚未滾入的累計利息
+                });
+            }
+
+            // 4. 過濾數據以供圖表和表格展示 (若年期，則按年彙整展示；若月期，則按月展示)
+            const resultData = [];
+            // 插入初始狀態以顯示起步本金，利於數據對照
+            resultData.push({
+                label: '初始',
+                startBalance: 0,
+                contribution: 0,
+                interest: 0,
+                cumulativeInterest: 0,
+                totalPrincipal: principal,
+                total: principal
+            });
+            if (periodUnit === 'year') {
+                let prevTotal = principal;
+                let prevInterest = 0;
+                // 每 12 個月取一次數據代表每年年底
+                for (let year = 1; year <= periodVal; year++) {
+                    const idx = Math.min(year * 12 - 1, monthlyData.length - 1);
+                    const currentTotal = monthlyData[idx].balance;
+                    const currentPrincipal = monthlyData[idx].totalPrincipal;
+                    const currentInterest = monthlyData[idx].totalInterest;
+                    
+                    const prevPrincipal = year === 1 ? principal : monthlyData[(year - 1) * 12 - 1].totalPrincipal;
+                    const contributionThisYear = currentPrincipal - prevPrincipal;
+                    const interestThisYear = currentInterest - prevInterest;
+
+                    resultData.push({
+                        label: `第 ${year} 年`,
+                        startBalance: prevTotal,
+                        contribution: contributionThisYear,
+                        interest: interestThisYear,
+                        cumulativeInterest: currentInterest,
+                        totalPrincipal: currentPrincipal,
+                        total: currentTotal
+                    });
+
+                    prevTotal = currentTotal;
+                    prevInterest = currentInterest;
+                }
+            } else {
+                let prevTotal = principal;
+                let prevInterest = 0;
+                // 按月展示
+                monthlyData.forEach(item => {
+                    const currentTotal = item.balance;
+                    const currentPrincipal = item.totalPrincipal;
+                    const currentInterest = item.totalInterest;
+
+                    const prevPrincipal = item.month === 1 ? principal : monthlyData[item.month - 2].totalPrincipal;
+                    const contributionThisMonth = currentPrincipal - prevPrincipal;
+                    const interestThisMonth = currentInterest - prevInterest;
+
+                    resultData.push({
+                        label: `第 ${item.month} 月`,
+                        startBalance: prevTotal,
+                        contribution: contributionThisMonth,
+                        interest: interestThisMonth,
+                        cumulativeInterest: currentInterest,
+                        totalPrincipal: currentPrincipal,
+                        total: currentTotal
+                    });
+
+                    prevTotal = currentTotal;
+                    prevInterest = currentInterest;
+                });
+            }
+
+            // 5. 更新大指標看板
+            const finalState = resultData[resultData.length - 1];
+            document.getElementById('val-total').textContent = formatCurrency(finalState.total);
+            document.getElementById('val-principal').textContent = formatCurrency(finalState.totalPrincipal);
+            document.getElementById('val-interest').textContent = formatCurrency(finalState.cumulativeInterest);
+
+            // 6. 更新明細表格
+            document.getElementById('th-period').textContent = periodUnit === 'year' ? '年度' : '月份';
+            document.getElementById('table-title').textContent = periodUnit === 'year' ? '歷年本利和明細表' : '歷月本利和明細表';
+            
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            resultData.forEach(item => {
+                const tr = document.createElement('tr');
+                const isInitial = item.label === '初始';
+                tr.innerHTML = `
+                    <td style="text-align: left; color: var(--text-secondary);">${item.label}</td>
+                    <td>${isInitial ? '-' : formatCurrency(item.startBalance)}</td>
+                    <td>${isInitial ? '-' : '+' + formatCurrency(item.contribution)}</td>
+                    <td>${isInitial ? '-' : '+' + formatCurrency(item.interest)}</td>
+                    <td>${formatCurrency(item.totalPrincipal)}</td>
+                    <td style="color: #ffb800; font-weight: 500;">${formatCurrency(item.total)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 7. 更新 Chart.js 圖表
+            const labels = resultData.map(item => item.label);
+            const principalDataset = resultData.map(item => item.totalPrincipal);
+            const interestDataset = resultData.map(item => item.cumulativeInterest);
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctxChart = document.getElementById('growth-chart').getContext('2d');
+            chartInstance = new Chart(ctxChart, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '累計本金',
+                            data: principalDataset,
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            borderColor: 'rgba(255, 255, 255, 0.4)',
+                            borderWidth: 1,
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: '累積利息',
+                            data: interestDataset,
+                            backgroundColor: 'rgba(255, 184, 0, 0.65)',
+                            borderColor: 'rgba(255, 184, 0, 0.9)',
+                            borderWidth: 1,
+                            stack: 'Stack 0',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#8892b0',
+                                font: { family: 'Inter' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#8892b0', font: { family: 'Inter' } }
+                        },
+                        y: {
+                            stacked: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { 
+                                color: '#8892b0', 
+                                font: { family: 'Inter' },
+                                callback: function(value) {
+                                    return value >= 1000000 
+                                        ? (value / 1000000).toFixed(1) + 'M' 
+                                        : value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 顯示結果區塊
+            const resSec = document.getElementById('results-sec');
+            resSec.classList.add('show');
+        }
+
+        document.getElementById('btn-calc').addEventListener('click', (e) => {
+            // 觸發粒子爆發效果
+            createBurst(e.clientX, e.clientY);
+            calculateCompoundInterest();
+        });
+
+        function initFormattedInput(inputId) {
+            const input = document.getElementById(inputId);
+            
+            input.addEventListener('input', (e) => {
+                let value = input.value.replace(/,/g, '');
+                if (value === '') {
+                    input.value = '';
+                    return;
+                }
+                const num = parseInt(value, 10);
+                if (!isNaN(num)) {
+                    const originalCursor = input.selectionStart;
+                    const originalCommaCount = (input.value.substring(0, originalCursor).match(/,/g) || []).length;
+                    
+                    const formatted = num.toLocaleString('zh-TW');
+                    input.value = formatted;
+                    
+                    const newCommaCount = (formatted.substring(0, originalCursor).match(/,/g) || []).length;
+                    const cursorOffset = newCommaCount - originalCommaCount;
+                    input.setSelectionRange(originalCursor + cursorOffset, originalCursor + cursorOffset);
+                }
+            });
+
+            if (input.value) {
+                const num = parseInt(input.value.replace(/,/g, ''), 10);
+                if (!isNaN(num)) {
+                    input.value = num.toLocaleString('zh-TW');
+                }
+            }
+        }
+
+        // 頁面加載時先進行一次默認計算
+        window.addEventListener('load', () => {
+            initFormattedInput('input-principal');
+            initFormattedInput('input-contribution');
+            calculateCompoundInterest();
+        });
+    </script>
+
+    <script>
+        // ==========================================
+        // 背景粒子與特效動畫 (金色主題)
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (typeof adjustParticles === 'function') {
+                adjustParticles();
+            }
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5; 
+                this.density = (Math.random() * 30) + 1;
+                
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1; 
+                
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 5; 
+                    this.velocityY = (Math.random() - 0.5) * 5;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 金色泡沫緩慢往上飄
+                    this.velocityX = (Math.random() - 0.5) * 0.2;
+                }
+            }
+            draw() {
+                ctx.beginPath(); 
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
+                ctx.closePath();
+                
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                
+                // 金黃色粒子調配
+                ctx.fillStyle = this.isBurst 
+                    ? `rgba(255, 184, 0, ${alpha})` 
+                    : `rgba(255, 184, 0, ${alpha * 0.8})`; 
+                ctx.fill();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.025; 
+                    this.velocityX *= 0.95;
+                    this.velocityY *= 0.95;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+                    
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                    if (this.x < 0 || this.x > canvas.width) {
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * this.density * 0.6;
+                    this.y -= (dy / distance) * force * this.density * 0.6;
+                } 
+            }
+        }
+
+        function adjustParticles() {
+            const targetCount = Math.floor((canvas.width * canvas.height) / 10000);
+            let bgParticles = particles.filter(p => !p.isBurst);
+            const burstParticles = particles.filter(p => p.isBurst);
+
+            bgParticles.forEach(p => {
+                if (p.x > canvas.width) p.x = Math.random() * canvas.width;
+                if (p.y > canvas.height) p.y = Math.random() * canvas.height;
+            });
+
+            if (bgParticles.length < targetCount) {
+                const toAdd = targetCount - bgParticles.length;
+                for (let i = 0; i < toAdd; i++) {
+                    bgParticles.push(new Particle());
+                }
+            } else if (bgParticles.length > targetCount) {
+                bgParticles = bgParticles.slice(0, targetCount);
+            }
+
+            particles = [...bgParticles, ...burstParticles];
+        }
+
+        function createBurst(x, y) {
+            if (x === undefined || y === undefined) return;
+            for(let i = 0; i < 20; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        window.addEventListener('mousemove', (e) => { 
+            mouse.x = e.clientX; 
+            mouse.y = e.clientY; 
+        });
+        window.addEventListener('mousedown', (e) => { 
+            mouse.radius = 280; 
+            createBurst(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { mouse.radius = 150; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        animateParticles();
+    </script>
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具庫</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="精緻、唯美且實用的網頁工具庫。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="工具庫">
+    <meta property="og:description" content="精緻、唯美且實用的網頁工具庫。">
+    <meta property="og:url" content="https://tools.cjkuo.net/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+    
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(0, 240, 255, 0.6);
+            --accent-purple: rgba(180, 0, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3.5rem 3rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 1000px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 3.5rem;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* ====== 工具卡片網格 ====== */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 100%;
+        }
+
+        /* ====== 工具卡片樣式 ====== */
+        .tool-card {
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2.2rem 1.8rem;
+            text-align: left;
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 240px;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡片光效背景 */
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%);
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+
+        .tool-card.interest-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 184, 0, 0.06), transparent 40%);
+        }
+
+        .tool-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-card h3 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+            letter-spacing: 1.5px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .tool-card .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+            display: block;
+        }
+
+        .tool-card p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            flex-grow: 1;
+            margin-bottom: 2rem;
+            transition: color 0.3s ease;
+        }
+
+        /* 卡片底部操作指引 */
+        .card-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #00f0ff;
+            letter-spacing: 1px;
+            font-weight: 500;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .card-action svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        /* 懸浮效果 */
+        .tool-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 240, 255, 0.1),
+                        inset 0 0 15px rgba(0, 240, 255, 0.02);
+        }
+
+        .tool-card:hover h3 {
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .tool-card:hover p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tool-card:hover .card-action {
+            transform: translateX(4px);
+        }
+
+        .tool-card:hover .card-action svg {
+            transform: translateX(2px);
+        }
+
+        /* 複利計算機專屬 hover 效果 */
+        .tool-card.interest-card:hover {
+            border-color: rgba(255, 184, 0, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(255, 184, 0, 0.15),
+                        inset 0 0 15px rgba(255, 184, 0, 0.02);
+        }
+
+        .tool-card.interest-card:hover h3 {
+            color: #ffb800;
+            text-shadow: 0 0 10px rgba(255, 184, 0, 0.4);
+        }
+
+        .tool-card.interest-card .card-action {
+            color: #ffb800;
+        }
+
+        /* ====== 預留卡片樣式 ====== */
+        .tool-card.placeholder {
+            border-style: dashed;
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.005);
+            cursor: default;
+        }
+
+        .tool-card.placeholder::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(180, 0, 255, 0.04), transparent 40%);
+        }
+
+        .tool-card.placeholder h3 {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .tool-card.placeholder p {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .tool-card.placeholder .card-action {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .tool-card.placeholder:hover {
+            transform: translateY(-4px);
+            border-color: rgba(180, 0, 255, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 
+                        0 0 15px rgba(180, 0, 255, 0.05);
+        }
+
+        .tool-card.placeholder:hover h3 {
+            color: rgba(255, 255, 255, 0.6);
+            text-shadow: none;
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 900px) {
+            .tools-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+            }
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <h1>工具庫</h1>
+        <div class="subtitle-top">My Toolbox</div>
+
+        <div class="tools-grid">
+            <!-- 目標計時器 -->
+            <a href="./time/index.html" class="tool-card">
+                <div>
+                    <h3>目標計時器</h3>
+                    <span class="subtitle">Target Timer</span>
+                    <p>唯美精緻的目標計時器，清楚顯示倒數與累計時間，支援多種時間顯示格式與自訂主題色。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- 複利計算機 -->
+            <a href="./compound-interest/index.html" class="tool-card interest-card">
+                <div>
+                    <h3>複利計算機</h3>
+                    <span class="subtitle">Compound Interest Calculator</span>
+                    <p>精緻且專業的複利計算工具，支援年/月利率與定期定額，透過動態堆疊圖表直觀呈現財富增長軌跡。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- 預留位置 2 -->
+            <div class="tool-card placeholder">
+                <div>
+                    <h3>敬請期待</h3>
+                    <span class="subtitle">Coming Soon</span>
+                    <p>更多實用、設計精美且流暢互動的網頁小工具正在開發中，敬請期待。</p>
+                </div>
+                <div class="card-action">
+                    開發中...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 背景粒子與特效動畫
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (typeof adjustParticles === 'function') {
+                adjustParticles();
+            }
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5; 
+                this.density = (Math.random() * 30) + 1;
+                
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1; 
+                
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 4; 
+                    this.velocityY = (Math.random() - 0.5) * 4;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 緩慢向上漂浮
+                    this.velocityX = (Math.random() - 0.5) * 0.2;     // 輕微左右晃動
+                }
+            }
+            draw() {
+                ctx.beginPath(); 
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
+                ctx.closePath();
+                
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                
+                // 根據是否是爆發粒子顯示顏色，普通粒子主要是亮青色
+                ctx.fillStyle = this.isBurst 
+                    ? `rgba(0, 240, 255, ${alpha})` 
+                    : `rgba(0, 240, 255, ${alpha * 0.8})`; 
+                ctx.fill();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.025; 
+                    this.velocityX *= 0.95;
+                    this.velocityY *= 0.95;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+                    
+                    // 邊界處理
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                    if (this.x < 0 || this.x > canvas.width) {
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                // 滑鼠排斥效果
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * this.density * 0.6;
+                    this.y -= (dy / distance) * force * this.density * 0.6;
+                } 
+            }
+        }
+
+        function adjustParticles() {
+            const targetCount = Math.floor((canvas.width * canvas.height) / 10000);
+            let bgParticles = particles.filter(p => !p.isBurst);
+            const burstParticles = particles.filter(p => p.isBurst);
+
+            bgParticles.forEach(p => {
+                if (p.x > canvas.width) p.x = Math.random() * canvas.width;
+                if (p.y > canvas.height) p.y = Math.random() * canvas.height;
+            });
+
+            if (bgParticles.length < targetCount) {
+                const toAdd = targetCount - bgParticles.length;
+                for (let i = 0; i < toAdd; i++) {
+                    bgParticles.push(new Particle());
+                }
+            } else if (bgParticles.length > targetCount) {
+                bgParticles = bgParticles.slice(0, targetCount);
+            }
+
+            particles = [...bgParticles, ...burstParticles];
+        }
+
+        function createBurst(x, y) {
+            for(let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        window.addEventListener('mousemove', (e) => { 
+            mouse.x = e.clientX; 
+            mouse.y = e.clientY; 
+        });
+        window.addEventListener('mousedown', (e) => { 
+            mouse.radius = 280; 
+            createBurst(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { mouse.radius = 150; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        animateParticles();
+
+        // ====== 卡片滑鼠跟隨光源效果 ======
+        const cards = document.querySelectorAll('.tool-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--x', `${x}px`);
+                card.style.setProperty('--y', `${y}px`);
+            });
+        });
+    </script>
+</body>
+</html>
