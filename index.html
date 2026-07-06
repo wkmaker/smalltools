@@ -71,7 +71,7 @@
             text-align: center;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
             width: 100%;
-            max-width: 1000px;
+            max-width: 90%;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -295,6 +295,27 @@
             color: #ff0055;
         }
 
+        /* 房貸計算機專屬 hover 效果 */
+        .tool-card.mortgage-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(139, 92, 246, 0.06), transparent 40%);
+        }
+
+        .tool-card.mortgage-card:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(139, 92, 246, 0.15),
+                        inset 0 0 15px rgba(139, 92, 246, 0.02);
+        }
+
+        .tool-card.mortgage-card:hover h3 {
+            color: #8b5cf6;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+        }
+
+        .tool-card.mortgage-card .card-action {
+            color: #8b5cf6;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -413,19 +434,20 @@
                 </div>
             </a>
 
-            <!-- 敬請期待 1 -->
-            <div class="tool-card placeholder">
+            <!-- 房貸計算機 -->
+            <a href="./mortgage-loan/index.html" class="tool-card mortgage-card">
                 <div>
-                    <h3>敬請期待</h3>
-                    <span class="subtitle">Coming Soon</span>
-                    <p>更多實用、唯美的工具正在開發中，敬請期待下一次的更新與功能推出。</p>
+                    <h3>房貸計算機</h3>
+                    <span class="subtitle">Mortgage Loan Calculator</span>
+                    <p>專業的房貸試算工具，支援自備款與貸款成數雙向連動、寬限期試算、多段式階梯利率設定，並提供詳細的月付本息明細與實質年利率分析。</p>
                 </div>
                 <div class="card-action">
-                    規劃中
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
                 </div>
-            </div>
+            </a>
 
-            <!-- 敬請期待 2 -->
+            <!-- 敬請期待 -->
             <div class="tool-card placeholder">
                 <div>
                     <h3>敬請期待</h3>

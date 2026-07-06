@@ -93,7 +93,7 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
 
 10. **部署 CI/CD 安全排除**
     * 開發工具庫的配置設定與本地 Skill 定義（即 `.agents/` 目錄）切勿同步至生產環境。
-    * 必須在部署腳本（如 `.github/workflows/deploy.yml` 中的 `aws s3 sync`）中強制配置 `--exclude ".agents*"` 以防止內部檔案外流。
+     * 必須在部署腳本（如 `.github/workflows/deploy.yml` 中的 `aws s3 sync`）中強制配置 `--exclude ".agents*"` 以防止內部檔案外流。
 
 11. **雙向連動輸入框格式化規範 (Formatted Synced Inputs)**
     * 當多個金額欄位存在依存關係（如車價、自備款、貸款金額）且需雙向連動時，應僅對使用者正在鍵入的活動輸入框 (active input) 修正游標定位 (`setSelectionRange`)，其他連動欄位則由程式直接格式化填值，避免多重更新觸發游標亂跳或循環計算。
@@ -101,3 +101,22 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
 
 12. **多方案金流之實質年利率 (APR) 二分法計算**
     * 當試算工具支援多種還款方案（如寬限期、低首付、尾款保留等）時，實質年利率 (APR) 應基於實際產生的月付金流陣列 (paymentArray) 作為參數帶入二分搜尋法求解，避免為各方案寫死不同的 IRR 公式，以維持擴充性與高精度。
+
+13. **多段式利率動態增減段落 (Dynamic Multi-Stage Rate Management)**
+    * 具備多段式（階梯式）利率功能的計算工具，不應使用固定數量的靜態 HTML 段落（如寫死 3 段），必須改以 **JS 動態渲染 `stages` 陣列**，讓使用者可以自由新增（`addStage()`）與移除（`removeStage(idx)`）段落。
+    * **最少段數保護**：最少需保留 2 段（防止刪到只剩 1 段導致邏輯崩壞）。
+    * **最大段數限制**：預設上限為 6 段，超過時「新增段落」按鈕應 `disabled`。
+    * **最終段固定為剩餘期數**：最後一段永遠是「剩餘期數」適用段，只需填利率，不需填期間。移除時提示標籤文字應有所區別。
+    * **每段期間均需年/月切換**：使用 `stage-unit-selector` 微型版本的年/月切換按鈕，確保使用者可輸入「2 年」或「24 個月」而非只有月份數字。
+    * **JS 計算邏輯**：計算時將 `stages` 陣列展開為與總期數等長的 `stageRates[]` 陣列（每期對應的年利率），最後一段補滿剩餘期數。這樣可確保任意段數的計算邏輯完全通用，無需為不同段數寫不同判斷式。
+
+14. **自備款分開兩行顯示 (Down-Payment Inputs Stacked)**
+    * 在房貸計算機等含有「自備款成數 (%)」與「自備款金額 (元)」雙向連動的介面中，當兩者數字較大、並排時容易被截斷，必須將兩個欄位**分開為各自獨立的 `input-group` 行**（不能並排在同一個 `stage-row` 中），確保在所有螢幕尺寸下數值均能完整顯示。
+
+15. **全站容器寬度規範 (Max-Width Standard)**
+    * 所有計算機與首頁的 `.glass-container` 必須使用 `max-width: 90%`（而非固定像素值如 1100px 或 1000px），確保在大螢幕（如 1920px 寬的顯示器）上也有足夠的展示空間，同時在小螢幕上仍保持適當的左右留白。
+
+16. **Sitemap 維護規範 (Sitemap Maintenance)**
+    * 專案根目錄必須維護一份 `sitemap.xml`，遵循 `http://www.sitemaps.org/schemas/sitemap/0.9` 標準，列出所有工具頁面的完整 URL、最後修改日期 (`lastmod`)、更新頻率 (`changefreq`) 與優先度 (`priority`)。
+    * 每次新增工具頁面後，必須同步更新 `sitemap.xml`，並更新所有現有頁面的 `lastmod` 日期。
+    * 首頁 (`index.html`) 的 `priority` 設為 `1.0`，其餘工具頁面設為 `0.8`，`changefreq` 一般設為 `monthly`。
