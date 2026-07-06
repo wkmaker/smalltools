@@ -464,6 +464,11 @@
 
         /* 響應式佈局 */
         @media (max-width: 900px) {
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
             .calculator-grid {
                 grid-template-columns: minmax(0, 1fr); /* 確保行動端網格不被大寬度表格撐開 */
             }
@@ -480,6 +485,16 @@
             .chart-container {
                 height: 250px;
             }
+        }
+
+        /* 隱藏瀏覽器預設的數字輸入框微調按鈕，防止與自訂單位按鈕重疊 */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
         }
     </style>
 </head>
@@ -535,8 +550,8 @@
                     <div class="input-wrapper">
                         <input type="number" id="input-rate" value="6" min="0" step="0.01" placeholder="例如：6">
                         <div class="unit-selector" id="rate-unit-selector">
-                            <button class="unit-btn active" data-unit="year">年%</button>
-                            <button class="unit-btn" data-unit="month">月%</button>
+                            <button class="unit-btn active" data-unit="year">年</button>
+                            <button class="unit-btn" data-unit="month">月</button>
                         </div>
                     </div>
                 </div>
@@ -563,8 +578,6 @@
                         <option value="0">單利計息 (不滾利)</option>
                     </select>
                 </div>
-
-                <button class="btn-calculate" id="btn-calc">開始計算</button>
             </div>
 
             <!-- 右側結果與圖表 -->
@@ -623,6 +636,8 @@
             buttons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
+                    // 在點擊切換時，於滑鼠位置觸發金泡沫粒子爆發，提升觸控微動效！
+                    createBurst(e.clientX, e.clientY);
                     buttons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     if (callback) callback(btn.getAttribute('data-unit'));
@@ -634,9 +649,9 @@
         let rateUnit = 'year';     // 'year' or 'month'
         let periodUnit = 'year';   // 'year' or 'month'
 
-        setupSelector('contrib-unit-selector', (unit) => { contribUnit = unit; });
-        setupSelector('rate-unit-selector', (unit) => { rateUnit = unit; });
-        setupSelector('period-unit-selector', (unit) => { periodUnit = unit; });
+        setupSelector('contrib-unit-selector', (unit) => { contribUnit = unit; calculateCompoundInterest(); });
+        setupSelector('rate-unit-selector', (unit) => { rateUnit = unit; calculateCompoundInterest(); });
+        setupSelector('period-unit-selector', (unit) => { periodUnit = unit; calculateCompoundInterest(); });
 
         // ==========================================
         // 複利計算核心與圖表渲染
@@ -654,9 +669,8 @@
             const periodVal = parseFloat(document.getElementById('input-period').value) || 0;
             const compoundFreq = parseInt(document.getElementById('select-compound').value); // 12, 4, 1, 0 (單利)
 
-            // 1. 計算總月數
-            const totalMonths = periodUnit === 'year' ? periodVal * 12 : periodVal;
-            if (totalMonths <= 0) return;
+            // 1. 計算總月數 (防呆最少為 0 個月，確保為空或 0 時能渲染出初始列)
+            const totalMonths = Math.max(0, periodUnit === 'year' ? periodVal * 12 : periodVal);
 
             // 2. 計算月利率 (做為模擬基本步長)
             // 若為年利率，則月利率 = (年利率 / 100) / 12; 若為月利率，則月利率 = (月利率 / 100)
@@ -893,11 +907,7 @@
             resSec.classList.add('show');
         }
 
-        document.getElementById('btn-calc').addEventListener('click', (e) => {
-            // 觸發粒子爆發效果
-            createBurst(e.clientX, e.clientY);
-            calculateCompoundInterest();
-        });
+        // (btn-calc 事件已被安全移除，因改為即時改即時算)
 
         function initFormattedInput(inputId) {
             const input = document.getElementById(inputId);
@@ -906,6 +916,7 @@
                 let value = input.value.replace(/,/g, '');
                 if (value === '') {
                     input.value = '';
+                    calculateCompoundInterest(); // 即時重算
                     return;
                 }
                 const num = parseInt(value, 10);
@@ -920,6 +931,7 @@
                     const cursorOffset = newCommaCount - originalCommaCount;
                     input.setSelectionRange(originalCursor + cursorOffset, originalCursor + cursorOffset);
                 }
+                calculateCompoundInterest(); // 即時重算
             });
 
             if (input.value) {
@@ -930,10 +942,16 @@
             }
         }
 
-        // 頁面加載時先進行一次默認計算
+        // 頁面加載時先進行一次默認計算，並掛載其餘即時計算事件
         window.addEventListener('load', () => {
             initFormattedInput('input-principal');
             initFormattedInput('input-contribution');
+            
+            // 監聽一般輸入框與下拉選單的即時變更
+            document.getElementById('input-rate').addEventListener('input', calculateCompoundInterest);
+            document.getElementById('input-period').addEventListener('input', calculateCompoundInterest);
+            document.getElementById('select-compound').addEventListener('change', calculateCompoundInterest);
+            
             calculateCompoundInterest();
         });
     </script>
