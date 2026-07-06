@@ -311,6 +311,7 @@
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            min-width: 0; /* 防止子元素撐寬 Grid Item */
         }
 
         .results-section.show {
@@ -378,6 +379,10 @@
             border: 1px solid var(--glass-border);
             border-radius: 16px;
             padding: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%; /* 強制適應父容器寬度 */
+            max-width: 100%;
         }
 
         .table-container h3 {
@@ -408,11 +413,38 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             font-family: 'JetBrains Mono', monospace;
             color: rgba(255, 255, 255, 0.8);
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         table tr:hover td {
             background: rgba(255, 255, 255, 0.02);
             color: #ffffff;
+        }
+
+        /* 針對平板及手機等小螢幕的表格優化 */
+        @media (max-width: 768px) {
+            .table-container {
+                padding: 1rem;
+            }
+
+            table {
+                min-width: 650px; /* 確保 6 個欄位擁有舒適寬度，不因壓縮而變形 */
+            }
+
+            /* 第一欄 Sticky 固定定位，在橫向滾動時特別方便對照時間 */
+            table th:first-child,
+            table td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #0b0b0e; /* 主色調的實色，遮擋後方滑過的數字 */
+                z-index: 2;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.4); /* 輕微側邊陰影，增強分界感 */
+            }
+
+            /* Hover 第一欄時獨立上色，避免被覆蓋 */
+            table tr:hover td:first-child {
+                background-color: #1a1a24;
+            }
         }
 
         /* 自訂滾動條 */
@@ -433,7 +465,7 @@
         /* 響應式佈局 */
         @media (max-width: 900px) {
             .calculator-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr); /* 確保行動端網格不被大寬度表格撐開 */
             }
             .glass-container {
                 padding: 2.5rem 1.5rem;
