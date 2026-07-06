@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信貸計算機</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="專業的個人信貸計算機，支援本息均攤、本金均攤與實質年利率 (APR) 試算，提供詳細的歷期還款明細與視覺化圖表。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="信貸計算機">
+    <meta property="og:description" content="專業的個人信貸計算機，支援本息均攤、本金均攤與實質年利率 (APR) 試算。">
+    <meta property="og:url" content="https://tools.cjkuo.net/personal-loan/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 引入 Google Fonts & Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(0, 245, 160, 0.6); /* 薄荷綠霓虹 */
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 1100px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 回首頁按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 245, 160, 0.1);
+            color: #00f5a0;
+            border-color: #00f5a0;
+            box-shadow: 0 0 15px rgba(0, 245, 160, 0.2);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 3rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* 雙欄版面 */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.9fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        /* ====== 左側表單樣式 ====== */
+        .form-section {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.8rem 1rem;
+            padding-right: 4.5rem;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: rgba(0, 245, 160, 0.6);
+            box-shadow: 0 0 15px rgba(0, 245, 160, 0.1);
+        }
+
+        /* 單位切換選擇器 */
+        .unit-selector {
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            bottom: 4px;
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .unit-selector .unit-btn,
+        .toggle-buttons-container .unit-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0 0.8rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .unit-selector .unit-btn.active,
+        .toggle-buttons-container .unit-btn.active {
+            background: rgba(0, 245, 160, 0.15);
+            color: #00f5a0;
+        }
+
+        /* 獨立切換按鈕組樣式 */
+        .toggle-buttons-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            width: 100%;
+        }
+
+        .toggle-buttons-container .unit-btn {
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: auto;
+            display: block;
+        }
+
+        .toggle-buttons-container .unit-btn.active {
+            background: rgba(0, 245, 160, 0.12);
+            border: 1px solid rgba(0, 245, 160, 0.3);
+            box-shadow: 0 0 10px rgba(0, 245, 160, 0.1);
+        }
+
+        /* 普通 Select 樣式 */
+        select.custom-select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238892b0'%3e%3cpath d='M7 10l5 5 5-5H7z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/1.25rem auto;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.8rem 1.5rem 0.8rem 1rem;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select.custom-select:focus {
+            border-color: rgba(0, 245, 160, 0.6);
+            box-shadow: 0 0 15px rgba(0, 245, 160, 0.1);
+        }
+
+        /* ====== 右側結果樣式 ====== */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            min-width: 0; /* 防止子元素撐寬 Grid Item */
+        }
+
+        .results-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 四個指標看板 (新增了APR看板) */
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.2rem;
+        }
+
+        .indicator-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.005);
+            transition: all 0.3s ease;
+        }
+
+        .indicator-card:hover {
+            border-color: rgba(0, 245, 160, 0.2);
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .indicator-card h4 {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+        }
+
+        .indicator-card .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 245, 160, 0.2);
+        }
+
+        .indicator-card.total-value .value {
+            color: #00f5a0;
+            text-shadow: 0 0 15px rgba(0, 245, 160, 0.4);
+        }
+
+        /* 圖表區塊 */
+        .chart-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+
+        /* 明細表格區塊 */
+        .table-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%; /* 強制適應父容器寬度 */
+            max-width: 100%;
+        }
+
+        .table-container h3 {
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.85rem;
+        }
+
+        table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-family: 'JetBrains Mono', monospace;
+            color: rgba(255, 255, 255, 0.8);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ffffff;
+        }
+
+        /* 針對平板及手機等小螢幕的表格優化 */
+        @media (max-width: 768px) {
+            .table-container {
+                padding: 1rem;
+            }
+
+            table {
+                min-width: 650px; /* 確保 6 個欄位擁有舒適寬度，不因壓縮而變形 */
+            }
+
+            /* 第一欄 Sticky 固定定位，在橫向滾動時特別方便對照期數 */
+            table th:first-child,
+            table td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #0b0b0e; /* 主色調的實色，遮擋後方滑過的數字 */
+                z-index: 2;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.4); /* 輕微側邊陰影，增強分界感 */
+            }
+
+            /* Hover 第一欄時獨立上色，避免被覆蓋 */
+            table tr:hover td:first-child {
+                background-color: #1a1a24;
+            }
+        }
+
+        /* 自訂滾動條 */
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 245, 160, 0.2);
+            border-radius: 3px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 245, 160, 0.4);
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 900px) {
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+            .calculator-grid {
+                grid-template-columns: minmax(0, 1fr); /* 確保行動端網格不被大寬度表格撐開 */
+            }
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .indicators-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* 隱藏瀏覽器預設的數字輸入框微調按鈕，防止與自訂單位按鈕重疊 */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 回首頁 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59-1.42-1.42L4 12l8 8 1.42-1.42L7.83 13H20v-2z"/></svg>
+            工具庫首頁
+        </a>
+
+        <h1>信貸計算機</h1>
+        <div class="subtitle-top">Personal Loan Calculator</div>
+
+        <div class="calculator-grid">
+            <!-- 左側表單 -->
+            <div class="form-section">
+                <!-- 貸款金額 -->
+                <div class="input-group">
+                    <label for="input-amount">貸款金額</label>
+                    <div class="input-wrapper">
+                        <input type="text" inputmode="numeric" id="input-amount" value="1,000,000" placeholder="例如：1,000,000">
+                        <div class="unit-selector">
+                            <button class="unit-btn active" style="pointer-events: none;">元</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 貸款年利率 -->
+                <div class="input-group">
+                    <label for="input-rate">年利率 (%)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="input-rate" value="2.5" min="0" step="0.01" placeholder="例如：2.5">
+                        <div class="unit-selector" style="pointer-events: none; background: transparent; border: none; right: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">%</div>
+                    </div>
+                </div>
+
+                <!-- 貸款期間 -->
+                <div class="input-group">
+                    <label for="input-period">貸款期間</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="input-period" value="7" min="1" placeholder="例如：7">
+                        <div class="unit-selector" id="period-unit-selector">
+                            <button class="unit-btn active" data-unit="year">年</button>
+                            <button class="unit-btn" data-unit="month">月</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 開辦手續費 -->
+                <div class="input-group">
+                    <label for="input-fee">開辦費 / 手續費</label>
+                    <div class="input-wrapper">
+                        <input type="text" inputmode="numeric" id="input-fee" value="3,000" placeholder="例如：3,000">
+                        <div class="unit-selector" style="pointer-events: none; background: transparent; border: none; right: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">元</div>
+                    </div>
+                </div>
+
+                <!-- 還款方式 -->
+                <div class="input-group">
+                    <label>還款方式</label>
+                    <div class="toggle-buttons-container" id="repay-type-selector">
+                        <button class="unit-btn active" data-unit="equal-total">本息均攤</button>
+                        <button class="unit-btn" data-unit="equal-principal">本金均攤</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側結果與圖表 -->
+            <div class="results-section" id="results-sec">
+                <!-- 看板 -->
+                <div class="indicators-grid">
+                    <div class="indicator-card total-value">
+                        <h4>首期每月還款額</h4>
+                        <div class="value" id="val-monthly">0</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h4>實質年利率 (APR)</h4>
+                        <div class="value" style="color: #00f5a0;" id="val-apr">0 %</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h4>總利息支出</h4>
+                        <div class="value" id="val-interest">0</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h4>總還款金額</h4>
+                        <div class="value" id="val-total">0</div>
+                    </div>
+                </div>
+
+                <!-- 圖表 -->
+                <div class="chart-container">
+                    <canvas id="growth-chart"></canvas>
+                </div>
+
+                <!-- 明細表格 -->
+                <div class="table-container">
+                    <h3 id="table-title">貸款還款明細表</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">期數</th>
+                                <th>期初餘額</th>
+                                <th>當期本金</th>
+                                <th>當期利息</th>
+                                <th>當期本息</th>
+                                <th>期末餘額</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- 明細行由 JS 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 介面按鈕交互 (單位與模式切換)
+        // ==========================================
+        function setupSelector(containerId, callback) {
+            const container = document.getElementById(containerId);
+            const buttons = container.querySelectorAll('.unit-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // 觸發綠泡沫粒子爆發微動效！
+                    createBurst(e.clientX, e.clientY);
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (callback) callback(btn.getAttribute('data-unit'));
+                });
+            });
+        }
+
+        let periodUnit = 'year';       // 'year' or 'month'
+        let repayType = 'equal-total'; // 'equal-total' or 'equal-principal'
+
+        setupSelector('period-unit-selector', (unit) => { periodUnit = unit; calculateLoan(); });
+        setupSelector('repay-type-selector', (type) => { repayType = type; calculateLoan(); });
+
+        // ==========================================
+        // 信貸計算核心與圖表渲染
+        // ==========================================
+        let chartInstance = null;
+
+        function formatCurrency(num) {
+            return Math.round(num).toLocaleString('zh-TW');
+        }
+
+        // 二分法求解實質年利率 (APR)
+        // 使得 貸款金額 - 開辦費 = 每月還款額的折現總和
+        function calculateAPR(loanAmount, fee, payments) {
+            const netAmount = loanAmount - fee;
+            if (netAmount <= 0) return 0;
+
+            let low = 0;
+            let high = 2; // 月折現率上限設為 200% (極端防呆)
+            let mid = 0;
+
+            for (let iter = 0; iter < 80; iter++) {
+                mid = (low + high) / 2;
+                let npv = -netAmount;
+                for (let t = 0; t < payments.length; t++) {
+                    npv += payments[t] / Math.pow(1 + mid, t + 1);
+                }
+
+                if (npv > 0) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+
+            // APR = 月折現率 * 12 * 100
+            return mid * 12 * 100;
+        }
+
+        function calculateLoan() {
+            const loanAmount = parseFloat(document.getElementById('input-amount').value.replace(/,/g, '')) || 0;
+            const ratePercent = parseFloat(document.getElementById('input-rate').value) || 0;
+            const periodVal = parseFloat(document.getElementById('input-period').value) || 0;
+            const fee = parseFloat(document.getElementById('input-fee').value.replace(/,/g, '')) || 0;
+
+            // 1. 計算總期數 (月數)
+            const totalMonths = Math.max(0, periodUnit === 'year' ? periodVal * 12 : periodVal);
+            
+            // 2. 準備數據模型
+            const resultData = [];
+            let totalInterest = 0;
+            let totalPayments = 0;
+            let firstPayment = 0;
+
+            // 初始狀態
+            resultData.push({
+                period: 0,
+                startBalance: 0,
+                principalPaid: 0,
+                interestPaid: 0,
+                totalPayment: 0,
+                endBalance: loanAmount
+            });
+
+            if (totalMonths > 0 && loanAmount > 0) {
+                const monthlyRate = (ratePercent / 100) / 12;
+                let remainingBalance = loanAmount;
+                const paymentArray = [];
+
+                if (repayType === 'equal-total') {
+                    // 本息平均攤還公式
+                    let monthlyPayment = 0;
+                    if (monthlyRate === 0) {
+                        monthlyPayment = loanAmount / totalMonths;
+                    } else {
+                        monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+                    }
+                    firstPayment = monthlyPayment;
+
+                    for (let m = 1; m <= totalMonths; m++) {
+                        const interestThisMonth = remainingBalance * monthlyRate;
+                        const principalThisMonth = monthlyPayment - interestThisMonth;
+                        const startBal = remainingBalance;
+                        remainingBalance -= principalThisMonth;
+                        if (m === totalMonths) {
+                            // 最後一期微調防浮點誤差
+                            remainingBalance = 0;
+                        }
+
+                        totalInterest += interestThisMonth;
+                        paymentArray.push(monthlyPayment);
+
+                        resultData.push({
+                            period: m,
+                            startBalance: startBal,
+                            principalPaid: principalThisMonth,
+                            interestPaid: interestThisMonth,
+                            totalPayment: monthlyPayment,
+                            endBalance: Math.max(0, remainingBalance)
+                        });
+                    }
+                    totalPayments = monthlyPayment * totalMonths;
+                } else {
+                    // 本金平均攤還公式
+                    const principalPerMonth = loanAmount / totalMonths;
+
+                    for (let m = 1; m <= totalMonths; m++) {
+                        const interestThisMonth = remainingBalance * monthlyRate;
+                        const totalPaymentThisMonth = principalPerMonth + interestThisMonth;
+                        const startBal = remainingBalance;
+                        remainingBalance -= principalPerMonth;
+                        if (m === totalMonths) {
+                            remainingBalance = 0;
+                        }
+
+                        if (m === 1) firstPayment = totalPaymentThisMonth;
+                        totalInterest += interestThisMonth;
+                        paymentArray.push(totalPaymentThisMonth);
+
+                        resultData.push({
+                            period: m,
+                            startBalance: startBal,
+                            principalPaid: principalPerMonth,
+                            interestPaid: interestThisMonth,
+                            totalPayment: totalPaymentThisMonth,
+                            endBalance: Math.max(0, remainingBalance)
+                        });
+                    }
+                    totalPayments = loanAmount + totalInterest;
+                }
+
+                // 計算實質年利率 (APR)
+                const apr = calculateAPR(loanAmount, fee, paymentArray);
+                document.getElementById('val-apr').textContent = apr.toFixed(2) + ' %';
+            } else {
+                document.getElementById('val-apr').textContent = ratePercent.toFixed(2) + ' %';
+            }
+
+            // 3. 更新指標看板
+            document.getElementById('val-monthly').textContent = formatCurrency(firstPayment);
+            document.getElementById('val-interest').textContent = formatCurrency(totalInterest);
+            document.getElementById('val-total').textContent = formatCurrency(loanAmount + totalInterest);
+
+            // 4. 更新明細表格
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            resultData.forEach(item => {
+                const tr = document.createElement('tr');
+                const isInitial = item.period === 0;
+                tr.innerHTML = `
+                    <td style="text-align: left; color: var(--text-secondary);">${isInitial ? '初始' : '第 ' + item.period + ' 期'}</td>
+                    <td>${isInitial ? '-' : formatCurrency(item.startBalance)}</td>
+                    <td>${isInitial ? '-' : formatCurrency(item.principalPaid)}</td>
+                    <td>${isInitial ? '-' : formatCurrency(item.interestPaid)}</td>
+                    <td>${isInitial ? '-' : formatCurrency(item.totalPayment)}</td>
+                    <td style="color: #00f5a0; font-weight: 500;">${formatCurrency(item.endBalance)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 5. 更新 Chart.js 圖表 (賸餘貸款本金折線圖)
+            const labels = resultData.map(item => isNaN(item.period) || item.period === 0 ? '初始' : `第 ${item.period} 期`);
+            const balanceDataset = resultData.map(item => item.endBalance);
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctxChart = document.getElementById('growth-chart').getContext('2d');
+            chartInstance = new Chart(ctxChart, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '賸餘本金餘額',
+                            data: balanceDataset,
+                            backgroundColor: 'rgba(0, 245, 160, 0.1)',
+                            borderColor: 'rgba(0, 245, 160, 0.85)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: labels.length > 50 ? 0 : 2,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#8892b0',
+                                font: { family: 'Inter' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#8892b0', font: { family: 'Inter' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { 
+                                color: '#8892b0', 
+                                font: { family: 'Inter' },
+                                callback: function(value) {
+                                    return value >= 1000000 
+                                        ? (value / 1000000).toFixed(1) + 'M' 
+                                        : value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 顯示結果區塊
+            const resSec = document.getElementById('results-sec');
+            resSec.classList.add('show');
+        }
+
+        // ==========================================
+        // 數字輸入逗號格式化 (游標修正)
+        // ==========================================
+        function initFormattedInput(inputId) {
+            const input = document.getElementById(inputId);
+            
+            input.addEventListener('input', (e) => {
+                let value = input.value.replace(/,/g, '');
+                if (value === '') {
+                    input.value = '';
+                    calculateLoan();
+                    return;
+                }
+                const num = parseInt(value, 10);
+                if (!isNaN(num)) {
+                    const originalCursor = input.selectionStart;
+                    const originalCommaCount = (input.value.substring(0, originalCursor).match(/,/g) || []).length;
+                    
+                    const formatted = num.toLocaleString('zh-TW');
+                    input.value = formatted;
+                    
+                    const newCommaCount = (formatted.substring(0, originalCursor).match(/,/g) || []).length;
+                    const cursorOffset = newCommaCount - originalCommaCount;
+                    input.setSelectionRange(originalCursor + cursorOffset, originalCursor + cursorOffset);
+                }
+                calculateLoan();
+            });
+
+            if (input.value) {
+                const num = parseInt(input.value.replace(/,/g, ''), 10);
+                if (!isNaN(num)) {
+                    input.value = num.toLocaleString('zh-TW');
+                }
+            }
+        }
+
+        // 頁面加載時先進行一次默認計算，並掛載其餘即時計算事件
+        window.addEventListener('load', () => {
+            initFormattedInput('input-amount');
+            initFormattedInput('input-fee');
+            
+            document.getElementById('input-rate').addEventListener('input', calculateLoan);
+            document.getElementById('input-period').addEventListener('input', calculateLoan);
+            
+            calculateLoan();
+        });
+    </script>
+
+    <script>
+        // ==========================================
+        // 背景粒子與特效動畫 (翠綠色主題)
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (typeof adjustParticles === 'function') {
+                adjustParticles();
+            }
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5; 
+                this.density = (Math.random() * 30) + 1;
+                
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1; 
+                
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 5; 
+                    this.velocityY = (Math.random() - 0.5) * 5;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 綠色泡沫緩慢往上飄
+                    this.velocityX = (Math.random() - 0.5) * 0.2;
+                }
+            }
+            draw() {
+                ctx.beginPath(); 
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
+                ctx.closePath();
+                
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                
+                // 翠綠色粒子調配
+                ctx.fillStyle = this.isBurst 
+                    ? `rgba(0, 245, 160, ${alpha})` 
+                    : `rgba(0, 245, 160, ${alpha * 0.8})`; 
+                ctx.fill();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.025; 
+                    this.velocityX *= 0.95;
+                    this.velocityY *= 0.95;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+                    
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+            }
+        }
+
+        function adjustParticles() {
+            particles = [];
+            const numberOfParticles = Math.min(60, (canvas.width * canvas.height) / 25000);
+            for (let i = 0; i < numberOfParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function createBurst(x, y) {
+            if (x === undefined || y === undefined) return;
+            const burstCount = 15;
+            for (let i = 0; i < burstCount; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function initParticles() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 監聽滑鼠移動
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            });
+            window.addEventListener('mouseout', () => {
+                mouse.x = null;
+                mouse.y = null;
+            });
+
+            animate();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                if (particles[i].isBurst && particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('load', initParticles);
+    </script>
+</body>
+</html>

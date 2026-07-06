@@ -253,6 +253,27 @@
             color: #ffb800;
         }
 
+        /* 信貸計算機專屬 hover 效果 */
+        .tool-card.loan-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 245, 160, 0.06), transparent 40%);
+        }
+
+        .tool-card.loan-card:hover {
+            border-color: rgba(0, 245, 160, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 245, 160, 0.15),
+                        inset 0 0 15px rgba(0, 245, 160, 0.02);
+        }
+
+        .tool-card.loan-card:hover h3 {
+            color: #00f5a0;
+            text-shadow: 0 0 10px rgba(0, 245, 160, 0.4);
+        }
+
+        .tool-card.loan-card .card-action {
+            color: #00f5a0;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -345,17 +366,18 @@
                 </div>
             </a>
 
-            <!-- 預留位置 2 -->
-            <div class="tool-card placeholder">
+            <!-- 信貸計算機 -->
+            <a href="./personal-loan/index.html" class="tool-card loan-card">
                 <div>
-                    <h3>敬請期待</h3>
-                    <span class="subtitle">Coming Soon</span>
-                    <p>更多實用、設計精美且流暢互動的網頁小工具正在開發中，敬請期待。</p>
+                    <h3>信貸計算機</h3>
+                    <span class="subtitle">Personal Loan Calculator</span>
+                    <p>專業的個人信貸試算工具，支援本息/本金平均攤還與實質年利率 (APR) 估算，助您精準掌握還款明細與利息支出。</p>
                 </div>
                 <div class="card-action">
-                    開發中...
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
