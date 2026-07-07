@@ -316,6 +316,27 @@
             color: #8b5cf6;
         }
 
+        /* Base64 編碼/解碼專屬 hover 效果 */
+        .tool-card.base64-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 115, 0, 0.06), transparent 40%);
+        }
+
+        .tool-card.base64-card:hover {
+            border-color: rgba(255, 115, 0, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(255, 115, 0, 0.15),
+                        inset 0 0 15px rgba(255, 115, 0, 0.02);
+        }
+
+        .tool-card.base64-card:hover h3 {
+            color: #ff7300;
+            text-shadow: 0 0 10px rgba(255, 115, 0, 0.4);
+        }
+
+        .tool-card.base64-card .card-action {
+            color: #ff7300;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -440,6 +461,19 @@
                     <h3>房貸計算機</h3>
                     <span class="subtitle">Mortgage Loan Calculator</span>
                     <p>專業的房貸試算工具，支援自備款與貸款成數雙向連動、寬限期試算、多段式階梯利率設定，並提供詳細的月付本息明細與實質年利率分析。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- Base64 編碼/解碼 -->
+            <a href="./base64/index.html" class="tool-card base64-card">
+                <div>
+                    <h3>Base64 編碼/解碼</h3>
+                    <span class="subtitle">Base64 Encoder & Decoder</span>
+                    <p>精緻的 Base64 轉換工具，支援文字即時雙向編解碼（UTF-8 不亂碼）、檔案拖曳編碼與多媒體預覽，並可解碼還原下載。</p>
                 </div>
                 <div class="card-action">
                     開啟工具
