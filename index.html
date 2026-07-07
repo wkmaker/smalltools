@@ -484,6 +484,27 @@
             color: #8b5cf6;
         }
 
+        /* 文字處理助手專屬 hover 效果 */
+        .tool-card.text-utility-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 0, 127, 0.06), transparent 40%);
+        }
+
+        .tool-card.text-utility-card:hover {
+            border-color: rgba(255, 0, 127, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(255, 0, 127, 0.15),
+                        inset 0 0 15px rgba(255, 0, 127, 0.02);
+        }
+
+        .tool-card.text-utility-card:hover h3 {
+            color: #ff007f;
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
+        }
+
+        .tool-card.text-utility-card .card-action {
+            color: #ff007f;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -936,6 +957,19 @@
                     <h3>DIG 網路診斷工具</h3>
                     <span class="subtitle">DNS Dig Web Tool</span>
                     <p>工程師必備的線上 DNS 診斷工具。支援 Cloudflare / Google 加密 DoH 伺服器切換、網域/網址自動解析清理，即時發送 DIG 請求查詢 A, CNAME, MX, TXT 各項記錄。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- 文字處理助手 -->
+            <a href="./text-utility/index.html" class="tool-card text-utility-card" data-category="developer" data-keywords="文字處理 轉大寫 轉小寫 刪除空白 字數統計 英文 中文 word count uppercase lowercase trim">
+                <div>
+                    <h3>文字處理助手</h3>
+                    <span class="subtitle">Text Processing Utility</span>
+                    <p>精緻且實用的文字排版助手。支援大小寫轉換、空白字元處理，並即時統計字元數、單字數、中文字數與總行數。</p>
                 </div>
                 <div class="card-action">
                     開啟工具
