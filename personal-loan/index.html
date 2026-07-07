@@ -480,6 +480,51 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+
+        /* ====== 分享連結按鈕 (薄荷綠主題) ====== */
+        .share-btn-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: -0.5rem;
+        }
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(0, 245, 160, 0.06);
+            border: 1px solid rgba(0, 245, 160, 0.25);
+            color: rgba(0, 245, 160, 0.75);
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .share-btn:hover {
+            background: rgba(0, 245, 160, 0.12);
+            border-color: rgba(0, 245, 160, 0.6);
+            color: #00f5a0;
+            box-shadow: 0 0 16px rgba(0, 245, 160, 0.15);
+        }
+        .share-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        .share-btn:hover svg { transform: rotate(-8deg) scale(1.15); }
+        .share-btn.copied {
+            background: rgba(0, 245, 160, 0.12);
+            border-color: rgba(0, 245, 160, 0.6);
+            color: #00f5a0;
+            box-shadow: 0 0 14px rgba(0, 245, 160, 0.2);
+        }
+        .share-btn .btn-text { transition: all 0.2s ease; }
     </style>
 </head>
 <body>
@@ -552,6 +597,15 @@
 
             <!-- 右側結果與圖表 -->
             <div class="results-section" id="results-sec">
+
+                <!-- 分享連結按鈕 -->
+                <div class="share-btn-wrapper">
+                    <button class="share-btn" id="share-btn" onclick="copyShareLink()" title="複製當前配置的查詢連結">
+                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                        <span class="btn-text">複製查詢連結</span>
+                    </button>
+                </div>
+
                 <!-- 看板 -->
                 <div class="indicators-grid">
                     <div class="indicator-card total-value">
@@ -889,16 +943,115 @@
             }
         }
 
+        // ==========================================
+        // URL 雙向連動 (信貸計算機)
+        // ==========================================
+        function safeParseFloat(val, fallback) {
+            const n = parseFloat(val);
+            return (isFinite(n) && !isNaN(n)) ? n : fallback;
+        }
+
+        function syncToURL() {
+            const params = new URLSearchParams();
+            params.set('a',  document.getElementById('input-amount').value.replace(/,/g, ''));
+            params.set('r',  document.getElementById('input-rate').value);
+            params.set('t',  document.getElementById('input-period').value);
+            params.set('f',  document.getElementById('input-fee').value.replace(/,/g, ''));
+            params.set('pu', periodUnit);
+            params.set('rt', repayType);
+            history.replaceState(null, '', '?' + params.toString());
+        }
+
+        let urlDebounceTimer = null;
+        function syncToURLDebounced() {
+            clearTimeout(urlDebounceTimer);
+            urlDebounceTimer = setTimeout(syncToURL, 300);
+        }
+
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.toString()) return false;
+
+            const puParam = params.get('pu');
+            const rtParam = params.get('rt');
+            if (puParam === 'year' || puParam === 'month') periodUnit = puParam;
+            if (rtParam === 'equal-total' || rtParam === 'equal-principal') repayType = rtParam;
+
+            function activateBtn(containerId, unit) {
+                const c = document.getElementById(containerId);
+                if (!c) return;
+                c.querySelectorAll('.unit-btn').forEach(b => {
+                    if (b.getAttribute('data-unit') === unit) b.classList.add('active');
+                    else b.classList.remove('active');
+                });
+            }
+            activateBtn('period-unit-selector', periodUnit);
+            activateBtn('repay-type-selector', repayType);
+
+            document.getElementById('input-amount').value = safeParseFloat(params.get('a'), 1000000).toLocaleString('zh-TW');
+            document.getElementById('input-fee').value    = safeParseFloat(params.get('f'), 3000).toLocaleString('zh-TW');
+            document.getElementById('input-rate').value   = safeParseFloat(params.get('r'), 2.5);
+            document.getElementById('input-period').value = safeParseFloat(params.get('t'), 7);
+            return true;
+        }
+
+        function copyShareLink() {
+            syncToURL();
+            const url = window.location.href;
+            const btn = document.getElementById('share-btn');
+            const btnText = btn.querySelector('.btn-text');
+            navigator.clipboard.writeText(url).then(() => {
+                btn.classList.add('copied');
+                btn.querySelector('svg').innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>';
+                btnText.textContent = '已複製！';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.querySelector('svg').innerHTML = '<path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>';
+                    btnText.textContent = '複製查詢連結';
+                }, 2200);
+            }).catch(() => window.prompt('請手動複製以下連結：', url));
+        }
+
         // 頁面加載時先進行一次默認計算，並掛載其餘即時計算事件
         window.addEventListener('load', () => {
+            initFromURL();
+
             initFormattedInput('input-amount');
             initFormattedInput('input-fee');
-            
-            document.getElementById('input-rate').addEventListener('input', calculateLoan);
-            document.getElementById('input-period').addEventListener('input', calculateLoan);
-            
+
+            ['input-amount', 'input-fee'].forEach(id => {
+                document.getElementById(id).addEventListener('input', syncToURLDebounced);
+                document.getElementById(id).addEventListener('blur', syncToURL);
+            });
+
+            document.getElementById('input-rate').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+            document.getElementById('input-period').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+
             calculateLoan();
         });
+
+        // 重新綁定 setupSelector 加入 URL 同步
+        function setupSelectorWithURL(containerId, callback) {
+            const container = document.getElementById(containerId);
+            container.querySelectorAll('.unit-btn').forEach(btn => {
+                const fresh = btn.cloneNode(true);
+                btn.parentNode.replaceChild(fresh, btn);
+            });
+            container.querySelectorAll('.unit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    createBurst(e.clientX, e.clientY);
+                    container.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (callback) callback(btn.getAttribute('data-unit'));
+                    syncToURL();
+                });
+            });
+        }
+        window.addEventListener('load', () => {
+            setupSelectorWithURL('period-unit-selector', (unit) => { periodUnit = unit; calculateLoan(); });
+            setupSelectorWithURL('repay-type-selector',  (type) => { repayType  = type; calculateLoan(); });
+        }, { once: true });
     </script>
 
     <script>

@@ -137,3 +137,25 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
 20. **時區選單優化設計 (Timezone Selection Simplification)**
     - **優化標準**：對於非特定指名的時區轉換，時區下拉選單不宜列出長串的全球城市名稱。應改用乾淨直觀的 **「UTC 數值偏移量」**（如 `UTC -08:00 (PST)`、`UTC +08:00`）。這能簡化下拉選單長度，並可在 JS 中直接進行簡單的數值加減（`ms = date.getTime() + offset * 3600 * 1000`），避免複雜的反向時區逼近計算，使代碼更高效、更不易出錯。
 
+21. **網址參數雙向狀態連動 (URL State Sync)**
+    * 所有計算工具的輸入狀態均應雙向連動至瀏覽器網址列，使配置可直接分享。
+
+    * **細節一 — 正向連動（無感更新網址）**：
+      - **絕對禁止** 使用 `window.location.href = ...`（會導致頁面重新整理）。必須使用 `history.replaceState(null, '', '?' + params.toString())` 在不刷新頁面的前提下更新網址列。
+      - **防抖處理**：千分位金額輸入框在「打字中」狀態下，應使用 300ms 防抖延遲（`clearTimeout` + `setTimeout`）後再更新 URL，並在 `blur` 事件時立即同步。`select` 與單位切換按鈕應在 `change` / `click` 後**即時**同步，無需防抖。
+
+    * **細節二 — 反向連動（防呆解析）**：
+      - 在 `window.addEventListener('load', ...)` 最開始，呼叫 `initFromURL()` 讀取 `window.location.search`。
+      - 若網址有帶參數，則覆蓋 HTML 的預設值；若無參數，則維持 HTML 原有預設值（靜默跳過）。
+      - **防呆 Fallback**：使用 `safeParseFloat(val, fallback)` 與 `safeParseInt(val, allowed, fallback)` 工具函數進行解析，任何格式錯誤（如 `?rate=abc`）或超出白名單的值，必須安全回退到預設安全數值，絕不能導致頁面報錯或死當。
+
+    * **細節三 — 逗號過濾與格式化**：
+      - **同步到 URL 前**，金額欄位必須去除千分位逗號：`input.value.replace(/,/g, '')`，確保 URL 中為純數字（如 `?p=1000000`，而非 `?p=1,000,000`）。
+      - **反向解析填回 UI 時**，從 URL 取得的純數字必須先通過 `toLocaleString('zh-TW')` 格式化後，再設定到輸入框的 `value`。
+      - 僅對正在輸入的「活動輸入框」執行游標修正（`setSelectionRange`），其他連動欄位直接設值，避免游標亂跳。
+
+    * **細節四 — 「複製查詢連結」分享按鈕**：
+      - 在結果輸出區右上角放置一個精美的分享按鈕（參考各工具的主題色）。
+      - 點擊時呼叫 `syncToURL()` 確保 URL 最新，再以 `navigator.clipboard.writeText(url)` 複製連結。
+      - 複製成功後，按鈕應切換為「✓ 已複製！」的視覺回饋（變色 + 圖示改為勾選圖示），2.2 秒後自動恢復原狀。
+      - **Fallback**：若 Clipboard API 不可用，改以 `window.prompt(...)` 呈現 URL 讓使用者手動複製。
