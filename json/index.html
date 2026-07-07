@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 格式化與美化器</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="專業的 JSON 格式化與壓縮工具，支援即時語法 lint 驗證定位、多種縮排切換、檔案拖曳上傳與強大互動式 JSON 樹狀摺疊檢視器。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="JSON 格式化與美化器">
+    <meta property="og:description" content="精緻、實用的 JSON 處理小工具，支援即時驗證、格式化排版、單行壓縮與樹狀結構分析。">
+    <meta property="og:url" content="https://tools.cjkuo.net/json/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 引入 Google Fonts & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(255, 0, 170, 0.6); /* 霓虹粉 */
+            --accent-glow-rgb: 255, 0, 170;
+            --accent-color: #ff00aa;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            --card-bg: rgba(255, 255, 255, 0.01);
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 90%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 返回首頁按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--accent-color);
+            border-color: rgba(255, 0, 170, 0.3);
+            background: rgba(255, 0, 170, 0.05);
+            box-shadow: 0 0 12px rgba(255, 0, 170, 0.15);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* 標題與說明 */
+        .header-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            margin-top: 1rem;
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            box-shadow: 0 0 8px var(--accent-color);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-color)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-color)); }
+        }
+
+        /* ====== 主要雙欄佈局 ====== */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pane {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pane:hover, .pane:focus-within {
+            border-color: rgba(255, 0, 170, 0.2);
+            box-shadow: 0 0 25px rgba(255, 0, 170, 0.03);
+        }
+
+        .pane-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            letter-spacing: 1px;
+        }
+
+        .pane-title-left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .pane-title svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent-color);
+        }
+
+        /* ====== 輸入文字框 ====== */
+        .editor-container {
+            position: relative;
+            flex-grow: 1;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .input-wrapper.dragover {
+            border-color: var(--accent-color);
+            background: rgba(255, 0, 170, 0.03);
+            box-shadow: 0 0 15px rgba(255, 0, 170, 0.25), inset 0 2px 6px rgba(0,0,0,0.5);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(255, 0, 170, 0.35), inset 0 2px 6px rgba(0,0,0,0.5);
+        }
+
+        .json-textarea {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            padding: 1.2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            line-height: 1.5;
+            resize: none;
+            width: 100%;
+            height: 100%;
+            tab-size: 4;
+        }
+
+        .json-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .drag-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(3, 3, 5, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            border: 2px dashed var(--accent-color);
+            border-radius: 11px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .input-wrapper.dragover .drag-overlay {
+            display: flex;
+        }
+
+        /* ====== LINT 錯誤警告面板 ====== */
+        .lint-panel {
+            background: rgba(255, 68, 68, 0.07);
+            border: 1px solid rgba(255, 68, 68, 0.25);
+            border-radius: 10px;
+            padding: 0.8rem 1.2rem;
+            display: none;
+            gap: 0.8rem;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lint-panel.show {
+            display: flex;
+        }
+
+        .lint-icon {
+            fill: #ff4444;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .lint-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            font-size: 0.85rem;
+            color: #ff9999;
+        }
+
+        .lint-title {
+            font-weight: 700;
+            color: #ff4444;
+        }
+
+        .lint-msg {
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ====== TAB 標籤控制 ====== */
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--glass-border);
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255, 0, 170, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            min-height: 480px;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ====== 美化/壓縮唯讀輸出區 ====== */
+        .output-box-container {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: auto;
+            position: relative;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+            max-height: 500px;
+        }
+
+        .code-display {
+            padding: 1.2rem;
+            color: #e5c07b; /* 淺黃代碼色 */
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ====== 互動式樹狀檢視器 ====== */
+        .tree-container {
+            padding: 1.2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #abb2bf;
+        }
+
+        .json-tree-list {
+            list-style: none;
+            padding-left: 1.2rem;
+            position: relative;
+        }
+
+        .json-tree-list::before {
+            content: '';
+            position: absolute;
+            left: 5px; top: 0; bottom: 0;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .json-tree-node {
+            position: relative;
+            margin: 0.2rem 0;
+        }
+
+        /* 樹狀標記展開/收合按鈕 */
+        .json-tree-toggle {
+            cursor: pointer;
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 6px;
+            position: relative;
+        }
+
+        .json-tree-toggle::before {
+            content: '▶';
+            font-size: 8px;
+            color: var(--text-secondary);
+            position: absolute;
+            left: 2px; top: -1px;
+            transition: transform 0.2s ease;
+        }
+
+        .json-tree-toggle.open::before {
+            transform: rotate(90deg);
+            color: var(--accent-color);
+        }
+
+        .json-tree-key {
+            color: #e06c75; /* 淺紅 */
+            font-weight: 500;
+        }
+
+        .json-tree-colon {
+            color: #abb2bf;
+        }
+
+        .json-tree-value {
+            font-weight: 500;
+        }
+
+        .json-tree-string {
+            color: #98c379; /* 淺綠 */
+            word-break: break-all;
+        }
+
+        .json-tree-number {
+            color: #d19a66; /* 橙 */
+        }
+
+        .json-tree-boolean {
+            color: #56b6c2; /* 青 */
+        }
+
+        .json-tree-null {
+            color: #c678dd; /* 紫 */
+            font-style: italic;
+        }
+
+        .json-tree-bracket {
+            color: #e5c07b;
+            font-weight: 700;
+        }
+
+        .json-tree-comma {
+            color: #abb2bf;
+        }
+
+        .json-tree-list.collapsed {
+            display: none;
+        }
+
+        /* ====== 操作按鈕欄 ====== */
+        .action-row {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 0, 170, 0.08);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(255, 0, 170, 0.15);
+        }
+
+        .btn-primary {
+            background: rgba(255, 0, 170, 0.1);
+            border-color: rgba(255, 0, 170, 0.3);
+            color: var(--accent-color);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-color);
+            color: #030305;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* 獨立控制的細長按鈕 */
+        .micro-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* 複製成功 class */
+        .btn.copied {
+            color: #00ff66 !important;
+            border-color: #00ff66 !important;
+            background: rgba(0, 255, 102, 0.1) !important;
+            box-shadow: 0 0 12px rgba(0, 255, 102, 0.3) !important;
+        }
+
+        /* 修正下拉選單樣式，確保選單展開時有深色背景與亮白色文字，防止文字消失 */
+        select {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+        }
+
+        option {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+            padding: 0.5rem;
+        }
+
+        .select-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .select-addon {
+            background: #121218;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* 複製提示浮窗 */
+        .toast-notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(6, 6, 9, 0.9);
+            border: 1px solid var(--accent-color);
+            color: #ffffff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(255, 0, 170, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-notification svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-color);
+        }
+
+        /* 佔位展示 */
+        .placeholder-msg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            font-style: italic;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        /* ====== 響應式媒體查詢 ====== */
+        @media (max-width: 1100px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .editor-container, .tab-content {
+                min-height: 380px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .glass-container {
+                max-width: 95%;
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            /* 返回首頁按鈕行動端防重疊 */
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+                align-self: flex-start;
+            }
+
+            .glass-container {
+                padding: 1.5rem 1rem;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header-section {
+                margin-top: 0;
+                margin-bottom: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .pane {
+                padding: 1.2rem;
+            }
+
+            .action-row {
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                width: 100%;
+                flex: none;
+            }
+
+            .tabs-header {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 粒子背景 Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+        <!-- 標題 -->
+        <div class="header-section">
+            <h1>JSON 格式化與美化器</h1>
+            <div class="subtitle-top">JSON Formatter & Minifier</div>
+        </div>
+
+        <!-- 主要雙欄應用區域 -->
+        <div class="app-grid">
+            
+            <!-- 左欄：JSON 輸入框 -->
+            <div class="pane">
+                <div class="pane-title">
+                    <div class="pane-title-left">
+                        <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                        原始 JSON 輸入
+                    </div>
+                    <button class="btn micro-btn" id="load-sample-btn" style="width: auto;">載入範例</button>
+                </div>
+
+                <div class="editor-container">
+                    <div class="input-wrapper" id="editor-wrapper">
+                        <textarea id="json-input" class="json-textarea" placeholder="在此處貼上 JSON 程式碼，或將 .json 檔案拖曳至此..." autocomplete="off" spellcheck="false"></textarea>
+                        <div class="drag-overlay">📥 偵測到檔案！放開以讀取</div>
+                    </div>
+                </div>
+
+                <!-- 錯誤語法 Lint 面板 -->
+                <div class="lint-panel" id="lint-warning">
+                    <svg class="lint-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    <div class="lint-info">
+                        <span class="lint-title">JSON 語法錯誤</span>
+                        <span class="lint-msg" id="lint-msg">錯誤訊息將顯示在此</span>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn btn-primary" id="format-btn">
+                        美化格式
+                    </button>
+                    <button class="btn" id="minify-btn">
+                        單行壓縮
+                    </button>
+                    <button class="btn" id="clear-btn">
+                        一鍵清除
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右欄：展示與分析區 -->
+            <div class="pane">
+                <div class="tabs-header">
+                    <button class="tab-btn active" data-tab="tab-beautify">
+                        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+                        美化輸出
+                    </button>
+                    <button class="tab-btn" data-tab="tab-tree">
+                        <svg viewBox="0 0 24 24"><path d="M22 11V3h-7v3H9V3H2v8h7V8h2v10h2v3h7v-8h-7v3h-2V8h2v3h7zM4 9V5h3v4H4zm13 10v-4h3v4h-3zm0-10V5h3v4h-3z"/></svg>
+                        樹狀檢視
+                    </button>
+                    <button class="tab-btn" data-tab="tab-minify">
+                        <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+                        壓縮單行
+                    </button>
+                </div>
+
+                <!-- 1. 美化輸出頁面 -->
+                <div id="tab-beautify" class="tab-content active">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                        <div class="select-wrapper">
+                            <span>縮排大小:</span>
+                            <select id="indent-select" class="select-addon">
+                                <option value="2">2 個空格</option>
+                                <option value="4" selected>4 個空格</option>
+                                <option value="tab">1 個 Tab</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn micro-btn" id="copy-beautified-btn">複製結果</button>
+                            <button class="btn micro-btn" id="download-btn">下載檔案</button>
+                        </div>
+                    </div>
+                    <div class="output-box-container">
+                        <pre class="code-display" id="beautified-code"></pre>
+                        <div class="placeholder-msg" id="beautify-placeholder">請在左側輸入有效的 JSON 後點選美化</div>
+                    </div>
+                </div>
+
+                <!-- 2. 樹狀檢視頁面 -->
+                <div id="tab-tree" class="tab-content">
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.8rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn micro-btn" id="tree-expand-all">展開全部</button>
+                            <button class="btn micro-btn" id="tree-collapse-all">收合全部</button>
+                        </div>
+                    </div>
+                    <div class="output-box-container" style="background: rgba(255,255,255,0.015);">
+                        <div class="tree-container" id="tree-viewer"></div>
+                        <div class="placeholder-msg" id="tree-placeholder">請在左側輸入有效的 JSON</div>
+                    </div>
+                </div>
+
+                <!-- 3. 壓縮單行頁面 -->
+                <div id="tab-minify" class="tab-content">
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.8rem;">
+                        <button class="btn micro-btn" id="copy-minified-btn">複製結果</button>
+                    </div>
+                    <div class="output-box-container">
+                        <pre class="code-display" id="minified-code" style="word-break: break-all; white-space: pre-wrap; font-size: 0.9rem;"></pre>
+                        <div class="placeholder-msg" id="minify-placeholder">請在左側輸入有效的 JSON 後點選壓縮</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 複製成功 Toast 提示 -->
+    <div id="toast" class="toast-notification">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toast-text">已複製到剪貼簿</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. 背景粒子與滑鼠特效動畫
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            adjustParticles();
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.density = (Math.random() * 30) + 1;
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1;
+
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 5;
+                    this.velocityY = (Math.random() - 0.5) * 5;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 緩慢向上漂浮
+                    this.velocityX = (Math.random() - 0.5) * 0.2;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                // 霓虹粉主題色
+                ctx.fillStyle = this.isBurst 
+                    ? `rgba(255, 0, 170, ${alpha})` 
+                    : `rgba(255, 0, 170, ${alpha * 0.7})`;
+                ctx.fill();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.025;
+                    this.velocityX *= 0.95;
+                    this.velocityY *= 0.95;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                    if (this.x < 0 || this.x > canvas.width) {
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                // 滑鼠斥力
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * this.density * 0.5;
+                    this.y -= (dy / distance) * force * this.density * 0.5;
+                }
+            }
+        }
+
+        function adjustParticles() {
+            const targetCount = Math.floor((canvas.width * canvas.height) / 12000);
+            let bgParticles = particles.filter(p => !p.isBurst);
+            const burstParticles = particles.filter(p => p.isBurst);
+
+            bgParticles.forEach(p => {
+                if (p.x > canvas.width) p.x = Math.random() * canvas.width;
+                if (p.y > canvas.height) p.y = Math.random() * canvas.height;
+            });
+
+            if (bgParticles.length < targetCount) {
+                const toAdd = targetCount - bgParticles.length;
+                for (let i = 0; i < toAdd; i++) {
+                    bgParticles.push(new Particle());
+                }
+            } else if (bgParticles.length > targetCount) {
+                bgParticles = bgParticles.slice(0, targetCount);
+            }
+            particles = [...bgParticles, ...burstParticles];
+        }
+
+        function createBurst(x, y) {
+            for(let i = 0; i < 18; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mousedown', (e) => {
+            mouse.radius = 250;
+            createBurst(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { mouse.radius = 150; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        // 氣泡爆炸動效
+        document.querySelectorAll('input, select, button, a, textarea, .tab-btn').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // 若點擊事件有 pageX (非程式觸發)
+                if (e.pageX) {
+                    createBurst(e.clientX, e.clientY);
+                }
+            });
+        });
+
+        animateParticles();
+
+
+        // ==========================================
+        // 2. JSON 處理邏輯
+        // ==========================================
+        const jsonInput = document.getElementById('json-input');
+        const editorWrapper = document.getElementById('editor-wrapper');
+        const lintWarning = document.getElementById('lint-warning');
+        const lintMsg = document.getElementById('lint-msg');
+        const beautifiedCode = document.getElementById('beautified-code');
+        const minifiedCode = document.getElementById('minified-code');
+        const treeViewer = document.getElementById('tree-viewer');
+
+        const beautifyPlaceholder = document.getElementById('beautify-placeholder');
+        const treePlaceholder = document.getElementById('tree-placeholder');
+        const minifyPlaceholder = document.getElementById('minify-placeholder');
+
+        const indentSelect = document.getElementById('indent-select');
+        const formatBtn = document.getElementById('format-btn');
+        const minifyBtn = document.getElementById('minify-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const loadSampleBtn = document.getElementById('load-sample-btn');
+
+        let parsedJsonObj = null;
+
+        // 計算錯誤發生的行與列號
+        function getLineAndColOfPosition(str, position) {
+            const lines = str.substring(0, position).split('\n');
+            const line = lines.length;
+            const column = lines[lines.length - 1].length + 1;
+            return { line, column };
+        }
+
+        // 即時檢查 JSON 語法
+        function lintJson() {
+            const rawVal = jsonInput.value.trim();
+            if (!rawVal) {
+                lintWarning.classList.remove('show');
+                parsedJsonObj = null;
+                clearOutputs();
+                return true;
+            }
+
+            try {
+                parsedJsonObj = JSON.parse(rawVal);
+                lintWarning.classList.remove('show');
+                return true;
+            } catch (e) {
+                parsedJsonObj = null;
+                let errMsg = e.message;
+                
+                // 1. 優先嘗試尋找 line \d+ column \d+ 的格式 (新版 V8 / Chrome 與 Node 引擎拋出的格式)
+                const lineColMatch = errMsg.match(/line (\d+)\s+column\s+(\d+)/i);
+                if (lineColMatch) {
+                    const line = parseInt(lineColMatch[1]);
+                    const column = parseInt(lineColMatch[2]);
+                    errMsg = `${errMsg.replace(/\(?line \d+\s+column\s+\d+\)?/gi, '')} (在第 ${line} 行，第 ${column} 個字元)`;
+                } else {
+                    // 2. 嘗試尋找 at position \d+ 的格式
+                    const posMatch = errMsg.match(/at position (\d+)/i);
+                    if (posMatch) {
+                        const pos = parseInt(posMatch[1]);
+                        const { line, column } = getLineAndColOfPosition(rawVal, pos);
+                        errMsg = `${errMsg.replace(/at position \d+/gi, '')} (在第 ${line} 行，第 ${column} 個字元)`;
+                    } else {
+                        // 3. 退而求其次尋找純 line \d+ 格式
+                        const lineMatch = errMsg.match(/line (\d+)/i);
+                        if (lineMatch) {
+                            const line = parseInt(lineMatch[1]);
+                            errMsg = `${errMsg.replace(/\(?line \d+\)?/gi, '')} (在第 ${line} 行左右)`;
+                        }
+                    }
+                }
+                
+                lintMsg.innerText = errMsg;
+                lintWarning.classList.add('show');
+                return false;
+            }
+        }
+
+        // 清空輸出區
+        function clearOutputs() {
+            beautifiedCode.innerText = '';
+            minifiedCode.innerText = '';
+            treeViewer.innerHTML = '';
+            
+            beautifyPlaceholder.style.display = 'flex';
+            treePlaceholder.style.display = 'flex';
+            minifyPlaceholder.style.display = 'flex';
+        }
+
+        // 美化格式
+        function performFormat() {
+            if (!lintJson()) return;
+            if (parsedJsonObj === null) return;
+
+            let indent = indentSelect.value;
+            if (indent === 'tab') {
+                indent = '\t';
+            } else {
+                indent = parseInt(indent);
+            }
+
+            const formatted = JSON.stringify(parsedJsonObj, null, indent);
+            beautifiedCode.innerText = formatted;
+            beautifyPlaceholder.style.display = 'none';
+            
+            // 順便更新 Minified
+            const minified = JSON.stringify(parsedJsonObj);
+            minifiedCode.innerText = minified;
+            minifyPlaceholder.style.display = 'none';
+
+            // 順便更新 Tree
+            renderJsonTree(parsedJsonObj, treeViewer);
+            treePlaceholder.style.display = 'none';
+        }
+
+        // 壓縮格式
+        function performMinify() {
+            if (!lintJson()) return;
+            if (parsedJsonObj === null) return;
+
+            const minified = JSON.stringify(parsedJsonObj);
+            minifiedCode.innerText = minified;
+            minifyPlaceholder.style.display = 'none';
+
+            // 切換到壓縮分頁
+            switchTab('tab-minify');
+        }
+
+        // ==========================================
+        // 3. 樹狀檢視器 DOM 渲染邏輯
+        // ==========================================
+        function renderJsonTree(data, container) {
+            container.innerHTML = '';
+            const rootUl = document.createElement('ul');
+            rootUl.className = 'json-tree-list';
+            rootUl.appendChild(createTreeNode(null, data, true));
+            container.appendChild(rootUl);
+        }
+
+        function createTreeNode(key, val, isLast) {
+            const li = document.createElement('li');
+            li.className = 'json-tree-node';
+
+            // 1. 渲染鍵值 (Key)
+            if (key !== null) {
+                const keySpan = document.createElement('span');
+                keySpan.className = 'json-tree-key';
+                keySpan.innerText = `"${key}"`;
+                li.appendChild(keySpan);
+
+                const colonSpan = document.createElement('span');
+                colonSpan.className = 'json-tree-colon';
+                colonSpan.innerText = ': ';
+                li.appendChild(colonSpan);
+            }
+
+            const type = typeof val;
+
+            if (val === null) {
+                // Null 型態
+                const nullSpan = document.createElement('span');
+                nullSpan.className = 'json-tree-value json-tree-null';
+                nullSpan.innerText = 'null';
+                li.appendChild(nullSpan);
+            } else if (Array.isArray(val)) {
+                // Array 型態
+                const folderSpan = document.createElement('span');
+                folderSpan.className = 'json-tree-toggle open';
+                li.appendChild(folderSpan);
+
+                const bracketOpen = document.createElement('span');
+                bracketOpen.className = 'json-tree-bracket';
+                bracketOpen.innerText = `[ // Array(${val.length})`;
+                li.appendChild(bracketOpen);
+
+                const childUl = document.createElement('ul');
+                childUl.className = 'json-tree-list';
+                val.forEach((item, idx) => {
+                    childUl.appendChild(createTreeNode(null, item, idx === val.length - 1));
+                });
+                li.appendChild(childUl);
+
+                const bracketClose = document.createElement('span');
+                bracketClose.className = 'json-tree-bracket';
+                bracketClose.innerText = ']';
+                li.appendChild(bracketClose);
+
+                // 樹節點摺疊收合事件
+                folderSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = folderSpan.classList.toggle('open');
+                    childUl.classList.toggle('collapsed');
+                    if (!isOpen) {
+                        bracketOpen.innerText = `[ Array(${val.length}) ... ]`;
+                        bracketClose.style.display = 'none';
+                    } else {
+                        bracketOpen.innerText = `[ // Array(${val.length})`;
+                        bracketClose.style.display = 'inline';
+                    }
+                });
+
+            } else if (type === 'object') {
+                // Object 型態
+                const keys = Object.keys(val);
+                const folderSpan = document.createElement('span');
+                folderSpan.className = 'json-tree-toggle open';
+                li.appendChild(folderSpan);
+
+                const braceOpen = document.createElement('span');
+                braceOpen.className = 'json-tree-bracket';
+                braceOpen.innerText = '{';
+                li.appendChild(braceOpen);
+
+                const childUl = document.createElement('ul');
+                childUl.className = 'json-tree-list';
+                keys.forEach((k, idx) => {
+                    childUl.appendChild(createTreeNode(k, val[k], idx === keys.length - 1));
+                });
+                li.appendChild(childUl);
+
+                const braceClose = document.createElement('span');
+                braceClose.className = 'json-tree-bracket';
+                braceClose.innerText = '}';
+                li.appendChild(braceClose);
+
+                // 樹節點摺疊收合事件
+                folderSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = folderSpan.classList.toggle('open');
+                    childUl.classList.toggle('collapsed');
+                    if (!isOpen) {
+                        braceOpen.innerText = `{ Object(${keys.length}) ... }`;
+                        braceClose.style.display = 'none';
+                    } else {
+                        braceOpen.innerText = '{';
+                        braceClose.style.display = 'inline';
+                    }
+                });
+
+            } else {
+                // 數值或字串 (Leaf Node)
+                const valSpan = document.createElement('span');
+                valSpan.className = `json-tree-value json-tree-${type}`;
+                if (type === 'string') {
+                    valSpan.innerText = `"${val}"`;
+                } else {
+                    valSpan.innerText = String(val);
+                }
+                li.appendChild(valSpan);
+            }
+
+            // 尾部逗號
+            if (!isLast) {
+                const commaSpan = document.createElement('span');
+                commaSpan.className = 'json-tree-comma';
+                commaSpan.innerText = ',';
+                li.appendChild(commaSpan);
+            }
+
+            return li;
+        }
+
+
+        // ==========================================
+        // 4. Tab 分頁切換與事件監聽
+        // ==========================================
+        const tabs = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function switchTab(tabId) {
+            tabs.forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+
+        tabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchTab(btn.getAttribute('data-tab'));
+            });
+        });
+
+        // 綁定輸入框即時 lint 驗證
+        let lintTimeout = null;
+        jsonInput.addEventListener('input', () => {
+            if (lintTimeout) clearTimeout(lintTimeout);
+            // 防抖 300ms 即時驗證，防止打字太快計算頻繁
+            lintTimeout = setTimeout(() => {
+                if (lintJson()) {
+                    performFormat();
+                }
+            }, 300);
+        });
+
+        indentSelect.addEventListener('change', performFormat);
+        formatBtn.addEventListener('click', performFormat);
+        minifyBtn.addEventListener('click', performMinify);
+
+        clearBtn.addEventListener('click', () => {
+            jsonInput.value = '';
+            lintWarning.classList.remove('show');
+            parsedJsonObj = null;
+            clearOutputs();
+        });
+
+        // 載入範例
+        loadSampleBtn.addEventListener('click', () => {
+            const sample = {
+                "name": "JSON 格式化工具",
+                "version": "1.0.0",
+                "active": true,
+                "nullValue": null,
+                "features": [
+                    "即時格式化美化",
+                    "摺疊式樹狀檢視",
+                    "單行緊湊壓縮",
+                    "語法定位錯誤"
+                ],
+                "meta": {
+                    "author": "Antigravity",
+                    "license": "MIT",
+                    "dependenciesCount": 0
+                }
+            };
+            jsonInput.value = JSON.stringify(sample, null, 4);
+            performFormat();
+            showToast("已載入 JSON 範例資料");
+        });
+
+        // 樹狀圖全部展開 / 收合
+        document.getElementById('tree-expand-all').addEventListener('click', () => {
+            document.querySelectorAll('#tree-viewer .json-tree-toggle').forEach(el => {
+                if (!el.classList.contains('open')) {
+                    el.click();
+                }
+            });
+        });
+
+        document.getElementById('tree-collapse-all').addEventListener('click', () => {
+            // 反向收合
+            const toggles = Array.from(document.querySelectorAll('#tree-viewer .json-tree-toggle'));
+            toggles.reverse().forEach(el => {
+                if (el.classList.contains('open')) {
+                    el.click();
+                }
+            });
+        });
+
+        // ==========================================
+        // 5. 檔案拖曳與讀取功能
+        // ==========================================
+        editorWrapper.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            editorWrapper.classList.add('dragover');
+        });
+
+        editorWrapper.addEventListener('dragleave', () => {
+            editorWrapper.classList.remove('dragover');
+        });
+
+        editorWrapper.addEventListener('drop', (e) => {
+            e.preventDefault();
+            editorWrapper.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.json') || file.type === "application/json") {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        jsonInput.value = event.target.result;
+                        performFormat();
+                        showToast(`已讀取 JSON 檔案: ${file.name}`);
+                    };
+                    reader.readAsText(file);
+                } else {
+                    showToast("僅支援拖曳讀取 .json 檔案！");
+                }
+            }
+        });
+
+        // ==========================================
+        // 6. 複製與下載功能
+        // ==========================================
+        const toast = document.getElementById('toast');
+        const toastText = document.getElementById('toast-text');
+        let toastTimeout = null;
+
+        function showToast(text) {
+            toastText.innerText = text;
+            toast.classList.add('show');
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function copyContent(text, btnElement) {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("已成功複製到剪貼簿");
+                if (btnElement) {
+                    btnElement.classList.add('copied');
+                    setTimeout(() => btnElement.classList.remove('copied'), 1000);
+                }
+            }).catch(err => {
+                console.error("複製失敗:", err);
+            });
+        }
+
+        document.getElementById('copy-beautified-btn').addEventListener('click', (e) => {
+            copyContent(beautifiedCode.innerText, e.target);
+        });
+
+        document.getElementById('copy-minified-btn').addEventListener('click', (e) => {
+            copyContent(minifiedCode.innerText, e.target);
+        });
+
+        // 下載 JSON 檔案
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const content = beautifiedCode.innerText;
+            if (!content) return;
+
+            const blob = new Blob([content], { type: "application/json;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "formatted.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("已開始下載 formatted.json");
+        });
+    </script>
+</body>
+</html>

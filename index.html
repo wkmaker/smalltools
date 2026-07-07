@@ -400,6 +400,27 @@
             color: #00ff99;
         }
 
+        /* JSON 格式化與美化器專屬 hover 效果 */
+        .tool-card.json-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 0, 170, 0.06), transparent 40%);
+        }
+
+        .tool-card.json-card:hover {
+            border-color: rgba(255, 0, 170, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(255, 0, 170, 0.15),
+                        inset 0 0 15px rgba(255, 0, 170, 0.02);
+        }
+
+        .tool-card.json-card:hover h3 {
+            color: #ff00aa;
+            text-shadow: 0 0 10px rgba(255, 0, 170, 0.4);
+        }
+
+        .tool-card.json-card .card-action {
+            color: #ff00aa;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -576,6 +597,19 @@
                     <h3>Epoch 時間戳記轉換</h3>
                     <span class="subtitle">Epoch Timestamp Converter</span>
                     <p>專業的 Epoch Unix 時間戳記轉換工具，支援秒與毫秒自動判定，並即時在台北時間、UTC、美西時間（PST/PDT）及自訂時區之間進行雙向轉換，並附帶歷史轉換紀錄。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- JSON 格式化與美化器 -->
+            <a href="./json/index.html" class="tool-card json-card">
+                <div>
+                    <h3>JSON 格式化與美化器</h3>
+                    <span class="subtitle">JSON Formatter & Minifier</span>
+                    <p>精緻且功能齊全的 JSON 處理小工具，支援即時語法 lint 驗證定位、多縮排格式美化、樹狀摺疊檢視與單行緊湊壓縮，並可拖曳檔案上傳與下載匯出。</p>
                 </div>
                 <div class="card-action">
                     開啟工具

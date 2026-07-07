@@ -120,3 +120,20 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
     * 專案根目錄必須維護一份 `sitemap.xml`，遵循 `http://www.sitemaps.org/schemas/sitemap/0.9` 標準，列出所有工具頁面的完整 URL、最後修改日期 (`lastmod`)、更新頻率 (`changefreq`) 與優先度 (`priority`)。
     * 每次新增工具頁面後，必須同步更新 `sitemap.xml`，並更新所有現有頁面的 `lastmod` 日期。
     * 首頁 (`index.html`) 的 `priority` 設為 `1.0`，其餘工具頁面設為 `0.8`，`changefreq` 一般設為 `monthly`。
+
+17. **下拉選單顏色與可見性規範 (Dropdown Select Visibility)**
+    * **問題**：在毛玻璃暗黑 UI 之下，下拉選單 `<select>` 若繼承全域亮色字體，但在各瀏覽器預設的選單展開背景（可能是白色或系統預設色）下，會產生白底白字的「文字隱形消失」Bug。
+    - **修復標準**：必須強制為所有 `<select>` 及 `<option>` 設定明確的深色背景（如 `background-color: #121218 !important`）與亮白色文字色（如 `color: #ffffff !important`），確保選單選項在任何平台均能清晰閱讀。
+
+18. **日期時間選擇器暗色系支援 (Dark-Scheme Datetime Picker)**
+    - **修復標準**：為所有 `input[type="datetime-local"]`、`input[type="date"]` 等輸入框明確套用 CSS 屬性 `color-scheme: dark;`。這能指示現代瀏覽器將彈出的月曆與時間選擇面板自動轉為深色模式，與整體的毛玻璃暗黑風格保持視覺一致。
+
+19. **文字輸入框對比度清晰度標準 (Text Input Contrast & Clarity)**
+    - **修復標準**：為了在半透明毛玻璃背景下提供極佳的文字清晰度：
+      - 文字框容器（`.input-wrapper`）的背景透明度應維持在 `0.035` 以上，且非聚焦邊框的不透明度應至少為 `0.15`（如 `rgba(255,255,255,0.15)`），提供明顯輪廓。
+      - 輸入文字（`.styled-input`）必須使用明亮的純白（`#ffffff`），字型大小建議 `1.1rem` 以上且適度加粗（如 `font-weight: 500`）。
+      - 占位符提示字（`::placeholder`）透明度不可太低，建議在 `0.35` 以上。
+
+20. **時區選單優化設計 (Timezone Selection Simplification)**
+    - **優化標準**：對於非特定指名的時區轉換，時區下拉選單不宜列出長串的全球城市名稱。應改用乾淨直觀的 **「UTC 數值偏移量」**（如 `UTC -08:00 (PST)`、`UTC +08:00`）。這能簡化下拉選單長度，並可在 JS 中直接進行簡單的數值加減（`ms = date.getTime() + offset * 3600 * 1000`），避免複雜的反向時區逼近計算，使代碼更高效、更不易出錯。
+
