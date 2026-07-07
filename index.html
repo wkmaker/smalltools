@@ -463,6 +463,27 @@
             color: #ff3b30;
         }
 
+        /* DIG 網路診斷工具專屬 hover 效果 */
+        .tool-card.dig-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(139, 92, 246, 0.06), transparent 40%);
+        }
+
+        .tool-card.dig-card:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(139, 92, 246, 0.15),
+                        inset 0 0 15px rgba(139, 92, 246, 0.02);
+        }
+
+        .tool-card.dig-card:hover h3 {
+            color: #8b5cf6;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+        }
+
+        .tool-card.dig-card .card-action {
+            color: #8b5cf6;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -678,6 +699,19 @@
                     <h3>台股期貨槓桿與逆風點數估算器</h3>
                     <span class="subtitle">Futures Margin & Leverage Calculator</span>
                     <p>期貨交易者風控防斷頭神器。即時計算大台/小台/微台實質資金槓桿倍數，並模擬逆風行情下之帳面損益、風控指標指針，以及追繳與強平臨界指數點數。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- DIG 網路診斷工具 -->
+            <a href="./dns-dig/index.html" class="tool-card dig-card">
+                <div>
+                    <h3>DIG 網路診斷工具</h3>
+                    <span class="subtitle">DNS Dig Web Tool</span>
+                    <p>工程師必備的線上 DNS 診斷工具。支援 Cloudflare / Google 加密 DoH 伺服器切換、網域/網址自動解析清理，即時發送 DIG 請求查詢 A, CNAME, MX, TXT 各項記錄。</p>
                 </div>
                 <div class="card-action">
                     開啟工具
