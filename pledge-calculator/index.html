@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票質押與維持率壓力測試器</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="專業的台股股票質押借款與維持率試算工具，支援個股價格/張數雙向連動、大盤大跌壓力測試滑桿模擬、130% 追繳臨界股價計算與補繳保證金安全水位評估。">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="股票質押與維持率壓力測試器">
+    <meta property="og:description" content="台股投資人的槓桿守護者。即時模擬大盤跌幅、維持率指針儀表板、追繳臨界價與補繳保證金試算。">
+    <meta property="og:url" content="https://tools.cjkuo.net/pledge-calculator/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(255, 184, 0, 0.6); /* 財富金黃 */
+            --accent-glow-rgb: 255, 184, 0;
+            --accent-color: #ffb800;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            --card-bg: rgba(255, 255, 255, 0.01);
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 90%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--accent-color);
+            border-color: rgba(255, 184, 0, 0.3);
+            background: rgba(255, 184, 0, 0.05);
+            box-shadow: 0 0 12px rgba(255, 184, 0, 0.15);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            margin-top: 1rem;
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            box-shadow: 0 0 8px var(--accent-color);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-color)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-color)); }
+        }
+
+        /* 雙欄排版 */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        .pane {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pane:hover, .pane:focus-within {
+            border-color: rgba(255, 184, 0, 0.2);
+            box-shadow: 0 0 25px rgba(255, 184, 0, 0.03);
+        }
+
+        .pane-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .pane-title-left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .pane-title-left svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent-color);
+        }
+
+        /* 快捷預設按鈕 */
+        .preset-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 輸入表單 */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-label span.note {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0 1rem;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .styled-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            padding: 0.8rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .styled-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .input-addon {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding-left: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        /* 雙欄輸入排版 */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 184, 0, 0.08);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 12px rgba(255, 184, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: rgba(255, 184, 0, 0.1);
+            border-color: rgba(255, 184, 0, 0.3);
+            color: var(--accent-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-color);
+            color: #030305;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .btn-micro {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* ====== SVG 儀表板區域 ====== */
+        .gauge-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .gauge-svg {
+            width: 100%;
+            max-width: 320px;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
+
+        .gauge-needle {
+            transform-origin: 100px 90px;
+            transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .gauge-value-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: -1.2rem;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .gauge-status-label {
+            font-size: 0.85rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 700;
+            margin-top: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 儀表板維持率狀態樣式 */
+        .status-safe {
+            background: rgba(0, 255, 102, 0.1);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            color: #00ff66;
+            box-shadow: 0 0 10px rgba(0,255,102,0.1);
+        }
+
+        .status-warn {
+            background: rgba(255, 184, 0, 0.1);
+            border: 1px solid rgba(255, 184, 0, 0.3);
+            color: #ffb800;
+            box-shadow: 0 0 10px rgba(255,184,0,0.1);
+        }
+
+        .status-danger {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+            box-shadow: 0 0 10px rgba(255,68,68,0.1);
+            animation: danger-pulse 1.5s infinite;
+        }
+
+        @keyframes danger-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,68,68,0.35); }
+        }
+
+        /* 壓力測試滑桿區 */
+        .stress-test-box {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .stress-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .stress-drop-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 0 8px rgba(255, 184, 0, 0.3);
+        }
+
+        /* 漂亮的黃金色滑桿 */
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-glow);
+            border: 2px solid #ffffff;
+            transition: transform 0.1s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* 雙欄臨界點排版 */
+        .critical-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .critical-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 輸出資訊卡片 */
+        .output-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .output-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .output-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .output-val {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .output-subval {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* 回補警示板 */
+        .topup-box {
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            background: rgba(255,255,255,0.005);
+        }
+
+        .topup-box.warning-active {
+            border-color: rgba(255, 68, 68, 0.25);
+            background: rgba(255, 68, 68, 0.02);
+        }
+
+        .topup-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .topup-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .topup-method-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .topup-method-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .topup-method-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* 修正下拉選單樣式，確保選單展開時有深色背景與亮白色文字，防止文字消失 */
+        select {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+        }
+
+        option {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+            padding: 0.5rem;
+        }
+
+        .select-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .select-addon {
+            background: #121218;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* 複製成功 Toast 提示 */
+        .toast-notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(6, 6, 9, 0.9);
+            border: 1px solid var(--accent-color);
+            color: #ffffff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(255, 184, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-notification svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-color);
+        }
+
+        /* ====== 響應式媒體查詢 ====== */
+        @media (max-width: 1100px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .glass-container {
+                max-width: 95%;
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            /* 返回按鈕行動端防重疊 */
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+                align-self: flex-start;
+            }
+
+            .glass-container {
+                padding: 1.5rem 1rem;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header-section {
+                margin-top: 0;
+                margin-bottom: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .pane {
+                padding: 1.2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .topup-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 粒子背景 Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+        <!-- 標題 -->
+        <div class="header-section">
+            <h1>股票質押與維持率壓力測試器</h1>
+            <div class="subtitle-top">Stock Pledging & Risk Calculator</div>
+        </div>
+
+        <!-- 主要雙欄應用區域 -->
+        <div class="app-grid">
+            
+            <!-- 左欄：參數輸入面板 -->
+            <div class="pane">
+                <div class="pane-title">
+                    <div class="pane-title-left">
+                        <svg viewBox="0 0 24 24"><path d="M3 17h18v2H3zm0-7h18v5H3zm0-4h18v2H3z"/></svg>
+                        質押資產設定
+                    </div>
+                </div>
+
+                <!-- 股價與張數雙欄 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="stock-price">目前個股單價</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="stock-price" class="styled-input" placeholder="例如：200" step="any" min="0">
+                            <span class="input-addon">元</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="stock-qty">持股數量</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="stock-qty" class="styled-input" placeholder="例如：50" min="0" step="any">
+                            <select id="qty-unit" class="select-addon" style="border:none; padding: 0 0.5rem;">
+                                <option value="1000" selected>張</option>
+                                <option value="1">股</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 股票總市值 -->
+                <div class="form-group">
+                    <label class="form-label" for="market-value">目前總市值</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="market-value" class="styled-input" placeholder="自動試算">
+                        <span class="input-addon">元</span>
+                    </div>
+                </div>
+
+                <!-- 借款本金 -->
+                <div class="form-group">
+                    <label class="form-label" for="loan-amount">
+                        借款本金
+                        <span class="note" id="max-loan-helper">上限 (60%): -</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="loan-amount" class="styled-input" placeholder="例如：6,000,000">
+                        <span class="input-addon">元</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.2rem;">
+                        <button class="btn btn-micro" id="loan-pct-60" style="flex:1;">帶入 60% 借款 (成數上限)</button>
+                        <button class="btn btn-micro" id="loan-pct-50" style="flex:1;">帶入 50% 借款 (安全防線)</button>
+                    </div>
+                </div>
+
+                <!-- 閾值自訂 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="threshold-warn">追繳維持率門檻</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="threshold-warn" class="styled-input" value="130" min="100" max="300">
+                            <span class="input-addon">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="threshold-safe">目標安全維持率</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="threshold-safe" class="styled-input" value="160" min="100" max="300">
+                            <span class="input-addon">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右欄：儀表板與模擬分析 -->
+            <div class="pane">
+                <div class="pane-title">
+                    <div class="pane-title-left">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                        維持率壓力模擬
+                    </div>
+                </div>
+
+                <!-- 1. SVG 儀表板 -->
+                <div class="gauge-section">
+                    <svg class="gauge-svg" viewBox="0 0 200 110">
+                        <!-- 背景弧線 -->
+                        <path d="M 30,90 A 70,70 0 0,1 170,90" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12" stroke-linecap="round"/>
+                        <!-- 危險區 (100% - 130%) 弧度約 0 到 30% -->
+                        <path d="M 30,90 A 70,70 0 0,1 71.2,40.5" fill="none" stroke="#ff4444" stroke-width="12" stroke-dasharray="" stroke-linecap="butt"/>
+                        <!-- 警示區 (130% - 160%) -->
+                        <path d="M 71.2,40.5 A 70,70 0 0,1 128.8,40.5" fill="none" stroke="#ffb800" stroke-width="12" stroke-linecap="butt"/>
+                        <!-- 安全區 (160% - 200%) -->
+                        <path d="M 128.8,40.5 A 70,70 0 0,1 170,90" fill="none" stroke="#00ff66" stroke-width="12" stroke-linecap="round"/>
+                        
+                        <!-- 儀表板指針 -->
+                        <line x1="100" y1="90" x2="100" y2="35" stroke="#ffb800" stroke-width="4" stroke-linecap="round" id="gauge-needle" class="gauge-needle"/>
+                        <!-- 中心圓點 -->
+                        <circle cx="100" cy="90" r="7" fill="#ffffff" stroke="#ffb800" stroke-width="2"/>
+                    </svg>
+                    <div class="gauge-value-text" id="gauge-ratio">- %</div>
+                    <div class="gauge-status-label" id="gauge-status">-</div>
+                </div>
+
+                <!-- 2. 壓力測試滑桿 -->
+                <div class="stress-test-box">
+                    <div class="stress-label-row">
+                        <span>模擬大盤/股價大跌</span>
+                        <span class="stress-drop-value" id="stress-drop-pct">0%</span>
+                    </div>
+                    <input type="range" id="stress-slider" class="range-slider" min="0" max="60" value="0" step="1">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.4rem;">
+                        <div class="output-card" style="padding: 0.6rem 0.8rem;">
+                            <div class="output-info">
+                                <span class="output-label">模擬股價</span>
+                                <span class="output-val" id="sim-price" style="font-size: 1rem;">-</span>
+                            </div>
+                        </div>
+                        <div class="output-card" style="padding: 0.6rem 0.8rem;">
+                            <div class="output-info">
+                                <span class="output-label">模擬總市值</span>
+                                <span class="output-val" id="sim-market-val" style="font-size: 1rem;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 臨界點資訊 -->
+                <div class="critical-grid">
+                    <div class="output-card" style="cursor: pointer;" title="點擊複製此數值">
+                        <div class="output-info">
+                            <span class="output-label">觸發追繳臨界價 (<span class="warn-pct-label">130</span>%)</span>
+                            <span class="output-val" id="out-warn-price" style="color: #ff4444; font-size: 1.1rem;">-</span>
+                            <span class="output-subval">容許跌幅: <span id="out-warn-drop" style="color: #ff4444; font-weight:700;">-</span></span>
+                        </div>
+                    </div>
+                    <div class="output-card" style="cursor: pointer;" title="點擊複製此數值">
+                        <div class="output-info">
+                            <span class="output-label">維持安全線臨界價 (<span class="safe-pct-label">160</span>%)</span>
+                            <span class="output-val" id="out-safe-price" style="color: #00ff66; font-size: 1.1rem;">-</span>
+                            <span class="output-subval">容許跌幅: <span id="out-safe-drop" style="color: #00ff66; font-weight:700;">-</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 保證金安全補繳試算 -->
+                <div class="topup-box" id="topup-box">
+                    <div class="topup-title" id="topup-title">
+                        <span>保證金回補試算</span>
+                    </div>
+                    <div class="topup-methods">
+                        <div class="topup-method-card">
+                            <span class="topup-method-title">方案 A：償還借款本金</span>
+                            <span class="topup-method-val" id="topup-repay">-</span>
+                        </div>
+                        <div class="topup-method-card">
+                            <span class="topup-method-title">方案 B：補繳現金擔保</span>
+                            <span class="topup-method-val" id="topup-cash">-</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功提示 Notification -->
+    <div id="toast" class="toast-notification">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toast-text">已複製</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. 金黃色粒子與滑鼠互動 Canvas
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            adjustParticles();
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.density = (Math.random() * 30) + 1;
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1;
+
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 5;
+                    this.velocityY = (Math.random() - 0.5) * 5;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 緩慢向上漂浮
+                    this.velocityX = (Math.random() - 0.5) * 0.2;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                // 財富金黃色調粒子
+                ctx.fillStyle = this.isBurst 
+                    ? `rgba(255, 184, 0, ${alpha})` 
+                    : `rgba(255, 184, 0, ${alpha * 0.7})`;
+                ctx.fill();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.025;
+                    this.velocityX *= 0.95;
+                    this.velocityY *= 0.95;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                    if (this.x < 0 || this.x > canvas.width) {
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                // 滑鼠引力
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * this.density * 0.5;
+                    this.y -= (dy / distance) * force * this.density * 0.5;
+                }
+            }
+        }
+
+        function adjustParticles() {
+            const targetCount = Math.floor((canvas.width * canvas.height) / 12000);
+            let bgParticles = particles.filter(p => !p.isBurst);
+            const burstParticles = particles.filter(p => p.isBurst);
+
+            bgParticles.forEach(p => {
+                if (p.x > canvas.width) p.x = Math.random() * canvas.width;
+                if (p.y > canvas.height) p.y = Math.random() * canvas.height;
+            });
+
+            if (bgParticles.length < targetCount) {
+                const toAdd = targetCount - bgParticles.length;
+                for (let i = 0; i < toAdd; i++) {
+                    bgParticles.push(new Particle());
+                }
+            } else if (bgParticles.length > targetCount) {
+                bgParticles = bgParticles.slice(0, targetCount);
+            }
+            particles = [...bgParticles, ...burstParticles];
+        }
+
+        function createBurst(x, y) {
+            for(let i = 0; i < 18; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mousedown', (e) => {
+            mouse.radius = 250;
+            createBurst(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { mouse.radius = 150; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        // 為所有按鈕/輸入/連結綁定點擊爆裂效果
+        document.querySelectorAll('input, select, button, a').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (e.pageX) {
+                    createBurst(e.clientX, e.clientY);
+                }
+            });
+        });
+
+        animateParticles();
+
+
+        // ==========================================
+        // 2. 股票質押與維持率計算核心
+        // ==========================================
+        const stockPriceIn = document.getElementById('stock-price');
+        const stockQtyIn = document.getElementById('stock-qty');
+        const qtyUnitSelect = document.getElementById('qty-unit');
+        const marketValueIn = document.getElementById('market-value');
+        const loanAmountIn = document.getElementById('loan-amount');
+        const maxLoanHelper = document.getElementById('max-loan-helper');
+        
+        const thresholdWarnIn = document.getElementById('threshold-warn');
+        const thresholdSafeIn = document.getElementById('threshold-safe');
+
+        const stressSlider = document.getElementById('stress-slider');
+        const stressDropPct = document.getElementById('stress-drop-pct');
+        const simPriceEl = document.getElementById('sim-price');
+        const simMarketValEl = document.getElementById('sim-market-val');
+
+        // 臨界與追繳
+        const warnPctLabels = document.querySelectorAll('.warn-pct-label');
+        const outWarnPrice = document.getElementById('out-warn-price');
+        const outWarnDrop = document.getElementById('out-warn-drop');
+
+        // 安全臨界
+        const safePctLabels = document.querySelectorAll('.safe-pct-label');
+        const outSafePrice = document.getElementById('out-safe-price');
+        const outSafeDrop = document.getElementById('out-safe-drop');
+
+        const gaugeRatio = document.getElementById('gauge-ratio');
+        const gaugeStatus = document.getElementById('gauge-status');
+        const gaugeNeedle = document.getElementById('gauge-needle');
+
+        const topupBox = document.getElementById('topup-box');
+        const topupTitle = document.getElementById('topup-title');
+        const topupRepay = document.getElementById('topup-repay');
+        const topupCash = document.getElementById('topup-cash');
+
+        // 快速本金成數按鈕
+        const loan60Btn = document.getElementById('loan-pct-60');
+        const loan50Btn = document.getElementById('loan-pct-50');
+
+        let isCalculating = false;
+
+        // 計算目前股數
+        function getShares() {
+            const qty = parseFloat(stockQtyIn.value) || 0;
+            const multiplier = parseFloat(qtyUnitSelect.value) || 1;
+            return qty * multiplier;
+        }
+
+        // 計算維持率與臨界點
+        function recalculate() {
+            if (isCalculating) return;
+            isCalculating = true;
+
+            const price = parseFloat(stockPriceIn.value) || 0;
+            const shares = getShares();
+            const marketVal = price * shares;
+            
+            // 更新總市值 (若非手動更改所觸發)
+            if (document.activeElement !== marketValueIn) {
+                marketValueIn.value = marketVal > 0 ? Math.round(marketVal).toLocaleString('zh-TW') : '';
+            }
+
+            // 更新最高質押本金 (60%) 提示
+            const maxLoan = marketVal * 0.6;
+            maxLoanHelper.innerText = maxLoan > 0 ? `上限 (60%): $${Math.round(maxLoan).toLocaleString()}` : '上限 (60%): -';
+
+            const loan = parseFloat(loanAmountIn.value.replace(/,/g, '')) || 0;
+            const warnRate = parseFloat(thresholdWarnIn.value) || 130;
+            const safeRate = parseFloat(thresholdSafeIn.value) || 160;
+
+            // 標題跟隨更改
+            warnPctLabels.forEach(el => el.innerText = warnRate);
+            safePctLabels.forEach(el => el.innerText = safeRate);
+
+            // A. 計算追繳與安全臨界股價及跌幅
+            if (loan > 0 && shares > 0) {
+                // 追繳臨界點
+                const warnPrice = (warnRate / 100 * loan) / shares;
+                const warnDrop = ((price - warnPrice) / price) * 100;
+                outWarnPrice.innerText = `$${warnPrice.toFixed(2)} 元`;
+                outWarnDrop.innerText = warnDrop > 0 ? `${warnDrop.toFixed(2)} %` : '0.00 %';
+
+                // 安全臨界點
+                const safePrice = (safeRate / 100 * loan) / shares;
+                const safeDrop = ((price - safePrice) / price) * 100;
+                outSafePrice.innerText = `$${safePrice.toFixed(2)} 元`;
+                outSafeDrop.innerText = safeDrop > 0 ? `${safeDrop.toFixed(2)} %` : '0.00 %';
+            } else {
+                outWarnPrice.innerText = '-';
+                outWarnDrop.innerText = '-';
+                outSafePrice.innerText = '-';
+                outSafeDrop.innerText = '-';
+            }
+
+            // B. 進行模擬跌幅壓力測試
+            const dropPct = parseFloat(stressSlider.value);
+            stressDropPct.innerText = `${dropPct}%`;
+            
+            const simPrice = price * (1 - dropPct / 100);
+            const simMarketVal = marketVal * (1 - dropPct / 100);
+
+            simPriceEl.innerText = price > 0 ? `$${simPrice.toFixed(2)} 元` : '-';
+            simMarketValEl.innerText = marketVal > 0 ? `$${Math.round(simMarketVal).toLocaleString()} 元` : '-';
+
+            // C. 計算與更新維持率儀表板
+            let ratio = 0;
+            if (loan > 0) {
+                ratio = (simMarketVal / loan) * 100;
+            }
+
+            if (loan === 0 && simMarketVal > 0) {
+                gaugeRatio.innerText = '∞';
+                gaugeStatus.innerText = '無借款安全區';
+                gaugeStatus.className = 'gauge-status-label status-safe';
+                rotateNeedle(200); // 最大位置
+                
+                topupBox.className = 'topup-box';
+                topupTitle.innerHTML = `<span style="color: #00ff66;">🟢 目前資產安全健康，無須補繳</span>`;
+                topupRepay.innerText = '$0 元';
+                topupCash.innerText = '$0 元';
+            } else if (loan > 0 && simMarketVal > 0) {
+                gaugeRatio.innerText = `${ratio.toFixed(2)} %`;
+                
+                // 判斷狀態顏色
+                if (ratio >= safeRate) {
+                    gaugeStatus.innerText = '安全健康';
+                    gaugeStatus.className = 'gauge-status-label status-safe';
+                } else if (ratio >= warnRate) {
+                    gaugeStatus.innerText = '低於安全線 (警示)';
+                    gaugeStatus.className = 'gauge-status-label status-warn';
+                } else {
+                    gaugeStatus.innerText = '低於門檻 (追繳被斷頭)';
+                    gaugeStatus.className = 'gauge-status-label status-danger';
+                }
+
+                // 旋轉指針：對應維持率 100% ~ 200% 到半圓的 0 ~ 180 度 (由左至右)
+                // SVG 指針預設垂直向上為 -90deg，所以我們映射為：
+                // 100% 維持率 ➜ -90 度旋轉 (指向最左)
+                // 200% 維持率 ➜ +90 度旋轉 (指向最右)
+                rotateNeedle(ratio);
+
+                // D. 計算保證金回補金額 (目標安全維持率)
+                if (ratio < safeRate) {
+                    // 方案 A: 償還借款本金
+                    // Target = simMarketVal / (loan - repay) => loan - repay = simMarketVal / Target => repay = loan - simMarketVal / Target
+                    const targetSec = safeRate / 100;
+                    const repayAmt = loan - (simMarketVal / targetSec);
+                    
+                    // 方案 B: 補繳現金擔保
+                    // Target = (simMarketVal + cash) / loan => cash = loan * Target - simMarketVal
+                    const cashAmt = (loan * targetSec) - simMarketVal;
+
+                    topupBox.className = 'topup-box warning-active';
+                    topupTitle.innerHTML = `<span style="color: #ff4444;">⚠️ 已低於目標安全維持率 ${safeRate}%，補繳方案試算：</span>`;
+                    topupRepay.innerText = repayAmt > 0 ? `$${Math.round(repayAmt).toLocaleString()} 元` : '$0 元';
+                    topupCash.innerText = cashAmt > 0 ? `$${Math.round(cashAmt).toLocaleString()} 元` : '$0 元';
+                } else {
+                    topupBox.className = 'topup-box';
+                    topupTitle.innerHTML = `<span style="color: #00ff66;">🟢 模擬維持率處於安全區，無須補繳</span>`;
+                    topupRepay.innerText = '$0 元';
+                    topupCash.innerText = '$0 元';
+                }
+
+            } else {
+                gaugeRatio.innerText = '- %';
+                gaugeStatus.innerText = '等待輸入';
+                gaugeStatus.className = 'gauge-status-label';
+                rotateNeedle(100);
+                
+                topupBox.className = 'topup-box';
+                topupTitle.innerHTML = `<span>保證金回補試算</span>`;
+                topupRepay.innerText = '-';
+                topupCash.innerText = '-';
+            }
+
+            isCalculating = false;
+        }
+
+        // 旋轉 SVG 指針函數
+        function rotateNeedle(ratio) {
+            let deg = -90; // 預設指向最左
+            if (ratio >= 200) {
+                deg = 90; // 指向最右
+            } else if (ratio <= 100) {
+                deg = -90; // 指向最左
+            } else {
+                // 100 ~ 200 對應 -90 ~ 90 度
+                deg = -90 + (ratio - 100) * 1.8;
+            }
+            gaugeNeedle.style.transform = `rotate(${deg}deg)`;
+        }
+
+        // ==========================================
+        // 3. 事件監聽器設定
+        // ==========================================
+
+        // 股價、數量、單位與警示率即時連動
+        stockPriceIn.addEventListener('input', recalculate);
+        stockQtyIn.addEventListener('input', recalculate);
+        qtyUnitSelect.addEventListener('change', recalculate);
+        thresholdWarnIn.addEventListener('input', recalculate);
+        thresholdSafeIn.addEventListener('input', recalculate);
+
+        // 壓力測試滑桿連動
+        stressSlider.addEventListener('input', recalculate);
+
+        // 千分位格式化與輸入監聽器掛載 (符合 SKILL.md 定位游標規範)
+        function initFormattedInput(inputId, onInputCallback) {
+            const input = document.getElementById(inputId);
+            input.addEventListener('input', () => {
+                let value = input.value.replace(/,/g, '');
+                if (value === '') {
+                    input.value = '';
+                    if (onInputCallback) onInputCallback(0);
+                    recalculate();
+                    return;
+                }
+                
+                // 只允許整數金額做千分位
+                const num = parseInt(value, 10);
+                if (!isNaN(num)) {
+                    const originalCursor = input.selectionStart;
+                    const originalCommaCount = (input.value.substring(0, originalCursor).match(/,/g) || []).length;
+                    
+                    const formatted = num.toLocaleString('zh-TW');
+                    input.value = formatted;
+                    
+                    const newCommaCount = (formatted.substring(0, originalCursor).match(/,/g) || []).length;
+                    const cursorOffset = newCommaCount - originalCommaCount;
+                    input.setSelectionRange(originalCursor + cursorOffset, originalCursor + cursorOffset);
+                    if (onInputCallback) onInputCallback(num);
+                } else {
+                    if (onInputCallback) onInputCallback(0);
+                }
+                recalculate();
+            });
+        }
+
+        // 初始化金額輸入框千分位
+        initFormattedInput('loan-amount');
+        initFormattedInput('market-value', (num) => {
+            // 市值改變時反推持股數量
+            if (isCalculating) return;
+            const price = parseFloat(stockPriceIn.value) || 0;
+            const multiplier = parseFloat(qtyUnitSelect.value) || 1;
+            if (price > 0 && num > 0) {
+                const calculatedQty = (num / price) / multiplier;
+                stockQtyIn.value = calculatedQty.toFixed(4);
+            }
+        });
+
+        // 60% 借本金快捷鍵 (自動格式化為千分位)
+        loan60Btn.addEventListener('click', () => {
+            const price = parseFloat(stockPriceIn.value) || 0;
+            const shares = getShares();
+            const marketVal = price * shares;
+            if (marketVal > 0) {
+                loanAmountIn.value = Math.round(marketVal * 0.6).toLocaleString('zh-TW');
+                recalculate();
+                showToast("已帶入最高成數借款 (60%)");
+            } else {
+                showToast("請先輸入個股單價與持股數量！");
+            }
+        });
+
+        // 50% 借本金快捷鍵 (自動格式化為千分位)
+        loan50Btn.addEventListener('click', () => {
+            const price = parseFloat(stockPriceIn.value) || 0;
+            const shares = getShares();
+            const marketVal = price * shares;
+            if (marketVal > 0) {
+                loanAmountIn.value = Math.round(marketVal * 0.5).toLocaleString('zh-TW');
+                recalculate();
+                showToast("已帶入安全成數借款 (50%)");
+            } else {
+                showToast("請先輸入個股單價與持股數量！");
+            }
+        });
+
+        // ==========================================
+        // 4. 複製 Toast 功能
+        // ==========================================
+        const toast = document.getElementById('toast');
+        const toastText = document.getElementById('toast-text');
+        let toastTimeout = null;
+
+        function showToast(text) {
+            toastText.innerText = text;
+            toast.classList.add('show');
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // 點選輸出卡片拷貝數值
+        document.querySelectorAll('.output-card').forEach(card => {
+            card.style.cursor = 'pointer';
+            card.setAttribute('title', '點擊複製此數值');
+            card.addEventListener('click', () => {
+                const valEl = card.querySelector('.output-val');
+                if (valEl && valEl.innerText !== '-') {
+                    const text = valEl.innerText.replace(' 元', '').replace(' %', '').replace(/,/g, '').trim();
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast(`已複製數值: ${text}`);
+                    });
+                }
+            });
+        });
+
+        // 初始化預設值 (0050 模擬案例，本金含千分位)
+        stockPriceIn.value = "200";
+        stockQtyIn.value = "50";
+        qtyUnitSelect.value = "1000";
+        loanAmountIn.value = "6,000,000";
+        thresholdWarnIn.value = "130";
+        thresholdSafeIn.value = "160";
+        stressSlider.value = "0";
+
+        recalculate();
+    </script>
+</body>
+</html>

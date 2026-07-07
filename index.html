@@ -421,6 +421,27 @@
             color: #ff00aa;
         }
 
+        /* 股票質押與維持率壓力測試器專屬 hover 效果 */
+        .tool-card.pledge-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 184, 0, 0.06), transparent 40%);
+        }
+
+        .tool-card.pledge-card:hover {
+            border-color: rgba(255, 184, 0, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(255, 184, 0, 0.15),
+                        inset 0 0 15px rgba(255, 184, 0, 0.02);
+        }
+
+        .tool-card.pledge-card:hover h3 {
+            color: #ffb800;
+            text-shadow: 0 0 10px rgba(255, 184, 0, 0.4);
+        }
+
+        .tool-card.pledge-card .card-action {
+            color: #ffb800;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -610,6 +631,19 @@
                     <h3>JSON 格式化與美化器</h3>
                     <span class="subtitle">JSON Formatter & Minifier</span>
                     <p>精緻且功能齊全的 JSON 處理小工具，支援即時語法 lint 驗證定位、多縮排格式美化、樹狀摺疊檢視與單行緊湊壓縮，並可拖曳檔案上傳與下載匯出。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- 股票質押與維持率壓力測試器 -->
+            <a href="./pledge-calculator/index.html" class="tool-card pledge-card">
+                <div>
+                    <h3>股票質押與維持率壓力測試器</h3>
+                    <span class="subtitle">Stock Pledging & Risk Calculator</span>
+                    <p>台股資產活化與槓桿風險管理利器。支援個股股價與張數雙向市值連動、自訂追繳門檻、大跌幅壓力測試模擬，並精確計算追繳臨界股價與安全回補保證金。</p>
                 </div>
                 <div class="card-action">
                     開啟工具
