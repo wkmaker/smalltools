@@ -358,6 +358,27 @@
             color: #0077ff;
         }
 
+        /* 密碼生成器專屬 hover 效果 */
+        .tool-card.password-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 102, 0.06), transparent 40%);
+        }
+
+        .tool-card.password-card:hover {
+            border-color: rgba(0, 255, 102, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 255, 102, 0.15),
+                        inset 0 0 15px rgba(0, 255, 102, 0.02);
+        }
+
+        .tool-card.password-card:hover h3 {
+            color: #00ff66;
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+        }
+
+        .tool-card.password-card .card-action {
+            color: #00ff66;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -508,6 +529,19 @@
                     <h3>URL 編碼/解碼</h3>
                     <span class="subtitle">URL Encoder & Decoder</span>
                     <p>專業的網址編解碼工具，支援 URI/URIComponent 模式，並具備強大的 Query 參數表格即時解析與雙向編輯功能。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- 密碼生成器 -->
+            <a href="./password/index.html" class="tool-card password-card">
+                <div>
+                    <h3>安全密碼生成器</h3>
+                    <span class="subtitle">Password Generator (CSPRNG)</span>
+                    <p>密碼學安全強隨機數密碼生成工具（CSPRNG），支援排除易混淆字元、強制每種字元分佈、即時強度評估與生成歷史記錄。</p>
                 </div>
                 <div class="card-action">
                     開啟工具

@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全密碼生成器</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="專業的密碼生成工具，基於 Web Crypto API 密碼學安全隨機數 (CSPRNG)，支援排除混淆字元、字元強制分佈、密碼強度動態視覺化分析及歷史記錄管理。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="安全密碼生成器 - 唯美極客工具">
+    <meta property="og:description" content="基於 CSPRNG 密碼學隨機數生成，支援強度分析與混淆排除。">
+    <meta property="og:url" content="https://tools.cjkuo.net/password/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(0, 255, 102, 0.6); /* 防禦綠 */
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            
+            --strength-weak: #ff3366;
+            --strength-medium: #ff9900;
+            --strength-strong: #ffcc00;
+            --strength-secure: #00ff66;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 90%; /* 比照全站其他 index 頁面寬度，保持視覺高度統一 */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 雙欄響應式網格 */
+        .password-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr; /* 左側設定區佔 55%，右側密碼/歷史紀錄區佔 45% */
+            gap: 2rem;
+            align-items: start;
+            text-align: left; /* 將內部對齊設為左對齊以保持清爽 */
+        }
+
+        .column-left {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .column-right {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 255, 102, 0.1);
+            color: var(--strength-secure);
+            border-color: var(--strength-secure);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* ====== 密碼展示主面板 ====== */
+        .password-display-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .password-display-card:hover {
+            border-color: rgba(0, 255, 102, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.05);
+        }
+
+        .password-output-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .password-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(1.1rem, 3vw, 1.6rem);
+            font-weight: 700;
+            color: #ffffff;
+            word-break: break-all;
+            user-select: all;
+            flex-grow: 1;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+            min-height: 2.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-actions {
+            display: flex;
+            gap: 0.6rem;
+            flex-shrink: 0;
+        }
+
+        /* ====== 強度評估區 ====== */
+        .strength-indicator-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .strength-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .strength-text {
+            font-weight: 700;
+            transition: color 0.3s;
+        }
+
+        .strength-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        /* ====== 控制選項區 ====== */
+        .options-container {
+            background: rgba(255, 255, 255, 0.005);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* 長度 Slider */
+        .range-slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .slider-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--strength-secure);
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+        }
+
+        .custom-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            outline: none;
+            transition: background 0.3s;
+        }
+
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid var(--strength-secure);
+            box-shadow: 0 0 8px var(--strength-secure);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .custom-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: var(--strength-secure);
+        }
+
+        /* 複選控制網格 */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.9rem;
+            color: #d1d5db;
+            transition: color 0.2s;
+        }
+
+        .checkbox-container:hover {
+            color: #ffffff;
+        }
+
+        .checkbox-container input {
+            display: none;
+        }
+
+        .checkmark {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--glass-border);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            display: inline-block;
+            position: relative;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .checkbox-container:hover .checkmark {
+            border-color: rgba(0, 255, 102, 0.4);
+        }
+
+        .checkbox-container input:checked + .checkmark {
+            background: var(--strength-secure);
+            border-color: var(--strength-secure);
+            box-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+        }
+
+        .checkbox-container input:checked + .checkmark::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid #030305;
+            border-width: 0 2.5px 2.5px 0;
+            transform: rotate(45deg);
+        }
+
+        /* 按鈕樣式 */
+        .tech-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.3s ease;
+        }
+
+        .tech-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .tech-btn:hover {
+            background: rgba(0, 255, 102, 0.08);
+            border-color: rgba(0, 255, 102, 0.4);
+            color: var(--strength-secure);
+            box-shadow: 0 0 12px rgba(0, 255, 102, 0.15);
+        }
+
+        .tech-btn.primary {
+            background: rgba(0, 255, 102, 0.15);
+            border-color: rgba(0, 255, 102, 0.4);
+            color: var(--strength-secure);
+            font-weight: 500;
+        }
+
+        .tech-btn.primary:hover {
+            background: var(--strength-secure);
+            color: #030305;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
+        }
+
+        .action-btn-row {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+        }
+
+        /* ====== 歷史記錄面板 ====== */
+        .history-section {
+            background: rgba(255, 255, 255, 0.003);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: none; /* 有歷史時才 JS 展開 */
+            flex-direction: column;
+            gap: 0.8rem;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .history-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .history-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: #d1d5db;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .history-copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .history-copy-btn:hover {
+            color: var(--strength-secure);
+        }
+
+        .history-copy-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* ====== Toast 訊息 ====== */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(0, 255, 102, 0.15);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            backdrop-filter: blur(10px);
+            color: var(--strength-secure);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5), 0 0 10px rgba(0,255,102,0.1);
+            z-index: 100;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 900px) {
+            .password-layout {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 1.5rem;
+            }
+        }
+        @media (max-width: 600px) {
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 粒子背景 Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- 主毛玻璃容器 -->
+    <div class="glass-container">
+        <!-- 返回按鈕 (行動端自動 static) -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            返回首頁
+        </a>
+
+        <h1>安全密碼生成</h1>
+        <div class="subtitle-top">CSPRNG Password Generator</div>
+
+        <div class="password-layout">
+            <!-- 左欄：控制選項 -->
+            <div class="column-left">
+                <div class="options-container">
+                    <!-- 密碼長度 -->
+                    <div class="range-slider-group">
+                        <div class="slider-header">
+                            <span>密碼長度 (Length)</span>
+                            <span class="slider-value" id="length-val">16</span>
+                        </div>
+                        <input type="range" id="password-length" class="custom-slider" min="4" max="64" value="16" oninput="updateSliderValue()">
+                    </div>
+
+                    <!-- 字元集複選 -->
+                    <div class="options-grid">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="opt-upper" checked onchange="onCheckboxChange()">
+                            <span class="checkmark"></span>
+                            大寫字母 (A-Z)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="opt-lower" checked onchange="onCheckboxChange()">
+                            <span class="checkmark"></span>
+                            小寫字母 (a-z)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="opt-number" checked onchange="onCheckboxChange()">
+                            <span class="checkmark"></span>
+                            數字 (0-9)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="opt-symbol" checked onchange="onCheckboxChange()">
+                            <span class="checkmark"></span>
+                            特殊符號 (!@#...)
+                        </label>
+                    </div>
+
+                    <!-- 高級配置 -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="opt-exclude" onchange="onCheckboxChange()">
+                            <span class="checkmark"></span>
+                            排除相似與混淆字元 (如 1, l, I, 0, O, o 等)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="opt-strict" checked onchange="onCheckboxChange()">
+                            <span class="checkmark"></span>
+                            強制每種字元集至少出現一個 (分佈更均勻)
+                        </label>
+                    </div>
+                    
+                    <div class="action-btn-row">
+                        <button class="tech-btn primary" style="width: 100%; height: 42px; justify-content: center; font-size: 0.95rem; letter-spacing: 1.5px;" onclick="regeneratePassword()">
+                            重新生成安全密碼
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右欄：展示與歷史紀錄 -->
+            <div class="column-right">
+                <!-- 密碼展示大卡片 -->
+                <div class="password-display-card">
+                    <div class="password-output-row">
+                        <span class="password-text" id="password-output">點擊生成按鈕獲取密碼</span>
+                        <div class="password-actions">
+                            <button class="tech-btn" onclick="regeneratePassword()" title="重新生成">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                            </button>
+                            <button class="tech-btn primary" onclick="copyPassword()" title="複製密碼">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                                複製
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 密碼強度視覺看板 -->
+                    <div class="strength-indicator-section">
+                        <div class="strength-header">
+                            <span>密碼安全強度：</span>
+                            <span class="strength-text" id="strength-label">-</span>
+                        </div>
+                        <div class="strength-bar-track">
+                            <div class="strength-bar-fill" id="strength-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 歷史紀錄 -->
+                <div class="history-section" id="history-panel">
+                    <div class="history-title">歷史生成記錄 (最近 5 組)</div>
+                    <div class="history-list" id="history-container">
+                        <!-- 由 JS 動態生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 訊息提示 Toast -->
+    <div id="copy-toast" class="toast">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toast-text">已複製到剪貼簿</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // Toast 提示
+        // ==========================================
+        function showToast(message) {
+            const toast = document.getElementById('copy-toast');
+            document.getElementById('toast-text').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // ==========================================
+        // UI 連動與 Slider
+        // ==========================================
+        const slider = document.getElementById('password-length');
+        const lengthVal = document.getElementById('length-val');
+
+        function updateSliderValue() {
+            lengthVal.innerText = slider.value;
+            generatePassword(); // 打字或拖動時即時重新產生
+        }
+
+        function onCheckboxChange() {
+            generatePassword();
+        }
+
+        // ==========================================
+        // 密碼學安全隨機數與生成邏輯 (CSPRNG)
+        // ==========================================
+        
+        // 消除 Modulo Bias 的加密隨機整數產生器，數值範圍：[0, max - 1]
+        function secureRandomInt(max) {
+            if (max <= 0) return 0;
+            const array = new Uint32Array(1);
+            const maxUint32 = 4294967295;
+            const limit = maxUint32 - (maxUint32 % max);
+            
+            do {
+                window.crypto.getRandomValues(array);
+            } while (array[0] >= limit);
+            
+            return array[0] % max;
+        }
+
+        // Fisher-Yates csping 洗牌演算法
+        function secureShuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = secureRandomInt(i + 1);
+                const temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+        }
+
+        const charSets = {
+            upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            lower: "abcdefghijklmnopqrstuvwxyz",
+            number: "0123456789",
+            // 徹底移除了空白字元、單引號(')、雙引號(")、以及反單引號(`)，預防在各類程式碼或解析中因特殊符號而導致報錯崩潰
+            symbol: "!@#$%^&*()_+-=[]{}|;:,./<>?"
+        };
+
+        const confusableChars = {
+            upper: ['I', 'O', 'Z', 'S', 'B'],
+            lower: ['l', 'o'],
+            number: ['0', '1', '2', '5', '8'],
+            // 同步移除在大池中已被永久過濾的符號，剩餘可用於混淆過濾的符號對
+            symbol: ['|', ',', '.', '-', '_']
+        };
+
+        let currentPassword = '';
+        const passwordHistory = [];
+
+        function regeneratePassword() {
+            // 提供點擊爆炸動效反饋
+            createBurst(window.innerWidth / 2, window.innerHeight / 2);
+            generatePassword(true); // 強制加入歷史紀錄
+        }
+
+        function generatePassword(pushHistory = false) {
+            const length = parseInt(slider.value, 10);
+            const useUpper = document.getElementById('opt-upper').checked;
+            const useLower = document.getElementById('opt-lower').checked;
+            const useNumber = document.getElementById('opt-number').checked;
+            const useSymbol = document.getElementById('opt-symbol').checked;
+            const excludeConfusable = document.getElementById('opt-exclude').checked;
+            const strictMode = document.getElementById('opt-strict').checked;
+
+            const selectedPools = [];
+            
+            if (useUpper) selectedPools.push({ name: 'upper', chars: charSets.upper, confusable: confusableChars.upper });
+            if (useLower) selectedPools.push({ name: 'lower', chars: charSets.lower, confusable: confusableChars.lower });
+            if (useNumber) selectedPools.push({ name: 'number', chars: charSets.number, confusable: confusableChars.number });
+            if (useSymbol) selectedPools.push({ name: 'symbol', chars: charSets.symbol, confusable: confusableChars.symbol });
+
+            if (selectedPools.length === 0) {
+                document.getElementById('password-output').innerText = "請至少選擇一種字元集！";
+                document.getElementById('password-output').style.color = "var(--strength-weak)";
+                updateStrengthIndicator('', 0);
+                return;
+            }
+
+            document.getElementById('password-output').style.color = "#ffffff";
+
+            // 過濾相似字元
+            const processedPools = selectedPools.map(pool => {
+                let availableChars = pool.chars;
+                if (excludeConfusable) {
+                    availableChars = availableChars.split('').filter(c => !pool.confusable.includes(c)).join('');
+                }
+                return { name: pool.name, chars: availableChars };
+            });
+
+            // 檢查過濾後是否有空池（例如極端情況下）
+            const validPools = processedPools.filter(pool => pool.chars.length > 0);
+            if (validPools.length === 0) {
+                document.getElementById('password-output').innerText = "字元池過濾後無可用字元！";
+                return;
+            }
+
+            let passwordChars = [];
+
+            // 1. 如果開啟嚴格分佈模式，且長度足夠，則先確保每種勾選的字元集各抽一個
+            if (strictMode && length >= validPools.length) {
+                validPools.forEach(pool => {
+                    const rndIdx = secureRandomInt(pool.chars.length);
+                    passwordChars.push(pool.chars[rndIdx]);
+                });
+            }
+
+            // 2. 結合全部可用字元為大池，填充剩下長度
+            const totalCharPool = validPools.map(p => p.chars).join('');
+            const remainingLength = length - passwordChars.length;
+
+            for (let i = 0; i < remainingLength; i++) {
+                const rndIdx = secureRandomInt(totalCharPool.length);
+                passwordChars.push(totalCharPool[rndIdx]);
+            }
+
+            // 3. 用安全 Fisher-Yates 洗牌以防結構分佈被猜透
+            secureShuffle(passwordChars);
+
+            currentPassword = passwordChars.join('');
+            document.getElementById('password-output').innerText = currentPassword;
+
+            // 4. 計算並更新強度
+            evaluatePasswordStrength(currentPassword, validPools.length, length);
+
+            // 5. 歷史記錄處理
+            if (pushHistory) {
+                if (passwordHistory.length === 0 || passwordHistory[0] !== currentPassword) {
+                    passwordHistory.unshift(currentPassword);
+                    if (passwordHistory.length > 5) {
+                        passwordHistory.pop();
+                    }
+                    renderHistory();
+                }
+            }
+        }
+
+        // ==========================================
+        // 密碼強度評量演算法
+        // ==========================================
+        function evaluatePasswordStrength(password, selectedSetsCount, length) {
+            if (!password) {
+                updateStrengthIndicator('-', 0, 'transparent');
+                return;
+            }
+
+            // 評估因子：長度、字元池多樣性、熵值估算
+            let score = 0;
+            
+            // 長度權重
+            score += length * 4;
+
+            // 字元多樣性加成
+            score += selectedSetsCount * 12;
+
+            // 檢查密碼是否混合大小寫、數字、特殊符號
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+            let mixCount = 0;
+            if (hasUpper) mixCount++;
+            if (hasLower) mixCount++;
+            if (hasNumber) mixCount++;
+            if (hasSymbol) mixCount++;
+
+            score += mixCount * 8;
+
+            // 特殊懲罰：如果只有一種類型
+            if (mixCount === 1) {
+                score = Math.min(score, 35);
+            }
+
+            // 對應至強度層級
+            let label = '';
+            let percent = 0;
+            let color = '';
+
+            if (score < 40) {
+                label = '弱 (Weak) - 易受爆破';
+                percent = 25;
+                color = 'var(--strength-weak)';
+            } else if (score < 65) {
+                label = '中等 (Medium) - 尚可安全';
+                percent = 50;
+                color = 'var(--strength-medium)';
+            } else if (score < 85) {
+                label = '強 (Strong) - 建議採用';
+                percent = 75;
+                color = 'var(--strength-strong)';
+            } else {
+                label = '安全 (Secure) - 密碼學防護';
+                percent = 100;
+                color = 'var(--strength-secure)';
+            }
+
+            updateStrengthIndicator(label, percent, color);
+        }
+
+        function updateStrengthIndicator(label, percent, color) {
+            const bar = document.getElementById('strength-bar');
+            const lbl = document.getElementById('strength-label');
+
+            lbl.innerText = label;
+            lbl.style.color = color;
+            
+            bar.style.width = percent + '%';
+            bar.style.backgroundColor = color;
+            bar.style.color = color; // 支援 css currentColor
+        }
+
+        // ==========================================
+        // 複製與歷史記錄管理
+        // ==========================================
+        function copyPassword() {
+            if (!currentPassword) {
+                showToast("無效的密碼內容");
+                return;
+            }
+            navigator.clipboard.writeText(currentPassword)
+                .then(() => showToast("已複製密碼到剪貼簿"))
+                .catch(() => showToast("複製失敗，請手動複製"));
+        }
+
+        function copyHistoryVal(val) {
+            navigator.clipboard.writeText(val)
+                .then(() => showToast("已複製歷史密碼"));
+        }
+
+        function renderHistory() {
+            const panel = document.getElementById('history-panel');
+            const container = document.getElementById('history-container');
+            
+            if (passwordHistory.length === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            panel.style.display = 'flex';
+            container.innerHTML = '';
+
+            passwordHistory.forEach(pwd => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span class="history-val">${escapeHtml(pwd)}</span>
+                    <button class="history-copy-btn" onclick="copyHistoryVal('${escapeHtml(pwd)}')" title="複製此組密碼">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function escapeHtml(string) {
+            return String(string).replace(/[&<>"']/g, function (s) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[s];
+            });
+        }
+
+        // ==========================================
+        // 背景加密數字亂碼粒子及動效 (防禦綠主題)
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        const securityChars = ['*', '#', '$', '@', '?', '0', '1', 'i', 'x', 'y', 'z', '[', ']'];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            adjustParticles();
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.density = (Math.random() * 30) + 1;
+                this.char = securityChars[Math.floor(Math.random() * securityChars.length)];
+                
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1;
+                
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 6;
+                    this.velocityY = (Math.random() - 0.5) * 6;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 緩步上升
+                    this.velocityX = (Math.random() - 0.5) * 0.15;
+                }
+            }
+            draw() {
+                let alpha = this.isBurst ? this.life : (this.size / 3.2);
+                ctx.beginPath();
+                ctx.font = `${Math.floor(this.size * 7 + 4)}px 'JetBrains Mono', monospace`;
+                
+                if (this.isBurst) {
+                    ctx.fillStyle = `rgba(0, 255, 102, ${alpha})`;
+                } else {
+                    ctx.fillStyle = `rgba(0, 255, 102, ${alpha * 0.7})`;
+                }
+                ctx.fillText(this.char, this.x, this.y);
+                ctx.closePath();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.02;
+                    this.velocityX *= 0.95;
+                    this.velocityY *= 0.95;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+                    
+                    if (this.y < -10) {
+                        this.y = canvas.height + 10;
+                        this.x = Math.random() * canvas.width;
+                    }
+                    if (this.x < -10 || this.x > canvas.width + 10) {
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * this.density * 0.5;
+                    this.y -= (dy / distance) * force * this.density * 0.5;
+                } 
+            }
+        }
+
+        function adjustParticles() {
+            const targetCount = Math.floor((canvas.width * canvas.height) / 16000);
+            let bgParticles = particles.filter(p => !p.isBurst);
+            const burstParticles = particles.filter(p => p.isBurst);
+
+            bgParticles.forEach(p => {
+                if (p.x > canvas.width) p.x = Math.random() * canvas.width;
+                if (p.y > canvas.height) p.y = Math.random() * canvas.height;
+            });
+
+            if (bgParticles.length < targetCount) {
+                const toAdd = targetCount - bgParticles.length;
+                for (let i = 0; i < toAdd; i++) {
+                    bgParticles.push(new Particle());
+                }
+            } else if (bgParticles.length > targetCount) {
+                bgParticles = bgParticles.slice(0, targetCount);
+            }
+
+            particles = [...bgParticles, ...burstParticles];
+        }
+
+        function createBurst(x, y) {
+            for(let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => { 
+            mouse.x = e.clientX; 
+            mouse.y = e.clientY; 
+        });
+        window.addEventListener('mousedown', (e) => { 
+            mouse.radius = 280; 
+            createBurst(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { mouse.radius = 150; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        animateParticles();
+
+        // 頁面初始化載入時，直接自動產生一組安全密碼
+        window.addEventListener('load', () => {
+            generatePassword();
+        });
+    </script>
+</body>
+</html>
