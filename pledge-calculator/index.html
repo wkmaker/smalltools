@@ -606,6 +606,49 @@
             fill: var(--accent-color);
         }
 
+        /* ====== 分享連結按鈕 (霧金黃主題) ====== */
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(255, 184, 0, 0.06);
+            border: 1px solid rgba(255, 184, 0, 0.25);
+            color: rgba(255, 184, 0, 0.75);
+            padding: 0.35rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            margin-left: auto;
+            text-decoration: none;
+            user-select: none;
+        }
+        .share-btn:hover {
+            background: rgba(255, 184, 0, 0.12);
+            border-color: rgba(255, 184, 0, 0.6);
+            color: #ffb800;
+            box-shadow: 0 0 16px rgba(255, 184, 0, 0.15);
+        }
+        .share-btn svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        .share-btn:hover svg { transform: rotate(-8deg) scale(1.15); }
+        .share-btn.copied {
+            background: rgba(0, 255, 102, 0.1);
+            border-color: rgba(0, 255, 102, 0.5);
+            color: #00ff66;
+            box-shadow: 0 0 14px rgba(0, 255, 102, 0.15);
+        }
+        .share-btn .btn-text { transition: all 0.2s ease; }
+
         /* ====== 響應式媒體查詢 ====== */
         @media (max-width: 1100px) {
             .app-grid {
@@ -756,11 +799,16 @@
 
             <!-- 右欄：儀表板與模擬分析 -->
             <div class="pane">
-                <div class="pane-title">
+                <div class="pane-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div class="pane-title-left">
                         <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
                         維持率壓力模擬
                     </div>
+                    <!-- 分享連結按鈕 -->
+                    <button class="share-btn" id="share-btn" onclick="copyShareLink()" title="複製當前配置的查詢連結">
+                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                        <span class="btn-text">複製查詢連結</span>
+                    </button>
                 </div>
 
                 <!-- 1. SVG 儀表板 -->
@@ -1200,7 +1248,71 @@
         thresholdSafeIn.addEventListener('input', recalculate);
 
         // 壓力測試滑桿連動
-        stressSlider.addEventListener('input', recalculate);
+        stressSlider.addEventListener('input', () => {
+            recalculate();
+            syncToURLDebounced();
+        });
+        stressSlider.addEventListener('change', syncToURL);
+
+        // ==========================================
+        // URL 雙向連動 (股票質押與維持率壓力測試器)
+        // ==========================================
+        function safeParseFloat(val, fallback) {
+            const n = parseFloat(val);
+            return (isFinite(n) && !isNaN(n)) ? n : fallback;
+        }
+
+        function syncToURL() {
+            const params = new URLSearchParams();
+            params.set('p', stockPriceIn.value);
+            params.set('q', stockQtyIn.value);
+            params.set('u', qtyUnitSelect.value);
+            params.set('la', loanAmountIn.value.replace(/,/g, ''));
+            params.set('tw', thresholdWarnIn.value);
+            params.set('ts', thresholdSafeIn.value);
+            params.set('s', stressSlider.value);
+            history.replaceState(null, '', '?' + params.toString());
+        }
+
+        let urlDebounceTimer = null;
+        function syncToURLDebounced() {
+            clearTimeout(urlDebounceTimer);
+            urlDebounceTimer = setTimeout(syncToURL, 300);
+        }
+
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.toString()) return false;
+
+            stockPriceIn.value = safeParseFloat(params.get('p'), 200);
+            stockQtyIn.value = safeParseFloat(params.get('q'), 50);
+            qtyUnitSelect.value = params.get('u') === '1' ? '1' : '1000';
+            
+            const laVal = safeParseFloat(params.get('la'), 6000000);
+            loanAmountIn.value = Math.round(laVal).toLocaleString('zh-TW');
+            
+            thresholdWarnIn.value = safeParseFloat(params.get('tw'), 130);
+            thresholdSafeIn.value = safeParseFloat(params.get('ts'), 160);
+            stressSlider.value = safeParseFloat(params.get('s'), 0);
+            return true;
+        }
+
+        function copyShareLink() {
+            syncToURL();
+            const url = window.location.href;
+            const btn = document.getElementById('share-btn');
+            const btnText = btn.querySelector('.btn-text');
+            navigator.clipboard.writeText(url).then(() => {
+                btn.classList.add('copied');
+                btn.querySelector('svg').innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>';
+                btnText.textContent = '已複製！';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.querySelector('svg').innerHTML = '<path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>';
+                    btnText.textContent = '複製查詢連結';
+                }, 2200);
+            }).catch(() => window.prompt('請手動複製以下連結：', url));
+        }
 
         // 千分位格式化與輸入監聽器掛載 (符合 SKILL.md 定位游標規範)
         function initFormattedInput(inputId, onInputCallback) {
@@ -1247,6 +1359,12 @@
             }
         });
 
+        // 綁定金額輸入框的 URL 同步
+        ['loan-amount', 'market-value'].forEach(id => {
+            document.getElementById(id).addEventListener('input', syncToURLDebounced);
+            document.getElementById(id).addEventListener('blur', syncToURL);
+        });
+
         // 60% 借本金快捷鍵 (自動格式化為千分位)
         loan60Btn.addEventListener('click', () => {
             const price = parseFloat(stockPriceIn.value) || 0;
@@ -1255,6 +1373,7 @@
             if (marketVal > 0) {
                 loanAmountIn.value = Math.round(marketVal * 0.6).toLocaleString('zh-TW');
                 recalculate();
+                syncToURL();
                 showToast("已帶入最高成數借款 (60%)");
             } else {
                 showToast("請先輸入個股單價與持股數量！");
