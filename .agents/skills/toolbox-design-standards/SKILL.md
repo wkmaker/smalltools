@@ -148,6 +148,7 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
       - 在 `window.addEventListener('load', ...)` 最開始，呼叫 `initFromURL()` 讀取 `window.location.search`。
       - 若網址有帶參數，則覆蓋 HTML 的預設值；若無參數，則維持 HTML 原有預設值（靜默跳過）。
       - **防呆 Fallback**：使用 `safeParseFloat(val, fallback)` 與 `safeParseInt(val, allowed, fallback)` 工具函數進行解析，任何格式錯誤（如 `?rate=abc`）或超出白名單的值，必須安全回退到預設安全數值，絕不能導致頁面報錯或死當。
+      - **即時查詢自動觸發**：對於網路診斷、Lookup 或分析類工具（如 DNS DIG），若從 URL 成功解析出有效的查詢目標（如網域名稱 `d` 參數），在頁面載入且還原 UI 狀態後，**必須自動觸發一次查詢**，使使用者打開分享連結時能直接獲得解析結果，免去再次手動點擊查詢的步驟。
 
     * **細節三 — 逗號過濾與格式化**：
       - **同步到 URL 前**，金額欄位必須去除千分位逗號：`input.value.replace(/,/g, '')`，確保 URL 中為純數字（如 `?p=1000000`，而非 `?p=1,000,000`）。
@@ -159,3 +160,7 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
       - 點擊時呼叫 `syncToURL()` 確保 URL 最新，再以 `navigator.clipboard.writeText(url)` 複製連結。
       - 複製成功後，按鈕應切換為「✓ 已複製！」的視覺回饋（變色 + 圖示改為勾選圖示），2.2 秒後自動恢復原狀。
       - **Fallback**：若 Clipboard API 不可用，改以 `window.prompt(...)` 呈現 URL 讓使用者手動複製。
+
+    * **細節五 — 複雜物件與陣列的序列化**：
+      - 對於多段式利率段落（如房貸 `stages` 陣列）或其他非單一數值的複雜資料結構，應將其轉換為縮減版 JSON 字串後存入 URL 參數（如 `?stages=[{"d":1,"u":"year","r":2.1}]`）。
+      - 在反向解析時，必須使用 `try...catch` 語法包裹 `JSON.parse` 進行解析，防範惡意篡改或損壞的 JSON 字串引發腳本錯誤導致頁面死當，解析失敗時必須安全地回退到預設的動態陣列結構。

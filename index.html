@@ -520,6 +520,213 @@
             text-shadow: none;
         }
 
+        /* ====== 控制面板與搜尋/篩選樣式 ====== */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin: 0 auto 3.5rem;
+            width: 100%;
+            max-width: 700px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50px;
+            padding: 0.2rem 1.5rem 0.2rem 3.5rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-wrapper:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .search-wrapper:focus-within {
+            border-color: var(--accent-glow);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.25), inset 0 0 10px rgba(0, 240, 255, 0.05);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.4rem;
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: var(--text-secondary);
+            pointer-events: none;
+            transition: fill 0.3s ease;
+        }
+
+        .search-wrapper:focus-within .search-icon {
+            fill: var(--accent-glow);
+        }
+
+        #search-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+            padding: 0.8rem 0;
+        }
+
+        #search-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        #search-clear {
+            background: transparent;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 0.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        #search-clear:hover {
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        #search-clear svg {
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: currentColor;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 0.6rem;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            padding: 0.4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-secondary);
+            padding: 0.6rem 1.6rem;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 1px;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.05);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-btn[data-tab="all"].active {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15), inset 0 0 10px rgba(0, 240, 255, 0.05);
+            border-color: rgba(0, 240, 255, 0.3);
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+            color: #00f0ff;
+        }
+
+        .tab-btn[data-tab="finance"].active {
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.15), inset 0 0 10px rgba(255, 184, 0, 0.05);
+            border-color: rgba(255, 184, 0, 0.3);
+            text-shadow: 0 0 8px rgba(255, 184, 0, 0.5);
+            color: #ffb800;
+        }
+
+        .tab-btn[data-tab="developer"].active {
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.15), inset 0 0 10px rgba(0, 255, 102, 0.05);
+            border-color: rgba(0, 255, 102, 0.3);
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+            color: #00ff66;
+        }
+
+        .tab-btn[data-tab="utility"].active {
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.15), inset 0 0 10px rgba(139, 92, 246, 0.05);
+            border-color: rgba(139, 92, 246, 0.3);
+            text-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+            color: #8b5cf6;
+        }
+
+        /* 卡片過濾過渡動畫 */
+        .tool-card {
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        border-color 0.4s ease, 
+                        box-shadow 0.4s ease, 
+                        opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+                        scale 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .tool-card.card-hidden {
+            opacity: 0;
+            scale: 0.9;
+            pointer-events: none;
+            position: absolute;
+            width: 0;
+            height: 0;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            overflow: hidden;
+        }
+
+        /* 無結果提示 */
+        .no-results {
+            width: 100%;
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .no-results svg {
+            width: 3rem;
+            height: 3rem;
+            fill: rgba(255, 255, 255, 0.15);
+        }
+
+        .no-results p {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* 響應式佈局 */
         @media (max-width: 900px) {
             .tools-grid {
@@ -549,9 +756,26 @@
         <h1>工具庫</h1>
         <div class="subtitle-top">My Toolbox</div>
 
+        <!-- 分類與搜尋控制面板 -->
+        <div class="control-panel">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="search-input" placeholder="搜尋工具... (e.g. loan, json, base64)" autocomplete="off">
+                <button id="search-clear" title="清除搜尋" style="display: none;">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+            <div class="tab-group">
+                <button class="tab-btn active" data-tab="all">全部工具</button>
+                <button class="tab-btn" data-tab="finance">金融理財</button>
+                <button class="tab-btn" data-tab="developer">開發工具</button>
+                <button class="tab-btn" data-tab="utility">實用工具</button>
+            </div>
+        </div>
+
         <div class="tools-grid">
             <!-- 目標計時器 -->
-            <a href="./time/index.html" class="tool-card">
+            <a href="./time/index.html" class="tool-card" data-category="utility" data-keywords="目標計時器 target timer 倒數 累計">
                 <div>
                     <h3>目標計時器</h3>
                     <span class="subtitle">Target Timer</span>
@@ -564,7 +788,7 @@
             </a>
 
             <!-- 複利計算機 -->
-            <a href="./compound-interest/index.html" class="tool-card interest-card">
+            <a href="./compound-interest/index.html" class="tool-card interest-card" data-category="finance" data-keywords="複利計算機 compound interest 定期定額 財富 增長">
                 <div>
                     <h3>複利計算機</h3>
                     <span class="subtitle">Compound Interest Calculator</span>
@@ -577,7 +801,7 @@
             </a>
 
             <!-- 信貸計算機 -->
-            <a href="./personal-loan/index.html" class="tool-card loan-card">
+            <a href="./personal-loan/index.html" class="tool-card loan-card" data-category="finance" data-keywords="信貸計算機 personal loan 本息均攤 本金均攤 實質年利率 apr 還款">
                 <div>
                     <h3>信貸計算機</h3>
                     <span class="subtitle">Personal Loan Calculator</span>
@@ -590,7 +814,7 @@
             </a>
 
             <!-- 車貸計算機 -->
-            <a href="./car-loan/index.html" class="tool-card car-card">
+            <a href="./car-loan/index.html" class="tool-card car-card" data-category="finance" data-keywords="車貸計算機 car loan 自備款 寬限期 月付金 apr 還款">
                 <div>
                     <h3>車貸計算機</h3>
                     <span class="subtitle">Car Loan Calculator</span>
@@ -603,7 +827,7 @@
             </a>
 
             <!-- 房貸計算機 -->
-            <a href="./mortgage-loan/index.html" class="tool-card mortgage-card">
+            <a href="./mortgage-loan/index.html" class="tool-card mortgage-card" data-category="finance" data-keywords="房貸計算機 mortgage loan 自備款 寬限期 階梯利率 多段式利率 apr 還款">
                 <div>
                     <h3>房貸計算機</h3>
                     <span class="subtitle">Mortgage Loan Calculator</span>
@@ -616,7 +840,7 @@
             </a>
 
             <!-- Base64 編碼/解碼 -->
-            <a href="./base64/index.html" class="tool-card base64-card">
+            <a href="./base64/index.html" class="tool-card base64-card" data-category="developer" data-keywords="base64 編碼 解碼 encoder decoder 檔案 拖曳 轉換">
                 <div>
                     <h3>Base64 編碼/解碼</h3>
                     <span class="subtitle">Base64 Encoder & Decoder</span>
@@ -629,7 +853,7 @@
             </a>
 
             <!-- URL 編碼/解碼 -->
-            <a href="./url/index.html" class="tool-card url-card">
+            <a href="./url/index.html" class="tool-card url-card" data-category="developer" data-keywords="url 編碼 解碼 encoder decoder query 參數 網址 轉換">
                 <div>
                     <h3>URL 編碼/解碼</h3>
                     <span class="subtitle">URL Encoder & Decoder</span>
@@ -642,7 +866,7 @@
             </a>
 
             <!-- 密碼生成器 -->
-            <a href="./password/index.html" class="tool-card password-card">
+            <a href="./password/index.html" class="tool-card password-card" data-category="developer" data-keywords="安全密碼生成器 password generator csprng 強度 隨機">
                 <div>
                     <h3>安全密碼生成器</h3>
                     <span class="subtitle">Password Generator (CSPRNG)</span>
@@ -655,7 +879,7 @@
             </a>
 
             <!-- Epoch 萬年時間戳記轉換器 -->
-            <a href="./epoch/index.html" class="tool-card epoch-card">
+            <a href="./epoch/index.html" class="tool-card epoch-card" data-category="utility" data-keywords="epoch unix 時間戳記 timestamp converter 時區 台北 utc pst">
                 <div>
                     <h3>Epoch 時間戳記轉換</h3>
                     <span class="subtitle">Epoch Timestamp Converter</span>
@@ -668,7 +892,7 @@
             </a>
 
             <!-- JSON 格式化與美化器 -->
-            <a href="./json/index.html" class="tool-card json-card">
+            <a href="./json/index.html" class="tool-card json-card" data-category="developer" data-keywords="json 格式化 美化器 formatter minifier lint 驗證 壓縮">
                 <div>
                     <h3>JSON 格式化與美化器</h3>
                     <span class="subtitle">JSON Formatter & Minifier</span>
@@ -681,7 +905,7 @@
             </a>
 
             <!-- 股票質押與維持率壓力測試器 -->
-            <a href="./pledge-calculator/index.html" class="tool-card pledge-card">
+            <a href="./pledge-calculator/index.html" class="tool-card pledge-card" data-category="finance" data-keywords="股票質押 維持率 壓力測試 stock pledging risk calculator 追繳 臨界">
                 <div>
                     <h3>股票質押與維持率壓力測試器</h3>
                     <span class="subtitle">Stock Pledging & Risk Calculator</span>
@@ -694,7 +918,7 @@
             </a>
 
             <!-- 台股期貨槓桿與逆風點數估算器 -->
-            <a href="./futures-calculator/index.html" class="tool-card futures-card">
+            <a href="./futures-calculator/index.html" class="tool-card futures-card" data-category="finance" data-keywords="台股期貨 槓桿 逆風 點數 futures margin leverage calculator 斷頭 追繳 臨界">
                 <div>
                     <h3>台股期貨槓桿與逆風點數估算器</h3>
                     <span class="subtitle">Futures Margin & Leverage Calculator</span>
@@ -707,7 +931,7 @@
             </a>
 
             <!-- DIG 網路診斷工具 -->
-            <a href="./dns-dig/index.html" class="tool-card dig-card">
+            <a href="./dns-dig/index.html" class="tool-card dig-card" data-category="developer" data-keywords="dig 網路診斷工具 dns web tool cloudflare google doh 查詢">
                 <div>
                     <h3>DIG 網路診斷工具</h3>
                     <span class="subtitle">DNS Dig Web Tool</span>
@@ -720,7 +944,7 @@
             </a>
 
             <!-- 敬請期待 -->
-            <div class="tool-card placeholder">
+            <div class="tool-card placeholder" data-category="all">
                 <div>
                     <h3>敬請期待</h3>
                     <span class="subtitle">Coming Soon</span>
@@ -730,6 +954,12 @@
                     規劃中
                 </div>
             </div>
+        </div>
+
+        <!-- 無篩選結果提示 -->
+        <div id="no-results" class="no-results" style="display: none;">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <p>沒有找到符合的工具，請嘗試其他關鍵字</p>
         </div>
     </div>
 
@@ -884,6 +1114,156 @@
                 card.style.setProperty('--y', `${y}px`);
             });
         });
+
+        // ==========================================
+        // 工具篩選與搜尋邏輯
+        // ==========================================
+        const searchInput = document.getElementById('search-input');
+        const searchClear = document.getElementById('search-clear');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const toolCards = document.querySelectorAll('.tools-grid .tool-card');
+        const noResults = document.getElementById('no-results');
+
+        let currentTab = 'all';
+        let searchQuery = '';
+
+        // 防抖定時器
+        let searchDebounceTimeout = null;
+
+        // 初始化 URL 狀態
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // 解析分類
+            const cat = params.get('category');
+            const allowedCats = ['all', 'finance', 'developer', 'utility'];
+            if (cat && allowedCats.includes(cat)) {
+                currentTab = cat;
+                tabBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-tab') === currentTab);
+                });
+            }
+
+            // 解析搜尋關鍵字
+            const q = params.get('search');
+            if (q) {
+                searchQuery = q.trim();
+                searchInput.value = searchQuery;
+                searchClear.style.display = searchQuery ? 'flex' : 'none';
+            }
+
+            filterTools(false); // 初始過濾，不防抖
+        }
+
+        // 同步狀態至 URL (含防抖)
+        function syncToURL(debounce = true) {
+            if (searchDebounceTimeout) {
+                clearTimeout(searchDebounceTimeout);
+            }
+
+            const update = () => {
+                const params = new URLSearchParams();
+                if (currentTab !== 'all') {
+                    params.set('category', currentTab);
+                }
+                if (searchQuery) {
+                    params.set('search', searchQuery);
+                }
+                const newUrl = params.toString() ? '?' + params.toString() : window.location.pathname;
+                history.replaceState(null, '', newUrl);
+            };
+
+            if (debounce) {
+                searchDebounceTimeout = setTimeout(update, 300);
+            } else {
+                update();
+            }
+        }
+
+        // 核心過濾邏輯
+        function filterTools(shouldSync = true) {
+            let visibleCount = 0;
+            const query = searchQuery.toLowerCase();
+
+            toolCards.forEach(card => {
+                // 判斷是否為預留卡片
+                const isPlaceholder = card.classList.contains('placeholder');
+                
+                // 取得卡片分類與關鍵字
+                const category = card.getAttribute('data-category');
+                const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+                const title = (card.querySelector('h3') ? card.querySelector('h3').textContent : '').toLowerCase();
+                const desc = (card.querySelector('p') ? card.querySelector('p').textContent : '').toLowerCase();
+
+                // 分類匹配
+                // 預留卡片只在「全部工具」且「沒有搜尋 query」時顯示
+                let matchTab = false;
+                if (isPlaceholder) {
+                    matchTab = (currentTab === 'all' && !query);
+                } else {
+                    matchTab = (currentTab === 'all' || category === currentTab);
+                }
+
+                // 搜尋匹配
+                let matchSearch = true;
+                if (query && !isPlaceholder) {
+                    matchSearch = title.includes(query) || desc.includes(query) || keywords.includes(query);
+                }
+
+                // 綜合判斷
+                if (matchTab && matchSearch) {
+                    card.classList.remove('card-hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('card-hidden');
+                }
+            });
+
+            // 顯示/隱藏無結果提示
+            noResults.style.display = (visibleCount === 0) ? 'flex' : 'none';
+
+            if (shouldSync) {
+                syncToURL(true);
+            }
+        }
+
+        // 綁定事件監聽
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim();
+            searchClear.style.display = searchQuery ? 'flex' : 'none';
+            filterTools(true);
+        });
+
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            searchQuery = '';
+            searchClear.style.display = 'none';
+            searchInput.focus();
+            filterTools(true);
+        });
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tab = btn.getAttribute('data-tab');
+                if (currentTab === tab) return;
+
+                // 切換 active state
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = tab;
+
+                // 觸發粒子爆炸效果
+                if (typeof createBurst === 'function') {
+                    createBurst(e.clientX, e.clientY);
+                }
+
+                filterTools(true);
+                syncToURL(false); // 切換 Tab 立即更新 URL
+            });
+        });
+
+        // 頁面載入時初始化
+        window.addEventListener('load', initFromURL);
     </script>
 </body>
 </html>
