@@ -505,6 +505,27 @@
             color: #ff007f;
         }
 
+        /* Designer QR Code 產生器專屬 hover 效果 */
+        .tool-card.qr-generator-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 102, 0.06), transparent 40%);
+        }
+
+        .tool-card.qr-generator-card:hover {
+            border-color: rgba(0, 255, 102, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 255, 102, 0.15),
+                        inset 0 0 15px rgba(0, 255, 102, 0.02);
+        }
+
+        .tool-card.qr-generator-card:hover h3 {
+            color: #00ff66;
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+        }
+
+        .tool-card.qr-generator-card .card-action {
+            color: #00ff66;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -970,6 +991,19 @@
                     <h3>文字處理助手</h3>
                     <span class="subtitle">Text Processing Utility</span>
                     <p>精緻且實用的文字排版助手。支援大小寫轉換、空白字元處理，並即時統計字元數、單字數、中文字數與總行數。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- Designer QR Code 產生器 -->
+            <a href="./qr-generator/index.html" class="tool-card qr-generator-card" data-category="developer" data-keywords="qrcode qr code generator designer style gradient logo 產生器 二維碼 漸層 賽博綠">
+                <div>
+                    <h3>Designer QR Code 產生器</h3>
+                    <span class="subtitle">Designer QR Code Generator</span>
+                    <p>專業的藝術二維碼設計生成工具。支援碼體與定位點液態化自訂、霓虹漸層色調整、置中頭像/Logo 拖曳上傳與自動安全容錯防禦。</p>
                 </div>
                 <div class="card-action">
                     開啟工具
