@@ -145,6 +145,11 @@
             height: 16px;
             fill: currentColor;
             transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .back-btn .back-btn-text {
+            display: inline;
         }
 
         .back-btn:hover {
@@ -183,13 +188,57 @@
         }
 
         /* ====== 右上角控制列 ====== */
-        .top-controls { position: absolute; top: 1.5rem; right: 1.5rem; display: flex; gap: 0.8rem; z-index: 10; }
-        .icon-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-secondary); width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; }
+        .top-controls {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            z-index: 10;
+        }
+
+        /* 收折區塊 */
+        .controls-panel {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            overflow: hidden;
+            max-width: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease;
+        }
+        .controls-panel.expanded {
+            max-width: 200px;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
         .icon-btn svg { width: 18px; height: 18px; fill: currentColor; transition: transform 0.3s ease; }
         .icon-btn:hover { background: rgba(0, 240, 255, 0.1); color: #00f0ff; border-color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
         .icon-btn.btn-danger:hover { background: rgba(255, 0, 128, 0.1); color: #ff3366; border-color: #ff3366; box-shadow: 0 0 15px rgba(255, 0, 128, 0.3); }
         .icon-btn:hover svg { transform: rotate(90deg); }
         #btn-fullscreen:hover svg { transform: scale(1.1); }
+        #btn-toggle:hover svg { transform: rotate(45deg); }
+        #btn-toggle.active { background: rgba(0, 240, 255, 0.12); color: #00f0ff; border-color: rgba(0, 240, 255, 0.5); }
+        #btn-toggle.active svg { transform: rotate(45deg); }
+
+        /* 複製連結按鈕回饋 */
+        #btn-copy.copied { background: rgba(0, 240, 255, 0.15); color: #00f0ff; border-color: rgba(0, 240, 255, 0.6); box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
+        #btn-copy.copied svg { transform: scale(1.1); }
 
         /* ====== 格式設定懸浮選單 ====== */
         .format-dropdown { position: absolute; top: 45px; right: 0; background: rgba(15, 15, 20, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.5rem; width: 260px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); transform-origin: top right; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: scale(0.95); pointer-events: none; }
@@ -270,13 +319,25 @@
 
         .hidden { display: none !important; }
 
+        /* 全螢幕模式下隱藏回首頁按鈕（由 JS 切換 class 控制） */
+        body.is-fullscreen .back-btn { display: none !important; }
+
         @media (max-width: 768px) {
+            /* 手機版：back-btn 縮成圓形圖示按鈕，只保留箭頭 */
             .back-btn {
-                position: static;
-                display: inline-flex;
-                margin-bottom: 1.5rem;
+                position: absolute;
+                top: 1.2rem;
+                left: 1.2rem;
+                padding: 0.5rem;
+                border-radius: 50%;
+                width: 36px;
+                height: 36px;
+                justify-content: center;
             }
-            .glass-container { padding: 2.5rem 1.5rem; width: 95%; max-width: 95%; }
+            .back-btn .back-btn-text {
+                display: none;
+            }
+            .glass-container { padding: 2.5rem 1.5rem; padding-top: 4rem; width: 95%; max-width: 95%; }
             .timer-display { flex-direction: column; gap: 2rem; }
             .timer-group { width: 100%; justify-content: center; gap: 1.5rem 1rem; }
             .number { font-size: clamp(2rem, 8vw, 3.5rem); }
@@ -297,21 +358,31 @@
     </div>
 
     <div class="glass-container">
-        <!-- 回首頁 -->
-        <a href="../index.html" class="back-btn">
+        <!-- 回首頁：電腦版顯示文字，手機版縮成圓形圖示 -->
+        <a href="../index.html" class="back-btn" aria-label="工具庫首頁">
             <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59-1.42-1.42L4 12l8 8 1.42-1.42L7.83 13H20v-2z"/></svg>
-            工具庫首頁
+            <span class="back-btn-text">工具庫首頁</span>
         </a>
         <div class="top-controls hidden" id="top-controls">
-            <button id="btn-fullscreen" class="icon-btn" aria-label="Fullscreen">
-                <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            <!-- Toggle 展開按鈕（永遠顯示） -->
+            <button id="btn-toggle" class="icon-btn" aria-label="展開控制列" title="更多選項">
+                <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
             </button>
-            <button id="btn-settings" class="icon-btn" aria-label="Settings">
-                <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
-            </button>
-            <button id="btn-reset" class="icon-btn btn-danger" aria-label="Reset Timer">
-                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
+            <!-- 可收折的按鈕群 -->
+            <div class="controls-panel" id="controls-panel">
+                <button id="btn-fullscreen" class="icon-btn" aria-label="Fullscreen" title="全螢幕">
+                    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                </button>
+                <button id="btn-settings" class="icon-btn" aria-label="Settings" title="顯示格式">
+                    <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+                </button>
+                <button id="btn-copy" class="icon-btn" aria-label="複製連結" title="複製分享連結">
+                    <svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>
+                </button>
+                <button id="btn-reset" class="icon-btn btn-danger" aria-label="Reset Timer" title="重設計時器">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
             <div id="format-dropdown" class="format-dropdown">
                 <h3>顯示單位</h3>
                 <div class="dropdown-grid">
@@ -421,6 +492,26 @@
             document.getElementById('event-title').textContent = basePageTitle;
         }
 
+        // ====== Toggle 收折按鈕 ======
+        const btnToggle = document.getElementById('btn-toggle');
+        const controlsPanel = document.getElementById('controls-panel');
+        btnToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = controlsPanel.classList.toggle('expanded');
+            btnToggle.classList.toggle('active', isExpanded);
+            // 收起時同步關閉 format dropdown
+            if (!isExpanded) {
+                document.getElementById('format-dropdown').classList.remove('active');
+            }
+        });
+        // 點擊外部收起
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('top-controls').contains(e.target)) {
+                controlsPanel.classList.remove('expanded');
+                btnToggle.classList.remove('active');
+            }
+        });
+
         document.getElementById('btn-fullscreen').addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
@@ -428,6 +519,38 @@
                 });
             } else {
                 document.exitFullscreen();
+            }
+        });
+
+        // 全螢幕切換時隱藏/顯示回首頁按鈕
+        const onFullscreenChange = () => {
+            document.body.classList.toggle('is-fullscreen', !!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
+
+        // ====== 複製連結按鈕 ======
+        document.getElementById('btn-copy').addEventListener('click', () => {
+            const url = window.location.href;
+            const btnCopy = document.getElementById('btn-copy');
+            const copiedSvg = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+            const linkSvg = `<svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>`;
+            const doFeedback = () => {
+                btnCopy.innerHTML = copiedSvg;
+                btnCopy.classList.add('copied');
+                setTimeout(() => {
+                    btnCopy.innerHTML = linkSvg;
+                    btnCopy.classList.remove('copied');
+                }, 2200);
+            };
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(doFeedback).catch(() => {
+                    window.prompt('複製此連結：', url);
+                });
+            } else {
+                window.prompt('複製此連結：', url);
+                doFeedback();
             }
         });
 
@@ -529,7 +652,7 @@
             });
 
             document.addEventListener('click', (e) => {
-                if (!dropdown.contains(e.target)) dropdown.classList.remove('active');
+                if (!dropdown.contains(e.target) && !btnSettings.contains(e.target)) dropdown.classList.remove('active');
             });
 
             document.getElementById('btn-apply-format').addEventListener('click', () => {
