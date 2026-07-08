@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP 檢測助手 - 唯美極客工具</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="專業的網路 IP 檢測與診斷助手。支援 IPv4/IPv6 雙棧查詢、Cloudflare Trace 與隱私檢測，以及 AWS, GCP, Azure, 阿里雲, Baidu Cloud, Apple, Fastly, Akamai, LINE, Facebook 連通性與延遲時間 (Latency) 診斷。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="IP 檢測助手 - 唯美極客工具">
+    <meta property="og:description" content="即時檢測您的 IPv4/IPv6，解析 Cloudflare Trace 與隱私狀態，並診斷各大公有雲、CDN 業者與社群服務之連線延遲。">
+    <meta property="og:url" content="https://tools.cjkuo.net/ip-detector/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+    
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(0, 240, 255, 0.6); /* 科技天藍 */
+            --accent-glow-rgb: 0, 240, 255;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            --success-color: #00ff66;
+            --warning-color: #ffaa00;
+            --danger-color: #ff3366;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 90%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* 返回按鈕手機防重疊 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-glow);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* ====== 頂部：IPv4 & IPv6 雙棧卡片 ====== */
+        .ip-stack-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .ip-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .ip-card.success::before {
+            background: var(--success-color);
+            box-shadow: 0 0 10px var(--success-color);
+        }
+
+        .ip-card.unsupported::before {
+            background: var(--warning-color);
+            box-shadow: 0 0 10px var(--warning-color);
+        }
+
+        .ip-card-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .ip-address-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #ffffff;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .ip-card.success .ip-address-value {
+            color: var(--success-color);
+            text-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+        }
+
+        .ip-card.unsupported .ip-address-value {
+            color: var(--warning-color);
+            text-shadow: 0 0 15px rgba(255, 170, 0, 0.15);
+        }
+
+        /* 旋轉加載中 */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-glow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ====== 中部：資訊卡雙欄排版 ====== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            min-height: 260px;
+        }
+
+        .info-card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.8rem;
+        }
+
+        .info-card-header::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 16px;
+            background: var(--accent-glow);
+            border-radius: 3px;
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin-right: 6px;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.02);
+            padding-bottom: 0.4rem;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+            font-weight: 500;
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .info-value.highlight-green {
+            color: var(--success-color);
+        }
+
+        .info-value.highlight-red {
+            color: var(--danger-color);
+        }
+
+        /* UA 特別換行處理 */
+        .info-item.ua-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.3rem;
+        }
+
+        .info-item.ua-item .info-value {
+            text-align: left;
+            max-width: 100%;
+            white-space: normal;
+            word-break: break-all;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* ====== 底部：公有雲診斷卡 ====== */
+        .cloud-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .cloud-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.2rem;
+        }
+
+        .cloud-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .cloud-item:hover {
+            border-color: rgba(0, 240, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .cloud-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .cloud-status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-dot.loading {
+            background: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .status-dot.connected {
+            background: var(--success-color);
+            box-shadow: 0 0 10px var(--success-color);
+        }
+
+        .status-dot.failed {
+            background: var(--danger-color);
+            box-shadow: 0 0 10px var(--danger-color);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .cloud-latency {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .cloud-item.connected .cloud-latency {
+            color: var(--success-color);
+        }
+
+        .cloud-item.failed .cloud-latency {
+            color: var(--danger-color);
+        }
+
+        /* 重新檢測按鈕 */
+        .recheck-btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .recheck-btn {
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--accent-glow);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.05);
+        }
+
+        .recheck-btn:hover {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .recheck-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            transition: transform 0.6s ease;
+        }
+
+        .recheck-btn:hover svg {
+            transform: rotate(180deg);
+        }
+
+        .recheck-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 1024px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .cloud-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+                max-width: 90%;
+            }
+            .ip-stack-container {
+                grid-template-columns: 1fr;
+            }
+            .cloud-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+        <h1>IP 檢測助手</h1>
+        <div class="subtitle-top">IP Diagnostic Tool</div>
+
+        <!-- 頂部：IPv4 & IPv6 雙棧卡片 -->
+        <div class="ip-stack-container">
+            <div class="ip-card" id="card-ipv4">
+                <div class="ip-card-title">IPv4 地址</div>
+                <div class="ip-address-value" id="ipv4-val">
+                    <span class="spinner"></span> 偵測中...
+                </div>
+            </div>
+            <div class="ip-card" id="card-ipv6">
+                <div class="ip-card-title">IPv6 地址</div>
+                <div class="ip-address-value" id="ipv6-val">
+                    <span class="spinner"></span> 偵測中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 中部：雙欄連線與隱私資訊 -->
+        <div class="info-grid">
+            <!-- Cloudflare Trace Card -->
+            <div class="info-card">
+                <div class="info-card-header">Cloudflare Trace 連線診斷</div>
+                <div class="info-list" id="cf-trace-list">
+                    <div class="info-item"><span class="info-label">載入狀態</span><span class="info-value"><span class="spinner" style="width:14px;height:14px;"></span> 查詢中...</span></div>
+                </div>
+            </div>
+
+            <!-- IP Geolocation & Privacy Card -->
+            <div class="info-card">
+                <div class="info-card-header">IP 地理位置與隱私診斷</div>
+                <div class="info-list" id="mullvad-list">
+                    <div class="info-item"><span class="info-label">載入狀態</span><span class="info-value"><span class="spinner" style="width:14px;height:14px;"></span> 查詢中...</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部：公有雲連線診斷卡 -->
+        <div class="cloud-card">
+            <div class="info-card-header">公有雲及重要服務連線診斷 (Latency)</div>
+            <div class="cloud-grid" id="cloud-grid">
+                <!-- AWS -->
+                <div class="cloud-item" id="cloud-aws">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Amazon AWS</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Google Cloud -->
+                <div class="cloud-item" id="cloud-gcp">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Google Cloud</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Microsoft Azure -->
+                <div class="cloud-item" id="cloud-azure">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Microsoft Azure</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Alibaba Cloud -->
+                <div class="cloud-item" id="cloud-aliyun">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Alibaba Cloud</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Baidu -->
+                <div class="cloud-item" id="cloud-baidu">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Baidu Cloud</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Apple Services -->
+                <div class="cloud-item" id="cloud-apple">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Apple Captive</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Fastly CDN -->
+                <div class="cloud-item" id="cloud-fastly">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Fastly CDN</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Akamai CDN -->
+                <div class="cloud-item" id="cloud-akamai">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Akamai CDN</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- LINE -->
+                <div class="cloud-item" id="cloud-line">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">LINE</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Facebook -->
+                <div class="cloud-item" id="cloud-facebook">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Meta / FB</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+            </div>
+
+            <!-- 重新檢測按鈕 -->
+            <div class="recheck-btn-container">
+                <button class="recheck-btn" id="btn-recheck">
+                    <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    重新檢測網路連線
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 背景粒子與特效動畫
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            adjustParticles();
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5; 
+                this.density = (Math.random() * 30) + 1;
+                
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1; 
+                
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 4; 
+                    this.velocityY = (Math.random() - 0.5) * 4;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1);
+                    this.velocityX = (Math.random() - 0.5) * 0.2;
+                }
+            }
+            draw() {
+                ctx.beginPath(); 
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
+                ctx.closePath();
+                
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                // 科技藍粒子
+                ctx.fillStyle = this.isBurst 
+                    ? `rgba(0, 240, 255, ${alpha})` 
+                    : `rgba(0, 240, 255, ${alpha * 0.8})`; 
+                ctx.fill();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.025; 
+                    this.velocityX *= 0.95;
+                    this.velocityY *= 0.95;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+                    
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                    if (this.x < 0 || this.x > canvas.width) {
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * this.density * 0.6;
+                    this.y -= (dy / distance) * force * this.density * 0.6;
+                } 
+            }
+        }
+
+        function adjustParticles() {
+            const targetCount = Math.floor((canvas.width * canvas.height) / 10000);
+            let bgParticles = particles.filter(p => !p.isBurst);
+            const burstParticles = particles.filter(p => p.isBurst);
+
+            bgParticles.forEach(p => {
+                if (p.x > canvas.width) p.x = Math.random() * canvas.width;
+                if (p.y > canvas.height) p.y = Math.random() * canvas.height;
+            });
+
+            if (bgParticles.length < targetCount) {
+                const toAdd = targetCount - bgParticles.length;
+                for (let i = 0; i < toAdd; i++) {
+                    bgParticles.push(new Particle());
+                }
+            } else if (bgParticles.length > targetCount) {
+                bgParticles = bgParticles.slice(0, targetCount);
+            }
+
+            particles = [...bgParticles, ...burstParticles];
+        }
+
+        function createBurst(x, y) {
+            for(let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        window.addEventListener('mousemove', (e) => { 
+            mouse.x = e.clientX; 
+            mouse.y = e.clientY; 
+        });
+        window.addEventListener('mousedown', (e) => { 
+            mouse.radius = 280; 
+            createBurst(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { mouse.radius = 150; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        animateParticles();
+
+        // ==========================================
+        // IP 檢測助手主邏輯
+        // ==========================================
+
+        const ipv4Val = document.getElementById('ipv4-val');
+        const ipv6Val = document.getElementById('ipv6-val');
+        const cardIpv4 = document.getElementById('card-ipv4');
+        const cardIpv6 = document.getElementById('card-ipv6');
+        const cfTraceList = document.getElementById('cf-trace-list');
+        const mullvadList = document.getElementById('mullvad-list');
+        const btnRecheck = document.getElementById('btn-recheck');
+
+        // 公有雲與常用服務端點
+        const cloudEndpoints = {
+            aws: { name: 'Amazon AWS', url: 'https://checkip.amazonaws.com/', elemId: 'cloud-aws' },
+            gcp: { name: 'Google Cloud', url: 'https://clients3.google.com/generate_204', elemId: 'cloud-gcp' },
+            azure: { name: 'Microsoft Azure', url: 'https://www.microsoft.com/favicon.ico', elemId: 'cloud-azure' },
+            aliyun: { name: 'Alibaba Cloud', url: 'https://www.aliyun.com/favicon.ico', elemId: 'cloud-aliyun' },
+            baidu: { name: 'Baidu Cloud', url: 'https://www.baidu.com/favicon.ico', elemId: 'cloud-baidu' },
+            apple: { name: 'Apple Captive', url: 'https://captive.apple.com/hotspot-detect.html', elemId: 'cloud-apple' },
+            fastly: { name: 'Fastly CDN', url: 'https://www.fastly.com/favicon.ico', elemId: 'cloud-fastly' },
+            akamai: { name: 'Akamai CDN', url: 'https://www.akamai.com/favicon.ico', elemId: 'cloud-akamai' },
+            line: { name: 'LINE', url: 'https://line.me/favicon.ico', elemId: 'cloud-line' },
+            facebook: { name: 'Meta / FB', url: 'https://www.facebook.com/favicon.ico', elemId: 'cloud-facebook' }
+        };
+
+        // 輔助：格式化加載狀態
+        function setElementLoading(element, msg = "偵測中...") {
+            element.innerHTML = `<span class="spinner" style="width: 16px; height: 16px;"></span> ${msg}`;
+        }
+
+        // 1. 檢測 IP (IPv4 / IPv6)
+        async function detectIP(type, url, container, card) {
+            card.className = "ip-card"; // 重設 class
+            setElementLoading(container, `偵測 ${type} 中...`);
+            
+            try {
+                const res = await fetch(url, {
+                    signal: AbortSignal.timeout(4000) // 4秒超時
+                });
+                const data = await res.json();
+                if (data && data.ip) {
+                    container.textContent = data.ip;
+                    card.classList.add('success');
+                } else {
+                    throw new Error("無效的 IP 資料");
+                }
+            } catch (err) {
+                container.textContent = "不支援";
+                card.classList.add('unsupported');
+            }
+        }
+
+        // 2. 解析 Cloudflare Trace
+        function parseTraceText(text) {
+            const lines = text.split('\n');
+            const result = {};
+            lines.forEach(line => {
+                const parts = line.split('=');
+                if (parts.length >= 2) {
+                    result[parts[0].trim()] = parts.slice(1).join('=').trim();
+                }
+            });
+            return result;
+        }
+
+        async function detectCloudflareTrace() {
+            setElementLoading(cfTraceList, "讀取連線資訊中...");
+            
+            try {
+                const res = await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
+                    signal: AbortSignal.timeout(4500)
+                });
+                const text = await res.text();
+                const trace = parseTraceText(text);
+
+                // 只呈現 IP, colo, loc, http, UA (uag)
+                cfTraceList.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">連線 IP</span>
+                        <span class="info-value" title="${trace.ip || '未知'}">${trace.ip || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">機房節點 (colo)</span>
+                        <span class="info-value highlight-green" title="${trace.colo || '未知'}">${trace.colo || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">地理位置 (loc)</span>
+                        <span class="info-value" title="${trace.loc || '未知'}">${trace.loc || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">最高連線協議</span>
+                        <span class="info-value" title="${trace.http || '未知'}">${trace.http || '未知'}</span>
+                    </div>
+                    <div class="info-item ua-item">
+                        <span class="info-label">瀏覽器 UA (User Agent)</span>
+                        <span class="info-value" title="${trace.uag || '未知'}">${trace.uag || '未知'}</span>
+                    </div>
+                `;
+            } catch (err) {
+                cfTraceList.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">連線狀態</span>
+                        <span class="info-value highlight-red">Cloudflare 診斷失敗 / 網路阻斷</span>
+                    </div>
+                `;
+            }
+        }
+
+        // 3. 檢測 IP 地理位置與 Mullvad 服務狀態
+        async function detectMullvad() {
+            setElementLoading(mullvadList, "查詢地理與隱私防護狀態中...");
+            
+            let ipData = null;
+            let ipError = false;
+            
+            // 軌道 1-A：優先獲取 freeipapi.com 資料
+            try {
+                const res = await fetch('https://freeipapi.com/api/json', {
+                    signal: AbortSignal.timeout(3500)
+                });
+                const rawData = await res.json();
+                
+                ipData = {
+                    org: rawData.asnOrganization,
+                    city: rawData.cityName,
+                    country_name: rawData.countryName,
+                    latitude: rawData.latitude,
+                    longitude: rawData.longitude,
+                    timezone: rawData.timeZones ? rawData.timeZones[0] : '未知',
+                    postal: rawData.zipCode,
+                    is_proxy: rawData.isProxy
+                };
+            } catch (err) {
+                // 軌道 1-B：備份 fallback 到 ipapi.co
+                try {
+                    const res = await fetch('https://ipapi.co/json/', {
+                        signal: AbortSignal.timeout(3500)
+                    });
+                    const rawData = await res.json();
+                    ipData = {
+                        org: rawData.org,
+                        city: rawData.city,
+                        country_name: rawData.country_name,
+                        latitude: rawData.latitude,
+                        longitude: rawData.longitude,
+                        timezone: rawData.timezone,
+                        postal: rawData.postal,
+                        is_proxy: null
+                    };
+                } catch (fallbackErr) {
+                    ipError = true;
+                }
+            }
+
+            // 軌道 2：背景檢測 Mullvad 節點連通性 (使用 no-cors)
+            let mullvadConnected = false;
+            let mullvadLatency = null;
+            const mullvadStart = performance.now();
+            try {
+                await fetch('https://am.i.mullvad.net/json', {
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(3500)
+                });
+                mullvadConnected = true;
+                mullvadLatency = Math.round(performance.now() - mullvadStart);
+            } catch (err) {
+                mullvadConnected = false;
+            }
+
+            if (ipError) {
+                mullvadList.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">地理診斷</span>
+                        <span class="info-value highlight-red">地理位置查詢失敗 / 網路阻斷</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Mullvad 節點狀態</span>
+                        <span class="info-value ${mullvadConnected ? 'highlight-green' : 'highlight-red'}">
+                            ${mullvadConnected ? `已連通 (${mullvadLatency} ms)` : '無法連通'}
+                        </span>
+                    </div>
+                `;
+                return;
+            }
+
+            const isBlacklisted = ipData.is_proxy === true;
+
+            mullvadList.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">所屬機構 (ISP)</span>
+                    <span class="info-value" title="${ipData.org || '未知'}">${ipData.org || '未知'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">地理位置</span>
+                    <span class="info-value" title="${ipData.city || ''}, ${ipData.country_name || '未知'}">${ipData.city || '未知'}, ${ipData.country_name || '未知'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">地理經緯度</span>
+                    <span class="info-value" style="font-size: 0.8rem;">${ipData.longitude || 0}, ${ipData.latitude || 0}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">IP 黑名單狀態</span>
+                    <span class="info-value ${isBlacklisted ? 'highlight-red' : 'highlight-green'}">${isBlacklisted ? '有風險 (公開代理)' : '安全 (未列入)'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mullvad 節點連通</span>
+                    <span class="info-value ${mullvadConnected ? 'highlight-green' : ''}">
+                        ${mullvadConnected ? `已連通 (${mullvadLatency} ms)` : '無法連通'}
+                    </span>
+                </div>
+            `;
+        }
+
+        // 4. 公有雲延遲與連通性檢測
+        async function diagnoseCloudEndpoint(key, config) {
+            const item = document.getElementById(config.elemId);
+            const indicator = item.querySelector('.status-dot');
+            const latencyText = item.querySelector('.cloud-latency');
+
+            item.className = "cloud-item"; // 重置
+            indicator.className = "status-dot loading";
+            latencyText.textContent = "偵測中...";
+
+            const start = performance.now();
+            try {
+                // 使用 mode: 'no-cors' 規避跨網域 CORS 問題，並避免 cache
+                await fetch(config.url, {
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(4500) // 4.5秒超時
+                });
+
+                const latency = Math.round(performance.now() - start);
+                
+                indicator.className = "status-dot connected";
+                item.classList.add('connected');
+                latencyText.textContent = `${latency} ms`;
+            } catch (err) {
+                indicator.className = "status-dot failed";
+                item.classList.add('failed');
+                latencyText.textContent = "連線失敗";
+            }
+        }
+
+        async function runCloudDiagnostics() {
+            const promises = Object.keys(cloudEndpoints).map(key => 
+                diagnoseCloudEndpoint(key, cloudEndpoints[key])
+            );
+            await Promise.all(promises);
+        }
+
+        // 一鍵重新檢測
+        async function runAllChecks() {
+            // 平行載入
+            detectIP("IPv4", "https://api.ipify.org?format=json", ipv4Val, cardIpv4);
+            detectIP("IPv6", "https://api6.ipify.org?format=json", ipv6Val, cardIpv6);
+            detectCloudflareTrace();
+            detectMullvad();
+            runCloudDiagnostics();
+        }
+
+        // 重新檢測按鈕監聽
+        btnRecheck.addEventListener('click', (e) => {
+            createBurst(e.clientX, e.clientY);
+            runAllChecks();
+        });
+
+        // 初始化
+        window.addEventListener('load', () => {
+            runAllChecks();
+        });
+    </script>
+</body>
+</html>
