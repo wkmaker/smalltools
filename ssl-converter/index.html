@@ -1059,6 +1059,20 @@
 
                     const daysRemaining = checkCertificateExpiry(clientCertObj);
 
+                    const outputs = [
+                        { filename: 'certificate.crt', content: certPem, label: '憑證檔案 (.crt)' },
+                        { filename: 'private.key', content: privateKeyPem, label: '私鑰檔案 (.key)' }
+                    ];
+
+                    if (caBundlePem && caBundlePem.trim()) {
+                        outputs.push({ filename: 'ca-bundle.crt', content: caBundlePem, label: '中繼憑證鏈 (.ca-bundle)' });
+                        outputs.push({ 
+                            filename: 'fullchain.crt', 
+                            content: `${certPem.trim()}\n${caBundlePem.trim()}`, 
+                            label: '完整憑證鏈 [包含伺服器憑證+中繼憑證] (.crt)' 
+                        });
+                    }
+
                     showConversionResults({
                         meta: [
                             { label: '檔案名稱', value: uploadedFiles.pfx.name },
@@ -1071,11 +1085,7 @@
                                 class: daysRemaining !== null && daysRemaining <= 30 ? (daysRemaining < 0 ? 'danger' : 'warning') : 'success' 
                             }
                         ],
-                        outputs: [
-                            { filename: 'certificate.crt', content: certPem, label: '憑證檔案 (.crt)' },
-                            { filename: 'private.key', content: privateKeyPem, label: '私鑰檔案 (.key)' },
-                            { filename: 'ca-bundle.crt', content: caBundlePem, label: '中繼憑證鏈 (.ca-bundle)' }
-                        ]
+                        outputs: outputs
                     });
 
                 } catch (err) {
