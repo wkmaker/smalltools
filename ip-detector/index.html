@@ -918,67 +918,122 @@
             }
         }
 
-        // 3. 檢測 IP 地理位置資訊 (使用 ipapi.co)
+        // 3. 檢測 IP 地理位置資訊 (優先 ipapi.co，限流時 fallback 至 ipwhois.app)
         async function detectMullvad() {
             setElementLoading(mullvadList, "查詢地理位置與網路資訊中...");
             
+            // 將 API 回傳的原始資料標準化為統一格式
+            function normalizeIpapi(d) {
+                return {
+                    org: d.org,
+                    asn: d.asn,
+                    network: d.network || null,
+                    city: d.city,
+                    region: d.region,
+                    country_name: d.country_name,
+                    latitude: d.latitude,
+                    longitude: d.longitude,
+                    timezone: d.timezone,
+                    utc_offset: d.utc_offset,
+                    currency: d.currency,
+                    currency_name: d.currency_name,
+                    source: 'ipapi.co'
+                };
+            }
+
+            function normalizeIpwhois(d) {
+                return {
+                    org: d.org || d.isp,
+                    asn: d.asn,
+                    network: null,   // ipwhois 不提供 CIDR 網段
+                    city: d.city,
+                    region: d.region,
+                    country_name: d.country,
+                    latitude: d.latitude,
+                    longitude: d.longitude,
+                    timezone: d.timezone,
+                    utc_offset: d.timezone_gmt,
+                    currency: d.currency_code,
+                    currency_name: d.currency,
+                    source: 'ipwhois.app'
+                };
+            }
+
+            let data = null;
+
+            // 軌道 1：嘗試 ipapi.co
             try {
                 const res = await fetch('https://ipapi.co/json/', {
                     signal: AbortSignal.timeout(5000)
                 });
-                const d = await res.json();
-                
-                // 如果 API 回傳錯誤（例如 Rate Limited）
-                if (d.error) {
-                    throw new Error(d.reason || 'API 限流');
-                }
-
-                const inEU = d.in_eu ? '是 (EU)' : '否';
-                const timezone = d.timezone ? `${d.timezone} (UTC${d.utc_offset || ''})` : '未知';
-                const location = [d.city, d.region, d.country_name].filter(Boolean).join(', ') || '未知';
-                const latlon = (d.latitude != null && d.longitude != null)
-                    ? `${d.longitude}, ${d.latitude}` : '未知';
-                const currency = d.currency ? `${d.currency} (${d.currency_name || ''})` : '未知';
-
-                mullvadList.innerHTML = `
-                    <div class="info-item">
-                        <span class="info-label">所屬機構 (ISP)</span>
-                        <span class="info-value" title="${d.org || '未知'}">${d.org || '未知'}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">ASN</span>
-                        <span class="info-value">${d.asn || '未知'}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">網段 (CIDR)</span>
-                        <span class="info-value" style="font-size: 0.85rem;">${d.network || '未知'}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">地理位置</span>
-                        <span class="info-value" title="${location}">${location}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">地理經緯度</span>
-                        <span class="info-value" style="font-size: 0.85rem;">${latlon}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">時區</span>
-                        <span class="info-value">${timezone}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="info-label">貨幣</span>
-                        <span class="info-value">${currency}</span>
-                    </div>
-                `;
+                const raw = await res.json();
+                if (raw.error) throw new Error(raw.reason || '限流');
+                data = normalizeIpapi(raw);
             } catch (err) {
-                mullvadList.innerHTML = `
-                    <div class="info-item">
-                        <span class="info-label">查詢狀態</span>
-                        <span class="info-value highlight-red">地理位置查詢失敗 (${err.message || '網路錯誤'})</span>
-                    </div>
-                `;
+                // 軌道 2：fallback 至 ipwhois.app
+                try {
+                    const res = await fetch('https://ipwhois.app/json/', {
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const raw = await res.json();
+                    if (!raw.success) throw new Error('ipwhois 查詢失敗');
+                    data = normalizeIpwhois(raw);
+                } catch (fallbackErr) {
+                    mullvadList.innerHTML = `
+                        <div class="info-item">
+                            <span class="info-label">查詢狀態</span>
+                            <span class="info-value highlight-red">地理位置查詢失敗，主備來源皆無回應</span>
+                        </div>
+                    `;
+                    return;
+                }
             }
+
+            const timezone = data.timezone
+                ? `${data.timezone} (UTC${data.utc_offset || ''})`
+                : '未知';
+            const location = [data.city, data.region, data.country_name].filter(Boolean).join(', ') || '未知';
+            const latlon = (data.latitude != null && data.longitude != null)
+                ? `${data.longitude}, ${data.latitude}` : '未知';
+            const currency = data.currency
+                ? `${data.currency} (${data.currency_name || ''})` : '未知';
+            const networkRow = data.network
+                ? `<div class="info-item">
+                        <span class="info-label">網段 (CIDR)</span>
+                        <span class="info-value" style="font-size: 0.85rem;">${data.network}</span>
+                    </div>` : '';
+
+            mullvadList.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">所屬機構 (ISP)</span>
+                    <span class="info-value" title="${data.org || '未知'}">${data.org || '未知'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">ASN</span>
+                    <span class="info-value">${data.asn || '未知'}</span>
+                </div>
+                ${networkRow}
+                <div class="info-item">
+                    <span class="info-label">地理位置</span>
+                    <span class="info-value" title="${location}">${location}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">地理經緯度</span>
+                    <span class="info-value" style="font-size: 0.85rem;">${latlon}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">時區</span>
+                    <span class="info-value">${timezone}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">貨幣</span>
+                    <span class="info-value">${currency}</span>
+                </div>
+                <div class="info-item" style="margin-top: 0.3rem;">
+                    <span class="info-label" style="font-size: 0.75rem; color: var(--text-secondary);">資料來源</span>
+                    <span class="info-value" style="font-size: 0.75rem; color: var(--text-secondary);">${data.source}</span>
+                </div>
+            `;
         }
 
         // 4. 公有雲延遲與連通性檢測
