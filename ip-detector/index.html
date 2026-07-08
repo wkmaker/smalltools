@@ -819,14 +819,14 @@
         const cloudEndpoints = {
             aws: { name: 'Amazon AWS', url: 'https://checkip.amazonaws.com/', elemId: 'cloud-aws' },
             gcp: { name: 'Google Cloud', url: 'https://clients3.google.com/generate_204', elemId: 'cloud-gcp' },
-            azure: { name: 'Microsoft Azure', url: 'https://www.microsoft.com/favicon.ico', elemId: 'cloud-azure' },
-            aliyun: { name: 'Alibaba Cloud', url: 'https://www.aliyun.com/favicon.ico', elemId: 'cloud-aliyun' },
-            baidu: { name: 'Baidu Cloud', url: 'https://www.baidu.com/favicon.ico', elemId: 'cloud-baidu' },
+            azure: { name: 'Microsoft Azure', url: 'https://azure.microsoft.com/', elemId: 'cloud-azure' },
+            aliyun: { name: 'Alibaba Cloud', url: 'https://www.aliyun.com/', elemId: 'cloud-aliyun' },
+            baidu: { name: 'Baidu Cloud', url: 'https://www.baidu.com/', elemId: 'cloud-baidu' },
             apple: { name: 'Apple Captive', url: 'https://captive.apple.com/hotspot-detect.html', elemId: 'cloud-apple' },
-            fastly: { name: 'Fastly CDN', url: 'https://www.fastly.com/favicon.ico', elemId: 'cloud-fastly' },
-            akamai: { name: 'Akamai CDN', url: 'https://www.akamai.com/favicon.ico', elemId: 'cloud-akamai' },
-            line: { name: 'LINE', url: 'https://line.me/favicon.ico', elemId: 'cloud-line' },
-            facebook: { name: 'Meta / FB', url: 'https://www.facebook.com/favicon.ico', elemId: 'cloud-facebook' }
+            fastly: { name: 'Fastly CDN', url: 'https://www.fastly.com/', elemId: 'cloud-fastly' },
+            akamai: { name: 'Akamai CDN', url: 'https://www.akamai.com/', elemId: 'cloud-akamai' },
+            line: { name: 'LINE', url: 'https://line.me/', elemId: 'cloud-line' },
+            facebook: { name: 'Meta / FB', url: 'https://www.facebook.com/', elemId: 'cloud-facebook' }
         };
 
         // 輔助：格式化加載狀態
@@ -872,14 +872,16 @@
         async function detectCloudflareTrace() {
             setElementLoading(cfTraceList, "讀取連線資訊中...");
             
+            const start = performance.now();
             try {
                 const res = await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
                     signal: AbortSignal.timeout(4500)
                 });
+                const latency = Math.round(performance.now() - start);
                 const text = await res.text();
                 const trace = parseTraceText(text);
 
-                // 只呈現 IP, colo, loc, http, UA (uag)
+                // 呈現 IP, colo, loc, http, Latency, UA
                 cfTraceList.innerHTML = `
                     <div class="info-item">
                         <span class="info-label">連線 IP</span>
@@ -897,6 +899,10 @@
                         <span class="info-label">最高連線協議</span>
                         <span class="info-value" title="${trace.http || '未知'}">${trace.http || '未知'}</span>
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">連線延遲 (Latency)</span>
+                        <span class="info-value highlight-green">${latency} ms</span>
+                    </div>
                     <div class="info-item ua-item">
                         <span class="info-label">瀏覽器 UA (User Agent)</span>
                         <span class="info-value" title="${trace.uag || '未知'}">${trace.uag || '未知'}</span>
@@ -912,110 +918,67 @@
             }
         }
 
-        // 3. 檢測 IP 地理位置與 Mullvad 服務狀態
+        // 3. 檢測 IP 地理位置資訊 (使用 ipapi.co)
         async function detectMullvad() {
-            setElementLoading(mullvadList, "查詢地理與隱私防護狀態中...");
+            setElementLoading(mullvadList, "查詢地理位置與網路資訊中...");
             
-            let ipData = null;
-            let ipError = false;
-            
-            // 軌道 1-A：優先獲取 freeipapi.com 資料
             try {
-                const res = await fetch('https://freeipapi.com/api/json', {
-                    signal: AbortSignal.timeout(3500)
+                const res = await fetch('https://ipapi.co/json/', {
+                    signal: AbortSignal.timeout(5000)
                 });
-                const rawData = await res.json();
+                const d = await res.json();
                 
-                ipData = {
-                    org: rawData.asnOrganization,
-                    city: rawData.cityName,
-                    country_name: rawData.countryName,
-                    latitude: rawData.latitude,
-                    longitude: rawData.longitude,
-                    timezone: rawData.timeZones ? rawData.timeZones[0] : '未知',
-                    postal: rawData.zipCode,
-                    is_proxy: rawData.isProxy
-                };
-            } catch (err) {
-                // 軌道 1-B：備份 fallback 到 ipapi.co
-                try {
-                    const res = await fetch('https://ipapi.co/json/', {
-                        signal: AbortSignal.timeout(3500)
-                    });
-                    const rawData = await res.json();
-                    ipData = {
-                        org: rawData.org,
-                        city: rawData.city,
-                        country_name: rawData.country_name,
-                        latitude: rawData.latitude,
-                        longitude: rawData.longitude,
-                        timezone: rawData.timezone,
-                        postal: rawData.postal,
-                        is_proxy: null
-                    };
-                } catch (fallbackErr) {
-                    ipError = true;
+                // 如果 API 回傳錯誤（例如 Rate Limited）
+                if (d.error) {
+                    throw new Error(d.reason || 'API 限流');
                 }
-            }
 
-            // 軌道 2：背景檢測 Mullvad 節點連通性 (使用 no-cors)
-            let mullvadConnected = false;
-            let mullvadLatency = null;
-            const mullvadStart = performance.now();
-            try {
-                await fetch('https://am.i.mullvad.net/json', {
-                    mode: 'no-cors',
-                    cache: 'no-store',
-                    signal: AbortSignal.timeout(3500)
-                });
-                mullvadConnected = true;
-                mullvadLatency = Math.round(performance.now() - mullvadStart);
-            } catch (err) {
-                mullvadConnected = false;
-            }
+                const inEU = d.in_eu ? '是 (EU)' : '否';
+                const timezone = d.timezone ? `${d.timezone} (UTC${d.utc_offset || ''})` : '未知';
+                const location = [d.city, d.region, d.country_name].filter(Boolean).join(', ') || '未知';
+                const latlon = (d.latitude != null && d.longitude != null)
+                    ? `${d.longitude}, ${d.latitude}` : '未知';
+                const currency = d.currency ? `${d.currency} (${d.currency_name || ''})` : '未知';
 
-            if (ipError) {
                 mullvadList.innerHTML = `
                     <div class="info-item">
-                        <span class="info-label">地理診斷</span>
-                        <span class="info-value highlight-red">地理位置查詢失敗 / 網路阻斷</span>
+                        <span class="info-label">所屬機構 (ISP)</span>
+                        <span class="info-value" title="${d.org || '未知'}">${d.org || '未知'}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Mullvad 節點狀態</span>
-                        <span class="info-value ${mullvadConnected ? 'highlight-green' : 'highlight-red'}">
-                            ${mullvadConnected ? `已連通 (${mullvadLatency} ms)` : '無法連通'}
-                        </span>
+                        <span class="info-label">ASN</span>
+                        <span class="info-value">${d.asn || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">網段 (CIDR)</span>
+                        <span class="info-value" style="font-size: 0.85rem;">${d.network || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">地理位置</span>
+                        <span class="info-value" title="${location}">${location}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">地理經緯度</span>
+                        <span class="info-value" style="font-size: 0.85rem;">${latlon}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">時區</span>
+                        <span class="info-value">${timezone}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">貨幣</span>
+                        <span class="info-value">${currency}</span>
                     </div>
                 `;
-                return;
+            } catch (err) {
+                mullvadList.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">查詢狀態</span>
+                        <span class="info-value highlight-red">地理位置查詢失敗 (${err.message || '網路錯誤'})</span>
+                    </div>
+                `;
             }
-
-            const isBlacklisted = ipData.is_proxy === true;
-
-            mullvadList.innerHTML = `
-                <div class="info-item">
-                    <span class="info-label">所屬機構 (ISP)</span>
-                    <span class="info-value" title="${ipData.org || '未知'}">${ipData.org || '未知'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">地理位置</span>
-                    <span class="info-value" title="${ipData.city || ''}, ${ipData.country_name || '未知'}">${ipData.city || '未知'}, ${ipData.country_name || '未知'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">地理經緯度</span>
-                    <span class="info-value" style="font-size: 0.8rem;">${ipData.longitude || 0}, ${ipData.latitude || 0}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">IP 黑名單狀態</span>
-                    <span class="info-value ${isBlacklisted ? 'highlight-red' : 'highlight-green'}">${isBlacklisted ? '有風險 (公開代理)' : '安全 (未列入)'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Mullvad 節點連通</span>
-                    <span class="info-value ${mullvadConnected ? 'highlight-green' : ''}">
-                        ${mullvadConnected ? `已連通 (${mullvadLatency} ms)` : '無法連通'}
-                    </span>
-                </div>
-            `;
         }
 
         // 4. 公有雲延遲與連通性檢測
