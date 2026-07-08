@@ -547,6 +547,27 @@
             color: #00f0ff;
         }
 
+        /* SSL 憑證格式轉換器專屬 hover 效果 */
+        .tool-card.ssl-converter-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 170, 0.06), transparent 40%);
+        }
+
+        .tool-card.ssl-converter-card:hover {
+            border-color: rgba(0, 255, 170, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 255, 170, 0.15),
+                        inset 0 0 15px rgba(0, 255, 170, 0.02);
+        }
+
+        .tool-card.ssl-converter-card:hover h3 {
+            color: #00ffaa;
+            text-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
+        }
+
+        .tool-card.ssl-converter-card .card-action {
+            color: #00ffaa;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -1025,6 +1046,19 @@
                     <h3>Designer QR Code 產生器</h3>
                     <span class="subtitle">Designer QR Code Generator</span>
                     <p>專業的藝術二維碼設計生成工具。支援碼體與定位點液態化自訂、霓虹漸層色調整、置中頭像/Logo 拖曳上傳與自動安全容錯防禦。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- SSL 憑證格式轉換器 -->
+            <a href="./ssl-converter/index.html" class="tool-card ssl-converter-card" data-category="developer" data-keywords="ssl certificate converter pfx p12 pem der key crt ca-bundle x509 pkcs12 憑證 格式 轉換 密鑰 雜湊">
+                <div>
+                    <h3>SSL 憑證格式轉換器</h3>
+                    <span class="subtitle">SSL Certificate Converter</span>
+                    <p>專業的安全 SSL 憑證格式轉換工具。支援 PFX/P12, PEM, DER 雙向轉換，具備私鑰/憑證金鑰雜湊匹配檢查與證書到期動態警示。</p>
                 </div>
                 <div class="card-action">
                     開啟工具
