@@ -568,6 +568,27 @@
             color: #00ffaa;
         }
 
+        /* 文件比對工具專屬 hover 效果 */
+        .tool-card.diff-checker-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(139, 92, 246, 0.06), transparent 40%);
+        }
+
+        .tool-card.diff-checker-card:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(139, 92, 246, 0.15),
+                        inset 0 0 15px rgba(139, 92, 246, 0.02);
+        }
+
+        .tool-card.diff-checker-card:hover h3 {
+            color: #8b5cf6;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+        }
+
+        .tool-card.diff-checker-card .card-action {
+            color: #8b5cf6;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -1059,6 +1080,19 @@
                     <h3>SSL 憑證格式轉換器</h3>
                     <span class="subtitle">SSL Certificate Converter</span>
                     <p>專業的安全 SSL 憑證格式轉換工具。支援 PFX/P12, PEM, DER 雙向轉換，具備私鑰/憑證金鑰雜湊匹配檢查與證書到期動態警示。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- 兩份文件比對工具 -->
+            <a href="./diff-checker/index.html" class="tool-card diff-checker-card" data-category="developer" data-keywords="diff checker document comparison text code comparison split unified jsdiff 比對 兩份文件 差異 減 增 變更 電光紫">
+                <div>
+                    <h3>兩份文件比對工具</h3>
+                    <span class="subtitle">Document Diff Checker</span>
+                    <p>極致安全的本地文本差異比對工具。支援左右雙窗格對齊（Split Mode）與 GitHub 混合比對（Unified Mode），純本機運算保障資安不外洩。</p>
                 </div>
                 <div class="card-action">
                     開啟工具

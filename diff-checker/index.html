@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兩份文件比對工具 - 唯美極客工具</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="專業的前端文件比對工具 (Document Diff Checker)。支援左右雙窗格對比與單窗格 PR 混合比對，具備 Myers 演算法行級精確解析，百分之百本地端瀏覽器運算，保護私密代碼不外洩。">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="兩份文件比對工具 - 唯美極客工具">
+    <meta property="og:description" content="純前端安全文本比對工具，提供 Split 與 Unified 模式，電光紫視覺特效，支援大文字拖曳與忽略大小寫設定。">
+    <meta property="og:url" content="https://tools.cjkuo.net/diff-checker/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+    
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 引入 jsdiff 差異演算法套件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: #8b5cf6; /* 電光紫 */
+            --accent-glow-rgb: 139, 92, 246;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            
+            /* 差異高亮顏色 */
+            --diff-remove-bg: rgba(255, 59, 48, 0.15);
+            --diff-remove-text: #ff3b30;
+            --diff-add-bg: rgba(0, 245, 160, 0.15);
+            --diff-add-text: #00ffaa;
+            
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 1200px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 2rem;
+            left: 2.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--accent-glow);
+            text-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-4px);
+        }
+
+        /* 頁首標題 */
+        .header {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        h1 span {
+            color: var(--accent-glow);
+            font-weight: 700;
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+        }
+
+        /* 工具列 (Toolbar) */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 0.8rem 1.2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .toolbar-section {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        /* 模式切換按鈕 */
+        .segmented-control {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 30px;
+            padding: 0.2rem;
+        }
+
+        .segment-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .segment-btn.active {
+            background: rgba(var(--accent-glow-rgb), 0.15);
+            border: 1px solid rgba(var(--accent-glow-rgb), 0.3);
+            color: #ffffff;
+            text-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        /* 開關元件 Toggle */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle-checkbox {
+            display: none;
+        }
+
+        .toggle-checkbox:checked + .toggle-switch {
+            background: var(--accent-glow);
+        }
+
+        .toggle-checkbox:checked + .toggle-switch::after {
+            transform: translateX(18px);
+        }
+
+        /* 按鈕樣式 */
+        .btn-action {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-action:hover {
+            background: rgba(var(--accent-glow-rgb), 0.1);
+            border-color: var(--accent-glow);
+            color: var(--text-primary);
+        }
+
+        .btn-action svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .btn-compare {
+            background: rgba(var(--accent-glow-rgb), 0.1);
+            border: 1px solid rgba(var(--accent-glow-rgb), 0.3);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .btn-compare:hover {
+            background: rgba(var(--accent-glow-rgb), 0.2);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(var(--accent-glow-rgb), 0.2);
+        }
+
+        /* 雙視窗容器 */
+        .editors-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            height: 220px;
+            position: relative;
+            transition: all 0.3s ease;
+            opacity: 1;
+        }
+
+        .editors-container.hidden-pane {
+            height: 0;
+            margin: 0;
+            opacity: 0;
+            overflow: hidden;
+            pointer-events: none;
+            gap: 0;
+        }
+
+        .editor-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            height: 100%;
+        }
+
+        .editor-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drop-zone {
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--accent-glow);
+            box-shadow: inset 0 0 15px rgba(var(--accent-glow-rgb), 0.05);
+        }
+
+        .editor-textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            padding: 1.2rem;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* 浮動拖曳提示 */
+        .drag-hint {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(var(--accent-glow-rgb), 0.05);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-glow);
+            font-size: 1rem;
+            font-weight: 500;
+            pointer-events: none;
+            border: 2px dashed var(--accent-glow);
+            border-radius: 16px;
+        }
+
+        .drop-zone.dragover .drag-hint {
+            display: flex;
+        }
+
+        /* Diff 顯示區域 */
+        .diff-preview-container {
+            display: flex;
+            width: 100%;
+            min-height: 120px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .diff-preview-container.fullscreen {
+            height: 600px;
+        }
+
+        /* Split 雙視窗對齊樣式 */
+        .split-view-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 分割線 */
+        .split-divider {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .diff-pane {
+            overflow: auto;
+            height: 100%;
+            position: relative;
+        }
+
+        /* 表格排版，維持縮排與同步行高 */
+        .diff-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            table-layout: fixed;
+        }
+
+        .diff-table td {
+            padding: 0.1rem 0.6rem;
+            vertical-align: top;
+        }
+
+        .line-num {
+            width: 50px;
+            color: rgba(255, 255, 255, 0.2);
+            text-align: right;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            user-select: none;
+            font-size: 0.8rem;
+        }
+
+        .code-line {
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #d1d5db;
+        }
+
+        /* 行級差異高亮 */
+        .removed {
+            background-color: var(--diff-remove-bg);
+        }
+        .removed .code-line {
+            color: var(--diff-remove-text);
+        }
+        .removed .line-num {
+            color: rgba(255, 59, 48, 0.4);
+        }
+
+        .added {
+            background-color: var(--diff-add-bg);
+        }
+        .added .code-line {
+            color: var(--diff-add-text);
+        }
+        .added .line-num {
+            color: rgba(0, 245, 160, 0.4);
+        }
+
+        .empty-row {
+            background-color: rgba(255, 255, 255, 0.01);
+            user-select: none;
+        }
+
+        /* Unified 單視窗樣式 */
+        .unified-view-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .unified-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            line-height: 1.1;
+        }
+
+        .unified-table td {
+            padding: 2px 8px;
+            vertical-align: middle;
+        }
+
+        .unified-table .code-line {
+            font-size: 0.82rem;
+            line-height: 1.1;
+            padding: 0;
+        }
+
+        .unified-table .line-num {
+            width: 36px;
+            font-size: 0.75rem;
+        }
+
+        /* 行動按鈕欄 - 直覺標籤式設計 */
+        .action-col {
+            width: 90px;
+            text-align: right;
+            padding-right: 0.5rem !important;
+            white-space: nowrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            height: 20px;
+            padding: 0 0.4rem;
+            border: 1px solid transparent;
+            border-radius: 20px;
+            font-size: 0.68rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: transparent;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 刪除行的按鈕：「保留」（預設：不在結果中，點擊恢復） */
+        .action-btn.restore {
+            border-color: rgba(0, 245, 160, 0.35);
+            color: var(--diff-add-text);
+        }
+        .action-btn.restore:hover {
+            background: rgba(0, 245, 160, 0.15);
+            border-color: rgba(0, 245, 160, 0.6);
+        }
+
+        /* 新增行的按鈕：「排除」（預設：在結果中，點擊移除） */
+        .action-btn.exclude {
+            border-color: rgba(255, 59, 48, 0.35);
+            color: var(--diff-remove-text);
+        }
+        .action-btn.exclude:hover {
+            background: rgba(255, 59, 48, 0.15);
+            border-color: rgba(255, 59, 48, 0.6);
+        }
+
+        /* 「↺ 還原」回到預設狀態 */
+        .action-btn.revert {
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+        }
+        .action-btn.revert:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #ffffff;
+        }
+
+        /* 行被捨棄時的視覺 */
+        tr.skipped {
+            background-color: rgba(0, 0, 0, 0.2) !important;
+            opacity: 0.6;
+        }
+        tr.skipped .code-line {
+            text-decoration: line-through;
+            color: var(--text-secondary) !important;
+        }
+        tr.accepted {
+            opacity: 1;
+        }
+
+        /* 合併結果區 */
+        .merge-result-section {
+            display: none;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 1rem;
+        }
+        .merge-result-section.visible {
+            display: flex;
+        }
+        .merge-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .merge-copy-btn {
+            background: rgba(var(--accent-glow-rgb), 0.08);
+            border: 1px solid rgba(var(--accent-glow-rgb), 0.25);
+            color: var(--accent-glow);
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .merge-copy-btn:hover {
+            background: rgba(var(--accent-glow-rgb), 0.18);
+            box-shadow: 0 0 10px rgba(var(--accent-glow-rgb), 0.2);
+        }
+        .merge-result-textarea {
+            width: 100%;
+            min-height: 60px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            outline: none;
+            resize: none;
+            padding: 0.5rem 0.8rem;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.3;
+            transition: border-color 0.2s;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        .merge-result-textarea:focus {
+            border-color: rgba(var(--accent-glow-rgb), 0.3);
+        }
+
+        /* 響應式 */
+        @media (max-width: 1024px) {
+            body {
+                align-items: flex-start;
+            }
+            .glass-container {
+                padding: 1.5rem;
+            }
+            .back-btn {
+                position: static;
+                margin-bottom: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .editors-container {
+                grid-template-columns: 1fr;
+                height: 600px;
+            }
+            .split-view-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .split-divider {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+        <!-- 頁首 -->
+        <div class="header">
+            <h1><span>文件</span>比對工具</h1>
+            <div class="subtitle">Document Diff Checker</div>
+        </div>
+
+        <!-- 控制列 -->
+        <div class="toolbar">
+            <div class="toolbar-section">
+                <!-- 雙向模式切換 -->
+                <div class="segmented-control">
+                    <button class="segment-btn active" id="btn-split" onclick="setDiffMode('split')">左右對比 (Split)</button>
+                    <button class="segment-btn" id="btn-unified" onclick="setDiffMode('單欄混合 (Unified)')">混合對比 (Unified)</button>
+                </div>
+
+                <!-- 忽略大小寫 -->
+                <label class="toggle-container">
+                    <input type="checkbox" class="toggle-checkbox" id="ignore-case-checkbox" onchange="triggerDiff()">
+                    <div class="toggle-switch"></div>
+                    <span>忽略大小寫</span>
+                </label>
+            </div>
+
+            <div class="toolbar-section">
+                <button class="btn-action" onclick="swapDocuments()">
+                    <svg viewBox="0 0 24 24"><path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/></svg>
+                    交換左右
+                </button>
+                <button class="btn-action" onclick="clearAll()">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    清除
+                </button>
+                <button class="btn-action btn-compare" id="btn-toggle-view" onclick="toggleEditPreviewState()">
+                    開始比對 (Diff)
+                </button>
+            </div>
+        </div>
+
+        <!-- 編輯模式 (State 1) -->
+        <div class="editors-container" id="editors-container">
+            <!-- 左側：Original -->
+            <div class="editor-wrapper">
+                <div class="editor-title">
+                    <span>原始文件 (Original)</span>
+                    <span style="font-size: 0.75rem; font-weight: normal; opacity: 0.6;">支援拖曳 txt / code</span>
+                </div>
+                <div class="drop-zone" id="left-drop-zone">
+                    <textarea class="editor-textarea" id="left-text" placeholder="請在此貼上原始文本，或將檔案拖曳至此..."></textarea>
+                    <div class="drag-hint">放開滑鼠以匯入檔案</div>
+                </div>
+            </div>
+
+            <!-- 右側：Modified -->
+            <div class="editor-wrapper">
+                <div class="editor-title">
+                    <span>修改後文件 (Modified)</span>
+                    <span style="font-size: 0.75rem; font-weight: normal; opacity: 0.6;">支援拖曳 txt / code</span>
+                </div>
+                <div class="drop-zone" id="right-drop-zone">
+                    <textarea class="editor-textarea" id="right-text" placeholder="請在此貼上變更後的文本，或將檔案拖曳至此..."></textarea>
+                    <div class="drag-hint">放開滑鼠以匯入檔案</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 比對顯示區 (State 2) -->
+        <div class="diff-preview-container" id="diff-preview-container">
+            <!-- 左右對比渲染視窗 -->
+            <div class="split-view-wrapper" id="split-view-wrapper">
+                <div class="split-divider"></div>
+                <!-- 左側唯讀視窗 -->
+                <div class="diff-pane" id="left-diff-pane">
+                    <table class="diff-table" id="left-diff-table">
+                        <!-- 動態插入 -->
+                    </table>
+                </div>
+                <!-- 右側唯讀視窗 -->
+                <div class="diff-pane" id="right-diff-pane">
+                    <table class="diff-table" id="right-diff-table">
+                        <!-- 動態插入 -->
+                    </table>
+                </div>
+            </div>
+
+            <!-- 單欄混合對比渲染視窗 -->
+            <div class="unified-view-wrapper" id="unified-view-wrapper" style="display: none;">
+                <table class="unified-table" id="unified-diff-table">
+                    <!-- 動態插入 -->
+                </table>
+            </div>
+        </div>
+
+        <!-- 合併結果區 (Unified 模式下顯示) -->
+        <div class="merge-result-section" id="merge-result-section">
+            <div class="merge-result-header">
+                <span>✏️ 合併結果 <span style="font-weight:normal;font-size:0.78rem;opacity:0.6;">（可直接編輯此區域）</span></span>
+                <button class="merge-copy-btn" onclick="copyMergeResult()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    複製結果
+                </button>
+            </div>
+            <textarea class="merge-result-textarea" id="merge-result-textarea" placeholder="（Unified 模式比對後，可在此取得合併結果）"></textarea>
+        </div>
+
+        <div class="toggle-view-bar">
+            <!-- 狀態快捷鍵 -->
+            <button class="btn-action" id="btn-bottom-toggle" onclick="toggleEditPreviewState()" style="display: none;">
+                返回編輯
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 背景粒子系統 (電光紫 #8b5cf6)
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            adjustParticles();
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5; 
+                this.density = (Math.random() * 30) + 1;
+                
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1; 
+                
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 4; 
+                    this.velocityY = (Math.random() - 0.5) * 4;
+                } else {
+                    this.velocityY = -((Math.random() * 0.4) + 0.1); 
+                    this.velocityX = (Math.random() - 0.5) * 0.2;
+                }
+            }
+            draw() {
+                ctx.beginPath(); 
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
+                ctx.closePath();
+                
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                ctx.fillStyle = `rgba(139, 92, 246, ${alpha * 0.7})`; 
+                ctx.fill();
+            }
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.02;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+                    if (this.y < -10) {
+                        this.y = canvas.height + 10;
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+            }
+        }
+
+        function adjustParticles() {
+            particles = [];
+            const count = Math.min(65, Math.floor((canvas.width * canvas.height) / 25000));
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function createBurst(x, y) {
+            for(let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('mousedown', (e) => { createBurst(e.clientX, e.clientY); });
+        animateParticles();
+
+
+        // ==========================================
+        // UI 狀態控制 (編輯與預覽切換)
+        // ==========================================
+        let currentState = 'both'; // 'both' or 'fullscreen'
+        let currentDiffMode = 'split'; // 'split' or 'unified'
+
+        function toggleEditPreviewState() {
+            const editors = document.getElementById('editors-container');
+            const preview = document.getElementById('diff-preview-container');
+            const toggleBtn = document.getElementById('btn-toggle-view');
+
+            if (currentState === 'both') {
+                editors.classList.add('hidden-pane');
+                preview.classList.add('fullscreen');
+                toggleBtn.textContent = '展開編輯器 (Show)';
+                currentState = 'fullscreen';
+            } else {
+                editors.classList.remove('hidden-pane');
+                preview.classList.remove('fullscreen');
+                toggleBtn.textContent = '隱藏編輯器 (Hide)';
+                currentState = 'both';
+            }
+        }
+
+        function setDiffMode(mode) {
+            const btnSplit = document.getElementById('btn-split');
+            const btnUnified = document.getElementById('btn-unified');
+            const splitWrapper = document.getElementById('split-view-wrapper');
+            const unifiedWrapper = document.getElementById('unified-view-wrapper');
+            const container = document.getElementById('diff-preview-container');
+
+            if (mode === 'split') {
+                btnSplit.classList.add('active');
+                btnUnified.classList.remove('active');
+                splitWrapper.style.display = 'grid';
+                unifiedWrapper.style.display = 'none';
+                currentDiffMode = 'split';
+                // Split 模式：固定容器高度，兩側各自捲動
+                container.style.height = '380px';
+                container.style.overflow = 'hidden';
+                // 切回 Split 時隱藏合併結果區
+                document.getElementById('merge-result-section').classList.remove('visible');
+            } else {
+                btnSplit.classList.remove('active');
+                btnUnified.classList.add('active');
+                splitWrapper.style.display = 'none';
+                unifiedWrapper.style.display = 'flex';
+                currentDiffMode = 'unified';
+                // Unified 模式：容器自動高度，內容自然漲開
+                container.style.height = 'auto';
+                container.style.overflow = 'visible';
+            }
+
+            triggerDiff();
+        }
+
+
+        // ==========================================
+        // 交換與清除邏輯
+        // ==========================================
+        function swapDocuments() {
+            const leftText = document.getElementById('left-text');
+            const rightText = document.getElementById('right-text');
+            const temp = leftText.value;
+            leftText.value = rightText.value;
+            rightText.value = temp;
+
+            triggerDiff();
+        }
+
+        function clearAll() {
+            document.getElementById('left-text').value = '';
+            document.getElementById('right-text').value = '';
+            triggerDiff();
+        }
+
+
+        // ==========================================
+        // 檔案拖曳上傳與載入
+        // ==========================================
+        function setupDragAndDrop(zoneId, textareaId) {
+            const zone = document.getElementById(zoneId);
+            const textarea = document.getElementById(textareaId);
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        textarea.value = event.target.result;
+                        triggerDiff();
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        }
+
+        setupDragAndDrop('left-drop-zone', 'left-text');
+        setupDragAndDrop('right-drop-zone', 'right-text');
+
+        // ==========================================
+        // 即時動態比對事件監聽 (Debounced Input Event)
+        // ==========================================
+        let debounceTimer;
+        function debouncedDiff() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(triggerDiff, 150);
+        }
+
+        document.getElementById('left-text').addEventListener('input', debouncedDiff);
+        document.getElementById('right-text').addEventListener('input', debouncedDiff);
+
+        // 頁面初次載入時預填範例與呼叫比對
+        window.addEventListener('DOMContentLoaded', () => {
+            const sampleLeft = "Hello World\nThis line is cool\nLine 3";
+            const sampleRight = "Hello world\nThis line is very cool\nLine 3\nLine 4";
+            document.getElementById('left-text').value = sampleLeft;
+            document.getElementById('right-text').value = sampleRight;
+            triggerDiff();
+        });
+
+
+        // ==========================================
+        // 同步滾動邏輯 (Dual-scroll lock)
+        // ==========================================
+        const leftPane = document.getElementById('left-diff-pane');
+        const rightPane = document.getElementById('right-diff-pane');
+
+        let isSyncingLeftScroll = false;
+        let isSyncingRightScroll = false;
+
+        leftPane.addEventListener('scroll', () => {
+            if (!isSyncingLeftScroll) {
+                isSyncingRightScroll = true;
+                rightPane.scrollTop = leftPane.scrollTop;
+                rightPane.scrollLeft = leftPane.scrollLeft;
+            }
+            isSyncingLeftScroll = false;
+        });
+
+        rightPane.addEventListener('scroll', () => {
+            if (!isSyncingRightScroll) {
+                isSyncingLeftScroll = true;
+                leftPane.scrollTop = rightPane.scrollTop;
+                leftPane.scrollLeft = rightPane.scrollLeft;
+            }
+            isSyncingRightScroll = false;
+        });
+
+
+        // ==========================================
+        // 核心比對與渲染邏輯 ( Myers Diff 演算法 )
+        // ==========================================
+        function getLines(str) {
+            const lines = str.split(/\r?\n/);
+            if (lines.length > 0 && lines[lines.length - 1] === '') {
+                lines.pop();
+            }
+            return lines;
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function normalizeNewlines(str) {
+            if (!str) return '';
+            // 統一換行符為 \n，並確保尾端有且僅有一個 \n
+            return str.replace(/\r\n/g, '\n').replace(/\n*$/, '\n');
+        }
+
+        function triggerDiff() {
+            const oldRaw = document.getElementById('left-text').value;
+            const newRaw = document.getElementById('right-text').value;
+            const ignoreCase = document.getElementById('ignore-case-checkbox').checked;
+
+            const oldStr = normalizeNewlines(oldRaw);
+            const newStr = normalizeNewlines(newRaw);
+
+            // 使用 jsdiff 做行級差異對比
+            const diffParts = Diff.diffLines(oldStr, newStr, { ignoreCase: ignoreCase });
+
+            if (currentDiffMode === 'split') {
+                renderSplitDiff(diffParts);
+            } else {
+                renderUnifiedDiff(diffParts);
+            }
+        }
+
+        // 渲染 Split (左右分欄) 視窗，保證行高對齊
+        function renderSplitDiff(diffParts) {
+            const leftTable = document.getElementById('left-diff-table');
+            const rightTable = document.getElementById('right-diff-table');
+
+            leftTable.innerHTML = '';
+            rightTable.innerHTML = '';
+
+            let leftLineNum = 1;
+            let rightLineNum = 1;
+
+            // 將 diffParts 區塊，以「連續刪除與連續新增」做對齊分組
+            let pendingRemoved = [];
+            let pendingAdded = [];
+
+            function flushPendingGroups() {
+                const maxLen = Math.max(pendingRemoved.length, pendingAdded.length);
+                for (let i = 0; i < maxLen; i++) {
+                    const leftRow = document.createElement('tr');
+                    const rightRow = document.createElement('tr');
+
+                    // 左側欄位
+                    if (i < pendingRemoved.length) {
+                        leftRow.className = 'removed';
+                        leftRow.innerHTML = `
+                            <td class="line-num">${leftLineNum++}</td>
+                            <td class="code-line">${escapeHtml(pendingRemoved[i])}</td>
+                        `;
+                    } else {
+                        leftRow.className = 'empty-row';
+                        leftRow.innerHTML = `
+                            <td class="line-num"></td>
+                            <td class="code-line"></td>
+                        `;
+                    }
+
+                    // 右側欄位
+                    if (i < pendingAdded.length) {
+                        rightRow.className = 'added';
+                        rightRow.innerHTML = `
+                            <td class="line-num">${rightLineNum++}</td>
+                            <td class="code-line">${escapeHtml(pendingAdded[i])}</td>
+                        `;
+                    } else {
+                        rightRow.className = 'empty-row';
+                        rightRow.innerHTML = `
+                            <td class="line-num"></td>
+                            <td class="code-line"></td>
+                        `;
+                    }
+
+                    leftTable.appendChild(leftRow);
+                    rightTable.appendChild(rightRow);
+                }
+
+                // 清空快取
+                pendingRemoved = [];
+                pendingAdded = [];
+            }
+
+            diffParts.forEach(part => {
+                const lines = getLines(part.value);
+
+                if (part.removed) {
+                    pendingRemoved.push(...lines);
+                } else if (part.added) {
+                    pendingAdded.push(...lines);
+                } else {
+                    // 遇到無變動區塊，先把緩存區的增刪做配對輸出
+                    flushPendingGroups();
+
+                    // 輸出無變動行
+                    lines.forEach(line => {
+                        const leftRow = document.createElement('tr');
+                        const rightRow = document.createElement('tr');
+
+                        leftRow.innerHTML = `
+                            <td class="line-num">${leftLineNum++}</td>
+                            <td class="code-line">${escapeHtml(line)}</td>
+                        `;
+                        rightRow.innerHTML = `
+                            <td class="line-num">${rightLineNum++}</td>
+                            <td class="code-line">${escapeHtml(line)}</td>
+                        `;
+
+                        leftTable.appendChild(leftRow);
+                        rightTable.appendChild(rightRow);
+                    });
+                }
+            });
+
+            // 最終確保尾部緩存也輸出
+            flushPendingGroups();
+        }
+
+        // 渲染 Unified (單欄混合) 視窗 - 互動式版本
+        let mergeDecisions = []; // { type: 'keep'|'removed'|'added', text, state: 'active'|'skipped', defaultState }
+
+        function makeActionBtn(idx, decision) {
+            // 刪除行 (removed)：預設 skipped，按鈕顯示「保留舊版」
+            // 新增行 (added)：預設 active，按鈕顯示「排除新增」
+            if (decision.type === 'keep') return '';
+
+            const isDefault = decision.state === decision.defaultState;
+
+            if (isDefault) {
+                if (decision.type === 'removed') {
+                    // 目前被捨棄，提供「↩ 保留」選項
+                    return `<button class="action-btn restore" onclick="toggleUnifiedLine(${idx}, this.closest('tr'))">↩ 保留舊版</button>`;
+                } else {
+                    // 目前被採用，提供「✕ 排除」選項
+                    return `<button class="action-btn exclude" onclick="toggleUnifiedLine(${idx}, this.closest('tr'))">✕ 排除此行</button>`;
+                }
+            } else {
+                // 已修改過，提供「↺ 還原」選項回到預設
+                return `<button class="action-btn revert" onclick="toggleUnifiedLine(${idx}, this.closest('tr'))">↺ 還原預設</button>`;
+            }
+        }
+
+        function renderUnifiedDiff(diffParts) {
+            const unifiedTable = document.getElementById('unified-diff-table');
+            unifiedTable.innerHTML = '';
+            mergeDecisions = [];
+
+            let leftLineNum = 1;
+            let rightLineNum = 1;
+            let decisionIndex = 0;
+
+            diffParts.forEach(part => {
+                const lines = getLines(part.value);
+
+                if (part.removed) {
+                    lines.forEach(line => {
+                        const idx = decisionIndex++;
+                        const dec = { type: 'removed', text: line, state: 'skipped', defaultState: 'skipped' };
+                        mergeDecisions.push(dec);
+                        const tr = document.createElement('tr');
+                        tr.className = 'removed skipped';
+                        tr.dataset.idx = idx;
+                        tr.innerHTML = `
+                            <td class="line-num">${leftLineNum++}</td>
+                            <td class="line-num"></td>
+                            <td class="code-line">− ${escapeHtml(line)}</td>
+                            <td class="action-col">${makeActionBtn(idx, dec)}</td>
+                        `;
+                        unifiedTable.appendChild(tr);
+                    });
+                } else if (part.added) {
+                    lines.forEach(line => {
+                        const idx = decisionIndex++;
+                        const dec = { type: 'added', text: line, state: 'active', defaultState: 'active' };
+                        mergeDecisions.push(dec);
+                        const tr = document.createElement('tr');
+                        tr.className = 'added accepted';
+                        tr.dataset.idx = idx;
+                        tr.innerHTML = `
+                            <td class="line-num"></td>
+                            <td class="line-num">${rightLineNum++}</td>
+                            <td class="code-line">+ ${escapeHtml(line)}</td>
+                            <td class="action-col">${makeActionBtn(idx, dec)}</td>
+                        `;
+                        unifiedTable.appendChild(tr);
+                    });
+                } else {
+                    lines.forEach(line => {
+                        const idx = decisionIndex++;
+                        mergeDecisions.push({ type: 'keep', text: line, state: 'active', defaultState: 'active' });
+                        const tr = document.createElement('tr');
+                        tr.dataset.idx = idx;
+                        tr.innerHTML = `
+                            <td class="line-num">${leftLineNum++}</td>
+                            <td class="line-num">${rightLineNum++}</td>
+                            <td class="code-line">  ${escapeHtml(line)}</td>
+                            <td class="action-col"></td>
+                        `;
+                        unifiedTable.appendChild(tr);
+                    });
+                }
+            });
+
+            rebuildMergeResult();
+        }
+
+        function toggleUnifiedLine(idx, tr) {
+            const dec = mergeDecisions[idx];
+            const isDefault = dec.state === dec.defaultState;
+
+            if (isDefault) {
+                // 從預設切換到反向狀態
+                dec.state = dec.defaultState === 'active' ? 'skipped' : 'active';
+            } else {
+                // 還原預設
+                dec.state = dec.defaultState;
+            }
+
+            // 更新 tr 的 CSS 狀態
+            if (dec.state === 'active') {
+                tr.classList.remove('skipped');
+                tr.classList.add('accepted');
+            } else {
+                tr.classList.add('skipped');
+                tr.classList.remove('accepted');
+            }
+
+            // 更新按鈕
+            const actionCol = tr.querySelector('.action-col');
+            actionCol.innerHTML = makeActionBtn(idx, dec);
+
+            rebuildMergeResult();
+        }
+
+        function rebuildMergeResult() {
+            const lines = mergeDecisions
+                .filter(d => d.state === 'active')
+                .map(d => d.text);
+            const result = lines.join('\n');
+            const textarea = document.getElementById('merge-result-textarea');
+            textarea.value = result;
+            autoResizeTextarea(textarea);
+
+            // 顯示合併結果區
+            const section = document.getElementById('merge-result-section');
+            if (currentDiffMode === 'unified') {
+                section.classList.add('visible');
+            } else {
+                section.classList.remove('visible');
+            }
+        }
+
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.max(60, el.scrollHeight) + 'px';
+        }
+
+        // 使用者手動編輯時也自動調整高度
+        window.addEventListener('DOMContentLoaded', () => {
+            const ta = document.getElementById('merge-result-textarea');
+            ta.addEventListener('input', () => autoResizeTextarea(ta));
+        });
+
+        function copyMergeResult() {
+            const textarea = document.getElementById('merge-result-textarea');
+            const text = textarea.value;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.merge-copy-btn');
+                const original = btn.innerHTML;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> 已複製！`;
+                btn.style.color = '#00ffaa';
+                setTimeout(() => { btn.innerHTML = original; btn.style.color = ''; }, 2000);
+            }).catch(() => {
+                textarea.select();
+                document.execCommand('copy');
+            });
+        }
+    </script>
+</body>
+</html>
