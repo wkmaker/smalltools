@@ -1007,10 +1007,10 @@
                     
                     if (pkcs8Bags.length > 0) {
                         privateKeyObj = pkcs8Bags[0].key;
-                        privateKeyPem = forge.pki.privateKeyToPem(privateKeyObj);
+                        privateKeyPem = forge.pki.privateKeyToPem(privateKeyObj).trim();
                     } else if (keyBags.length > 0) {
                         privateKeyObj = keyBags[0].key;
-                        privateKeyPem = forge.pki.privateKeyToPem(privateKeyObj);
+                        privateKeyPem = forge.pki.privateKeyToPem(privateKeyObj).trim();
                     }
 
                     const certBags = p12.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag] || [];
@@ -1048,8 +1048,8 @@
                         }
 
                         clientCertObj = mainCertBag.cert;
-                        certPem = forge.pki.certificateToPem(clientCertObj);
-                        caBundlePem = intermediateBags.map(b => forge.pki.certificateToPem(b.cert)).join('\n');
+                        certPem = forge.pki.certificateToPem(clientCertObj).trim();
+                        caBundlePem = intermediateBags.map(b => forge.pki.certificateToPem(b.cert).trim()).join('\n');
                         
                         subjectName = parseDistinguishedName(clientCertObj.subject);
                         issuerName = parseDistinguishedName(clientCertObj.issuer);
