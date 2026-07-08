@@ -476,6 +476,9 @@
 
         /* 響應式佈局 */
         @media (max-width: 1024px) {
+            body {
+                align-items: flex-start;
+            }
             .info-grid {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
@@ -495,6 +498,19 @@
             }
             .cloud-grid {
                 grid-template-columns: 1fr;
+            }
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.3rem;
+                border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+                padding-bottom: 0.6rem;
+            }
+            .info-value {
+                text-align: left;
+                max-width: 100%;
+                white-space: normal;
+                word-break: break-all;
             }
             h1 {
                 font-size: 1.8rem;
