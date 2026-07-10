@@ -171,6 +171,8 @@
             flex-direction: column;
             gap: 1.5rem;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            /* 防止 Grid 子元素被內容（如寬表格）撐破 */
+            min-width: 0;
         }
 
         .pane:hover, .pane:focus-within {
@@ -188,6 +190,9 @@
             border-bottom: 1px solid var(--glass-border);
             padding-bottom: 0.8rem;
             letter-spacing: 1px;
+            /* 在小螢幕允許分享按鈕換行 */
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .pane-title-left {
@@ -289,6 +294,11 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
+        }
+
+        /* 結果面板 flex 容器 */
+        #result-panel {
+            width: 100%;
         }
 
         /* 狀態卡片 */
@@ -584,7 +594,7 @@
         /* ====== 響應式媒體查詢 ====== */
         @media (max-width: 1100px) {
             .app-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
                 gap: 2rem;
             }
         }
@@ -621,6 +631,27 @@
 
             .pane {
                 padding: 1.2rem;
+                /* 手機版確保不撐破父容器 */
+                min-width: 0;
+                width: 100%;
+            }
+
+            /* 手機版狀態卡片改為單欄堆疊 */
+            .result-header-row {
+                grid-template-columns: 1fr;
+            }
+
+            /* 分享按鈕在手機版佔滿整行 */
+            .share-btn {
+                margin-left: 0;
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* 手機版 pane-title 區塊排列 */
+            .pane-title {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
