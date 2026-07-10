@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IP 檢測助手 - 唯美極客工具</title>
     <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
-    <meta name="description" content="專業的網路 IP 檢測與診斷助手。支援 IPv4/IPv6 雙棧查詢、Cloudflare Trace 與隱私檢測，以及 AWS, GCP, Azure, 阿里雲, Baidu Cloud, Apple, Fastly, Akamai, LINE, Facebook 連通性與延遲時間 (Latency) 診斷。">
+    <meta name="description" content="專業的網路 IP 檢測與診斷助手。支援 IPv4/IPv6 雙棧查詢、Cloudflare Trace 與隱私檢測，以及 AWS, GCP, Azure, 阿里雲, Tencent Cloud, Apple, Fastly, Akamai, LINE, Facebook 連通性與延遲時間 (Latency) 診斷。">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -608,12 +608,12 @@
                     <div class="cloud-name">Alibaba Cloud</div>
                     <div class="cloud-latency">偵測中...</div>
                 </div>
-                <!-- Baidu -->
-                <div class="cloud-item" id="cloud-baidu">
+                <!-- Tencent -->
+                <div class="cloud-item" id="cloud-tencent">
                     <div class="cloud-status-indicator">
                         <span class="status-dot loading"></span>
                     </div>
-                    <div class="cloud-name">Baidu Cloud</div>
+                    <div class="cloud-name">Tencent Cloud</div>
                     <div class="cloud-latency">偵測中...</div>
                 </div>
                 <!-- Apple Services -->
@@ -821,7 +821,7 @@
             gcp: { name: 'Google Cloud', url: 'https://clients3.google.com/generate_204', elemId: 'cloud-gcp' },
             azure: { name: 'Microsoft Azure', url: 'https://azure.microsoft.com/', elemId: 'cloud-azure' },
             aliyun: { name: 'Alibaba Cloud', url: 'https://www.aliyun.com/', elemId: 'cloud-aliyun' },
-            baidu: { name: 'Baidu Cloud', url: 'https://www.baidu.com/', elemId: 'cloud-baidu' },
+            tencent: { name: 'Tencent Cloud', url: 'https://www.tencentcloud.com/', elemId: 'cloud-tencent' },
             apple: { name: 'Apple Captive', url: 'https://captive.apple.com/hotspot-detect.html', elemId: 'cloud-apple' },
             fastly: { name: 'Fastly CDN', url: 'https://www.fastly.com/', elemId: 'cloud-fastly' },
             akamai: { name: 'Akamai CDN', url: 'https://www.akamai.com/', elemId: 'cloud-akamai' },
