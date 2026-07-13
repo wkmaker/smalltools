@@ -1130,11 +1130,6 @@
 
         </div>
 
-        <!-- Footer 頁尾 -->
-        <div class="footer-credits">
-            Powered by <a href="https://www.cjkuo.net/" target="_blank">CJKuo</a>
-        </div>
-
     </div>
 
     <!-- JavaScript 邏輯 -->
@@ -1393,6 +1388,7 @@
         let isRatioLocked = true;    // 追蹤等比例鎖定狀態
         let currentScaleX = 1;       // 追蹤翻轉狀態 (水平)
         let currentScaleY = 1;       // 追蹤翻轉狀態 (垂直)
+        let batchEstimatedSizes = []; // 保存批次中每張圖片的預估大小
 
         // 格式化檔案大小
         function formatBytes(bytes, decimals = 2) {
@@ -1793,10 +1789,13 @@
                 batchList.appendChild(item);
             });
 
+            // 初始化預估大小陣列
+            batchEstimatedSizes = new Array(files.length).fill(null);
+
             // 統計總量
             statOriginalSize.textContent = formatBytes(totalSize);
             statCompressedSize.textContent = '-';
-            statResolution.textContent = '批次處理不適用';
+            statResolution.textContent = '批次處理中...';
             statSavingRate.textContent = '-';
             
             // 觸發異步背景批次壓縮預估
@@ -2078,12 +2077,50 @@
 
                     estSpan.innerHTML = `➔ 預估 ${formatBytes(estimatedSize)} <span style="color: #10b981;">(-${displayPercent}%)</span>`;
                     estSpan.style.color = "var(--accent-fuchsia)";
+
+                    // 記錄並動態更新整體大面板統計數值
+                    batchEstimatedSizes[i] = estimatedSize;
+                    updateBatchEstimatedStats();
                 } catch (err) {
                     console.error(`預估圖片 ${file.name} 失敗:`, err);
                     estSpan.textContent = "➔ 無法預估";
                     estSpan.style.color = "#ef4444";
                 }
             }
+        }
+
+        // 動態計算並投射批次預估總數據到統計大面板
+        function updateBatchEstimatedStats() {
+            if (!isBatchMode || uploadedFiles.length === 0) return;
+            const totalOriginalSize = uploadedFiles.reduce((acc, f) => acc + f.size, 0);
+            
+            const estimatedCount = batchEstimatedSizes.filter(s => s !== null).length;
+            if (estimatedCount === 0) return;
+
+            let estimatedOriginalSum = 0;
+            let estimatedCompressedSum = 0;
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                if (batchEstimatedSizes[i] !== null) {
+                    estimatedOriginalSum += uploadedFiles[i].size;
+                    estimatedCompressedSum += batchEstimatedSizes[i];
+                }
+            }
+            
+            if (estimatedOriginalSum === 0) return;
+            const ratio = estimatedCompressedSum / estimatedOriginalSum;
+            const projectedTotalCompressedSize = Math.round(totalOriginalSize * ratio);
+
+            // 更新大統計面板
+            statOriginalSize.textContent = formatBytes(totalOriginalSize);
+            statCompressedSize.textContent = `預估 ${formatBytes(projectedTotalCompressedSize)}`;
+            statCompressedSize.style.color = "var(--accent-fuchsia)";
+
+            const savingPercent = Math.round(((totalOriginalSize - projectedTotalCompressedSize) / totalOriginalSize) * 100);
+            const displayPercent = savingPercent > 0 ? savingPercent : 0;
+            statSavingRate.textContent = `${displayPercent}%`;
+            statSavingRate.className = "stat-val saving";
+            
+            statResolution.textContent = `共 ${uploadedFiles.length} 張圖片 (已預估 ${estimatedCount}/${uploadedFiles.length})`;
         }
 
         async function updatePreviewAndStats() {
