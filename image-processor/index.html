@@ -866,6 +866,29 @@
                 height: 280px;
             }
         }
+
+        /* 頁尾署名樣式 */
+        .footer-credits {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            width: 100%;
+        }
+
+        .footer-credits a {
+            color: var(--accent-fuchsia);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .footer-credits a:hover {
+            color: #ffffff;
+            text-shadow: 0 0 8px var(--accent-fuchsia);
+        }
     </style>
 </head>
 <body>
@@ -1105,6 +1128,11 @@
 
             </div>
 
+        </div>
+
+        <!-- Footer 頁尾 -->
+        <div class="footer-credits">
+            Powered by <a href="https://www.cjkuo.net/" target="_blank">CJKuo</a>
         </div>
 
     </div>
@@ -1750,7 +1778,12 @@
                         <img src="${thumbUrl}" class="batch-item-thumb" onload="window.URL.revokeObjectURL('${thumbUrl}')">
                         <div class="batch-item-detail">
                             <div class="batch-item-name">${file.name}</div>
-                            <div class="batch-item-size">${formatBytes(file.size)}</div>
+                            <div class="batch-item-size">
+                                <span>${formatBytes(file.size)}</span>
+                                <span class="estimated-size-span" id="batch-est-size-${index}" style="margin-left: 0.5rem; color: var(--accent-fuchsia); font-weight: 500;">
+                                    ➔ 預估中...
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="batch-item-status">
@@ -1765,6 +1798,9 @@
             statCompressedSize.textContent = '-';
             statResolution.textContent = '批次處理不適用';
             statSavingRate.textContent = '-';
+            
+            // 觸發異步背景批次壓縮預估
+            triggerBatchEstimation();
         }
 
         // 清除批次清單
@@ -1932,10 +1968,122 @@
         // 8-1. 即時計算預估大小與預覽 (Real-time Calculation)
         // ===================================================
         let updateTimer;
+        let batchEstimateTimer = null;
+        let batchEstimateCancelToken = 0;
+
         function triggerUpdate() {
-            if (isBatchMode || uploadedFiles.length === 0) return;
-            clearTimeout(updateTimer);
-            updateTimer = setTimeout(updatePreviewAndStats, 300);
+            if (uploadedFiles.length === 0) return;
+            if (isBatchMode) {
+                triggerBatchEstimation();
+            } else {
+                clearTimeout(updateTimer);
+                updateTimer = setTimeout(updatePreviewAndStats, 300);
+            }
+        }
+
+        // 觸發批次異步背景大小預估 (防抖 350ms)
+        function triggerBatchEstimation() {
+            if (!isBatchMode || uploadedFiles.length === 0) return;
+            clearTimeout(batchEstimateTimer);
+            
+            // 重置所有預估 span 顯示為「預估中...」
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                const estSpan = document.getElementById(`batch-est-size-${i}`);
+                if (estSpan) {
+                    estSpan.textContent = "➔ 預估中...";
+                    estSpan.style.color = "var(--text-secondary)";
+                }
+            }
+
+            batchEstimateTimer = setTimeout(startBatchEstimation, 350);
+        }
+
+        // 批次背景異步壓縮與大小預估核心佇列 (不卡住 UI)
+        async function startBatchEstimation() {
+            const currentToken = ++batchEstimateCancelToken;
+            const format = selectFormat.value;
+            const quality = parseInt(sliderQuality.value);
+
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                if (currentToken !== batchEstimateCancelToken) return; // 有新的預估請求已發起，立刻退出舊預估佇列
+
+                const file = uploadedFiles[i];
+                const estSpan = document.getElementById(`batch-est-size-${i}`);
+                if (!estSpan) continue;
+
+                try {
+                    // 非阻塞載入為 ImageBitmap
+                    const imgBitmap = await createImageBitmap(file);
+                    if (currentToken !== batchEstimateCancelToken) return;
+
+                    // 1. 根據各圖片獨立計算目標縮放寬高
+                    let w = imgBitmap.width;
+                    let h = imgBitmap.height;
+                    const userW = parseInt(inputWidth.value);
+                    const userH = parseInt(inputHeight.value);
+                    const scalePct = parseInt(sliderScale.value);
+                    
+                    if (isRatioLocked) {
+                        const ratio = imgBitmap.width / imgBitmap.height;
+                        if (userW && !userH) {
+                            w = userW;
+                            h = Math.round(userW / ratio);
+                        } else if (userH && !userW) {
+                            h = userH;
+                            w = Math.round(userH * ratio);
+                        } else if (userW && userH) {
+                            w = userW;
+                            h = Math.round(userW / ratio);
+                        } else if (scalePct && scalePct !== 100) {
+                            const pct = scalePct / 100;
+                            w = Math.round(imgBitmap.width * pct);
+                            h = Math.round(imgBitmap.height * pct);
+                        }
+                    } else {
+                        w = userW || imgBitmap.width;
+                        h = userH || imgBitmap.height;
+                    }
+                    w = Math.max(1, w);
+                    h = Math.max(1, h);
+
+                    // 2. 限制背景預估壓縮的圖片在 1000px 內以達極速運行
+                    const maxPreviewDim = 1000;
+                    let pw = w;
+                    let ph = h;
+                    if (w > maxPreviewDim || h > maxPreviewDim) {
+                        const previewRatio = Math.min(maxPreviewDim / w, maxPreviewDim / h);
+                        pw = Math.max(1, Math.round(w * previewRatio));
+                        ph = Math.max(1, Math.round(h * previewRatio));
+                    }
+
+                    // 3. 繪製預估離屏畫布
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = pw;
+                    tempCanvas.height = ph;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(imgBitmap, 0, 0, pw, ph);
+
+                    const imgData = tempCtx.getImageData(0, 0, pw, ph);
+                    
+                    // 異步 WASM 壓縮預估
+                    const compressedPreviewBlob = await compressImageData(imgData, format, quality);
+                    if (currentToken !== batchEstimateCancelToken) return;
+
+                    // 4. 等比例還原估算出真實大圖的大小
+                    const pixelRatio = (pw * ph) / (w * h);
+                    const estimatedSize = Math.round(compressedPreviewBlob.size / pixelRatio);
+
+                    const savingPercent = Math.round(((file.size - estimatedSize) / file.size) * 100);
+                    const displayPercent = savingPercent > 0 ? savingPercent : 0;
+
+                    estSpan.innerHTML = `➔ 預估 ${formatBytes(estimatedSize)} <span style="color: #10b981;">(-${displayPercent}%)</span>`;
+                    estSpan.style.color = "var(--accent-fuchsia)";
+                } catch (err) {
+                    console.error(`預估圖片 ${file.name} 失敗:`, err);
+                    estSpan.textContent = "➔ 無法預估";
+                    estSpan.style.color = "#ef4444";
+                }
+            }
         }
 
         async function updatePreviewAndStats() {
