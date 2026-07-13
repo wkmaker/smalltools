@@ -1986,24 +1986,37 @@
                 const w = Math.max(1, parseInt(inputWidth.value) || sourceCanvas.width);
                 const h = Math.max(1, parseInt(inputHeight.value) || sourceCanvas.height);
 
-                // 3. 調整尺寸
-                const resizedCanvas = resizeCanvasElement(sourceCanvas, w, h);
+                // 3. 計算預覽圖尺寸 (最大限制在 1280px 內，避免超大像素導致 WASM 與 UI 卡死)
+                const maxPreviewDim = 1280;
+                let pw = w;
+                let ph = h;
+                if (w > maxPreviewDim || h > maxPreviewDim) {
+                    const previewRatio = Math.min(maxPreviewDim / w, maxPreviewDim / h);
+                    pw = Math.max(1, Math.round(w * previewRatio));
+                    ph = Math.max(1, Math.round(h * previewRatio));
+                }
 
-                // 4. 取得像素並壓縮
+                const previewCanvas = resizeCanvasElement(sourceCanvas, pw, ph);
+
+                // 4. 取得像素並壓縮預覽圖
                 const format = selectFormat.value;
                 const quality = parseInt(sliderQuality.value);
 
-                const ctx = resizedCanvas.getContext('2d');
-                const imageData = ctx.getImageData(0, 0, w, h);
-                const compressedBlob = await compressImageData(imageData, format, quality);
+                const pCtx = previewCanvas.getContext('2d');
+                const previewImageData = pCtx.getImageData(0, 0, pw, ph);
+                const compressedPreviewBlob = await compressImageData(previewImageData, format, quality);
 
-                // 5. 更新統計數據
+                // 5. 根據像素比例估算最終壓縮後的真實大小
+                const pixelRatio = (pw * ph) / (w * h);
+                const estimatedCompressedSize = Math.round(compressedPreviewBlob.size / pixelRatio);
+
+                // 6. 更新統計數據
                 const origFile = uploadedFiles[0];
                 statOriginalSize.textContent = formatBytes(origFile.size);
-                statCompressedSize.textContent = formatBytes(compressedBlob.size);
+                statCompressedSize.textContent = formatBytes(estimatedCompressedSize);
                 statResolution.textContent = `${w} × ${h} px`;
                 
-                const savingPercent = Math.round(((origFile.size - compressedBlob.size) / origFile.size) * 100);
+                const savingPercent = Math.round(((origFile.size - estimatedCompressedSize) / origFile.size) * 100);
                 statSavingRate.textContent = savingPercent > 0 ? `${savingPercent}%` : `0%`;
                 if (savingPercent > 0) {
                     statSavingRate.className = "stat-val saving";
@@ -2011,19 +2024,19 @@
                     statSavingRate.className = "stat-val";
                 }
 
-                // 6. 更新滑條比對圖與下載連結
+                // 7. 更新滑條比對圖與下載連結
                 if (activeCompressedObjectURL) {
                     URL.revokeObjectURL(activeCompressedObjectURL);
                 }
                 
-                activeCompressedObjectURL = URL.createObjectURL(compressedBlob);
+                activeCompressedObjectURL = URL.createObjectURL(compressedPreviewBlob);
                 imgAfter.src = activeCompressedObjectURL;
 
                 // 為了使比對滑條的左右兩張圖在 object-fit: contain 渲染下完全像素級重合對齊，
-                // 比對的原圖 (imgBefore) 也必須使用與壓縮圖 (imgAfter) 完全相同的縮放尺寸 (w × h)，
-                // 故將其設為 resizedCanvas 渲染出的 ObjectURL。為了防止 toDataURL 同步編碼卡死主執行緒，
+                // 比對的原圖 (imgBefore) 也必須使用與壓縮圖 (imgAfter) 完全相同的縮放尺寸，
+                // 故將其設為 previewCanvas 渲染出的 ObjectURL。為了防止 toDataURL 同步編碼卡死主執行緒，
                 // 我們改用異步 toBlob 與 CreateObjectURL 來載入！
-                resizedCanvas.toBlob((beforeBlob) => {
+                previewCanvas.toBlob((beforeBlob) => {
                     if (activeBeforeObjectURL) {
                         URL.revokeObjectURL(activeBeforeObjectURL);
                     }
@@ -2110,16 +2123,63 @@
 
             try {
                 if (!isBatchMode) {
-                    // 單圖模式：重新執行一次最新的預覽壓縮確保正確，然後觸發下載
                     btnProcess.disabled = true;
                     btnProcess.querySelector('span').textContent = "下載中...";
-                    await updatePreviewAndStats();
-                    
-                    if (btnDownloadSingle.href && btnDownloadSingle.href.startsWith('blob:')) {
-                        btnDownloadSingle.click();
-                    } else {
-                        throw new Error("壓縮檔案生成失敗");
+
+                    // 1. 取得裁切後的畫布
+                    let croppedCanvas = null;
+                    if (isCroppingActive) {
+                        try {
+                            const opt = {};
+                            if (cropperSelection.$width && cropperSelection.$height) {
+                                opt.width = cropperSelection.$width;
+                                opt.height = cropperSelection.$height;
+                            }
+                            croppedCanvas = await cropperSelection.$toCanvas(opt);
+                        } catch (e) {
+                            console.warn("裁切畫布獲取失敗，將採用原圖進行大圖導出", e);
+                        }
                     }
+
+                    let sourceCanvas = croppedCanvas;
+                    if (!sourceCanvas || sourceCanvas.width === 0 || sourceCanvas.height === 0) {
+                        sourceCanvas = document.createElement('canvas');
+                        sourceCanvas.width = originalImageElement.naturalWidth;
+                        sourceCanvas.height = originalImageElement.naturalHeight;
+                        const sCtx = sourceCanvas.getContext('2d');
+                        sCtx.drawImage(originalImageElement, 0, 0);
+                    }
+
+                    // 2. 取得目標真實尺寸
+                    const w = Math.max(1, parseInt(inputWidth.value) || sourceCanvas.width);
+                    const h = Math.max(1, parseInt(inputHeight.value) || sourceCanvas.height);
+
+                    // 3. 判斷是否可以直接使用預覽好的 Blob (若無縮小且原圖小於 1280px)
+                    const maxPreviewDim = 1280;
+                    if (w <= maxPreviewDim && h <= maxPreviewDim) {
+                        if (btnDownloadSingle.href && btnDownloadSingle.href.startsWith('blob:')) {
+                            btnDownloadSingle.click();
+                            return;
+                        }
+                    }
+
+                    // 4. 若大於 1280px，則執行完整的高解析度大圖壓縮編碼
+                    const resizedCanvas = resizeCanvasElement(sourceCanvas, w, h);
+                    const ctx = resizedCanvas.getContext('2d');
+                    const imageData = ctx.getImageData(0, 0, w, h);
+                    const finalBlob = await compressImageData(imageData, format, quality);
+
+                    const finalUrl = URL.createObjectURL(finalBlob);
+                    const tempLink = document.createElement('a');
+                    tempLink.href = finalUrl;
+                    const origFile = uploadedFiles[0];
+                    const cleanName = origFile.name.substring(0, origFile.name.lastIndexOf('.')) || origFile.name;
+                    tempLink.download = `${cleanName}_processed.${format}`;
+                    tempLink.click();
+
+                    setTimeout(() => {
+                        URL.revokeObjectURL(finalUrl);
+                    }, 1000);
                 } else {
                     // 批次處理模式
                     btnProcess.disabled = true;
