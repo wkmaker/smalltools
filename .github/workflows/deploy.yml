@@ -23,7 +23,7 @@ jobs:
       - name: Sync files to S3
         run: |
           # 1. 先同步所有檔案（排除 SVG, img/, .agents, .git, .github，設定快取 300 秒）
-          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "*.svg" --exclude "img/*" --exclude ".agents*" --exclude ".git*" --exclude ".github*" --cache-control "max-age=300"
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "*.svg" --exclude "img/*" --exclude ".agents*" --exclude ".git*" --exclude ".github*" --cache-control "max-age=600"
           
           # 2. 單獨同步非 img/ 下的 SVG 檔案，並強制指定正確的 MIME 類型與快取 300 秒
           aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --exclude "*" --include "*.svg" --exclude "img/*" --content-type "image/svg+xml" --cache-control "max-age=300"
