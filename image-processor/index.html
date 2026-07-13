@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光影裁剪 - 萬能圖片處理大師 | Universal Image Processor</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <meta name="description" content="精緻、唯美且強大的純前端萬能圖片處理工具。支援 Cropper.js v2 手動裁切、即時尺寸調整、jSquash 高性能 WebAssembly 圖片壓縮與轉檔，以及多張圖片批次打包下載。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="光影裁剪 - 萬能圖片處理大師 | Universal Image Processor">
+    <meta property="og:description" content="精緻、唯美且強大的純前端萬能圖片處理工具。支援 Cropper.js v2 裁切、尺寸調整與 jSquash 高速 WebAssembly 壓縮轉檔。">
+    <meta property="og:url" content="https://tools.cjkuo.net/image-processor/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/img/StockSnap_00F7DB5857.webp">
+
+    <!-- 引入 Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 引入 Cropper.js v2 Web Component JS -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/cropperjs@2/dist/cropper.js"></script>
+
+    <!-- 引入 JSZip -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(217, 70, 239, 0.6); /* Fuchsia 霓虹桃紅 */
+            --accent-fuchsia: #d946ef;
+            --accent-purple: #8b5cf6;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem 1.2rem;
+            border-radius: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .back-btn:hover {
+            background: rgba(217, 70, 239, 0.1);
+            border-color: rgba(217, 70, 239, 0.4);
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.2);
+            color: var(--accent-fuchsia);
+        }
+
+        /* 玻璃擬物化主容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.01);
+            width: 100%;
+            max-width: 90%;
+            margin-top: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 頂部標頭 */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-fuchsia), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* 主佈局網格 */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 7fr 3fr;
+            gap: 2.5rem;
+            min-height: 550px;
+            min-width: 0;
+        }
+
+        /* 左側：工作區（裁切/上傳/批次清單） */
+        .workspace-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 0;
+        }
+
+        /* 拖曳上傳框 */
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.01);
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent-fuchsia);
+            background: rgba(217, 70, 239, 0.03);
+            box-shadow: inset 0 0 20px rgba(217, 70, 239, 0.05);
+        }
+
+        .upload-zone i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .upload-zone:hover i, .upload-zone.dragover i {
+            color: var(--accent-fuchsia);
+        }
+
+        .upload-zone p {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .upload-zone span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Cropper 畫布外框 */
+        .cropper-wrapper {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            height: 480px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            display: none;
+        }
+
+        cropper-canvas {
+            width: 100%;
+            height: 100%;
+            background-color: #0b0b0e;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* 裁切控制輔助條 */
+        .cropper-toolbar {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            padding: 0.6rem;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .crop-tool-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .crop-tool-btn:hover {
+            background: rgba(217, 70, 239, 0.15);
+            border-color: var(--accent-fuchsia);
+            color: var(--accent-fuchsia);
+        }
+
+        /* 批次處理清單面板 */
+        .batch-wrapper {
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 1.2rem;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        .batch-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.8rem;
+        }
+
+        .batch-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .batch-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .batch-item-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            min-width: 0;
+        }
+
+        .batch-item-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #121218;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .batch-item-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            min-width: 0;
+        }
+
+        .batch-item-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .batch-item-size {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .batch-item-status {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-pending { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); }
+        .status-processing { background: rgba(217, 70, 239, 0.15); color: var(--accent-fuchsia); }
+        .status-done { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .status-error { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        /* 右側：控制面板 */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-card-sub {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .control-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.6rem;
+        }
+
+        .control-title i {
+            color: var(--accent-fuchsia);
+        }
+
+        /* 表單元素 */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* 下拉選單顏色與可見性規範 */
+        select.styled-select {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select.styled-select:focus {
+            border-color: var(--accent-fuchsia);
+            box-shadow: 0 0 10px rgba(217, 70, 239, 0.25);
+        }
+
+        select.styled-select option {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+        }
+
+        /* 輸入框對比度清晰度標準 */
+        .input-wrapper {
+            position: relative;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-fuchsia);
+            box-shadow: 0 0 10px rgba(217, 70, 239, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .styled-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 0.75rem 1rem;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* 隱藏預設微調按鈕 */
+        .styled-input::-webkit-outer-spin-button,
+        .styled-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .styled-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .input-suffix {
+            padding-right: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        /* 寬高鎖定與並排佈局 */
+        .resize-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: flex-end;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .lock-ratio-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .lock-ratio-btn:hover, .lock-ratio-btn.active {
+            background: rgba(217, 70, 239, 0.15);
+            border-color: var(--accent-fuchsia);
+            color: var(--accent-fuchsia);
+        }
+
+        /* 範圍選擇器 */
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            accent-color: var(--accent-fuchsia);
+            cursor: pointer;
+            height: 6px;
+            border-radius: 3px;
+        }
+
+        .slider-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--accent-fuchsia);
+            min-width: 45px;
+            text-align: right;
+        }
+
+        /* 即時統計數據面板 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .stat-val.saving {
+            color: #10b981;
+        }
+
+        /* 主要動作按鈕 */
+        .primary-action-btn {
+            background: linear-gradient(135deg, var(--accent-fuchsia), var(--accent-purple));
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            padding: 1.1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            box-shadow: 0 10px 20px -5px rgba(217, 70, 239, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .primary-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(217, 70, 239, 0.6), 0 0 15px rgba(217, 70, 239, 0.3);
+        }
+
+        .primary-action-btn:active {
+            transform: translateY(1px);
+        }
+
+        .primary-action-btn:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid var(--glass-border);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 分享按鈕與狀態連動 */
+        .share-btn-container {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .share-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.8rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .share-btn:hover {
+            background: rgba(217, 70, 239, 0.1);
+            border-color: rgba(217, 70, 239, 0.3);
+            color: var(--accent-fuchsia);
+        }
+
+        .share-btn.copied {
+            border-color: #10b981;
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* WASM 與容錯狀態提示 */
+        .toast-info {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .toast-info i {
+            color: var(--accent-fuchsia);
+        }
+
+        .toast-info.warning i {
+            color: #ffb800;
+        }
+
+        /* ==================== */
+        /* 左右滑動對比預覽區 */
+        /* ==================== */
+        .comparison-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .comparison-title {
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 雙圖重疊滑塊容器 */
+        .comparison-container {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #121218;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            user-select: none;
+        }
+
+        .comp-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            will-change: clip-path, transform;
+            transform: translateZ(0); /* 強制開啟 3D 硬體加速 */
+        }
+
+        .comp-img-before {
+            z-index: 1;
+        }
+
+        .comp-img-after {
+            z-index: 2;
+            /* 預設被剪裁 */
+            clip-path: inset(0 0 0 50%);
+        }
+
+        /* 拖曳條軌道 */
+        .comp-slider {
+            position: absolute;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            outline: none;
+            margin: 0;
+            z-index: 3;
+            cursor: ew-resize;
+            top: 0;
+            left: 0;
+        }
+
+        /* 隱藏 Chrome/Safari 預設 track */
+        .comp-slider::-webkit-slider-runnable-track {
+            background: transparent;
+            border: none;
+            height: 100%;
+        }
+
+        /* 將 Chrome/Safari 的 thumb 放大成跟容器一樣高，作為隱形拖曳熱區 */
+        .comp-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 480px;
+            background: transparent;
+            cursor: ew-resize;
+        }
+
+        /* 隱藏 Firefox 預設 track */
+        .comp-slider::-moz-range-track {
+            background: transparent;
+            border: none;
+            height: 100%;
+        }
+
+        /* 將 Firefox 的 thumb 放大 */
+        .comp-slider::-moz-range-thumb {
+            width: 40px;
+            height: 480px;
+            background: transparent;
+            cursor: ew-resize;
+            border: none;
+        }
+
+        /* 拖曳線與圓鈕 */
+        .comp-separator {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), 0 0 5px var(--accent-fuchsia);
+            left: 50%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .comp-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 38px;
+            height: 38px;
+            background: #ffffff;
+            border: 2px solid var(--accent-fuchsia);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            color: var(--bg-color);
+            font-size: 0.8rem;
+        }
+
+        /* 浮動標籤 */
+        .comp-label {
+            position: absolute;
+            bottom: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--glass-border);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #ffffff;
+            z-index: 2;
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        .comp-label-before {
+            left: 1rem;
+        }
+
+        .comp-label-after {
+            right: 1rem;
+        }
+
+        /* 強制隱藏 hidden 的 Web Components */
+        cropper-selection[hidden], cropper-shade[hidden] {
+            display: none !important;
+        }
+
+        /* 行動端調整 */
+        @media (max-width: 1024px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .glass-container {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+
+            .glass-container {
+                margin-top: 0;
+            }
+
+            h1 {
+                font-size: 1.7rem;
+            }
+
+            .cropper-wrapper {
+                height: 320px;
+            }
+
+            .comparison-container {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 粒子 Canvas 背景 -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- 返回首頁按鈕 -->
+    <a href="../index.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        回工具庫首頁
+    </a>
+
+    <!-- 主玻璃容器 -->
+    <div class="glass-container">
+        
+        <!-- 頂部標頭 -->
+        <div class="header">
+            <h1>光影裁剪</h1>
+            <div class="subtitle-top">萬能圖片處理大師 & 批次轉檔壓縮</div>
+        </div>
+
+        <!-- 核心佈局網格 -->
+        <div class="layout-grid">
+            
+            <!-- 左邊：圖片工作區 -->
+            <div class="workspace-panel">
+                
+                <!-- 拖曳上傳區 -->
+                <div id="upload-zone" class="upload-zone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>拖曳圖片至此處，或點擊選擇檔案</p>
+                    <span>支援 JPG, PNG, WebP, AVIF 等格式 | 支援多檔批次處理</span>
+                    <input type="file" id="file-input" style="display: none;" accept="image/*" multiple>
+                </div>
+
+                <!-- 畫布外框 -->
+                <div id="cropper-wrapper" class="cropper-wrapper">
+                    <cropper-canvas id="cropper-canvas" background>
+                        <cropper-image id="cropper-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="圖片編輯中" rotatable scalable translatable></cropper-image>
+                        <cropper-shade></cropper-shade>
+                        <cropper-handle action="select" plain></cropper-handle>
+                        <cropper-selection id="cropper-selection" movable resizable aspect-ratio="NaN">
+                            <cropper-grid role="grid" covered></cropper-grid>
+                            <cropper-crosshair></cropper-crosshair>
+                            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)"></cropper-handle>
+                            <cropper-handle action="n-resize"></cropper-handle>
+                            <cropper-handle action="e-resize"></cropper-handle>
+                            <cropper-handle action="s-resize"></cropper-handle>
+                            <cropper-handle action="w-resize"></cropper-handle>
+                            <cropper-handle action="ne-resize"></cropper-handle>
+                            <cropper-handle action="nw-resize"></cropper-handle>
+                            <cropper-handle action="se-resize"></cropper-handle>
+                            <cropper-handle action="sw-resize"></cropper-handle>
+                        </cropper-selection>
+                    </cropper-canvas>
+                </div>
+
+                <!-- 裁切工具列 -->
+                <div id="cropper-toolbar" class="cropper-toolbar">
+                    <button class="crop-tool-btn" id="btn-rotate-l" title="向左旋轉 90 度"><i class="fas fa-undo"></i></button>
+                    <button class="crop-tool-btn" id="btn-rotate-r" title="向右旋轉 90 度"><i class="fas fa-redo"></i></button>
+                    <button class="crop-tool-btn" id="btn-flip-h" title="水平翻轉"><i class="fas fa-arrows-alt-h"></i></button>
+                    <button class="crop-tool-btn" id="btn-flip-v" title="垂直翻轉"><i class="fas fa-arrows-alt-v"></i></button>
+                    <button class="crop-tool-btn" id="btn-reset-crop" title="重置裁切"><i class="fas fa-sync-alt"></i></button>
+                    <span style="width: 1px; background: var(--glass-border); margin: 0 0.3rem;"></span>
+                    <button class="crop-tool-btn" id="btn-aspect-free" title="自由比例" style="font-size: 0.8rem; width: auto; padding: 0 0.5rem;">自由</button>
+                    <button class="crop-tool-btn" id="btn-aspect-1-1" title="1:1 比例" style="font-size: 0.8rem; width: auto; padding: 0 0.5rem;">1:1</button>
+                    <button class="crop-tool-btn" id="btn-aspect-4-3" title="4:3 比例" style="font-size: 0.8rem; width: auto; padding: 0 0.5rem;">4:3</button>
+                    <button class="crop-tool-btn" id="btn-aspect-16-9" title="16:9 比例" style="font-size: 0.8rem; width: auto; padding: 0 0.5rem;">16:9</button>
+                </div>
+
+                <!-- 批次圖片清單 -->
+                <div id="batch-wrapper" class="batch-wrapper">
+                    <div class="batch-header-info">
+                        <span id="batch-count" style="font-size: 0.95rem; font-weight: 500;">已選擇 0 張圖片</span>
+                        <button class="share-btn" id="btn-clear-batch" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"><i class="fas fa-trash-alt"></i> 清除清單</button>
+                    </div>
+                    <div id="batch-list" class="batch-list">
+                        <!-- 動態插入批次項目 -->
+                    </div>
+                </div>
+
+                <!-- 比對預覽區 -->
+                <div id="comparison-panel" class="comparison-panel">
+                    <div class="comparison-header">
+                        <span class="comparison-title"><i class="fas fa-eye" style="color: var(--accent-fuchsia);"></i> 壓縮品質即時比對 (拖曳拉條查看)</span>
+                        <a id="btn-download-single" href="#" download="compressed.webp" style="display: none;"></a>
+                    </div>
+                    
+
+                    
+                    <div class="comparison-container" id="comp-container">
+                        <!-- 原圖（底圖） -->
+                        <img id="img-before" class="comp-img comp-img-before" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="壓縮前">
+                        <!-- 壓縮圖（上層） -->
+                        <img id="img-after" class="comp-img comp-img-after" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="壓縮後">
+                        
+                        <!-- 分割線與拉鈕 -->
+                        <div class="comp-separator" id="comp-separator"></div>
+                        <div class="comp-button" id="comp-button">
+                            <i class="fas fa-arrows-alt-h"></i>
+                        </div>
+                        
+                        <!-- 左右標籤 -->
+                        <div class="comp-label comp-label-before">原圖</div>
+                        <div class="comp-label comp-label-after">處理後</div>
+                        
+                        <!-- 滑動輸入軌道 -->
+                        <input type="range" min="0" max="100" value="50" class="comp-slider" id="comp-slider">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 右邊：控制與設定面板 -->
+            <div class="control-panel">
+                
+                <!-- 格式與品質設定 -->
+                <div class="control-card-sub">
+                    <span class="control-title"><i class="fas fa-sliders-h"></i> 輸出參數設定</span>
+                    
+                    <!-- 輸出格式 -->
+                    <div class="input-group">
+                        <label for="output-format">輸出格式</label>
+                        <select id="output-format" class="styled-select">
+                            <option value="webp">WebP (推薦：極高壓縮率)</option>
+                            <option value="jpeg">JPEG (標準相片格式)</option>
+                            <option value="png">PNG (無損 / 支援透明度)</option>
+                            <option value="avif">AVIF (下一代超高效率編碼)</option>
+                        </select>
+                    </div>
+
+                    <!-- 壓縮品質 -->
+                    <div class="input-group" id="quality-group">
+                        <div style="display: flex; justify-content: space-between;">
+                            <label for="compress-quality">壓縮品質</label>
+                            <span class="slider-val" id="quality-display">80%</span>
+                        </div>
+                        <div class="slider-wrapper">
+                            <input type="range" id="compress-quality" min="1" max="100" value="80">
+                        </div>
+                    </div>
+
+                    <!-- 尺寸調整區 -->
+                    <div class="resize-row">
+                        <!-- 寬度 -->
+                        <div class="input-group">
+                            <label for="resize-width">目標寬度</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="resize-width" class="styled-input" min="1" placeholder="原始寬度">
+                                <span class="input-suffix">px</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 鎖定比例按鈕 -->
+                        <button id="btn-lock-ratio" class="lock-ratio-btn active" title="鎖定寬高比例">
+                            <i class="fas fa-link"></i>
+                        </button>
+                        
+                        <!-- 高度 -->
+                        <div class="input-group">
+                            <label for="resize-height">目標高度</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="resize-height" class="styled-input" min="1" placeholder="原始高度">
+                                <span class="input-suffix">px</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 百分比滑動條 -->
+                    <div class="input-group" style="margin-top: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="resize-scale">依百分比縮放</label>
+                            <span class="slider-val" id="scale-display">100%</span>
+                        </div>
+                        <div class="slider-wrapper">
+                            <input type="range" id="resize-scale" min="10" max="100" value="100" step="5">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 數據統計與提示 -->
+                <div class="control-card-sub">
+                    <span class="control-title"><i class="fas fa-chart-bar"></i> 圖片資訊統計</span>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-label">原始大小</span>
+                            <span class="stat-val" id="stat-original-size">-</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">壓縮後大小</span>
+                            <span class="stat-val" id="stat-compressed-size">-</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">尺寸解析度</span>
+                            <span class="stat-val" id="stat-resolution">-</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">空間節省率</span>
+                            <span class="stat-val saving" id="stat-saving-rate">-</span>
+                        </div>
+                    </div>
+
+                    <!-- 狀態與容錯模式提示 -->
+                    <div id="wasm-status-toast" class="toast-info">
+                        <i class="fas fa-spinner fa-spin" id="wasm-toast-icon"></i>
+                        <span id="wasm-toast-text">正在加載 WebAssembly 高性能壓縮核心...</span>
+                    </div>
+                </div>
+
+                <!-- 動作按鈕 -->
+                <button id="btn-process" class="primary-action-btn" disabled>
+                    <i class="fas fa-magic"></i>
+                    <span>請先上傳圖片</span>
+                </button>
+
+                <!-- 強行放大警告氣泡 (置於主下載大按鈕下方，更加清晰醒目) -->
+                <div id="upscale-warning" style="display: none; font-size: 0.85rem; color: #eab308; background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.2); padding: 0.8rem 1rem; border-radius: 12px; flex-direction: column; gap: 0.6rem; width: 100%; margin-top: 0.8rem; box-sizing: border-box;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="upscale-warning-text">裁剪區像素小於目標尺寸，放大可能導致模糊。</span>
+                    </div>
+                    <button id="btn-download-original-size" class="share-btn" style="padding: 0.5rem 0.8rem; font-size: 0.8rem; border-color: var(--accent-fuchsia); color: #ffffff; background: rgba(217, 70, 239, 0.15); cursor: pointer; width: 100%; justify-content: center; box-sizing: border-box;">
+                        <i class="fas fa-arrow-down"></i> 下載原始裁切大小 (---)
+                    </button>
+                </div>
+
+                <!-- 分享與複製連結 -->
+                <div class="share-btn-container">
+                    <button class="share-btn" id="btn-share-link" title="複製目前參數配置連結">
+                        <i class="fas fa-link"></i>
+                        <span>複製配置連結</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- JavaScript 邏輯 -->
+    <script type="module">
+        // ===================================================
+        // 1. jSquash WASM 模組動態引入與 Fallback 機制
+        // ===================================================
+        let useJSquash = false;
+        let encodeWebp;
+        let encodeJpeg;
+        let encodePng;
+
+        const wasmStatusToast = document.getElementById('wasm-status-toast');
+        const wasmToastIcon = document.getElementById('wasm-toast-icon');
+        const wasmToastText = document.getElementById('wasm-toast-text');
+
+        async function initWasmModules() {
+            try {
+                // 設定 Wasm 初始化超時為 6 秒，防範網路延遲卡死
+                const timeout = (prom, ms) => {
+                    return Promise.race([
+                        prom,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))
+                    ]);
+                };
+
+                // 動態從 CDN 載入 ES 模組 (不需手動呼叫 init，jSquash 會在初次編碼時自動加載 WASM)
+                const loadModules = async () => {
+                    const webpMod = await import('https://esm.sh/@jsquash/webp?bundle');
+                    encodeWebp = webpMod.encode;
+
+                    const jpegMod = await import('https://esm.sh/@jsquash/jpeg?bundle');
+                    encodeJpeg = jpegMod.encode;
+
+                    const pngMod = await import('https://esm.sh/@jsquash/png?bundle');
+                    encodePng = pngMod.encode;
+                    
+                    // 背景悄悄預熱 WASM 編譯 (使用 1x1 像素 ImageData 執行一次無效編碼，強迫瀏覽器背景下載並編譯 .wasm)
+                    try {
+                        const dummyData = new ImageData(1, 1);
+                        encodeWebp(dummyData).catch(() => {});
+                        encodeJpeg(dummyData).catch(() => {});
+                        encodePng(dummyData).catch(() => {});
+                    } catch (e) {
+                        // 忽視預熱的錯誤
+                    }
+                };
+
+                await timeout(loadModules(), 6000);
+                useJSquash = true;
+
+                // 成功提示
+                wasmStatusToast.className = "toast-info";
+                wasmToastIcon.className = "fas fa-check-circle";
+                wasmToastIcon.style.color = "#10b981";
+                wasmToastText.textContent = "高性能 WebAssembly 壓縮核心已啟動";
+            } catch (err) {
+                console.warn("jSquash WASM 初始化失敗或超時，自動啟用原生瀏覽器編碼 Fallback 機制:", err);
+                useJSquash = false;
+
+                // 降級提示（改為溫和的提示，而非 Warning 警告）
+                wasmStatusToast.className = "toast-info";
+                wasmToastIcon.className = "fas fa-info-circle";
+                wasmToastIcon.style.color = "rgba(255, 255, 255, 0.6)";
+                wasmToastText.textContent = "已啟用原生瀏覽器極速編碼核心 (Canvas)";
+            }
+        }
+
+        // 頁面載入時進行模組初始化
+        window.addEventListener('load', () => {
+            initWasmModules();
+            initFromURL();
+        });
+
+        // ===================================================
+        // 2. 背景粒子與滑鼠特效 Canvas (霓虹粉紫主題)
+        // ===================================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            adjustParticles();
+        }
+
+        class Particle {
+            constructor(x = null, y = null, isBurst = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.density = (Math.random() * 30) + 1;
+                this.isBurst = isBurst;
+                this.life = isBurst ? 1.0 : -1;
+
+                if (isBurst) {
+                    this.velocityX = (Math.random() - 0.5) * 4.5;
+                    this.velocityY = (Math.random() - 0.5) * 4.5;
+                } else {
+                    this.velocityY = -((Math.random() * 0.35) + 0.1); // 緩慢往上飄
+                    this.velocityX = (Math.random() - 0.5) * 0.15;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+
+                let alpha = this.isBurst ? this.life : this.size / 3.5;
+                
+                // 使用霓虹粉紅 / 紫色色調
+                ctx.fillStyle = this.isBurst
+                    ? `rgba(217, 70, 239, ${alpha})`
+                    : `rgba(217, 70, 239, ${alpha * 0.75})`;
+                ctx.fill();
+            }
+
+            update() {
+                if (this.isBurst) {
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    this.life -= 0.022;
+                    this.velocityX *= 0.96;
+                    this.velocityY *= 0.96;
+                } else {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                    if (this.x < 0 || this.x > canvas.width) {
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                // 滑鼠排斥
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * this.density * 0.5;
+                    this.y -= (dy / distance) * force * this.density * 0.5;
+                }
+            }
+        }
+
+        function adjustParticles() {
+            const targetCount = Math.floor((canvas.width * canvas.height) / 12000);
+            let bgParticles = particles.filter(p => !p.isBurst);
+            const burstParticles = particles.filter(p => p.isBurst);
+
+            if (bgParticles.length < targetCount) {
+                const toAdd = targetCount - bgParticles.length;
+                for (let i = 0; i < toAdd; i++) {
+                    bgParticles.push(new Particle());
+                }
+            } else if (bgParticles.length > targetCount) {
+                bgParticles = bgParticles.slice(0, targetCount);
+            }
+            particles = [...bgParticles, ...burstParticles];
+        }
+
+        function createBurst(x, y) {
+            for (let i = 0; i < 16; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                if (p.isBurst && p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mousedown', (e) => {
+            mouse.radius = 280;
+            createBurst(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { mouse.radius = 150; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        animateParticles();
+
+
+        // ===================================================
+        // 3. UI 元素宣告與檔案管理狀態
+        // ===================================================
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const cropperWrapper = document.getElementById('cropper-wrapper');
+        const cropperToolbar = document.getElementById('cropper-toolbar');
+        const batchWrapper = document.getElementById('batch-wrapper');
+        const batchList = document.getElementById('batch-list');
+        const batchCount = document.getElementById('batch-count');
+        const btnClearBatch = document.getElementById('btn-clear-batch');
+
+        const cropperImage = document.getElementById('cropper-image');
+        const cropperSelection = document.getElementById('cropper-selection');
+        const cropperCanvas = document.getElementById('cropper-canvas');
+
+        const selectFormat = document.getElementById('output-format');
+        const sliderQuality = document.getElementById('compress-quality');
+        const valQuality = document.getElementById('quality-display');
+        const btnLockRatio = document.getElementById('btn-lock-ratio');
+        const inputWidth = document.getElementById('resize-width');
+        const inputHeight = document.getElementById('resize-height');
+        const sliderScale = document.getElementById('resize-scale');
+        const valScale = document.getElementById('scale-display');
+
+        const statOriginalSize = document.getElementById('stat-original-size');
+        const statCompressedSize = document.getElementById('stat-compressed-size');
+        const statResolution = document.getElementById('stat-resolution');
+        const statSavingRate = document.getElementById('stat-saving-rate');
+
+        const btnProcess = document.getElementById('btn-process');
+        const btnShareLink = document.getElementById('btn-share-link');
+
+        // 預覽與對比區
+        const comparisonPanel = document.getElementById('comparison-panel');
+        const imgBefore = document.getElementById('img-before');
+        const imgAfter = document.getElementById('img-after');
+        const compSlider = document.getElementById('comp-slider');
+        const compSeparator = document.getElementById('comp-separator');
+        const compButton = document.getElementById('comp-button');
+        const btnDownloadSingle = document.getElementById('btn-download-single');
+
+        // 當前工作狀態
+        let uploadedFiles = []; // 保存 File 物件清單
+        let activeIndex = 0;    // 批次處理中當前編輯的圖片，單圖則為 0
+        let isBatchMode = false;
+        let originalImageURL = null; // 單圖預覽用的ObjectURL
+        let originalImageElement = null; // 保存當前上傳原圖的 Image 實例
+        let activeCompressedObjectURL = null;
+        let activeBeforeObjectURL = null;
+        let isCroppingActive = false; // 追蹤裁切功能是否啟用
+        let isRatioLocked = true;    // 追蹤等比例鎖定狀態
+        let currentScaleX = 1;       // 追蹤翻轉狀態 (水平)
+        let currentScaleY = 1;       // 追蹤翻轉狀態 (垂直)
+
+        // 格式化檔案大小
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // ===================================================
+        // 4. 輸入欄位即時連動與網址參數同步 (URL Sync)
+        // ===================================================
+        
+        // 取得當前圖片來源大小
+        function getCurrentSourceDimensions() {
+            if (isCroppingActive && cropperSelection && cropperSelection.$width && cropperSelection.$height) {
+                return { currentWidth: cropperSelection.$width, currentHeight: cropperSelection.$height };
+            }
+            if (originalImageElement) {
+                return { currentWidth: originalImageElement.naturalWidth, currentHeight: originalImageElement.naturalHeight };
+            }
+            return { currentWidth: 0, currentHeight: 0 };
+        }
+
+        // 寬高數值同步連動
+        function syncDimensions(sourceField) {
+            const { currentWidth, currentHeight } = getCurrentSourceDimensions();
+            if (!currentWidth || !currentHeight) return;
+            const ratio = currentWidth / currentHeight;
+
+            if (sourceField === 'width') {
+                const w = parseInt(inputWidth.value);
+                if (w && ratio) {
+                    inputHeight.value = Math.round(w / ratio);
+                } else {
+                    inputHeight.value = '';
+                }
+            } else if (sourceField === 'height') {
+                const h = parseInt(inputHeight.value);
+                if (h && ratio) {
+                    inputWidth.value = Math.round(h * ratio);
+                } else {
+                    inputWidth.value = '';
+                }
+            }
+        }
+
+        // 鎖定/解鎖比例按鈕事件
+        btnLockRatio.addEventListener('click', () => {
+            isRatioLocked = !isRatioLocked;
+            if (isRatioLocked) {
+                btnLockRatio.classList.add('active');
+                btnLockRatio.innerHTML = '<i class="fas fa-link"></i>';
+                btnLockRatio.title = "鎖定寬高比例";
+                // 重新根據寬度同步一次高度
+                syncDimensions('width');
+            } else {
+                btnLockRatio.classList.remove('active');
+                btnLockRatio.innerHTML = '<i class="fas fa-link-slash"></i>';
+                btnLockRatio.title = "解鎖寬高比例";
+            }
+            syncToURLDebounced();
+            triggerUpdate();
+        });
+
+        // 品質拉條
+        sliderQuality.addEventListener('input', () => {
+            valQuality.textContent = sliderQuality.value + '%';
+            syncToURLDebounced();
+            triggerUpdate();
+        });
+
+        // 縮放比例拉條 (拖拉時自動依比例換算寬高度填入輸入框)
+        sliderScale.addEventListener('input', () => {
+            valScale.textContent = sliderScale.value + '%';
+            
+            const { currentWidth, currentHeight } = getCurrentSourceDimensions();
+            const pct = parseInt(sliderScale.value) / 100;
+            
+            if (currentWidth && currentHeight) {
+                inputWidth.value = Math.round(currentWidth * pct);
+                inputHeight.value = Math.round(currentHeight * pct);
+            }
+            
+            syncToURLDebounced();
+            triggerUpdate();
+        });
+
+        // 格式下拉選單
+        selectFormat.addEventListener('change', () => {
+            const fmt = selectFormat.value;
+            const qualityGroup = document.getElementById('quality-group');
+            if (fmt === 'png') {
+                qualityGroup.style.display = 'none';
+            } else {
+                qualityGroup.style.display = 'flex';
+            }
+            syncToURL();
+            triggerUpdate();
+        });
+
+        // 寬度輸入框手動打字
+        inputWidth.addEventListener('input', () => {
+            if (isRatioLocked) {
+                syncDimensions('width');
+            }
+            // 打字時，將百分比滑動條重置回 100% 避免數值衝突
+            sliderScale.value = 100;
+            valScale.textContent = '100%';
+            syncToURLDebounced();
+            triggerUpdate();
+        });
+        
+        // 高度輸入框手動打字
+        inputHeight.addEventListener('input', () => {
+            if (isRatioLocked) {
+                syncDimensions('height');
+            }
+            sliderScale.value = 100;
+            valScale.textContent = '100%';
+            syncToURLDebounced();
+            triggerUpdate();
+        });
+
+        // 防抖機制 (Debounce) 用於打字與拉條 URL 同步
+        let urlSyncTimer;
+        function syncToURLDebounced() {
+            clearTimeout(urlSyncTimer);
+            urlSyncTimer = setTimeout(syncToURL, 300);
+        }
+
+        // 同步狀態至 URL
+        function syncToURL() {
+            const params = new URLSearchParams();
+            params.set('f', selectFormat.value);
+            params.set('q', sliderQuality.value);
+            params.set('l', isRatioLocked ? '1' : '0');
+            
+            if (inputWidth.value) params.set('w', inputWidth.value);
+            if (inputHeight.value) params.set('h', inputHeight.value);
+            params.set('s', sliderScale.value);
+
+            history.replaceState(null, '', '?' + params.toString());
+        }
+
+        // 從 URL 還原狀態
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            
+            if (params.has('f')) {
+                const f = params.get('f');
+                if (['webp', 'jpeg', 'png', 'avif'].includes(f)) {
+                    selectFormat.value = f;
+                    selectFormat.dispatchEvent(new Event('change'));
+                }
+            }
+
+            if (params.has('q')) {
+                const q = parseInt(params.get('q'));
+                if (!isNaN(q) && q >= 1 && q <= 100) {
+                    sliderQuality.value = q;
+                    valQuality.textContent = q + '%';
+                }
+            }
+
+            if (params.has('l')) {
+                isRatioLocked = params.get('l') === '1';
+                if (isRatioLocked) {
+                    btnLockRatio.classList.add('active');
+                    btnLockRatio.innerHTML = '<i class="fas fa-link"></i>';
+                } else {
+                    btnLockRatio.classList.remove('active');
+                    btnLockRatio.innerHTML = '<i class="fas fa-link-slash"></i>';
+                }
+            }
+
+            if (params.has('w')) {
+                const w = parseInt(params.get('w'));
+                if (!isNaN(w) && w > 0) {
+                    inputWidth.value = w;
+                }
+            }
+
+            if (params.has('h')) {
+                const h = parseInt(params.get('h'));
+                if (!isNaN(h) && h > 0) {
+                    inputHeight.value = h;
+                }
+            }
+
+            if (params.has('s')) {
+                const s = parseInt(params.get('s'));
+                if (!isNaN(s) && s >= 10 && s <= 100) {
+                    sliderScale.value = s;
+                    valScale.textContent = s + '%';
+                }
+            }
+        }
+
+        // 複製配置連結分享按鈕
+        btnShareLink.addEventListener('click', () => {
+            syncToURL();
+            const shareURL = window.location.href;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareURL).then(() => {
+                    showCopiedFeedback();
+                }).catch(() => {
+                    fallbackCopyPrompt(shareURL);
+                });
+            } else {
+                fallbackCopyPrompt(shareURL);
+            }
+        });
+
+        function showCopiedFeedback() {
+            btnShareLink.classList.add('copied');
+            const icon = btnShareLink.querySelector('i');
+            const text = btnShareLink.querySelector('span');
+            icon.className = "fas fa-check";
+            text.textContent = "配置已複製！";
+            
+            setTimeout(() => {
+                btnShareLink.classList.remove('copied');
+                icon.className = "fas fa-link";
+                text.textContent = "複製配置連結";
+            }, 2200);
+        }
+
+        function fallbackCopyPrompt(url) {
+            window.prompt("您的瀏覽器不支援自動複製，請手動複製下方連結：", url);
+        }
+
+
+        // ===================================================
+        // 5. 拖曳上傳與檔案載入邏輯
+        // ===================================================
+        
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFiles(fileInput.files);
+            }
+        });
+
+        // 處理匯入的檔案清單
+        function handleFiles(files) {
+            uploadedFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+            
+            if (uploadedFiles.length === 0) {
+                alert("未偵測到有效的圖片檔案。");
+                return;
+            }
+
+            // 重置預覽
+            comparisonPanel.style.display = 'none';
+
+            if (uploadedFiles.length === 1) {
+                isBatchMode = false;
+                initSingleMode(uploadedFiles[0]);
+            } else {
+                isBatchMode = true;
+                initBatchMode(uploadedFiles);
+            }
+
+            // 更新按鈕狀態
+            btnProcess.disabled = false;
+            btnProcess.querySelector('span').textContent = isBatchMode ? "開始批次壓縮下載" : "下載調整後的圖片";
+        }
+
+        // 初始化單張圖片模式 (Cropper 裁剪)
+        function initSingleMode(file) {
+            // 隱藏批次清單，顯示裁切畫布與工具列
+            batchWrapper.style.display = 'none';
+            cropperWrapper.style.display = 'block';
+            cropperToolbar.style.display = 'flex';
+
+            // 釋放舊的 ObjectURL
+            if (originalImageURL) {
+                URL.revokeObjectURL(originalImageURL);
+            }
+            originalImageURL = URL.createObjectURL(file);
+            
+            // 設定至 Cropper 影像
+            cropperImage.src = originalImageURL;
+
+            // 統計數據初始化
+            statOriginalSize.textContent = formatBytes(file.size);
+            statCompressedSize.textContent = '-';
+            statSavingRate.textContent = '-';
+            
+            // 獲取原圖尺寸解析度
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                originalImageElement = tempImg;
+                statResolution.textContent = `${tempImg.naturalWidth} × ${tempImg.naturalHeight}`;
+                // 預設將目標寬度與高度欄位填入原圖大小
+                inputWidth.placeholder = tempImg.naturalWidth;
+                inputHeight.placeholder = tempImg.naturalHeight;
+
+                // 預設一上傳不啟用裁切，隱藏選取框與遮罩，套用全圖明亮
+                isCroppingActive = false;
+                if (cropperSelection) {
+                    cropperSelection.hidden = true;
+                }
+                const cropperShade = cropperCanvas.querySelector('cropper-shade');
+                if (cropperShade) {
+                    cropperShade.hidden = true;
+                }
+
+                // 立即觸發第一次即時壓縮計算 (非阻塞，瞬間完成首次載入顯示！)
+                triggerUpdate();
+
+                // 裁剪組件的初始化移至背景異步執行，避免阻塞首屏壓縮渲染
+                (async () => {
+                    try {
+                        await cropperImage.$ready();
+                    } catch (e) {
+                        console.warn("cropperImage ready timeout", e);
+                    }
+                    
+                    // 比例調整按鈕維持啟用，點擊時會自動開啟裁切
+                    const aspectButtons = [
+                        document.getElementById('btn-aspect-free'),
+                        document.getElementById('btn-aspect-1-1'),
+                        document.getElementById('btn-aspect-4-3'),
+                        document.getElementById('btn-aspect-16-9')
+                    ];
+                    aspectButtons.forEach(btn => {
+                        if (btn) {
+                            btn.style.opacity = '1';
+                            btn.style.pointerEvents = 'auto';
+                        }
+                    });
+                })();
+            };
+            tempImg.src = originalImageURL;
+        }
+
+        // 初始化批次模式
+        function initBatchMode(files) {
+            // 隱藏裁切畫布，顯示批次列表
+            cropperWrapper.style.display = 'none';
+            cropperToolbar.style.display = 'none';
+            batchWrapper.style.display = 'flex';
+
+            batchCount.textContent = `已選擇 ${files.length} 張圖片`;
+            batchList.innerHTML = '';
+
+            let totalSize = 0;
+
+            files.forEach((file, index) => {
+                totalSize += file.size;
+                const item = document.createElement('div');
+                item.className = 'batch-item';
+                item.id = `batch-item-${index}`;
+
+                // 產生縮圖
+                const thumbUrl = URL.createObjectURL(file);
+
+                item.innerHTML = `
+                    <div class="batch-item-left">
+                        <img src="${thumbUrl}" class="batch-item-thumb" onload="window.URL.revokeObjectURL('${thumbUrl}')">
+                        <div class="batch-item-detail">
+                            <div class="batch-item-name">${file.name}</div>
+                            <div class="batch-item-size">${formatBytes(file.size)}</div>
+                        </div>
+                    </div>
+                    <div class="batch-item-status">
+                        <span class="status-badge status-pending" id="batch-status-text-${index}">排隊中</span>
+                    </div>
+                `;
+                batchList.appendChild(item);
+            });
+
+            // 統計總量
+            statOriginalSize.textContent = formatBytes(totalSize);
+            statCompressedSize.textContent = '-';
+            statResolution.textContent = '批次處理不適用';
+            statSavingRate.textContent = '-';
+        }
+
+        // 清除批次清單
+        btnClearBatch.addEventListener('click', () => {
+            uploadedFiles = [];
+            batchList.innerHTML = '';
+            batchWrapper.style.display = 'none';
+            btnProcess.disabled = true;
+            btnProcess.querySelector('span').textContent = "請先上傳圖片";
+            statOriginalSize.textContent = '-';
+            statCompressedSize.textContent = '-';
+            statSavingRate.textContent = '-';
+        });
+
+
+        // ===================================================
+        // 6. Cropper.js v2 裁切按鈕互動事件
+        // ===================================================
+        
+        document.getElementById('btn-rotate-l').addEventListener('click', () => {
+            cropperImage.$rotate(-Math.PI / 2);
+            triggerUpdate();
+        });
+
+        document.getElementById('btn-rotate-r').addEventListener('click', () => {
+            cropperImage.$rotate(Math.PI / 2);
+            triggerUpdate();
+        });
+
+        document.getElementById('btn-flip-h').addEventListener('click', () => {
+            currentScaleX = currentScaleX === 1 ? -1 : 1;
+            cropperImage.$scale(currentScaleX, currentScaleY);
+            triggerUpdate();
+        });
+
+        document.getElementById('btn-flip-v').addEventListener('click', () => {
+            currentScaleY = currentScaleY === 1 ? -1 : 1;
+            cropperImage.$scale(currentScaleX, currentScaleY);
+            triggerUpdate();
+        });
+
+        // 啟用裁切模式的輔助函數
+        function enableCroppingMode() {
+            if (!isCroppingActive) {
+                isCroppingActive = true;
+                if (cropperSelection) {
+                    cropperSelection.hidden = false;
+                }
+                const cropperShade = cropperCanvas.querySelector('cropper-shade');
+                if (cropperShade) {
+                    cropperShade.hidden = false;
+                }
+            }
+        }
+
+        // 重置按鈕：清除所有裁切框，回復全彩明亮的全圖狀態，並還原旋轉與翻轉
+        document.getElementById('btn-reset-crop').addEventListener('click', () => {
+            isCroppingActive = false;
+            if (cropperSelection) {
+                cropperSelection.hidden = true;
+            }
+            const cropperShade = cropperCanvas.querySelector('cropper-shade');
+            if (cropperShade) {
+                cropperShade.hidden = true;
+            }
+
+            cropperCanvas.querySelectorAll('cropper-selection').forEach(s => s.$reset());
+            cropperImage.$rotate(0 - (cropperImage.rotated || 0));
+            currentScaleX = 1;
+            currentScaleY = 1;
+            cropperImage.$scale(1, 1);
+            triggerUpdate();
+        });
+
+        // 比例調整按鈕：點擊後會自動啟用裁剪，並重新將裁剪框居中定位
+        document.getElementById('btn-aspect-free').addEventListener('click', () => {
+            enableCroppingMode();
+            cropperSelection.setAttribute('aspect-ratio', 'NaN');
+            cropperSelection.$reset();
+            triggerUpdate();
+        });
+        document.getElementById('btn-aspect-1-1').addEventListener('click', () => {
+            enableCroppingMode();
+            cropperSelection.setAttribute('aspect-ratio', '1');
+            cropperSelection.$reset();
+            triggerUpdate();
+        });
+        document.getElementById('btn-aspect-4-3').addEventListener('click', () => {
+            enableCroppingMode();
+            cropperSelection.setAttribute('aspect-ratio', '1.33333333');
+            cropperSelection.$reset();
+            triggerUpdate();
+        });
+        document.getElementById('btn-aspect-16-9').addEventListener('click', () => {
+            enableCroppingMode();
+            cropperSelection.setAttribute('aspect-ratio', '1.77777777');
+            cropperSelection.$reset();
+            triggerUpdate();
+        });
+
+
+        // ===================================================
+        // 7. 圖片處理核心運算：縮放與編碼 (jSquash + Canvas)
+        // ===================================================
+
+        // 核心縮放函數：在 Canvas 上重繪以改變尺寸
+        function resizeCanvasElement(sourceCanvas, targetWidth, targetHeight) {
+            const resizedCanvas = document.createElement('canvas');
+            resizedCanvas.width = targetWidth;
+            resizedCanvas.height = targetHeight;
+            const ctx = resizedCanvas.getContext('2d');
+            
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            ctx.drawImage(sourceCanvas, 0, 0, targetWidth, targetHeight);
+            return resizedCanvas;
+        }
+
+
+
+        // 核心壓縮與轉檔函數 (ImageData -> Blob)
+        async function compressImageData(imageData, format, quality) {
+            if (useJSquash) {
+                try {
+                    if (format === 'webp') {
+                        const buffer = await encodeWebp(imageData, { quality: quality });
+                        return new Blob([buffer], { type: 'image/webp' });
+                    } else if (format === 'jpeg') {
+                        const buffer = await encodeJpeg(imageData, { quality: quality });
+                        return new Blob([buffer], { type: 'image/jpeg' });
+                    } else if (format === 'png') {
+                        const buffer = await encodePng(imageData);
+                        return new Blob([buffer], { type: 'image/png' });
+                    }
+                } catch (e) {
+                    console.error("jSquash WebAssembly 編碼失敗，嘗試轉用 Canvas 原生編碼:", e);
+                }
+            }
+
+            // WebAssembly 不可用或編碼出錯時，無縫回退原生 Canvas 編碼
+            return new Promise((resolve, reject) => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = imageData.width;
+                tempCanvas.height = imageData.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.putImageData(imageData, 0, 0);
+
+                let mimeType = `image/${format}`;
+                if (format === 'jpeg') mimeType = 'image/jpeg';
+                if (format === 'png') mimeType = 'image/png';
+                if (format === 'webp') mimeType = 'image/webp';
+                
+                tempCanvas.toBlob((blob) => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error("Canvas toBlob error"));
+                    }
+                }, mimeType, quality / 100);
+            });
+        }
+
+        // ===================================================
+        // 8-1. 即時計算預估大小與預覽 (Real-time Calculation)
+        // ===================================================
+        let updateTimer;
+        function triggerUpdate() {
+            if (isBatchMode || uploadedFiles.length === 0) return;
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(updatePreviewAndStats, 300);
+        }
+
+        async function updatePreviewAndStats() {
+            if (isBatchMode || uploadedFiles.length === 0 || !originalImageElement) return;
+
+            try {
+                // 1. 取得裁切後的畫布
+                let croppedCanvas = null;
+                let isCropped = false;
+                
+                if (isCroppingActive) {
+                    try {
+                        const opt = {};
+                        // 為了讓裁切後的尺寸不被邏輯縮小跑掉，優先以選取框在原圖上的實際大小 (natural pixels) 來獲取 canvas
+                        if (cropperSelection.$width && cropperSelection.$height) {
+                            opt.width = cropperSelection.$width;
+                            opt.height = cropperSelection.$height;
+                        }
+                        croppedCanvas = await cropperSelection.$toCanvas(opt);
+                        isCropped = true;
+                    } catch (e) {
+                        console.warn("cropperSelection.$toCanvas 失敗，將轉用原圖", e);
+                    }
+                }
+
+                let sourceCanvas = croppedCanvas;
+
+                // 防呆：若選取區 Canvas 寬高為 0 或未啟用，則使用原圖繪製為 sourceCanvas
+                if (!sourceCanvas || sourceCanvas.width === 0 || sourceCanvas.height === 0) {
+                    isCropped = false;
+                    sourceCanvas = document.createElement('canvas');
+                    sourceCanvas.width = originalImageElement.naturalWidth;
+                    sourceCanvas.height = originalImageElement.naturalHeight;
+                    const sCtx = sourceCanvas.getContext('2d');
+                    sCtx.drawImage(originalImageElement, 0, 0);
+                }
+
+                // 2. 計算目標寬高 (在比例鎖定下連動更新對立輸入欄位)
+                if (isRatioLocked) {
+                    const ratio = sourceCanvas.width / sourceCanvas.height;
+                    if (inputWidth.value) {
+                        inputHeight.value = Math.round(parseInt(inputWidth.value) / ratio);
+                    } else if (inputHeight.value) {
+                        inputWidth.value = Math.round(parseInt(inputHeight.value) * ratio);
+                    }
+                }
+
+                const w = Math.max(1, parseInt(inputWidth.value) || sourceCanvas.width);
+                const h = Math.max(1, parseInt(inputHeight.value) || sourceCanvas.height);
+
+                // 3. 調整尺寸
+                const resizedCanvas = resizeCanvasElement(sourceCanvas, w, h);
+
+                // 4. 取得像素並壓縮
+                const format = selectFormat.value;
+                const quality = parseInt(sliderQuality.value);
+
+                const ctx = resizedCanvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, w, h);
+                const compressedBlob = await compressImageData(imageData, format, quality);
+
+                // 5. 更新統計數據
+                const origFile = uploadedFiles[0];
+                statOriginalSize.textContent = formatBytes(origFile.size);
+                statCompressedSize.textContent = formatBytes(compressedBlob.size);
+                statResolution.textContent = `${w} × ${h} px`;
+                
+                const savingPercent = Math.round(((origFile.size - compressedBlob.size) / origFile.size) * 100);
+                statSavingRate.textContent = savingPercent > 0 ? `${savingPercent}%` : `0%`;
+                if (savingPercent > 0) {
+                    statSavingRate.className = "stat-val saving";
+                } else {
+                    statSavingRate.className = "stat-val";
+                }
+
+                // 6. 更新滑條比對圖與下載連結
+                if (activeCompressedObjectURL) {
+                    URL.revokeObjectURL(activeCompressedObjectURL);
+                }
+                
+                activeCompressedObjectURL = URL.createObjectURL(compressedBlob);
+                imgAfter.src = activeCompressedObjectURL;
+
+                // 為了使比對滑條的左右兩張圖在 object-fit: contain 渲染下完全像素級重合對齊，
+                // 比對的原圖 (imgBefore) 也必須使用與壓縮圖 (imgAfter) 完全相同的縮放尺寸 (w × h)，
+                // 故將其設為 resizedCanvas 渲染出的 ObjectURL。為了防止 toDataURL 同步編碼卡死主執行緒，
+                // 我們改用異步 toBlob 與 CreateObjectURL 來載入！
+                resizedCanvas.toBlob((beforeBlob) => {
+                    if (activeBeforeObjectURL) {
+                        URL.revokeObjectURL(activeBeforeObjectURL);
+                    }
+                    activeBeforeObjectURL = URL.createObjectURL(beforeBlob);
+                    imgBefore.src = activeBeforeObjectURL;
+                }, 'image/png');
+
+                comparisonPanel.style.display = 'flex';
+
+                btnDownloadSingle.href = activeCompressedObjectURL;
+                const cleanName = origFile.name.substring(0, origFile.name.lastIndexOf('.')) || origFile.name;
+                btnDownloadSingle.download = `${cleanName}_processed.${format}`;
+
+                // 7. 防範「強行放大導致模糊」的警告機制與下載原始裁切大小
+                const upscaleWarning = document.getElementById('upscale-warning');
+                const upscaleWarningText = document.getElementById('upscale-warning-text');
+                const btnDownloadOriginalSize = document.getElementById('btn-download-original-size');
+
+                if (sourceCanvas.width < w || sourceCanvas.height < h) {
+                    upscaleWarning.style.display = 'flex';
+                    upscaleWarningText.textContent = `裁切像素 (${sourceCanvas.width}×${sourceCanvas.height}) 小於目標尺寸，放大可能導致模糊。`;
+                    btnDownloadOriginalSize.innerHTML = `<i class="fas fa-arrow-down"></i> 下載原始裁切大小 (${sourceCanvas.width} × ${sourceCanvas.height} px)`;
+                    
+                    // 點擊「下載原始裁切大小」：以原始裁切大小進行壓縮並觸發下載
+                    btnDownloadOriginalSize.onclick = async (e) => {
+                        e.preventDefault();
+                        btnDownloadOriginalSize.textContent = "處理中...";
+                        btnDownloadOriginalSize.disabled = true;
+
+                        try {
+                            const origCtx = sourceCanvas.getContext('2d');
+                            const origImageData = origCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+                            const origBlob = await compressImageData(origImageData, format, quality);
+                            
+                            const origUrl = URL.createObjectURL(origBlob);
+                            const tempLink = document.createElement('a');
+                            tempLink.href = origUrl;
+                            tempLink.download = `${cleanName}_original_cropped.${format}`;
+                            tempLink.click();
+                            
+                            setTimeout(() => {
+                                URL.revokeObjectURL(origUrl);
+                            }, 100);
+                        } catch (err) {
+                            console.error("下載原始裁切大小失敗:", err);
+                        } finally {
+                            btnDownloadOriginalSize.innerHTML = `<i class="fas fa-arrow-down"></i> 下載原始裁切大小 (${sourceCanvas.width} × ${sourceCanvas.height} px)`;
+                            btnDownloadOriginalSize.disabled = false;
+                        }
+                    };
+                } else {
+                    upscaleWarning.style.display = 'none';
+                }
+
+            } catch (err) {
+                console.error("即時更新預估與預覽失敗:", err);
+            }
+        }
+
+        // 監聽裁切選取區的變化，即時觸發預覽與統計更新
+        cropperSelection.addEventListener('change', () => {
+            // 當使用者手動在畫布上拉出或調整裁剪框時，如果裁剪框大於 0 且尚未啟用裁切，自動將其顯示並啟用裁切模式
+            if (!isCroppingActive && cropperSelection.width > 0 && cropperSelection.height > 0) {
+                isCroppingActive = true;
+                cropperSelection.hidden = false;
+                const cropperShade = cropperCanvas.querySelector('cropper-shade');
+                if (cropperShade) {
+                    cropperShade.hidden = false;
+                }
+            }
+            triggerUpdate();
+        });
+
+        // ===================================================
+        // 8-2. 執行處理流程 (下載確認)
+        // ===================================================
+
+        btnProcess.addEventListener('click', async () => {
+            if (uploadedFiles.length === 0) return;
+
+            const format = selectFormat.value;
+            const quality = parseInt(sliderQuality.value);
+            const originalBtnText = btnProcess.querySelector('span').textContent;
+
+            try {
+                if (!isBatchMode) {
+                    // 單圖模式：重新執行一次最新的預覽壓縮確保正確，然後觸發下載
+                    btnProcess.disabled = true;
+                    btnProcess.querySelector('span').textContent = "下載中...";
+                    await updatePreviewAndStats();
+                    
+                    if (btnDownloadSingle.href && btnDownloadSingle.href.startsWith('blob:')) {
+                        btnDownloadSingle.click();
+                    } else {
+                        throw new Error("壓縮檔案生成失敗");
+                    }
+                } else {
+                    // 批次處理模式
+                    btnProcess.disabled = true;
+                    btnProcess.querySelector('span').textContent = "處理中...";
+                    
+                    const zip = new JSZip();
+                    let processedCount = 0;
+                    let totalCompressedSize = 0;
+
+                    for (let i = 0; i < uploadedFiles.length; i++) {
+                        const file = uploadedFiles[i];
+                        const statusBadge = document.getElementById(`batch-status-text-${i}`);
+                        statusBadge.className = "status-badge status-processing";
+                        statusBadge.textContent = "處理中...";
+
+                        try {
+                            const imgBitmap = await createImageBitmap(file);
+                            const tempCanvas = document.createElement('canvas');
+                            tempCanvas.width = imgBitmap.width;
+                            tempCanvas.height = imgBitmap.height;
+                            const tempCtx = tempCanvas.getContext('2d');
+                            tempCtx.drawImage(imgBitmap, 0, 0);
+
+                            // 批次處理尺寸調整計算 (每個圖片動態等比例縮放)
+                            let w = imgBitmap.width;
+                            let h = imgBitmap.height;
+                            
+                            const userW = parseInt(inputWidth.value);
+                            const userH = parseInt(inputHeight.value);
+                            const scalePct = parseInt(sliderScale.value);
+                            
+                            if (isRatioLocked) {
+                                const ratio = imgBitmap.width / imgBitmap.height;
+                                if (userW && !userH) {
+                                    w = userW;
+                                    h = Math.round(userW / ratio);
+                                } else if (userH && !userW) {
+                                    h = userH;
+                                    w = Math.round(userH * ratio);
+                                } else if (userW && userH) {
+                                    w = userW;
+                                    h = Math.round(userW / ratio);
+                                } else if (scalePct && scalePct !== 100) {
+                                    const pct = scalePct / 100;
+                                    w = Math.round(imgBitmap.width * pct);
+                                    h = Math.round(imgBitmap.height * pct);
+                                }
+                            } else {
+                                w = userW || imgBitmap.width;
+                                h = userH || imgBitmap.height;
+                            }
+                            
+                            w = Math.max(1, w);
+                            h = Math.max(1, h);
+                            const resizedCanvas = resizeCanvasElement(tempCanvas, w, h);
+
+                            const imgData = resizedCanvas.getContext('2d').getImageData(0, 0, w, h);
+                            const compressedBlob = await compressImageData(imgData, format, quality);
+
+                            totalCompressedSize += compressedBlob.size;
+                            const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                            zip.file(`${baseName}_processed.${format}`, compressedBlob);
+
+                            statusBadge.className = "status-badge status-done";
+                            statusBadge.textContent = "完成";
+                            processedCount++;
+                        } catch (err) {
+                            console.error(`處理圖片 ${file.name} 失敗:`, err);
+                            statusBadge.className = "status-badge status-error";
+                            statusBadge.textContent = "失敗";
+                        }
+                    }
+
+                    if (processedCount > 0) {
+                        const zipBlob = await zip.generateAsync({ type: 'blob' });
+                        const zipURL = URL.createObjectURL(zipBlob);
+                        
+                        const a = document.createElement('a');
+                        a.href = zipURL;
+                        a.download = `imagecraft_batch_${Date.now()}.zip`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        
+                        setTimeout(() => URL.revokeObjectURL(zipURL), 10000);
+
+                        statCompressedSize.textContent = formatBytes(totalCompressedSize);
+                        const totalOrigSize = uploadedFiles.reduce((acc, f) => acc + f.size, 0);
+                        const savingPercent = Math.round(((totalOrigSize - totalCompressedSize) / totalOrigSize) * 100);
+                        statSavingRate.textContent = savingPercent > 0 ? `${savingPercent}%` : `0%`;
+                    } else {
+                        alert("所有圖片均處理失敗。");
+                    }
+                }
+            } catch (err) {
+                console.error("執行圖片處理失敗:", err);
+                alert("圖片處理過程中發生錯誤：" + err.message);
+            } finally {
+                btnProcess.disabled = false;
+                btnProcess.querySelector('span').textContent = originalBtnText;
+            }
+        });
+
+
+        // ===================================================
+        // 9. 左右滑動對比預覽互動 (Comparison Slider)
+        // ===================================================
+        
+        let compTicking = false;
+        compSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (!compTicking) {
+                window.requestAnimationFrame(() => {
+                    imgAfter.style.clipPath = `inset(0 0 0 ${value}%)`;
+                    compSeparator.style.left = `${value}%`;
+                    compButton.style.left = `${value}%`;
+                    compTicking = false;
+                });
+                compTicking = true;
+            }
+        });
+
+    </script>
+</body>
+</html>

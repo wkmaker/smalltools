@@ -589,6 +589,27 @@
             color: #8b5cf6;
         }
 
+        /* 光影裁剪 - 萬能圖片處理大師專屬 hover 效果 */
+        .tool-card.image-processor-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(217, 70, 239, 0.06), transparent 40%);
+        }
+
+        .tool-card.image-processor-card:hover {
+            border-color: rgba(217, 70, 239, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(217, 70, 239, 0.15),
+                        inset 0 0 15px rgba(217, 70, 239, 0.02);
+        }
+
+        .tool-card.image-processor-card:hover h3 {
+            color: #d946ef;
+            text-shadow: 0 0 10px rgba(217, 70, 239, 0.4);
+        }
+
+        .tool-card.image-processor-card .card-action {
+            color: #d946ef;
+        }
+
         /* ====== 預留卡片樣式 ====== */
         .tool-card.placeholder {
             border-style: dashed;
@@ -1106,6 +1127,19 @@
                     <h3>IP 檢測助手</h3>
                     <span class="subtitle">IP Diagnostic Tool</span>
                     <p>專業的網路與 IP 連線診斷工具。支援即時 IPv4/IPv6 雙棧偵測、Cloudflare 與 Mullvad 隱私節點查詢，以及公有雲服務連線延遲診斷。</p>
+                </div>
+                <div class="card-action">
+                    開啟工具
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <!-- 光影裁剪 - 萬能圖片處理大師 -->
+            <a href="./image-processor/index.html" class="tool-card image-processor-card" data-category="utility" data-keywords="image processor crop resize compress jsquash cropper zip batch 圖片 裁切 尺寸 調整 壓縮 轉檔 批次">
+                <div>
+                    <h3>光影裁剪 - 萬能圖片處理大師</h3>
+                    <span class="subtitle">Universal Image Processor</span>
+                    <p>精緻且功能齊全的圖片處理解決方案。支援 Cropper.js v2 視覺化裁切、自訂尺寸調整 (Resize)、jSquash 高速 WebAssembly 轉檔與壓縮品質調整，並支援多檔批次處理一鍵打包 ZIP 下載。</p>
                 </div>
                 <div class="card-action">
                     開啟工具

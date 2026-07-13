@@ -2,115 +2,121 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://tools.cjkuo.net/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>1.0</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/time/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/compound-interest/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/personal-loan/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/car-loan/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/mortgage-loan/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/base64/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/url/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/password/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/epoch/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/json/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/pledge-calculator/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/futures-calculator/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/dns-dig/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/text-utility/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/qr-generator/index.html</loc>
-        <lastmod>2026-07-07</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/ip-detector/index.html</loc>
-        <lastmod>2026-07-08</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/ssl-converter/index.html</loc>
-        <lastmod>2026-07-08</lastmod>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tools.cjkuo.net/diff-checker/index.html</loc>
-        <lastmod>2026-07-08</lastmod>
+        <lastmod>2026-07-13</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://tools.cjkuo.net/image-processor/index.html</loc>
+        <lastmod>2026-07-13</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
