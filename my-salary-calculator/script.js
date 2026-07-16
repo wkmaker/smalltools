@@ -147,8 +147,9 @@ function calculate() {
     // 2. 員工端計算 (四捨五入)
     // 勞保自付額 = 投保金額 * 費率 * 員工自付比例
     const empLabor = Math.round(insuredLabor * currentConfig.labor_insurance.rate * currentConfig.labor_insurance.employee_ratio + 1e-9);
-    // 健保自付額 = 投保金額 * 費率 * 員工自付比例 * (1 + 眷屬人數)
-    const empHealth = Math.round(insuredHealth * currentConfig.health_insurance.rate * currentConfig.health_insurance.employee_ratio * (1 + dependents) + 1e-9);
+    // 健保自付額 = 本人自付額(四捨五入) * (1 + 眷屬人數)
+    const singleHealth = Math.round(insuredHealth * currentConfig.health_insurance.rate * currentConfig.health_insurance.employee_ratio + 1e-9);
+    const empHealth = singleHealth * (1 + dependents);
     // 勞退個人自提 = 提繳金額 * 自提比例
     const empPension = Math.round(insuredPension * selfPensionRate + 1e-9);
     
