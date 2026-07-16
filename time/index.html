@@ -342,6 +342,16 @@
             .timer-group { width: 100%; justify-content: center; gap: 1.5rem 1rem; }
             .number { font-size: clamp(2rem, 8vw, 3.5rem); }
         }
+            .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary, #8892b0);
+            text-align: center;
+        }
+
     </style>
 </head>
 <body>
@@ -399,6 +409,7 @@
 
         <div id="setup-view" class="hidden">
             <h1>Create Timer</h1>
+        <p class="page-description">線上目標計時器與倒數工具，支援自訂事件名稱可自訂顯示方式，提供精確到秒的倒數計時與全螢幕展示，適合活動倒數與專注管理。</p>
             <div class="input-group">
                 <label class="group-label" for="input-title">Event Title (事件名稱)</label>
                 <input type="text" id="input-title" placeholder="例如：曼谷自由行倒數" autocomplete="off">
