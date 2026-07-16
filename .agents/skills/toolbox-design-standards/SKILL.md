@@ -117,3 +117,7 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
    * **Sitemap 維護規範**：專案根目錄必須維護一份 `sitemap.xml`，每次新增工具頁面後，必須同步更新 `sitemap.xml`，並更新所有現有頁面的 `lastmod` 日期。首頁的 `priority` 設為 `1.0`，工具頁設為 `0.8`。
    * **部署 CI/CD 安全排除**：開發工具庫的配置設定與本地 Skill 定義（即 `.agents/` 目錄）切勿同步至生產環境。必須在部署腳本中強制配置 `--exclude ".agents*"` 以防止內部檔案外流。
    * **Favicon 與 Open Graph 標籤規範**：每個頁面必須加入 Open Graph 與 favicon 設定，且必須使用絕對路徑以確保轉傳時的正確性。
+
+8. **頁面主標題功能描述與 SEO 優化規範**
+    * **描述區段配置**：工具頁面的 `<h1>` 標題下方應配置 `<p class="page-description">` 用於描述工具特色，並自然融入「免費」、「線上製作」、「無廣告」等高搜尋意圖關鍵字。
+    * **CSS 美感標準**：`.page-description` 需限制 `max-width: 800px`（防大螢幕拉長），字型大小設於 `0.9rem` ~ `0.95rem`，字重 `300 (Light)`，行高 `1.6`，使用次要文字色（如 `var(--text-secondary)`）並配置置中對齊，維持全站精緻暗色毛玻璃的視覺平衡。

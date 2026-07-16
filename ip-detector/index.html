@@ -149,6 +149,16 @@
             text-transform: uppercase;
         }
 
+        .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
         @keyframes glow-pulse {
             0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
             50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
@@ -536,6 +546,7 @@
 
         <h1>IP 檢測助手</h1>
         <div class="subtitle-top">IP Diagnostic Tool</div>
+        <p class="page-description">IP 檢測工具支援 IPv4/IPv6 雙棧查詢，查詢均在前端完成，不留日誌。並提供連線資訊與地理隱私偵測、各大公有雲與 CDN 業者的即時連線延遲診斷。</p>
 
         <!-- 頂部：IPv4 & IPv6 雙棧卡片 -->
         <div class="ip-stack-container">
