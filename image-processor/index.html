@@ -1417,8 +1417,8 @@
         
         // 取得當前圖片來源大小
         function getCurrentSourceDimensions() {
-            if (isCroppingActive && cropperSelection && cropperSelection.$width && cropperSelection.$height) {
-                return { currentWidth: cropperSelection.$width, currentHeight: cropperSelection.$height };
+            if (isCroppingActive && cropperSelection && cropperSelection.width && cropperSelection.height) {
+                return { currentWidth: cropperSelection.width, currentHeight: cropperSelection.height };
             }
             if (originalImageElement) {
                 return { currentWidth: originalImageElement.naturalWidth, currentHeight: originalImageElement.naturalHeight };
@@ -1968,7 +1968,14 @@
                     if (blob) {
                         resolve(blob);
                     } else {
-                        reject(new Error("Canvas toBlob error"));
+                        // 若失敗（如部分瀏覽器不支援 WebP），回退至穩定的 PNG 格式
+                        tempCanvas.toBlob((pngBlob) => {
+                            if (pngBlob) {
+                                resolve(pngBlob);
+                            } else {
+                                reject(new Error("Canvas toBlob error"));
+                            }
+                        }, 'image/png');
                     }
                 }, mimeType, quality / 100);
             });
@@ -2146,9 +2153,9 @@
                     try {
                         const opt = {};
                         // 為了讓裁切後的尺寸不被邏輯縮小跑掉，優先以選取框在原圖上的實際大小 (natural pixels) 來獲取 canvas
-                        if (cropperSelection.$width && cropperSelection.$height) {
-                            opt.width = cropperSelection.$width;
-                            opt.height = cropperSelection.$height;
+                        if (cropperSelection.width && cropperSelection.height) {
+                            opt.width = cropperSelection.width;
+                            opt.height = cropperSelection.height;
                         }
                         croppedCanvas = await cropperSelection.$toCanvas(opt);
                         isCropped = true;
@@ -2327,9 +2334,9 @@
                     if (isCroppingActive) {
                         try {
                             const opt = {};
-                            if (cropperSelection.$width && cropperSelection.$height) {
-                                opt.width = cropperSelection.$width;
-                                opt.height = cropperSelection.$height;
+                            if (cropperSelection.width && cropperSelection.height) {
+                                opt.width = cropperSelection.width;
+                                opt.height = cropperSelection.height;
                             }
                             croppedCanvas = await cropperSelection.$toCanvas(opt);
                         } catch (e) {
@@ -2365,10 +2372,20 @@
                     const imageData = ctx.getImageData(0, 0, w, h);
                     const finalBlob = await compressImageData(imageData, format, quality);
 
+                    // 更新面板為真實的大圖壓縮檔案大小與節省率
+                    const origFile = uploadedFiles[0];
+                    statCompressedSize.textContent = formatBytes(finalBlob.size);
+                    const savingPercent = Math.round(((origFile.size - finalBlob.size) / origFile.size) * 100);
+                    statSavingRate.textContent = savingPercent > 0 ? `${savingPercent}%` : `0%`;
+                    if (savingPercent > 0) {
+                        statSavingRate.className = "stat-val saving";
+                    } else {
+                        statSavingRate.className = "stat-val";
+                    }
+
                     const finalUrl = URL.createObjectURL(finalBlob);
                     const tempLink = document.createElement('a');
                     tempLink.href = finalUrl;
-                    const origFile = uploadedFiles[0];
                     const cleanName = origFile.name.substring(0, origFile.name.lastIndexOf('.')) || origFile.name;
                     tempLink.download = `${cleanName}_processed.${format}`;
                     tempLink.click();
