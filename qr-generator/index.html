@@ -571,6 +571,13 @@
             justify-content: center;
         }
 
+        #qr-code-container canvas,
+        #qr-code-container svg {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
         /* 下載與操作按鈕 */
         .action-group {
             display: flex;
@@ -1338,8 +1345,7 @@
                 const singleC = singleColorInput.value;
                 dotsColorOpts = {
                     type: dotsType,
-                    color: singleC,
-                    gradient: null
+                    color: singleC
                 };
                 cornersSquareOpts.color = singleC;
                 cornersDotOpts.color = singleC;
@@ -1358,6 +1364,11 @@
 
             // 更新預覽背景與色彩標籤文字
             updateBackgroundPreview();
+
+            // 清除之前的漸層設定以避免 deepMerge 殘留 Bug
+            if (!useGradient && qrCode._options && qrCode._options.dotsOptions) {
+                delete qrCode._options.dotsOptions.gradient;
+            }
 
             // 執行更新
             qrCode.update({
@@ -1721,17 +1732,23 @@
         });
 
         // 下載設計二維碼 (含時間戳記與指定尺寸及格式)
-        btnDownloadQrcode.addEventListener('click', () => {
+        btnDownloadQrcode.addEventListener('click', async () => {
             const format = downloadFormatSelect.value;
             const size = parseInt(downloadSizeSelect.value);
             const timestamp = getFormattedTimestamp();
             const filename = `designer-qrcode_${timestamp}`;
 
-            qrCode.download({
-                name: filename,
-                extension: format,
+            // 建立一個專門用於下載的獨立實例，這樣完全不會動到預覽的實例，免去 update() 尺寸的競態問題與閃爍
+            const downloadQrCode = new QRCodeStyling({
+                ...qrCode._options,
                 width: size,
                 height: size
+            });
+
+            // 執行下載
+            await downloadQrCode.download({
+                name: filename,
+                extension: format
             });
         });
 
