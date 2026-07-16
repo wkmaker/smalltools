@@ -724,6 +724,9 @@
                 <button class="btn-mini" onclick="document.getElementById('result-section').style.display='none'">隱藏</button>
             </div>
 
+            <!-- 動態 AIA 中繼憑證修復提示區 -->
+            <div id="aia-fix-container" style="display: none; width: 100%;"></div>
+
             <div class="result-meta-grid" id="result-meta">
                 <!-- 注入 metadata -->
             </div>
@@ -833,6 +836,9 @@
             pfx: null,
             der: null
         };
+
+        let currentChainPems = [];
+        let lastResultData = null;
 
         // 標籤頁切換
         function switchTab(tabId) {
@@ -1296,6 +1302,34 @@
         // 通用渲染與下載觸發
         // ==========================================
         function showConversionResults(resultData) {
+            lastResultData = resultData;
+            
+            // 初始化 AIA 鏈
+            currentChainPems = [];
+            
+            let mainCertPem = '';
+            const certOutput = resultData.outputs.find(o => o.filename === 'certificate.crt');
+            if (certOutput && certOutput.content) {
+                mainCertPem = certOutput.content;
+            } else {
+                const derOutput = resultData.outputs.find(o => o.filename === 'converted.pem');
+                const isCertType = resultData.meta && resultData.meta.some(m => m.label === '解析類型' && m.value.includes('X.509 憑證'));
+                if (derOutput && isCertType && derOutput.content) {
+                    mainCertPem = derOutput.content;
+                }
+            }
+            
+            // 如果轉換結果中本來就包含中繼憑證 (ca-bundle.crt) 或完整憑證鏈 (fullchain.crt)
+            // 代表憑證鏈已經完整，直接提供即可，不需要跳出補鏈提示
+            const hasExistingChain = resultData.outputs.some(o => 
+                (o.filename === 'ca-bundle.crt' || o.filename === 'fullchain.crt') && 
+                o.content && o.content.trim() !== ''
+            );
+            
+            if (mainCertPem && !hasExistingChain) {
+                currentChainPems.push(mainCertPem.trim());
+            }
+
             const metaContainer = document.getElementById('result-meta');
             const outputsContainer = document.getElementById('result-outputs');
             
@@ -1332,6 +1366,9 @@
 
             document.getElementById('result-section').style.display = 'flex';
             document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+
+            // 執行 AIA 補齊檢查
+            checkAndShowAiaFixCard();
         }
 
         function triggerDownload(blob, filename) {
@@ -1360,6 +1397,221 @@
             const content = document.getElementById(elementId).value;
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             triggerDownload(blob, filename);
+        }
+
+        // ==========================================
+        // AIA 憑證鏈自動補齊功能
+        // ==========================================
+        function getDnString(dnObj) {
+            if (!dnObj || !dnObj.attributes) return '';
+            return dnObj.attributes.map(attr => `${attr.type}=${attr.value}`).sort().join(',');
+        }
+
+        function isRootCertificate(certObj) {
+            if (!certObj) return false;
+            const issuerStr = getDnString(certObj.issuer);
+            const subjectStr = getDnString(certObj.subject);
+            return issuerStr !== '' && issuerStr === subjectStr;
+        }
+
+        function extractAiaUrl(certObj) {
+            const ext = certObj.getExtension('authorityInfoAccess');
+            if (!ext) return null;
+            
+            let derStr = '';
+            if (ext.value) {
+                derStr = ext.value;
+            } else if (ext.asn1Value) {
+                derStr = forge.asn1.toDer(ext.asn1Value).getBytes();
+            } else {
+                return null;
+            }
+            
+            const aiaRegex = /http:\/\/[A-Za-z0-9\-\.\/]+\.(cer|crt|p7b)/i;
+            const match = derStr.match(aiaRegex);
+            return match ? match[0] : null;
+        }
+
+        function checkAndShowAiaFixCard() {
+            const container = document.getElementById('aia-fix-container');
+            if (!container) return;
+            
+            if (currentChainPems.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            const lastPem = currentChainPems[currentChainPems.length - 1];
+            
+            try {
+                const certObj = forge.pki.certificateFromPem(lastPem);
+                
+                if (isRootCertificate(certObj)) {
+                    container.style.display = 'none';
+                    finalizeChain();
+                    return;
+                }
+                
+                const aiaUrl = extractAiaUrl(certObj);
+                if (!aiaUrl) {
+                    container.style.display = 'none';
+                    finalizeChain();
+                    return;
+                }
+                
+                const isFirstLayer = currentChainPems.length === 1;
+                const tipText = isFirstLayer 
+                    ? '⚠️ 偵測到憑證鏈不完整，建議補齊'
+                    : `👍 成功解析第 ${currentChainPems.length - 1} 層！偵測到還有上一層中繼憑證，請繼續下載並上傳`;
+                    
+                container.innerHTML = `
+                    <div class="output-card" style="border: 1px solid var(--warning-color); padding: 1.5rem; border-radius: 12px; background: rgba(255, 170, 0, 0.03); display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--warning-color); font-weight: 600; font-size: 0.95rem;">
+                            <span>${tipText}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                            請點擊下方連結下載官方中繼憑證，並將下載的檔案拖曳至下方上傳區：
+                            <div style="margin-top: 0.5rem;">
+                                <a id="aia-download-link" href="${aiaUrl}" target="_blank" style="color: var(--accent-glow); text-decoration: underline; font-weight: 500; word-break: break-all;">
+                                    ${aiaUrl}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="upload-zone" id="aia-upload-zone" style="padding: 1.5rem 1rem;">
+                            <svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: var(--text-secondary);"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary);">將下載的憑證檔案拖曳至此，或點擊選擇檔案</p>
+                            <input type="file" class="file-input" id="aia-file-input" accept=".cer,.crt,.der">
+                        </div>
+                    </div>
+                `;
+                container.style.display = 'block';
+                
+                setupAiaUploadEvents();
+                
+            } catch (err) {
+                container.style.display = 'none';
+            }
+        }
+
+        function setupAiaUploadEvents() {
+            const zone = document.getElementById('aia-upload-zone');
+            const input = document.getElementById('aia-file-input');
+            if (!zone || !input) return;
+            
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleAiaFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            input.addEventListener('change', (e) => {
+                if (input.files.length > 0) {
+                    handleAiaFile(input.files[0]);
+                }
+            });
+        }
+
+        function handleAiaFile(file) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                const binaryData = e.target.result;
+                try {
+                    let certObj = null;
+                    let pem = '';
+                    
+                    try {
+                        const asn1 = forge.asn1.fromDer(binaryData);
+                        certObj = forge.pki.certificateFromAsn1(asn1);
+                        pem = forge.pki.certificateToPem(certObj);
+                    } catch (derErr) {
+                        try {
+                            const text = forge.util.binaryStringToString(binaryData);
+                            certObj = forge.pki.certificateFromPem(text);
+                            pem = forge.pki.certificateToPem(certObj);
+                        } catch (pemErr) {
+                            try {
+                                certObj = forge.pki.certificateFromPem(binaryData);
+                                pem = forge.pki.certificateToPem(certObj);
+                            } catch (err) {
+                                throw new Error('解析失敗');
+                            }
+                        }
+                    }
+                    
+                    if (!certObj || !pem) {
+                        throw new Error('解析失敗');
+                    }
+                    
+                    currentChainPems.push(pem.trim());
+                    checkAndShowAiaFixCard();
+                    
+                } catch (err) {
+                    showAlert('解析失敗，請確認上傳的是剛剛下載的憑證檔案', 'error');
+                }
+            };
+            fileReader.readAsBinaryString(file);
+        }
+
+        function finalizeChain() {
+            if (currentChainPems.length <= 1) return;
+            
+            const fullChainPem = currentChainPems.join('\n');
+            
+            if (lastResultData && lastResultData.outputs) {
+                const existingIdx = lastResultData.outputs.findIndex(o => o.filename === 'fullchain.crt');
+                const fullchainOutput = {
+                    filename: 'fullchain.crt',
+                    content: fullChainPem,
+                    label: '完整憑證鏈 [包含伺服器憑證+中繼憑證] (.crt)'
+                };
+                
+                if (existingIdx !== -1) {
+                    lastResultData.outputs[existingIdx] = fullchainOutput;
+                } else {
+                    lastResultData.outputs.push(fullchainOutput);
+                }
+                
+                renderOutputsOnly(lastResultData.outputs);
+                showAlert('成功補齊中繼憑證，已更新/產生完整憑證鏈 (fullchain.crt)！', 'success');
+            }
+        }
+
+        function renderOutputsOnly(outputs) {
+            const outputsContainer = document.getElementById('result-outputs');
+            outputsContainer.innerHTML = outputs.map((item, idx) => {
+                const uniqueId = `output-val-${idx}`;
+                const isEmpty = !item.content || item.content.trim() === '';
+                const styleDisplay = isEmpty ? 'display:none;' : '';
+                return `
+                    <div class="output-card" style="${styleDisplay}">
+                        <div class="output-header">
+                            <span class="output-name">${item.label || item.filename}</span>
+                            <div class="output-actions">
+                                <button class="btn-mini" onclick="copyToClipboard('${uniqueId}')">
+                                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                                    複製
+                                </button>
+                                <button class="btn-mini" onclick="downloadTextFile('${item.filename}', '${uniqueId}')">
+                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                    下載
+                                </button>
+                            </div>
+                        </div>
+                        <textarea class="custom-textarea" id="${uniqueId}" style="height: 120px;" readonly>${item.content || ''}</textarea>
+                    </div>
+                `;
+            }).join('');
         }
     </script>
 </body>
