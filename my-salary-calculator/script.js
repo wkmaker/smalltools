@@ -8,10 +8,10 @@ let urlDebounceTimer = null;
 // DOM 元素
 const yearSelect = document.getElementById('yearSelect');
 const salaryInput = document.getElementById('salaryInput');
+const insuranceBaseInput = document.getElementById('insuranceBaseInput');
 const dependentSelect = document.getElementById('dependentSelect');
 const pensionSelfRateSelect = document.getElementById('pensionSelfRateSelect');
 const taxRateSelect = document.getElementById('taxRateSelect');
-const calculateBtn = document.getElementById('calculateBtn');
 const copyToast = document.getElementById('copy-toast');
 const toastText = document.getElementById('toast-text');
 
@@ -27,10 +27,24 @@ const matrixParamsGroup = document.getElementById('matrixParamsGroup');
 const taxSalaryInput = document.getElementById('taxSalaryInput');
 const taxDependentsSelect = document.getElementById('taxDependentsSelect');
 
+const subEmpLabor = document.getElementById('sub-emp-labor');
+const valEmpLaborBracket = document.getElementById('val-emp-labor-bracket');
+const subEmpHealth = document.getElementById('sub-emp-health');
+const valEmpHealthBracket = document.getElementById('val-emp-health-bracket');
+const subEmpPension = document.getElementById('sub-emp-pension');
+const valEmpPensionBracket = document.getElementById('val-emp-pension-bracket');
+
 const valEmprLabor = document.getElementById('val-empr-labor');
 const valEmprHealth = document.getElementById('val-empr-health');
 const valEmprPension = document.getElementById('val-empr-pension');
 const valEmprTotal = document.getElementById('val-empr-total');
+
+const subEmprLabor = document.getElementById('sub-empr-labor');
+const valEmprLaborBracket = document.getElementById('val-empr-labor-bracket');
+const subEmprHealth = document.getElementById('sub-empr-health');
+const valEmprHealthBracket = document.getElementById('val-empr-health-bracket');
+const subEmprPension = document.getElementById('sub-empr-pension');
+const valEmprPensionBracket = document.getElementById('val-empr-pension-bracket');
 
 // ==========================================
 // 2. 年份法規 Fetch 載入與暫存
@@ -139,10 +153,14 @@ function calculate() {
         matrixParamsGroup.style.display = 'none';
     }
 
+    // 計算投保薪資基底 (手動輸入優先，未輸入則預設與月薪總額相同)
+    const customBaseStr = insuranceBaseInput.value.trim();
+    const insuranceBase = (customBaseStr !== '' && !isNaN(parseFloat(customBaseStr))) ? parseFloat(customBaseStr) : salary;
+
     // 1. 查投保級距金額
-    const insuredLabor = findInsuredAmount(salary, currentConfig.labor_insurance.brackets);
-    const insuredHealth = findInsuredAmount(salary, currentConfig.health_insurance.brackets);
-    const insuredPension = findInsuredAmount(salary, currentConfig.labor_pension.brackets);
+    const insuredLabor = findInsuredAmount(insuranceBase, currentConfig.labor_insurance.brackets);
+    const insuredHealth = findInsuredAmount(insuranceBase, currentConfig.health_insurance.brackets);
+    const insuredPension = findInsuredAmount(insuranceBase, currentConfig.labor_pension.brackets);
 
     // 2. 員工端計算 (四捨五入)
     // 勞保自付額 = 投保金額 * 費率 * 員工自付比例
@@ -205,6 +223,21 @@ function calculate() {
     valEmprHealth.textContent = emprHealth.toLocaleString('zh-TW');
     valEmprPension.textContent = emprPension.toLocaleString('zh-TW');
     valEmprTotal.textContent = emprTotal.toLocaleString('zh-TW');
+
+    // 渲染對應投保級距小字明細
+    valEmpLaborBracket.textContent = insuredLabor.toLocaleString('zh-TW');
+    valEmpHealthBracket.textContent = insuredHealth.toLocaleString('zh-TW');
+    valEmpPensionBracket.textContent = insuredPension.toLocaleString('zh-TW');
+    subEmpLabor.style.display = 'block';
+    subEmpHealth.style.display = 'block';
+    subEmpPension.style.display = 'block';
+
+    valEmprLaborBracket.textContent = insuredLabor.toLocaleString('zh-TW');
+    valEmprHealthBracket.textContent = insuredHealth.toLocaleString('zh-TW');
+    valEmprPensionBracket.textContent = insuredPension.toLocaleString('zh-TW');
+    subEmprLabor.style.display = 'block';
+    subEmprHealth.style.display = 'block';
+    subEmprPension.style.display = 'block';
 }
 
 function resetOutputs() {
@@ -219,6 +252,21 @@ function resetOutputs() {
     valEmprHealth.textContent = '-';
     valEmprPension.textContent = '-';
     valEmprTotal.textContent = '-';
+
+    // 重設對應投保級距小字明細
+    valEmpLaborBracket.textContent = '-';
+    valEmpHealthBracket.textContent = '-';
+    valEmpPensionBracket.textContent = '-';
+    subEmpLabor.style.display = 'none';
+    subEmpHealth.style.display = 'none';
+    subEmpPension.style.display = 'none';
+
+    valEmprLaborBracket.textContent = '-';
+    valEmprHealthBracket.textContent = '-';
+    valEmprPensionBracket.textContent = '-';
+    subEmprLabor.style.display = 'none';
+    subEmprHealth.style.display = 'none';
+    subEmprPension.style.display = 'none';
 }
 
 // ==========================================
@@ -229,6 +277,9 @@ function syncToURL() {
     params.set('y', yearSelect.value);
     if (salaryInput.value.trim() !== '') {
         params.set('s', salaryInput.value.trim());
+    }
+    if (insuranceBaseInput.value.trim() !== '') {
+        params.set('ib', insuranceBaseInput.value.trim());
     }
     params.set('d', dependentSelect.value);
     params.set('p', pensionSelfRateSelect.value);
@@ -268,6 +319,14 @@ function initFromURL() {
         salaryInput.value = '';
     }
 
+    // 解析申報薪資
+    const ibVal = parseFloat(params.get('ib'));
+    if (!isNaN(ibVal) && isFinite(ibVal) && ibVal >= 0) {
+        insuranceBaseInput.value = ibVal;
+    } else {
+        insuranceBaseInput.value = '';
+    }
+
     // 解析眷屬
     const dVal = params.get('d');
     if (['0', '1', '2', '3'].includes(dVal)) {
@@ -285,7 +344,7 @@ function initFromURL() {
     if (['rate_5', 'matrix'].includes(tVal)) {
         taxRateSelect.value = tVal;
     } else {
-        taxRateSelect.value = 'rate_5';
+        taxRateSelect.value = 'matrix';
     }
 
     if (taxRateSelect.value === 'matrix') {
@@ -318,6 +377,13 @@ function bindEvents() {
     });
     salaryInput.addEventListener('blur', syncToURL);
 
+    // 申報薪資變更時計算
+    insuranceBaseInput.addEventListener('input', () => {
+        calculate();
+        syncToURLDebounced();
+    });
+    insuranceBaseInput.addEventListener('blur', syncToURL);
+
     dependentSelect.addEventListener('change', () => {
         calculate();
         syncToURL();
@@ -348,15 +414,6 @@ function bindEvents() {
     taxDependentsSelect.addEventListener('change', () => {
         calculate();
         syncToURL();
-    });
-
-    calculateBtn.addEventListener('click', (e) => {
-        calculate();
-        syncToURL();
-        if (typeof createBurst === 'function') {
-            createBurst(e.clientX, e.clientY);
-        }
-        showToast("計算完成！已套用最新參數");
     });
 }
 

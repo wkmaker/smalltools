@@ -299,6 +299,14 @@
             user-select: none;
         }
 
+        .form-note {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 0.35rem;
+            line-height: 1.4;
+            display: block;
+        }
+
         /* 隱藏 Chrome/Safari 預設微調箭頭 */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
@@ -380,12 +388,28 @@
             background: rgba(255, 255, 255, 0.015);
             border: 1px solid var(--card-border);
             border-radius: 12px;
-            padding: 1rem 1.25rem;
+            padding: 0.9rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            gap: 0.2rem;
+        }
+
+        .result-main-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
+        }
+
+        .result-sub-label {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 0.15rem;
+            text-align: left;
+            font-weight: 500;
         }
 
         .result-item:hover {
@@ -592,6 +616,19 @@
                     </div>
                 </div>
 
+                <!-- 勞健保申報/投保薪資 (新増欄位) -->
+                <div class="form-group">
+                    <label class="form-label" for="insuranceBaseInput">勞健保申報/投保薪資 (元)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="insuranceBaseInput" class="styled-input" 
+                               placeholder="未輸入則預設與月薪總額相同" min="0" max="99999999" step="any">
+                        <span class="input-addon">元</span>
+                    </div>
+                    <span class="form-note">
+                        若公司有扣除固定餐費/伙食津貼等不列入投保範圍之項目，可在此輸入實際投保金額。
+                    </span>
+                </div>
+
                 <!-- 健保眷屬人數 -->
                 <div class="form-group">
                     <label class="form-label" for="dependentSelect">健保依附眷屬人數</label>
@@ -626,8 +663,8 @@
                     <label class="form-label" for="taxRateSelect">所得稅預扣方式</label>
                     <div class="input-wrapper select-wrapper">
                         <select id="taxRateSelect" class="styled-input">
-                            <option value="rate_5" selected>定率扣繳 (5%，達 $2,000 起扣)</option>
-                            <option value="matrix">矩陣扣繳 (對表)</option>
+                            <option value="matrix" selected>查表扣繳 (依有無配偶及受扶養親屬人數)</option>
+                            <option value="rate_5">按月扣取 5% (定率，達 $2,000 起扣)</option>
                         </select>
                     </div>
                 </div>
@@ -664,12 +701,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 計算按鈕 -->
-                <button id="calculateBtn" class="btn">
-                    <svg style="width:20px; height:20px; fill:currentColor;" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-                    開始計算
-                </button>
             </div>
 
             <!-- 右欄：計算結果輸出 -->
@@ -693,24 +724,39 @@
                                 </div>
                             </div>
                             <div class="result-item" id="card-emp-labor">
-                                <span class="result-label">勞工保險費自付額</span>
-                                <div class="result-value-wrapper">
-                                    <span class="result-value" id="val-emp-labor">-</span>
-                                    <span class="result-unit">元</span>
+                                <div class="result-main-row">
+                                    <span class="result-label">勞工保險費自付額</span>
+                                    <div class="result-value-wrapper">
+                                        <span class="result-value" id="val-emp-labor">-</span>
+                                        <span class="result-unit">元</span>
+                                    </div>
+                                </div>
+                                <div class="result-sub-label" id="sub-emp-labor" style="display: none;">
+                                    (對應勞保級距：<span id="val-emp-labor-bracket">-</span> 元)
                                 </div>
                             </div>
                             <div class="result-item" id="card-emp-health">
-                                <span class="result-label">健康保險費自付額</span>
-                                <div class="result-value-wrapper">
-                                    <span class="result-value" id="val-emp-health">-</span>
-                                    <span class="result-unit">元</span>
+                                <div class="result-main-row">
+                                    <span class="result-label">健康保險費自付額</span>
+                                    <div class="result-value-wrapper">
+                                        <span class="result-value" id="val-emp-health">-</span>
+                                        <span class="result-unit">元</span>
+                                    </div>
+                                </div>
+                                <div class="result-sub-label" id="sub-emp-health" style="display: none;">
+                                    (對應健保級距：<span id="val-emp-health-bracket">-</span> 元)
                                 </div>
                             </div>
                             <div class="result-item" id="card-emp-pension">
-                                <span class="result-label">勞工退休金個人自提</span>
-                                <div class="result-value-wrapper">
-                                    <span class="result-value" id="val-emp-pension">-</span>
-                                    <span class="result-unit">元</span>
+                                <div class="result-main-row">
+                                    <span class="result-label">勞工退休金個人自提</span>
+                                    <div class="result-value-wrapper">
+                                        <span class="result-value" id="val-emp-pension">-</span>
+                                        <span class="result-unit">元</span>
+                                    </div>
+                                </div>
+                                <div class="result-sub-label" id="sub-emp-pension" style="display: none;">
+                                    (對應勞退級距：<span id="val-emp-pension-bracket">-</span> 元)
                                 </div>
                             </div>
                             <div class="result-item" id="card-emp-tax">
@@ -735,24 +781,39 @@
                         <div class="results-section-title">企業勞務營運成本 (雇主負擔)</div>
                         <div class="results-card-list">
                             <div class="result-item" id="card-empr-labor">
-                                <span class="result-label">勞工保險費雇主分擔</span>
-                                <div class="result-value-wrapper">
-                                    <span class="result-value" id="val-empr-labor">-</span>
-                                    <span class="result-unit">元</span>
+                                <div class="result-main-row">
+                                    <span class="result-label">勞工保險費雇主分擔</span>
+                                    <div class="result-value-wrapper">
+                                        <span class="result-value" id="val-empr-labor">-</span>
+                                        <span class="result-unit">元</span>
+                                    </div>
+                                </div>
+                                <div class="result-sub-label" id="sub-empr-labor" style="display: none;">
+                                    (對應勞保級距：<span id="val-empr-labor-bracket">-</span> 元)
                                 </div>
                             </div>
                             <div class="result-item" id="card-empr-health">
-                                <span class="result-label">健康保險費雇主分擔</span>
-                                <div class="result-value-wrapper">
-                                    <span class="result-value" id="val-empr-health">-</span>
-                                    <span class="result-unit">元</span>
+                                <div class="result-main-row">
+                                    <span class="result-label">健康保險費雇主分擔</span>
+                                    <div class="result-value-wrapper">
+                                        <span class="result-value" id="val-empr-health">-</span>
+                                        <span class="result-unit">元</span>
+                                    </div>
+                                </div>
+                                <div class="result-sub-label" id="sub-empr-health" style="display: none;">
+                                    (對應健保級距：<span id="val-empr-health-bracket">-</span> 元)
                                 </div>
                             </div>
                             <div class="result-item" id="card-empr-pension">
-                                <span class="result-label">勞退雇主提繳額 (6%)</span>
-                                <div class="result-value-wrapper">
-                                    <span class="result-value" id="val-empr-pension">-</span>
-                                    <span class="result-unit">元</span>
+                                <div class="result-main-row">
+                                    <span class="result-label">勞退雇主提繳額 (6%)</span>
+                                    <div class="result-value-wrapper">
+                                        <span class="result-value" id="val-empr-pension">-</span>
+                                        <span class="result-unit">元</span>
+                                    </div>
+                                </div>
+                                <div class="result-sub-label" id="sub-empr-pension" style="display: none;">
+                                    (對應勞退級距：<span id="val-empr-pension-bracket">-</span> 元)
                                 </div>
                             </div>
                             <div class="result-item highlight-pay" id="card-empr-total">
