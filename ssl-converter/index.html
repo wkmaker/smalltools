@@ -1017,17 +1017,27 @@
                     const asn1 = forge.asn1.fromDer(binaryData);
                     const p12 = forge.pkcs12.pkcs12FromAsn1(asn1, password);
 
-                    let privateKeyPem = '';
+                    let privateKeyPemPkcs1 = '';
+                    let privateKeyPemPkcs8 = '';
                     let privateKeyObj = null;
                     const pkcs8Bags = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag })[forge.pki.oids.pkcs8ShroudedKeyBag] || [];
                     const keyBags = p12.getBags({ bagType: forge.pki.oids.keyBag })[forge.pki.oids.keyBag] || [];
                     
                     if (pkcs8Bags.length > 0) {
                         privateKeyObj = pkcs8Bags[0].key;
-                        privateKeyPem = forge.pki.privateKeyToPem(privateKeyObj).trim();
                     } else if (keyBags.length > 0) {
                         privateKeyObj = keyBags[0].key;
-                        privateKeyPem = forge.pki.privateKeyToPem(privateKeyObj).trim();
+                    }
+
+                    if (privateKeyObj) {
+                        privateKeyPemPkcs1 = forge.pki.privateKeyToPem(privateKeyObj).trim();
+                        try {
+                            const rsaPrivateKey = forge.pki.privateKeyToAsn1(privateKeyObj);
+                            const privateKeyInfo = forge.pki.wrapRsaPrivateKey(rsaPrivateKey);
+                            privateKeyPemPkcs8 = forge.pki.privateKeyInfoToPem(privateKeyInfo).trim();
+                        } catch (p8Err) {
+                            privateKeyPemPkcs8 = privateKeyPemPkcs1;
+                        }
                     }
 
                     const certBags = p12.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag] || [];
@@ -1077,9 +1087,19 @@
                     const daysRemaining = checkCertificateExpiry(clientCertObj);
 
                     const outputs = [
-                        { filename: 'certificate.crt', content: certPem, label: '憑證檔案 (.crt)' },
-                        { filename: 'private.key', content: privateKeyPem, label: '私鑰檔案 (.key)' }
+                        { filename: 'certificate.crt', content: certPem, label: '憑證檔案 (.crt)' }
                     ];
+
+                    if (privateKeyPemPkcs8 || privateKeyPemPkcs1) {
+                        outputs.push({
+                            filename: 'private.key',
+                            content: privateKeyPemPkcs8 || privateKeyPemPkcs1,
+                            contentPkcs8: privateKeyPemPkcs8,
+                            contentPkcs1: privateKeyPemPkcs1,
+                            label: '私鑰檔案 (.key)',
+                            isPrivateKey: true
+                        });
+                    }
 
                     if (caBundlePem && caBundlePem.trim()) {
                         outputs.push({ filename: 'ca-bundle.crt', content: caBundlePem, label: '中繼憑證鏈 (.ca-bundle)' });
@@ -1206,6 +1226,8 @@
                     let typeLabel = '';
                     let subjectName = '無';
                     let notAfterStr = '無';
+                    let privateKeyPemPkcs1 = '';
+                    let privateKeyPemPkcs8 = '';
 
                     try {
                         const cert = forge.pki.certificateFromAsn1(asn1);
@@ -1217,7 +1239,15 @@
                     } catch (certErr) {
                         try {
                             const key = forge.pki.privateKeyFromAsn1(asn1);
-                            pemResult = forge.pki.privateKeyToPem(key);
+                            privateKeyPemPkcs1 = forge.pki.privateKeyToPem(key).trim();
+                            try {
+                                const rsaPrivateKey = forge.pki.privateKeyToAsn1(key);
+                                const privateKeyInfo = forge.pki.wrapRsaPrivateKey(rsaPrivateKey);
+                                privateKeyPemPkcs8 = forge.pki.privateKeyInfoToPem(privateKeyInfo).trim();
+                            } catch (p8Err) {
+                                privateKeyPemPkcs8 = privateKeyPemPkcs1;
+                            }
+                            pemResult = privateKeyPemPkcs8; // 預設 pemResult 為 PKCS#8 通用格式
                             typeLabel = 'RSA 私鑰 (Private Key)';
                         } catch (keyErr) {
                             const base64 = forge.util.encode64(binaryData);
@@ -1227,6 +1257,20 @@
                         }
                     }
 
+                    let outputs = [];
+                    if (typeLabel === 'RSA 私鑰 (Private Key)') {
+                        outputs.push({
+                            filename: 'private.key',
+                            content: privateKeyPemPkcs8 || privateKeyPemPkcs1,
+                            contentPkcs8: privateKeyPemPkcs8,
+                            contentPkcs1: privateKeyPemPkcs1,
+                            label: '私鑰檔案 (.key)',
+                            isPrivateKey: true
+                        });
+                    } else {
+                        outputs.push({ filename: 'converted.pem', content: pemResult, label: '轉換後的 PEM 檔案 (.pem)' });
+                    }
+
                     showConversionResults({
                         meta: [
                             { label: '原始檔名', value: uploadedFiles.der.name },
@@ -1234,9 +1278,7 @@
                             { label: '主體通用名稱', value: subjectName },
                             { label: '過期時間', value: notAfterStr }
                         ],
-                        outputs: [
-                            { filename: 'converted.pem', content: pemResult, label: '轉換後的 PEM 檔案 (.pem)' }
-                        ]
+                        outputs: outputs
                     });
 
                 } catch (err) {
@@ -1340,29 +1382,8 @@
                 </div>
             `).join('');
 
-            outputsContainer.innerHTML = resultData.outputs.map((item, idx) => {
-                const uniqueId = `output-val-${idx}`;
-                const isEmpty = !item.content || item.content.trim() === '';
-                const styleDisplay = isEmpty ? 'display:none;' : '';
-                return `
-                    <div class="output-card" style="${styleDisplay}">
-                        <div class="output-header">
-                            <span class="output-name">${item.label || item.filename}</span>
-                            <div class="output-actions">
-                                <button class="btn-mini" onclick="copyToClipboard('${uniqueId}')">
-                                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-                                    複製
-                                </button>
-                                <button class="btn-mini" onclick="downloadTextFile('${item.filename}', '${uniqueId}')">
-                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    下載
-                                </button>
-                            </div>
-                        </div>
-                        <textarea class="custom-textarea" id="${uniqueId}" style="height: 120px;" readonly>${item.content || ''}</textarea>
-                    </div>
-                `;
-            }).join('');
+            // 委託給專用的 outputs 渲染函式以避免程式碼重複，並支持私鑰格式動態切換
+            renderOutputsOnly(resultData.outputs);
 
             document.getElementById('result-section').style.display = 'flex';
             document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
@@ -1587,17 +1608,50 @@
             }
         }
 
+        function togglePrivateKeyFormat(selectElem, textareaId, idx) {
+            const format = selectElem.value;
+            const textarea = document.getElementById(textareaId);
+            const outputItem = lastResultData.outputs[idx];
+            
+            if (format === 'pkcs8') {
+                textarea.value = outputItem.contentPkcs8;
+                updateDownloadButton(textareaId, 'private.key');
+            } else {
+                textarea.value = outputItem.contentPkcs1;
+                updateDownloadButton(textareaId, 'private.rsa.key');
+            }
+        }
+
+        function updateDownloadButton(textareaId, filename) {
+            const textarea = document.getElementById(textareaId);
+            const card = textarea.closest('.output-card');
+            const downloadBtn = card.querySelector('[onclick^="downloadTextFile"]');
+            if (downloadBtn) {
+                downloadBtn.setAttribute('onclick', `downloadTextFile('${filename}', '${textareaId}')`);
+            }
+        }
+
         function renderOutputsOnly(outputs) {
             const outputsContainer = document.getElementById('result-outputs');
             outputsContainer.innerHTML = outputs.map((item, idx) => {
                 const uniqueId = `output-val-${idx}`;
                 const isEmpty = !item.content || item.content.trim() === '';
                 const styleDisplay = isEmpty ? 'display:none;' : '';
+                
+                // 私鑰切換格式下拉選單 (遵守暗色系規範)
+                const formatSelectHtml = item.isPrivateKey ? `
+                    <select class="btn-mini" onchange="togglePrivateKeyFormat(this, '${uniqueId}', ${idx})" style="background-color: #121218 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.75rem; outline: none; cursor: pointer;">
+                        <option value="pkcs8" style="background-color: #121218 !important; color: #ffffff !important;">PKCS#8 (通用)</option>
+                        <option value="pkcs1" style="background-color: #121218 !important; color: #ffffff !important;">PKCS#1 (傳統 RSA)</option>
+                    </select>
+                ` : '';
+
                 return `
                     <div class="output-card" style="${styleDisplay}">
                         <div class="output-header">
                             <span class="output-name">${item.label || item.filename}</span>
                             <div class="output-actions">
+                                ${formatSelectHtml}
                                 <button class="btn-mini" onclick="copyToClipboard('${uniqueId}')">
                                     <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                                     複製
