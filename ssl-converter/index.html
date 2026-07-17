@@ -1480,6 +1480,9 @@
                     return;
                 }
                 
+                // 將 http:// 自動升級為 https:// 以避開瀏覽器安全下載攔截機制，絕大多數 CA 都支援 https
+                const secureAiaUrl = aiaUrl.startsWith('http://') ? aiaUrl.replace('http://', 'https://') : aiaUrl;
+                
                 const isFirstLayer = currentChainPems.length === 1;
                 const tipText = isFirstLayer 
                     ? '⚠️ 偵測到憑證鏈不完整，建議補齊'
@@ -1492,10 +1495,13 @@
                         </div>
                         <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
                             請點擊下方連結下載官方中繼憑證，並將下載的檔案拖曳至下方上傳區：
-                            <div style="margin-top: 0.5rem;">
-                                <a id="aia-download-link" href="${aiaUrl}" target="_blank" style="color: var(--accent-glow); text-decoration: underline; font-weight: 500; word-break: break-all;">
-                                    ${aiaUrl}
+                            <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                                <a id="aia-download-link" href="${secureAiaUrl}" target="_blank" style="color: var(--accent-glow); text-decoration: underline; font-weight: 500; word-break: break-all;">
+                                    ${secureAiaUrl}
                                 </a>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary); opacity: 0.8; margin-top: 0.2rem;">
+                                    💡 貼心提醒：若點擊無法下載，請<strong>右鍵點擊連結選擇「另存連結為...」</strong>，或複製網址至新分頁貼上開啟。
+                                </span>
                             </div>
                         </div>
                         <div class="upload-zone" id="aia-upload-zone" style="padding: 1.5rem 1rem;">
