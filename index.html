@@ -794,11 +794,78 @@
             color: #00ff66;
         }
 
+        .tab-btn[data-tab="network"].active {
+            box-shadow: 0 0 15px rgba(0, 195, 255, 0.15), inset 0 0 10px rgba(0, 195, 255, 0.05);
+            border-color: rgba(0, 195, 255, 0.3);
+            text-shadow: 0 0 8px rgba(0, 195, 255, 0.5);
+            color: #00c3ff;
+        }
+
+        .tab-btn[data-tab="text"].active {
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.15), inset 0 0 10px rgba(217, 70, 239, 0.05);
+            border-color: rgba(217, 70, 239, 0.3);
+            text-shadow: 0 0 8px rgba(217, 70, 239, 0.5);
+            color: #d946ef;
+        }
+
         .tab-btn[data-tab="utility"].active {
             box-shadow: 0 0 15px rgba(139, 92, 246, 0.15), inset 0 0 10px rgba(139, 92, 246, 0.05);
             border-color: rgba(139, 92, 246, 0.3);
             text-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
             color: #8b5cf6;
+        }
+
+        /* ====== 分類區段與標題樣式 ====== */
+        .category-section {
+            margin-bottom: 3.5rem;
+            text-align: left;
+            transition: all 0.4s ease;
+        }
+
+        .category-section.section-hidden {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 1.8rem;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding-left: 0.5rem;
+            position: relative;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.25rem;
+            border-radius: 2px;
+        }
+
+        .category-section[data-section="finance"] .section-title::before {
+            background: linear-gradient(180deg, #ffb800, #ff7300);
+            box-shadow: 0 0 8px rgba(255, 184, 0, 0.6);
+        }
+        .category-section[data-section="developer"] .section-title::before {
+            background: linear-gradient(180deg, #00ff66, #00f5a0);
+            box-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+        }
+        .category-section[data-section="network"] .section-title::before {
+            background: linear-gradient(180deg, #00c3ff, #0077ff);
+            box-shadow: 0 0 8px rgba(0, 195, 255, 0.6);
+        }
+        .category-section[data-section="text"] .section-title::before {
+            background: linear-gradient(180deg, #d946ef, #ff00aa);
+            box-shadow: 0 0 8px rgba(217, 70, 239, 0.6);
+        }
+        .category-section[data-section="utility"] .section-title::before {
+            background: linear-gradient(180deg, #8b5cf6, #b400ff);
+            box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
         }
 
         /* 卡片過濾過渡動畫 */
@@ -917,281 +984,311 @@
             <div class="tab-group">
                 <button class="tab-btn active" data-tab="all">全部工具</button>
                 <button class="tab-btn" data-tab="finance">金融理財</button>
-                <button class="tab-btn" data-tab="developer">開發工具</button>
-                <button class="tab-btn" data-tab="utility">實用工具</button>
+                <button class="tab-btn" data-tab="developer">開發輔助</button>
+                <button class="tab-btn" data-tab="network">網路工具</button>
+                <button class="tab-btn" data-tab="text">文字編輯</button>
+                <button class="tab-btn" data-tab="utility">實用小工具</button>
             </div>
         </div>
 
-        <div class="tools-grid">
-            <!-- 目標計時器 -->
-            <a href="./time/index.html" class="tool-card" data-category="utility" data-keywords="目標計時器 target timer 倒數 累計">
-                <div>
-                    <h3>目標計時器</h3>
-                    <span class="subtitle">Target Timer</span>
-                    <p>唯美精緻的目標計時器，清楚顯示倒數與累計時間，支援多種時間顯示格式與自訂主題色。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+        <!-- 金融理財區段 -->
+        <div class="category-section" data-section="finance">
+            <h2 class="section-title">🏦 金融理財</h2>
+            <div class="tools-grid">
+                <!-- 複利計算機 -->
+                <a href="./compound-interest/index.html" class="tool-card interest-card" data-category="finance" data-keywords="複利計算機 compound interest 定期定額 財富 增長">
+                    <div>
+                        <h3>複利計算機</h3>
+                        <span class="subtitle">Compound Interest Calculator</span>
+                        <p>精緻且專業的複利計算工具，支援年/月利率與定期定額，透過動態堆疊圖表直觀呈現財富增長軌跡。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 複利計算機 -->
-            <a href="./compound-interest/index.html" class="tool-card interest-card" data-category="finance" data-keywords="複利計算機 compound interest 定期定額 財富 增長">
-                <div>
-                    <h3>複利計算機</h3>
-                    <span class="subtitle">Compound Interest Calculator</span>
-                    <p>精緻且專業的複利計算工具，支援年/月利率與定期定額，透過動態堆疊圖表直觀呈現財富增長軌跡。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 信貸計算機 -->
+                <a href="./personal-loan/index.html" class="tool-card loan-card" data-category="finance" data-keywords="信貸計算機 personal loan 本息均攤 本金均攤 實質年利率 apr 還款">
+                    <div>
+                        <h3>信貸計算機</h3>
+                        <span class="subtitle">Personal Loan Calculator</span>
+                        <p>專業的個人信貸試算工具，支援本息/本金平均攤還與實質年利率 (APR) 估算，助您精準掌握還款明細與利息支出。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 信貸計算機 -->
-            <a href="./personal-loan/index.html" class="tool-card loan-card" data-category="finance" data-keywords="信貸計算機 personal loan 本息均攤 本金均攤 實質年利率 apr 還款">
-                <div>
-                    <h3>信貸計算機</h3>
-                    <span class="subtitle">Personal Loan Calculator</span>
-                    <p>專業的個人信貸試算工具，支援本息/本金平均攤還與實質年利率 (APR) 估算，助您精準掌握還款明細與利息支出。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 車貸計算機 -->
+                <a href="./car-loan/index.html" class="tool-card car-card" data-category="finance" data-keywords="車貸計算機 car loan 自備款 寬限期 月付金 apr 還款">
+                    <div>
+                        <h3>車貸計算機</h3>
+                        <span class="subtitle">Car Loan Calculator</span>
+                        <p>貼心的車貸試算工具，支援車價與自備款成數試算、寬限期設定，並提供詳細的月付金額與實質年利率分析。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 車貸計算機 -->
-            <a href="./car-loan/index.html" class="tool-card car-card" data-category="finance" data-keywords="車貸計算機 car loan 自備款 寬限期 月付金 apr 還款">
-                <div>
-                    <h3>車貸計算機</h3>
-                    <span class="subtitle">Car Loan Calculator</span>
-                    <p>貼心的車貸試算工具，支援車價與自備款成數試算、寬限期設定，並提供詳細的月付金額與實質年利率分析。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 房貸計算機 -->
+                <a href="./mortgage-loan/index.html" class="tool-card mortgage-card" data-category="finance" data-keywords="房貸計算機 mortgage loan 自備款 寬限期 階梯利率 多段式利率 apr 還款">
+                    <div>
+                        <h3>房貸計算機</h3>
+                        <span class="subtitle">Mortgage Loan Calculator</span>
+                        <p>專業的房貸試算工具，支援自備款與貸款成數雙向連動、寬限期試算、多段式階梯利率設定，並提供詳細的月付本息明細與實質年利率分析。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 房貸計算機 -->
-            <a href="./mortgage-loan/index.html" class="tool-card mortgage-card" data-category="finance" data-keywords="房貸計算機 mortgage loan 自備款 寬限期 階梯利率 多段式利率 apr 還款">
-                <div>
-                    <h3>房貸計算機</h3>
-                    <span class="subtitle">Mortgage Loan Calculator</span>
-                    <p>專業的房貸試算工具，支援自備款與貸款成數雙向連動、寬限期試算、多段式階梯利率設定，並提供詳細的月付本息明細與實質年利率分析。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 股票質押與維持率壓力測試器 -->
+                <a href="./pledge-calculator/index.html" class="tool-card pledge-card" data-category="finance" data-keywords="股票質押 維持率 壓力測試 stock pledging risk calculator 追繳 臨界">
+                    <div>
+                        <h3>股票質押與維持率壓力測試器</h3>
+                        <span class="subtitle">Stock Pledging & Risk Calculator</span>
+                        <p>台股資產活化與槓桿風險管理利器。支援個股股價與張數雙向市值連動、自訂追繳門檻、大跌幅壓力測試模擬，並精確計算追繳臨界股價與安全回補保證金。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- Base64 編碼/解碼 -->
-            <a href="./base64/index.html" class="tool-card base64-card" data-category="developer" data-keywords="base64 編碼 解碼 encoder decoder 檔案 拖曳 轉換">
-                <div>
-                    <h3>Base64 編碼/解碼</h3>
-                    <span class="subtitle">Base64 Encoder & Decoder</span>
-                    <p>精緻的 Base64 轉換工具，支援文字即時雙向編解碼（UTF-8 不亂碼）、檔案拖曳編碼與多媒體預覽，並可解碼還原下載。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 台股期貨槓桿與逆風點數估算器 -->
+                <a href="./futures-calculator/index.html" class="tool-card futures-card" data-category="finance" data-keywords="台股期貨 槓桿 逆風 點數 futures margin leverage calculator 斷頭 追繳 臨界">
+                    <div>
+                        <h3>台股期貨槓桿與逆風點數估算器</h3>
+                        <span class="subtitle">Futures Margin & Leverage Calculator</span>
+                        <p>期貨交易者風控防斷頭神器。即時計算大台/小台/微台實質資金槓桿倍數，並模擬逆風行情下之帳面損益、風控指標指針，以及追繳與強平臨界指數點數。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- URL 編碼/解碼 -->
-            <a href="./url/index.html" class="tool-card url-card" data-category="developer" data-keywords="url 編碼 解碼 encoder decoder query 參數 網址 轉換">
-                <div>
-                    <h3>URL 編碼/解碼</h3>
-                    <span class="subtitle">URL Encoder & Decoder</span>
-                    <p>專業的網址編解碼工具，支援 URI/URIComponent 模式，並具備強大的 Query 參數表格即時解析與雙向編輯功能。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 薪資、勞保、健保、預扣稅計算機 -->
+                <a href="./my-salary-calculator/index.html" class="tool-card salary-card" data-category="finance" data-keywords="資與勞健保計算機 薪資 勞保 健保 勞退 實領薪水 雇主成本 salary calculator">
+                    <div>
+                        <h3>薪資、勞保、健保、預扣稅計算機</h3>
+                        <span class="subtitle">Salary & Insurances Calculator</span>
+                        <p>精準且唯美的台灣薪資與保費試算工具。一鍵查表比對勞保、健保、勞退與預扣稅金額，清晰呈現員工薪資扣項明細與雇主總勞務營運成本。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-            <!-- 密碼生成器 -->
-            <a href="./password/index.html" class="tool-card password-card" data-category="developer" data-keywords="安全密碼生成器 password generator csprng 強度 隨機">
-                <div>
-                    <h3>安全密碼生成器</h3>
-                    <span class="subtitle">Password Generator (CSPRNG)</span>
-                    <p>密碼學安全強隨機數密碼生成工具（CSPRNG），支援排除易混淆字元、強制每種字元分佈、即時強度評估與生成歷史記錄。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+        <!-- 開發輔助區段 -->
+        <div class="category-section" data-section="developer">
+            <h2 class="section-title">💻 開發輔助</h2>
+            <div class="tools-grid">
+                <!-- Base64 編碼/解碼 -->
+                <a href="./base64/index.html" class="tool-card base64-card" data-category="developer" data-keywords="base64 編碼 解碼 encoder decoder 檔案 拖曳 轉換">
+                    <div>
+                        <h3>Base64 編碼/解碼</h3>
+                        <span class="subtitle">Base64 Encoder & Decoder</span>
+                        <p>精緻的 Base64 轉換工具，支援文字即時雙向編解碼（UTF-8 不亂碼）、檔案拖曳編碼與多媒體預覽，並可解碼還原下載。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- Epoch 萬年時間戳記轉換器 -->
-            <a href="./epoch/index.html" class="tool-card epoch-card" data-category="utility" data-keywords="epoch unix 時間戳記 timestamp converter 時區 台北 utc pst">
-                <div>
-                    <h3>Epoch 時間戳記轉換</h3>
-                    <span class="subtitle">Epoch Timestamp Converter</span>
-                    <p>專業的 Epoch Unix 時間戳記轉換工具，支援秒與毫秒自動判定，並即時在台北時間、UTC、美西時間（PST/PDT）及自訂時區之間進行雙向轉換，並附帶歷史轉換紀錄。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- URL 編碼/解碼 -->
+                <a href="./url/index.html" class="tool-card url-card" data-category="developer" data-keywords="url 編碼 解碼 encoder decoder query 參數 網址 轉換">
+                    <div>
+                        <h3>URL 編碼/解碼</h3>
+                        <span class="subtitle">URL Encoder & Decoder</span>
+                        <p>專業的網址編解碼工具，支援 URI/URIComponent 模式，並具備強大的 Query 參數表格即時解析與雙向編輯功能。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- JSON 格式化與美化器 -->
-            <a href="./json/index.html" class="tool-card json-card" data-category="developer" data-keywords="json 格式化 美化器 formatter minifier lint 驗證 壓縮">
-                <div>
-                    <h3>JSON 格式化與美化器</h3>
-                    <span class="subtitle">JSON Formatter & Minifier</span>
-                    <p>精緻且功能齊全的 JSON 處理小工具，支援即時語法 lint 驗證定位、多縮排格式美化、樹狀摺疊檢視與單行緊湊壓縮，並可拖曳檔案上傳與下載匯出。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 密碼生成器 -->
+                <a href="./password/index.html" class="tool-card password-card" data-category="developer" data-keywords="安全密碼生成器 password generator csprng 強度 隨機">
+                    <div>
+                        <h3>安全密碼生成器</h3>
+                        <span class="subtitle">Password Generator (CSPRNG)</span>
+                        <p>密碼學安全強隨機數密碼生成工具（CSPRNG），支援排除易混淆字元、強制每種字元分佈、即時強度評估與生成歷史記錄。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 股票質押與維持率壓力測試器 -->
-            <a href="./pledge-calculator/index.html" class="tool-card pledge-card" data-category="finance" data-keywords="股票質押 維持率 壓力測試 stock pledging risk calculator 追繳 臨界">
-                <div>
-                    <h3>股票質押與維持率壓力測試器</h3>
-                    <span class="subtitle">Stock Pledging & Risk Calculator</span>
-                    <p>台股資產活化與槓桿風險管理利器。支援個股股價與張數雙向市值連動、自訂追繳門檻、大跌幅壓力測試模擬，並精確計算追繳臨界股價與安全回補保證金。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- JSON 格式化與美化器 -->
+                <a href="./json/index.html" class="tool-card json-card" data-category="developer" data-keywords="json 格式化 美化器 formatter minifier lint 驗證 壓縮">
+                    <div>
+                        <h3>JSON 格式化與美化器</h3>
+                        <span class="subtitle">JSON Formatter & Minifier</span>
+                        <p>精緻且功能齊全的 JSON 處理小工具，支援即時語法 lint 驗證定位、多縮排格式美化、樹狀摺疊檢視與單行緊湊壓縮，並可拖曳檔案上傳與下載匯出。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 台股期貨槓桿與逆風點數估算器 -->
-            <a href="./futures-calculator/index.html" class="tool-card futures-card" data-category="finance" data-keywords="台股期貨 槓桿 逆風 點數 futures margin leverage calculator 斷頭 追繳 臨界">
-                <div>
-                    <h3>台股期貨槓桿與逆風點數估算器</h3>
-                    <span class="subtitle">Futures Margin & Leverage Calculator</span>
-                    <p>期貨交易者風控防斷頭神器。即時計算大台/小台/微台實質資金槓桿倍數，並模擬逆風行情下之帳面損益、風控指標指針，以及追繳與強平臨界指數點數。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- SSL 憑證格式轉換器 -->
+                <a href="./ssl-converter/index.html" class="tool-card ssl-converter-card" data-category="developer" data-keywords="ssl certificate converter pfx p12 pem der key crt ca-bundle x509 pkcs12 憑證 格式 轉換 密鑰 雜湊">
+                    <div>
+                        <h3>SSL 憑證格式轉換器</h3>
+                        <span class="subtitle">SSL Certificate Converter</span>
+                        <p>專業的安全 SSL 憑證格式轉換工具。支援 PFX/P12, PEM, DER 雙向轉換，具備私鑰/憑證金鑰雜湊匹配檢查與證書到期動態警示。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-            <!-- 資與勞健保計算機（雙向負擔版） -->
-            <a href="./my-salary-calculator/index.html" class="tool-card salary-card" data-category="finance" data-keywords="資與勞健保計算機 薪資 勞保 健保 勞退 實領薪水 雇主成本 salary calculator">
-                <div>
-                    <h3>薪資、勞保、健保、預扣稅計算機</h3>
-                    <span class="subtitle">Salary & Insurances Calculator</span>
-                    <p>精準且唯美的台灣薪資與保費試算工具。一鍵查表比對勞保、健保、勞退與預扣稅金額，清晰呈現員工薪資扣項明細與雇主總勞務營運成本。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+        <!-- 網路工具區段 -->
+        <div class="category-section" data-section="network">
+            <h2 class="section-title">🌐 網路工具</h2>
+            <div class="tools-grid">
+                <!-- DIG 網路診斷工具 -->
+                <a href="./dns-dig/index.html" class="tool-card dig-card" data-category="network" data-keywords="dig 網路診斷工具 dns web tool cloudflare google doh 查詢">
+                    <div>
+                        <h3>DIG 網路診斷工具</h3>
+                        <span class="subtitle">DNS Dig Web Tool</span>
+                        <p>工程師必備的線上 DNS 診斷工具。支援 Cloudflare / Google 加密 DoH 伺服器切換、網域/網址自動解析清理，即時發送 DIG 請求查詢 A, CNAME, MX, TXT 各項記錄。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- DIG 網路診斷工具 -->
-            <a href="./dns-dig/index.html" class="tool-card dig-card" data-category="developer" data-keywords="dig 網路診斷工具 dns web tool cloudflare google doh 查詢">
-                <div>
-                    <h3>DIG 網路診斷工具</h3>
-                    <span class="subtitle">DNS Dig Web Tool</span>
-                    <p>工程師必備的線上 DNS 診斷工具。支援 Cloudflare / Google 加密 DoH 伺服器切換、網域/網址自動解析清理，即時發送 DIG 請求查詢 A, CNAME, MX, TXT 各項記錄。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- IP 檢測助手 -->
+                <a href="./ip-detector/index.html" class="tool-card ip-detector-card" data-category="network" data-keywords="ip detector diagnostic trace ping check ipv4 ipv6 cloudflare mullvad aws gcp azure apple 檢測 診斷 延遲">
+                    <div>
+                        <h3>IP 檢測助手</h3>
+                        <span class="subtitle">IP Diagnostic Tool</span>
+                        <p>專業的網路與 IP 連線診斷工具。支援即時 IPv4/IPv6 雙棧偵測、Cloudflare 與 Mullvad 隱私節點查詢，以及公有雲服務連線延遲診斷。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-            <!-- 文字處理助手 -->
-            <a href="./text-utility/index.html" class="tool-card text-utility-card" data-category="developer" data-keywords="文字處理 轉大寫 轉小寫 刪除空白 字數統計 英文 中文 word count uppercase lowercase trim">
-                <div>
-                    <h3>文字處理助手</h3>
-                    <span class="subtitle">Text Processing Utility</span>
-                    <p>精緻且實用的文字排版助手。支援大小寫轉換、空白字元處理，並即時統計字元數、單字數、中文字數與總行數。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+        <!-- 文字編輯區段 -->
+        <div class="category-section" data-section="text">
+            <h2 class="section-title">✍️ 文字編輯</h2>
+            <div class="tools-grid">
+                <!-- 文字處理助手 -->
+                <a href="./text-utility/index.html" class="tool-card text-utility-card" data-category="text" data-keywords="文字處理 轉大寫 轉小寫 刪除空白 字數統計 英文 中文 word count uppercase lowercase trim">
+                    <div>
+                        <h3>文字處理助手</h3>
+                        <span class="subtitle">Text Processing Utility</span>
+                        <p>精緻且實用的文字排版助手。支援大小寫轉換、空白字元處理，並即時統計字元數、單字數、中文字數與總行數。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- Designer QR Code 產生器 -->
-            <a href="./qr-generator/index.html" class="tool-card qr-generator-card" data-category="developer" data-keywords="qrcode qr code generator designer style gradient logo 產生器 二維碼 漸層 賽博綠">
-                <div>
-                    <h3>Designer QR Code 產生器</h3>
-                    <span class="subtitle">Designer QR Code Generator</span>
-                    <p>專業的藝術二維碼設計生成工具。支援碼體與定位點液態化自訂、霓虹漸層色調整、置中頭像/Logo 拖曳上傳與自動安全容錯防禦。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- Designer QR Code 產生器 -->
+                <a href="./qr-generator/index.html" class="tool-card qr-generator-card" data-category="text" data-keywords="qrcode qr code generator designer style gradient logo 產生器 二維碼 漸層 賽博綠">
+                    <div>
+                        <h3>Designer QR Code 產生器</h3>
+                        <span class="subtitle">Designer QR Code Generator</span>
+                        <p>專業的藝術二維碼設計生成工具。支援碼體與定位點液態化自訂、霓虹漸層色調整、置中頭像/Logo 拖曳上傳與自動安全容錯防禦。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- SSL 憑證格式轉換器 -->
-            <a href="./ssl-converter/index.html" class="tool-card ssl-converter-card" data-category="developer" data-keywords="ssl certificate converter pfx p12 pem der key crt ca-bundle x509 pkcs12 憑證 格式 轉換 密鑰 雜湊">
-                <div>
-                    <h3>SSL 憑證格式轉換器</h3>
-                    <span class="subtitle">SSL Certificate Converter</span>
-                    <p>專業的安全 SSL 憑證格式轉換工具。支援 PFX/P12, PEM, DER 雙向轉換，具備私鑰/憑證金鑰雜湊匹配檢查與證書到期動態警示。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 兩份文件比對工具 -->
+                <a href="./diff-checker/index.html" class="tool-card diff-checker-card" data-category="text" data-keywords="diff checker document comparison text code comparison split unified jsdiff 比對 兩份文件 差異 減 增 變更 電光紫">
+                    <div>
+                        <h3>兩份文件比對工具</h3>
+                        <span class="subtitle">Document Diff Checker</span>
+                        <p>極致安全的本地文本差異比對工具。支援左右雙窗格對齊（Split Mode）與 GitHub 混合比對（Unified Mode），純本機運算保障資安不外洩。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-            <!-- 兩份文件比對工具 -->
-            <a href="./diff-checker/index.html" class="tool-card diff-checker-card" data-category="developer" data-keywords="diff checker document comparison text code comparison split unified jsdiff 比對 兩份文件 差異 減 增 變更 電光紫">
-                <div>
-                    <h3>兩份文件比對工具</h3>
-                    <span class="subtitle">Document Diff Checker</span>
-                    <p>極致安全的本地文本差異比對工具。支援左右雙窗格對齊（Split Mode）與 GitHub 混合比對（Unified Mode），純本機運算保障資安不外洩。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+        <!-- 實用小工具區段 -->
+        <div class="category-section" data-section="utility">
+            <h2 class="section-title">🔧 實用小工具</h2>
+            <div class="tools-grid">
+                <!-- 目標計時器 -->
+                <a href="./time/index.html" class="tool-card" data-category="utility" data-keywords="目標計時器 target timer 倒數 累計">
+                    <div>
+                        <h3>目標計時器</h3>
+                        <span class="subtitle">Target Timer</span>
+                        <p>唯美精緻的目標計時器，清楚顯示倒數與累計時間，支援多種時間顯示格式與自訂主題色。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- IP 檢測助手 -->
-            <a href="./ip-detector/index.html" class="tool-card ip-detector-card" data-category="utility" data-keywords="ip detector diagnostic trace ping check ipv4 ipv6 cloudflare mullvad aws gcp azure apple 檢測 診斷 延遲">
-                <div>
-                    <h3>IP 檢測助手</h3>
-                    <span class="subtitle">IP Diagnostic Tool</span>
-                    <p>專業的網路與 IP 連線診斷工具。支援即時 IPv4/IPv6 雙棧偵測、Cloudflare 與 Mullvad 隱私節點查詢，以及公有雲服務連線延遲診斷。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- Epoch 萬年時間戳記轉換器 -->
+                <a href="./epoch/index.html" class="tool-card epoch-card" data-category="utility" data-keywords="epoch unix 時間戳記 timestamp converter 時區 台北 utc pst">
+                    <div>
+                        <h3>Epoch 時間戳記轉換</h3>
+                        <span class="subtitle">Epoch Timestamp Converter</span>
+                        <p>專業的 Epoch Unix 時間戳記轉換工具，支援秒與毫秒自動判定，並即時在台北時間、UTC、美西時間（PST/PDT）及自訂時區之間進行雙向轉換，並附帶歷史轉換紀錄。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 光影裁剪 - 萬能圖片處理大師 -->
-            <a href="./image-processor/index.html" class="tool-card image-processor-card" data-category="utility" data-keywords="image processor crop resize compress jsquash cropper zip batch 圖片 裁切 尺寸 調整 壓縮 轉檔 批次">
-                <div>
-                    <h3>光影裁剪 - 萬能圖片處理大師</h3>
-                    <span class="subtitle">Universal Image Processor</span>
-                    <p>精緻且功能齊全的圖片處理解決方案。支援 Cropper.js v2 視覺化裁切、自訂尺寸調整 (Resize)、jSquash 高速 WebAssembly 轉檔與壓縮品質調整，並支援多檔批次處理一鍵打包 ZIP 下載。</p>
-                </div>
-                <div class="card-action">
-                    開啟工具
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </div>
-            </a>
+                <!-- 光影裁剪 - 萬能圖片處理大師 -->
+                <a href="./image-processor/index.html" class="tool-card image-processor-card" data-category="utility" data-keywords="image processor crop resize compress jsquash cropper zip batch 圖片 裁切 尺寸 調整 壓縮 轉檔 批次">
+                    <div>
+                        <h3>光影裁剪 - 萬能圖片處理大師</h3>
+                        <span class="subtitle">Universal Image Processor</span>
+                        <p>精緻且功能齊全的圖片處理解決方案。支援 Cropper.js v2 視覺化裁切、自訂尺寸調整 (Resize)、jSquash 高速 WebAssembly 轉檔與壓縮品質調整，並支援多檔批次處理一鍵打包 ZIP 下載。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
 
-            <!-- 敬請期待 -->
-            <div class="tool-card placeholder" data-category="all">
-                <div>
-                    <h3>敬請期待</h3>
-                    <span class="subtitle">Coming Soon</span>
-                    <p>更多實用、唯美的工具正在開發中，敬請期待下一次的更新與功能推出。</p>
-                </div>
-                <div class="card-action">
-                    規劃中
+                <!-- 敬請期待 -->
+                <div class="tool-card placeholder" data-category="utility">
+                    <div>
+                        <h3>敬請期待</h3>
+                        <span class="subtitle">Coming Soon</span>
+                        <p>更多實用、唯美的工具正在開發中，敬請期待下一次的更新與功能推出。</p>
+                    </div>
+                    <div class="card-action">
+                        規劃中
+                    </div>
                 </div>
             </div>
         </div>
@@ -1381,7 +1478,7 @@
             
             // 解析分類
             const cat = params.get('category');
-            const allowedCats = ['all', 'finance', 'developer', 'utility'];
+            const allowedCats = ['all', 'finance', 'developer', 'network', 'text', 'utility'];
             if (cat && allowedCats.includes(cat)) {
                 currentTab = cat;
                 tabBtns.forEach(btn => {
@@ -1427,45 +1524,55 @@
 
         // 核心過濾邏輯
         function filterTools(shouldSync = true) {
-            let visibleCount = 0;
+            let totalVisibleCount = 0;
             const query = searchQuery.toLowerCase();
+            const sections = document.querySelectorAll('.category-section');
 
-            toolCards.forEach(card => {
-                // 判斷是否為預留卡片
-                const isPlaceholder = card.classList.contains('placeholder');
-                
-                // 取得卡片分類與關鍵字
-                const category = card.getAttribute('data-category');
-                const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
-                const title = (card.querySelector('h3') ? card.querySelector('h3').textContent : '').toLowerCase();
-                const desc = (card.querySelector('p') ? card.querySelector('p').textContent : '').toLowerCase();
+            sections.forEach(section => {
+                const sectionCategory = section.getAttribute('data-section');
+                const cardsInSection = section.querySelectorAll('.tool-card');
+                let visibleCardsInSection = 0;
 
-                // 分類匹配
-                // 預留卡片只在「全部工具」且「沒有搜尋 query」時顯示
-                let matchTab = false;
-                if (isPlaceholder) {
-                    matchTab = (currentTab === 'all' && !query);
+                cardsInSection.forEach(card => {
+                    // 判斷是否為預留卡片
+                    const isPlaceholder = card.classList.contains('placeholder');
+                    
+                    // 取得卡片分類與關鍵字
+                    const category = card.getAttribute('data-category');
+                    const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+                    const title = (card.querySelector('h3') ? card.querySelector('h3').textContent : '').toLowerCase();
+                    const desc = (card.querySelector('p') ? card.querySelector('p').textContent : '').toLowerCase();
+
+                    // 1. Tab 匹配
+                    let matchTab = (currentTab === 'all' || sectionCategory === currentTab);
+
+                    // 2. 搜尋匹配 (Placeholder 只有在沒有搜尋且在 All 視圖時顯示)
+                    let matchSearch = true;
+                    if (isPlaceholder) {
+                        matchSearch = !query && currentTab === 'all';
+                    } else if (query) {
+                        matchSearch = title.includes(query) || desc.includes(query) || keywords.includes(query);
+                    }
+
+                    if (matchTab && matchSearch) {
+                        card.classList.remove('card-hidden');
+                        visibleCardsInSection++;
+                        totalVisibleCount++;
+                    } else {
+                        card.classList.add('card-hidden');
+                    }
+                });
+
+                // 如果該 Section 中沒有任何卡片可見，則隱藏整個 Section（含標題）
+                if (visibleCardsInSection > 0) {
+                    section.classList.remove('section-hidden');
                 } else {
-                    matchTab = (currentTab === 'all' || category === currentTab);
-                }
-
-                // 搜尋匹配
-                let matchSearch = true;
-                if (query && !isPlaceholder) {
-                    matchSearch = title.includes(query) || desc.includes(query) || keywords.includes(query);
-                }
-
-                // 綜合判斷
-                if (matchTab && matchSearch) {
-                    card.classList.remove('card-hidden');
-                    visibleCount++;
-                } else {
-                    card.classList.add('card-hidden');
+                    section.classList.add('section-hidden');
                 }
             });
 
             // 顯示/隱藏無結果提示
-            noResults.style.display = (visibleCount === 0) ? 'flex' : 'none';
+            noResults.style.display = (totalVisibleCount === 0) ? 'flex' : 'none';
 
             if (shouldSync) {
                 syncToURL(true);

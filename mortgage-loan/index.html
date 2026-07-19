@@ -23,8 +23,8 @@
             --bg-color: #030305;
             --glass-bg: rgba(255, 255, 255, 0.015);
             --glass-border: rgba(255, 255, 255, 0.05);
-            --accent-glow: rgba(139, 92, 246, 0.6); /* 霓虹紫主題 */
-            --accent-glow-rgb: 139, 92, 246;
+            --accent-glow: rgba(0, 245, 160, 0.6); /* 霓虹薄荷綠主題 */
+            --accent-glow-rgb: 0, 245, 160;
             --text-primary: #ffffff;
             --text-secondary: #8892b0;
             color-scheme: dark;
@@ -104,10 +104,10 @@
         }
 
         .back-btn:hover {
-            background: rgba(139, 92, 246, 0.1);
-            color: #8b5cf6;
-            border-color: #8b5cf6;
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+            background: rgba(0, 245, 160, 0.1);
+            color: #00f5a0;
+            border-color: #00f5a0;
+            box-shadow: 0 0 15px rgba(0, 245, 160, 0.2);
         }
 
         .back-btn:hover svg {
@@ -180,13 +180,13 @@
 
         .input-group label span.badge {
             font-family: 'JetBrains Mono', monospace;
-            background: rgba(139, 92, 246, 0.12);
-            color: #8b5cf6;
+            background: rgba(0, 245, 160, 0.12);
+            color: #00f5a0;
             padding: 1px 6px;
             border-radius: 4px;
             font-size: 0.75rem;
             margin-left: 6px;
-            border: 1px solid rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(0, 245, 160, 0.2);
         }
 
         .input-wrapper {
@@ -210,8 +210,8 @@
         }
 
         .input-wrapper input:focus {
-            border-color: rgba(139, 92, 246, 0.6);
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
+            border-color: rgba(0, 245, 160, 0.6);
+            box-shadow: 0 0 15px rgba(0, 245, 160, 0.1);
         }
 
         /* 單位切換選擇器與純單位顯示 */
@@ -245,8 +245,8 @@
 
         .unit-selector .unit-btn.active,
         .toggle-buttons-container .unit-btn.active {
-            background: rgba(139, 92, 246, 0.15);
-            color: #8b5cf6;
+            background: rgba(0, 245, 160, 0.15);
+            color: #00f5a0;
         }
 
         .unit-display {
@@ -281,9 +281,9 @@
         }
 
         .toggle-buttons-container .unit-btn.active {
-            background: rgba(139, 92, 246, 0.12);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+            background: rgba(0, 245, 160, 0.12);
+            border: 1px solid rgba(0, 245, 160, 0.3);
+            box-shadow: 0 0 10px rgba(0, 245, 160, 0.1);
         }
 
         /* 多段式利率階梯表單 */
@@ -307,7 +307,7 @@
 
         .stage-row-title {
             font-size: 0.75rem;
-            color: #8b5cf6;
+            color: #00f5a0;
             letter-spacing: 1px;
             font-weight: 500;
             display: flex;
@@ -335,7 +335,7 @@
         /* 最後一段的標題 */
         .stage-last-title {
             font-size: 0.75rem;
-            color: rgba(139, 92, 246, 0.6);
+            color: rgba(0, 245, 160, 0.6);
             letter-spacing: 1px;
             font-style: italic;
         }
@@ -343,9 +343,9 @@
         /* 新增段落按鈕 */
         .add-stage-btn {
             width: 100%;
-            background: rgba(139, 92, 246, 0.06);
-            border: 1px dashed rgba(139, 92, 246, 0.3);
-            color: #8b5cf6;
+            background: rgba(0, 245, 160, 0.06);
+            border: 1px dashed rgba(0, 245, 160, 0.3);
+            color: #00f5a0;
             border-radius: 8px;
             padding: 0.5rem;
             font-size: 0.8rem;
@@ -355,7 +355,7 @@
             margin-top: 0.2rem;
         }
         .add-stage-btn:hover {
-            background: rgba(139, 92, 246, 0.12);
+            background: rgba(0, 245, 160, 0.12);
             border-style: solid;
         }
         .add-stage-btn:disabled {
@@ -391,8 +391,8 @@
             justify-content: center;
         }
         .stage-unit-selector .unit-btn.active {
-            background: rgba(139, 92, 246, 0.18);
-            color: #8b5cf6;
+            background: rgba(0, 245, 160, 0.18);
+            color: #00f5a0;
         }
 
         /* ====== 右側結果樣式 ====== */
@@ -427,7 +427,7 @@
         }
 
         .indicator-card:hover {
-            border-color: rgba(139, 92, 246, 0.25);
+            border-color: rgba(0, 245, 160, 0.25);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
@@ -464,7 +464,7 @@
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
-            padding: 1.5rem;
+            padding: 1.5rem 0;
             width: 100%;
             max-width: 100%;
             overflow-x: auto; /* 手機水平滾動 */
@@ -476,6 +476,7 @@
             letter-spacing: 2px;
             margin-bottom: 1.2rem;
             color: var(--text-primary);
+            padding: 0 1.5rem;
         }
 
         table {
@@ -489,6 +490,10 @@
             padding: 0.9rem 1rem;
             text-align: right;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        th:last-child, td:last-child {
+            padding-right: 1.5rem;
         }
 
         th {
@@ -507,6 +512,7 @@
             background-color: #0b0b0e; /* 實底色防重疊 */
             border-right: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.4);
+            padding-left: 1.5rem;
         }
 
         tr:hover td {
@@ -558,9 +564,9 @@
             display: inline-flex;
             align-items: center;
             gap: 0.45rem;
-            background: rgba(139, 92, 246, 0.06);
-            border: 1px solid rgba(139, 92, 246, 0.25);
-            color: rgba(139, 92, 246, 0.75);
+            background: rgba(0, 245, 160, 0.06);
+            border: 1px solid rgba(0, 245, 160, 0.25);
+            color: rgba(0, 245, 160, 0.75);
             padding: 0.45rem 1rem;
             border-radius: 8px;
             font-size: 0.8rem;
@@ -572,10 +578,10 @@
             overflow: hidden;
         }
         .share-btn:hover {
-            background: rgba(139, 92, 246, 0.12);
-            border-color: rgba(139, 92, 246, 0.6);
-            color: #8b5cf6;
-            box-shadow: 0 0 16px rgba(139, 92, 246, 0.15);
+            background: rgba(0, 245, 160, 0.12);
+            border-color: rgba(0, 245, 160, 0.6);
+            color: #00f5a0;
+            box-shadow: 0 0 16px rgba(0, 245, 160, 0.15);
         }
         .share-btn svg {
             width: 14px;
@@ -600,6 +606,48 @@
             line-height: 1.6;
             color: var(--text-secondary, #8892b0);
             text-align: center;
+        }
+
+        /* 組合貸款子卡片樣式 */
+        .sub-card {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .sub-card:hover {
+            border-color: rgba(0, 245, 160, 0.15);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .sub-card-title {
+            font-size: 0.95rem;
+            color: #00f5a0;
+            font-weight: 500;
+            margin-bottom: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 1px;
+        }
+        .loan-name-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+            color: #00f5a0;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: 500;
+            outline: none;
+            padding: 2px 4px;
+            width: 65%;
+            transition: all 0.3s ease;
+        }
+        .loan-name-input:focus {
+            border-bottom-color: #00f5a0;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom-style: solid;
         }
 
     </style>
@@ -658,72 +706,263 @@
                     </div>
                 </div>
 
-                <!-- 貸款期間 -->
+                <!-- 貸款模式切換 -->
                 <div class="input-group">
-                    <label for="input-period">貸款期間</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="input-period" value="30" min="1" placeholder="例如：30">
-                        <div class="unit-selector" id="period-unit-selector">
-                            <button class="unit-btn active" data-unit="year">年</button>
-                            <button class="unit-btn" data-unit="month">月</button>
+                    <label>貸款模式</label>
+                    <div class="toggle-buttons-container" id="loan-mode-selector">
+                        <button class="unit-btn active" data-unit="single">單一貸款</button>
+                        <button class="unit-btn" data-unit="combined">組合貸款 (自訂雙貸款)</button>
+                    </div>
+                </div>
+
+                <!-- 單一貸款設定 -->
+                <div id="single-loan-inputs">
+                    <!-- 貸款期間 -->
+                    <div class="input-group">
+                        <label for="input-period">貸款期間</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="input-period" value="30" min="1" placeholder="例如：30">
+                            <div class="unit-selector" id="period-unit-selector">
+                                <button class="unit-btn active" data-unit="year">年</button>
+                                <button class="unit-btn" data-unit="month">月</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 寬限期 -->
+                    <div class="input-group">
+                        <label for="input-grace-period">寬限期 (只付利息)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="input-grace-period" value="3" min="0" placeholder="例如：3">
+                            <div class="unit-selector" id="grace-unit-selector">
+                                <button class="unit-btn active" data-unit="year">年</button>
+                                <button class="unit-btn" data-unit="month">月</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 利率類型 -->
+                    <div class="input-group">
+                        <label>利率類型</label>
+                        <div class="toggle-buttons-container" id="rate-type-selector">
+                            <button class="unit-btn active" data-unit="single">單一利率</button>
+                            <button class="unit-btn" data-unit="multi">多段式利率</button>
+                        </div>
+                    </div>
+
+                    <!-- 單一利率輸入 -->
+                    <div class="input-group" id="single-rate-box">
+                        <label for="input-single-rate">年利率 (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="input-single-rate" value="2.1" min="0" step="0.01" placeholder="例如：2.1">
+                            <div class="unit-display">%</div>
+                        </div>
+                    </div>
+
+                    <!-- 多段式利率輸入 -->
+                    <div class="input-group" id="multi-rate-box" style="display: none;">
+                        <label>多段式利率設定</label>
+                        <div class="multi-stage-box" id="stage-list">
+                            <!-- 段落由 JS 動態生成 -->
+                        </div>
+                        <button class="add-stage-btn" id="add-stage-btn" onclick="addStage(); return false;">＋ 新增利率段落</button>
+                    </div>
+
+                    <!-- 還款方式 -->
+                    <div class="input-group">
+                        <label>還款方式</label>
+                        <div class="toggle-buttons-container" id="repay-type-selector">
+                            <button class="unit-btn active" data-unit="equal-total">本息均攤</button>
+                            <button class="unit-btn" data-unit="equal-principal">本金均攤</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 開辦費/手續費 -->
+                    <div class="input-group">
+                        <label for="input-fee">開辦費 / 信用查詢費等</label>
+                        <div class="input-wrapper">
+                            <input type="text" inputmode="numeric" id="input-fee" value="5,000" placeholder="例如：5,000">
+                            <div class="unit-display">元</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 寬限期 -->
-                <div class="input-group">
-                    <label for="input-grace-period">寬限期 (只付利息)</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="input-grace-period" value="3" min="0" placeholder="例如：3">
-                        <div class="unit-selector" id="grace-unit-selector">
-                            <button class="unit-btn active" data-unit="year">年</button>
-                            <button class="unit-btn" data-unit="month">月</button>
+                <!-- 組合貸款設定 -->
+                <div id="combined-loan-inputs" style="display: none;">
+                    <!-- 第一筆貸款卡片 -->
+                    <div class="sub-card">
+                        <div class="sub-card-title">
+                            <input type="text" id="input-loan-name-1" value="貸款 A" placeholder="貸款 A 名稱" class="loan-name-input">
+                            <span class="badge">第一筆</span>
+                        </div>
+                        
+                        <!-- 貸款金額 A -->
+                        <div class="input-group">
+                            <label for="input-loan-amount-1">貸款金額 (元)</label>
+                            <div class="input-wrapper" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+                                <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                                    <input type="text" inputmode="decimal" id="input-loan-amount-1" value="10,000,000" placeholder="例如：10,000,000" style="padding-right: 4.5rem; width: 100%;">
+                                    <div class="unit-display">元</div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 0.1rem;">
+                                    <button class="stage-remove-btn" style="background: rgba(0, 245, 160, 0.08); border-color: rgba(0, 245, 160, 0.2); color: rgba(0, 245, 160, 0.85); flex: 1; text-align: center; padding: 4px 0; font-size: 0.72rem; cursor: pointer;" onclick="setLoanAValue(10000000); return false;">設定 1,000 萬 (如新青安)</button>
+                                    <button class="stage-remove-btn" style="background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.08); color: var(--text-secondary); flex: 1; text-align: center; padding: 4px 0; font-size: 0.72rem; cursor: pointer;" onclick="setLoanAValue(null); return false;">全部分配給 A</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 貸款期間 A -->
+                        <div class="input-group">
+                            <label for="input-period-1">貸款期間</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="input-period-1" value="40" min="1" placeholder="例如：40">
+                                <div class="unit-selector" id="period-unit-selector-1">
+                                    <button class="unit-btn active" data-unit="year">年</button>
+                                    <button class="unit-btn" data-unit="month">月</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 寬限期 A -->
+                        <div class="input-group">
+                            <label for="input-grace-period-1">寬限期 (只付利息)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="input-grace-period-1" value="5" min="0" placeholder="例如：5">
+                                <div class="unit-selector" id="grace-unit-selector-1">
+                                    <button class="unit-btn active" data-unit="year">年</button>
+                                    <button class="unit-btn" data-unit="month">月</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 還款方式 A -->
+                        <div class="input-group">
+                            <label>還款方式</label>
+                            <div class="toggle-buttons-container" id="repay-type-selector-1">
+                                <button class="unit-btn active" data-unit="equal-total">本息均攤</button>
+                                <button class="unit-btn" data-unit="equal-principal">本金均攤</button>
+                            </div>
+                        </div>
+
+                        <!-- 利率類型 A -->
+                        <div class="input-group">
+                            <label>利率類型</label>
+                            <div class="toggle-buttons-container" id="rate-type-selector-1">
+                                <button class="unit-btn active" data-unit="single">單一利率</button>
+                                <button class="unit-btn" data-unit="multi">多段式利率</button>
+                            </div>
+                        </div>
+
+                        <!-- 單一利率 A -->
+                        <div class="input-group" id="single-rate-box-1">
+                            <label for="input-single-rate-1">年利率 (%)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="input-single-rate-1" value="1.775" min="0" step="0.001" placeholder="例如：1.775">
+                                <div class="unit-display">%</div>
+                            </div>
+                        </div>
+
+                        <!-- 多段式利率 A -->
+                        <div class="input-group" id="multi-rate-box-1" style="display: none;">
+                            <label>多段式利率設定</label>
+                            <div class="multi-stage-box" id="stage-list-1">
+                                <!-- 由 JS 動態生成 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 開辦費 A -->
+                        <div class="input-group">
+                            <label for="input-fee-1">開辦費 / 手續費 (元)</label>
+                            <div class="input-wrapper">
+                                <input type="text" inputmode="numeric" id="input-fee-1" value="3,000" placeholder="例如：3,000">
+                                <div class="unit-display">元</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 利率類型 -->
-                <div class="input-group">
-                    <label>利率類型</label>
-                    <div class="toggle-buttons-container" id="rate-type-selector">
-                        <button class="unit-btn active" data-unit="single">單一利率</button>
-                        <button class="unit-btn" data-unit="multi">多段式利率</button>
-                    </div>
-                </div>
+                    <!-- 第二筆貸款卡片 -->
+                    <div class="sub-card">
+                        <div class="sub-card-title">
+                            <input type="text" id="input-loan-name-2" value="貸款 B" placeholder="貸款 B 名稱" class="loan-name-input" style="color: #ffb800; border-bottom-color: rgba(255, 184, 0, 0.25);">
+                            <span class="badge" style="background: rgba(255, 184, 0, 0.1); border-color: rgba(255, 184, 0, 0.25); color: #ffb800;">第二筆</span>
+                        </div>
 
-                <!-- 單一利率輸入 -->
-                <div class="input-group" id="single-rate-box">
-                    <label for="input-single-rate">年利率 (%)</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="input-single-rate" value="2.1" min="0" step="0.01" placeholder="例如：2.1">
-                        <div class="unit-display">%</div>
-                    </div>
-                </div>
+                        <!-- 貸款金額 B -->
+                        <div class="input-group">
+                            <label for="input-loan-amount-2">貸款金額 (元)</label>
+                            <div class="input-wrapper">
+                                <input type="text" inputmode="decimal" id="input-loan-amount-2" value="2,000,000" placeholder="例如：2,000,000">
+                                <div class="unit-display">元</div>
+                            </div>
+                        </div>
 
-                <!-- 多段式利率輸入 -->
-                <div class="input-group" id="multi-rate-box" style="display: none;">
-                    <label>多段式利率設定</label>
-                    <div class="multi-stage-box" id="stage-list">
-                        <!-- 段落由 JS 動態生成 -->
-                    </div>
-                    <button class="add-stage-btn" id="add-stage-btn" onclick="addStage()">＋ 新增利率段落</button>
-                </div>
+                        <!-- 貸款期間 B -->
+                        <div class="input-group">
+                            <label for="input-period-2">貸款期間</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="input-period-2" value="30" min="1" placeholder="例如：30">
+                                <div class="unit-selector" id="period-unit-selector-2">
+                                    <button class="unit-btn active" data-unit="year">年</button>
+                                    <button class="unit-btn" data-unit="month">月</button>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- 開辦費/手續費 -->
-                <div class="input-group">
-                    <label for="input-fee">開辦費 / 信用查詢費等</label>
-                    <div class="input-wrapper">
-                        <input type="text" inputmode="numeric" id="input-fee" value="5,000" placeholder="例如：5,000">
-                        <div class="unit-display">元</div>
-                    </div>
-                </div>
+                        <!-- 寬限期 B -->
+                        <div class="input-group">
+                            <label for="input-grace-period-2">寬限期 (只付利息)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="input-grace-period-2" value="3" min="0" placeholder="例如：3">
+                                <div class="unit-selector" id="grace-unit-selector-2">
+                                    <button class="unit-btn active" data-unit="year">年</button>
+                                    <button class="unit-btn" data-unit="month">月</button>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- 還款方式 -->
-                <div class="input-group">
-                    <label>還款方式</label>
-                    <div class="toggle-buttons-container" id="repay-type-selector">
-                        <button class="unit-btn active" data-unit="equal-total">本息均攤</button>
-                        <button class="unit-btn" data-unit="equal-principal">本金均攤</button>
+                        <!-- 還款方式 B -->
+                        <div class="input-group">
+                            <label>還款方式</label>
+                            <div class="toggle-buttons-container" id="repay-type-selector-2">
+                                <button class="unit-btn active" data-unit="equal-total">本息均攤</button>
+                                <button class="unit-btn" data-unit="equal-principal">本金均攤</button>
+                            </div>
+                        </div>
+
+                        <!-- 利率類型 B -->
+                        <div class="input-group">
+                            <label>利率類型</label>
+                            <div class="toggle-buttons-container" id="rate-type-selector-2">
+                                <button class="unit-btn active" data-unit="single">單一利率</button>
+                                <button class="unit-btn" data-unit="multi">多段式利率</button>
+                            </div>
+                        </div>
+
+                        <!-- 單一利率 B -->
+                        <div class="input-group" id="single-rate-box-2">
+                            <label for="input-single-rate-2">年利率 (%)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="input-single-rate-2" value="2.185" min="0" step="0.001" placeholder="例如：2.185">
+                                <div class="unit-display">%</div>
+                            </div>
+                        </div>
+
+                        <!-- 多段式利率 B -->
+                        <div class="input-group" id="multi-rate-box-2" style="display: none;">
+                            <label>多段式利率設定</label>
+                            <div class="multi-stage-box" id="stage-list-2">
+                                <!-- 由 JS 動態生成 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 開辦費 B -->
+                        <div class="input-group">
+                            <label for="input-fee-2">開辦費 / 手續費 (元)</label>
+                            <div class="input-wrapper">
+                                <input type="text" inputmode="numeric" id="input-fee-2" value="3,000" placeholder="例如：3,000">
+                                <div class="unit-display">元</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -747,7 +986,7 @@
                     </div>
                     <div class="indicator-card">
                         <h4>實質年利率 (APR)</h4>
-                        <div class="value" style="color: #8b5cf6;" id="val-apr">0 %</div>
+                        <div class="value" style="color: #00f5a0;" id="val-apr">0 %</div>
                     </div>
                     <div class="indicator-card">
                         <h4>總利息支出</h4>
@@ -811,6 +1050,18 @@
         let graceUnit = 'year';        // 'year' or 'month'
         let rateType = 'single';       // 'single' or 'multi'
         let repayType = 'equal-total'; // 'equal-total' or 'equal-principal'
+        let loanMode = 'single';       // 'single' or 'combined'
+
+        // 貸款 1 (A) 與 貸款 2 (B) 的設定值
+        let periodUnit1 = 'year';
+        let graceUnit1 = 'year';
+        let rateType1 = 'single';
+        let repayType1 = 'equal-total';
+
+        let periodUnit2 = 'year';
+        let graceUnit2 = 'year';
+        let rateType2 = 'single';
+        let repayType2 = 'equal-total';
 
         setupSelector('period-unit-selector', (unit) => { periodUnit = unit; calculateLoan(); });
         setupSelector('grace-unit-selector', (unit) => { graceUnit = unit; calculateLoan(); });
@@ -831,6 +1082,71 @@
 
         setupSelector('repay-type-selector', (type) => { repayType = type; calculateLoan(); });
 
+        // 貸款模式切換
+        setupSelector('loan-mode-selector', (mode) => {
+            loanMode = mode;
+            const singleSection = document.getElementById('single-loan-inputs');
+            const combinedSection = document.getElementById('combined-loan-inputs');
+            if (mode === 'single') {
+                singleSection.style.display = 'block';
+                combinedSection.style.display = 'none';
+            } else {
+                singleSection.style.display = 'none';
+                combinedSection.style.display = 'block';
+                // 切換時做一次金額重新分配
+                const loanInput = document.getElementById('input-loan-amount');
+                const loanInput1 = document.getElementById('input-loan-amount-1');
+                const loanInput2 = document.getElementById('input-loan-amount-2');
+                const loanTotal = parseNumberFromCommas(loanInput.value);
+                const currentA = parseNumberFromCommas(loanInput1.value);
+                const currentB = parseNumberFromCommas(loanInput2.value);
+                // 如果兩者和不等於總額，則重新智慧分配
+                if (currentA + currentB !== loanTotal) {
+                    const newLoanA = Math.min(loanTotal, 10000000);
+                    const newLoanB = Math.max(0, loanTotal - newLoanA);
+                    loanInput1.value = formatNumberWithCommas(newLoanA);
+                    loanInput2.value = formatNumberWithCommas(newLoanB);
+                }
+            }
+            calculateLoan();
+        });
+
+        // 貸款 A 設定
+        setupSelector('period-unit-selector-1', (unit) => { periodUnit1 = unit; calculateLoan(); });
+        setupSelector('grace-unit-selector-1', (unit) => { graceUnit1 = unit; calculateLoan(); });
+        setupSelector('repay-type-selector-1', (type) => { repayType1 = type; calculateLoan(); });
+        setupSelector('rate-type-selector-1', (type) => {
+            rateType1 = type;
+            const singleBox = document.getElementById('single-rate-box-1');
+            const multiBox = document.getElementById('multi-rate-box-1');
+            if (type === 'single') {
+                singleBox.style.display = 'block';
+                multiBox.style.display = 'none';
+            } else {
+                singleBox.style.display = 'none';
+                multiBox.style.display = 'block';
+            }
+            calculateLoan();
+        });
+
+        // 貸款 B 設定
+        setupSelector('period-unit-selector-2', (unit) => { periodUnit2 = unit; calculateLoan(); });
+        setupSelector('grace-unit-selector-2', (unit) => { graceUnit2 = unit; calculateLoan(); });
+        setupSelector('repay-type-selector-2', (type) => { repayType2 = type; calculateLoan(); });
+        setupSelector('rate-type-selector-2', (type) => {
+            rateType2 = type;
+            const singleBox = document.getElementById('single-rate-box-2');
+            const multiBox = document.getElementById('multi-rate-box-2');
+            if (type === 'single') {
+                singleBox.style.display = 'block';
+                multiBox.style.display = 'none';
+            } else {
+                singleBox.style.display = 'none';
+                multiBox.style.display = 'block';
+            }
+            calculateLoan();
+        });
+
         // ==========================================
         // 動態多段式利率管理
         // ==========================================
@@ -840,10 +1156,22 @@
             { durationValue: 1, durationUnit: 'year', rate: 2.1 },
             { durationValue: null, durationUnit: null, rate: 2.2 } // 最後剩餘段
         ];
+
+        let stages1 = [
+            { durationValue: 3, durationUnit: 'year', rate: 1.775 },
+            { durationValue: null, durationUnit: null, rate: 2.275 }
+        ];
+
+        let stages2 = [
+            { durationValue: 3, durationUnit: 'year', rate: 2.185 },
+            { durationValue: null, durationUnit: null, rate: 2.275 }
+        ];
+
         const MAX_STAGES = 6;
 
         function renderStages() {
             const list = document.getElementById('stage-list');
+            if (!list) return;
             list.innerHTML = '';
             stages.forEach((stage, idx) => {
                 const isLast = (idx === stages.length - 1);
@@ -860,14 +1188,13 @@
                     const removeBtn = document.createElement('button');
                     removeBtn.className = 'stage-remove-btn';
                     removeBtn.textContent = '移除';
-                    removeBtn.onclick = () => removeStage(idx);
+                    removeBtn.onclick = (e) => { e.preventDefault(); removeStage(idx); };
                     titleRow.appendChild(removeBtn);
                 } else if (isLast && stages.length > 2) {
-                    // 最後一段也可以移除（只要總段數 > 2）
                     const removeBtn = document.createElement('button');
                     removeBtn.className = 'stage-remove-btn';
                     removeBtn.textContent = '移除此段';
-                    removeBtn.onclick = () => removeStage(idx);
+                    removeBtn.onclick = (e) => { e.preventDefault(); removeStage(idx); };
                     titleRow.appendChild(removeBtn);
                 }
                 el.appendChild(titleRow);
@@ -936,12 +1263,12 @@
             });
 
             // 控制新增按鈕 disabled 狀態
-            document.getElementById('add-stage-btn').disabled = stages.length >= MAX_STAGES;
+            const addBtn = document.getElementById('add-stage-btn');
+            if (addBtn) addBtn.disabled = stages.length >= MAX_STAGES;
         }
 
         function addStage() {
             if (stages.length >= MAX_STAGES) return;
-            // 在最後一段之前插入一個新的中間段
             const lastStage = stages[stages.length - 1];
             const newStage = { durationValue: 1, durationUnit: 'year', rate: lastStage.rate };
             stages.splice(stages.length - 1, 0, newStage);
@@ -950,10 +1277,132 @@
         }
 
         function removeStage(idx) {
-            if (stages.length <= 2) return; // 最少保留 2 段
+            if (stages.length <= 2) return;
             stages.splice(idx, 1);
             renderStages();
             calculateLoan();
+        }
+
+        // 組合多段利率渲染
+        function renderStagesGeneric(stageList, listContainerId, addBtnId, idx) {
+            const list = document.getElementById(listContainerId);
+            if (!list) return;
+            list.innerHTML = '';
+            stageList.forEach((stage, sIdx) => {
+                const isLast = (sIdx === stageList.length - 1);
+                const label = `第 ${sIdx + 1} 段`;
+                const el = document.createElement('div');
+                el.className = 'stage-block';
+                el.style.cssText = 'display:flex;flex-direction:column;gap:0.5rem;padding-bottom:0.6rem;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:0.2rem;';
+
+                // 標題行
+                const titleRow = document.createElement('div');
+                titleRow.className = 'stage-row-title';
+                titleRow.innerHTML = `<span>${isLast ? label + '（剩餘期數）' : label}</span>`;
+                if (sIdx > 0 && !isLast) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'stage-remove-btn';
+                    removeBtn.textContent = '移除';
+                    removeBtn.onclick = (e) => { e.preventDefault(); removeStageCombo(idx, sIdx); };
+                    titleRow.appendChild(removeBtn);
+                } else if (isLast && stageList.length > 2) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'stage-remove-btn';
+                    removeBtn.textContent = '移除此段';
+                    removeBtn.onclick = (e) => { e.preventDefault(); removeStageCombo(idx, sIdx); };
+                    titleRow.appendChild(removeBtn);
+                }
+                el.appendChild(titleRow);
+
+                const inputRow = document.createElement('div');
+                inputRow.className = 'stage-row';
+
+                if (!isLast) {
+                    // 期間輸入
+                    const durationWrapper = document.createElement('div');
+                    durationWrapper.className = 'input-wrapper';
+                    const durationInput = document.createElement('input');
+                    durationInput.type = 'number';
+                    durationInput.min = '1';
+                    durationInput.value = stage.durationValue || 1;
+                    durationInput.placeholder = '期間';
+                    durationInput.style.paddingRight = '4.8rem';
+                    durationInput.oninput = (e) => {
+                        stageList[sIdx].durationValue = parseFloat(e.target.value) || 0;
+                        calculateLoan();
+                    };
+                    const unitSel = document.createElement('div');
+                    unitSel.className = 'stage-unit-selector';
+                    ['year','month'].forEach(u => {
+                        const btn = document.createElement('button');
+                        btn.className = 'unit-btn' + (stage.durationUnit === u ? ' active' : '');
+                        btn.textContent = u === 'year' ? '年' : '月';
+                        btn.onclick = (e) => {
+                            e.preventDefault();
+                            createBurst(e.clientX, e.clientY);
+                            stageList[sIdx].durationUnit = u;
+                            unitSel.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            calculateLoan();
+                        };
+                        unitSel.appendChild(btn);
+                    });
+                    durationWrapper.appendChild(durationInput);
+                    durationWrapper.appendChild(unitSel);
+                    inputRow.appendChild(durationWrapper);
+                }
+
+                // 利率輸入
+                const rateWrapper = document.createElement('div');
+                rateWrapper.className = 'input-wrapper';
+                if (isLast) rateWrapper.style.gridColumn = 'span 2';
+                const rateInput = document.createElement('input');
+                rateInput.type = 'number';
+                rateInput.min = '0';
+                rateInput.step = '0.01';
+                rateInput.value = stage.rate || 0;
+                rateInput.placeholder = '年利率 %';
+                rateInput.oninput = (e) => {
+                    stageList[sIdx].rate = parseFloat(e.target.value) || 0;
+                    calculateLoan();
+                };
+                const rateDisplay = document.createElement('div');
+                rateDisplay.className = 'unit-display';
+                rateDisplay.textContent = '%';
+                rateWrapper.appendChild(rateInput);
+                rateWrapper.appendChild(rateDisplay);
+                inputRow.appendChild(rateWrapper);
+
+                el.appendChild(inputRow);
+                list.appendChild(el);
+            });
+
+            const addBtn = document.getElementById(addBtnId);
+            if (addBtn) addBtn.disabled = stageList.length >= MAX_STAGES;
+        }
+
+        function addStageCombo(idx) {
+            let stageList = idx === 1 ? stages1 : stages2;
+            if (stageList.length >= MAX_STAGES) return;
+            const lastStage = stageList[stageList.length - 1];
+            const newStage = { durationValue: 1, durationUnit: 'year', rate: lastStage.rate };
+            stageList.splice(stageList.length - 1, 0, newStage);
+            renderStagesAll();
+            calculateLoan();
+        }
+
+        function removeStageCombo(idx, sIdx) {
+            let stageList = idx === 1 ? stages1 : stages2;
+            if (stageList.length <= 2) return;
+            stageList.splice(sIdx, 1);
+            renderStagesAll();
+            calculateLoan();
+        }
+
+        function renderStagesAll() {
+            renderStages();
+            renderStagesGeneric(stages1, 'stage-list-1', 'add-stage-btn-1', 1);
+            renderStagesGeneric(stages2, 'stage-list-2', 'add-stage-btn-2', 2);
         }
 
         // ==========================================
@@ -1048,30 +1497,25 @@
             const badge = document.getElementById('loan-ratio-badge');
 
             if (changedInputId === 'input-total-price') {
-                // 修改總價 -> 自備款、貸款金額連動 (成數保持不變)
                 const newDown = Math.round(totalVal * (percentVal / 100));
                 const newLoan = totalVal - newDown;
                 downInput.value = formatNumberWithCommas(newDown);
                 loanInput.value = formatNumberWithCommas(newLoan);
             } 
             else if (changedInputId === 'input-down-payment-percent') {
-                // 修改成數 -> 自備款、貸款金額連動 (總價不變)
                 const newDown = Math.round(totalVal * (percentVal / 100));
                 const newLoan = totalVal - newDown;
                 downInput.value = formatNumberWithCommas(newDown);
                 loanInput.value = formatNumberWithCommas(newLoan);
             } 
             else if (changedInputId === 'input-down-payment-amount') {
-                // 修改自備款 -> 成數、貸款金額連動 (總價不變)
                 let newPercent = totalVal > 0 ? (downVal / totalVal) * 100 : 0;
-                // 取小數點後兩位
                 newPercent = Math.round(newPercent * 100) / 100;
                 percentInput.value = newPercent;
                 const newLoan = Math.max(0, totalVal - downVal);
                 loanInput.value = formatNumberWithCommas(newLoan);
             } 
             else if (changedInputId === 'input-loan-amount') {
-                // 修改貸款金額 -> 自備款、成數連動 (總價不變)
                 const newDown = Math.max(0, totalVal - loanVal);
                 let newPercent = totalVal > 0 ? (newDown / totalVal) * 100 : 0;
                 newPercent = Math.round(newPercent * 100) / 100;
@@ -1079,14 +1523,63 @@
                 percentInput.value = newPercent;
             }
 
-            // 更新成數 Badge
             const currentTotal = parseNumberFromCommas(totalInput.value);
             const currentLoan = parseNumberFromCommas(loanInput.value);
             const ratio = currentTotal > 0 ? Math.round((currentLoan / currentTotal) * 100) : 0;
             badge.textContent = ratio + '%';
 
+            // 組合模式金額智慧同步
+            if (loanMode === 'combined') {
+                const newLoanA = Math.min(currentLoan, 10000000);
+                const newLoanB = Math.max(0, currentLoan - newLoanA);
+                document.getElementById('input-loan-amount-1').value = formatNumberWithCommas(newLoanA);
+                document.getElementById('input-loan-amount-2').value = formatNumberWithCommas(newLoanB);
+            }
+
             isSyncing = false;
             calculateLoan();
+        }
+
+        function syncCombinedAmounts(changedInputId) {
+            if (isSyncing) return;
+            isSyncing = true;
+
+            const loanTotal = parseNumberFromCommas(document.getElementById('input-loan-amount').value);
+            const loanInput1 = document.getElementById('input-loan-amount-1');
+            const loanInput2 = document.getElementById('input-loan-amount-2');
+
+            let loanA = parseNumberFromCommas(loanInput1.value);
+            let loanB = parseNumberFromCommas(loanInput2.value);
+
+            if (changedInputId === 'input-loan-amount-1') {
+                loanA = Math.min(loanA, loanTotal);
+                loanB = Math.max(0, loanTotal - loanA);
+                loanInput1.value = formatNumberWithCommas(loanA);
+                loanInput2.value = formatNumberWithCommas(loanB);
+            } else if (changedInputId === 'input-loan-amount-2') {
+                loanB = Math.min(loanB, loanTotal);
+                loanA = Math.max(0, loanTotal - loanB);
+                loanInput1.value = formatNumberWithCommas(loanA);
+                loanInput2.value = formatNumberWithCommas(loanB);
+            }
+
+            isSyncing = false;
+            calculateLoan();
+        }
+
+        function setLoanAValue(val) {
+            const loanTotal = parseNumberFromCommas(document.getElementById('input-loan-amount').value);
+            const loanInput1 = document.getElementById('input-loan-amount-1');
+            const loanInput2 = document.getElementById('input-loan-amount-2');
+
+            let loanA = val !== null ? Math.min(val, loanTotal) : loanTotal;
+            let loanB = Math.max(0, loanTotal - loanA);
+
+            loanInput1.value = formatNumberWithCommas(loanA);
+            loanInput2.value = formatNumberWithCommas(loanB);
+            
+            calculateLoan();
+            syncToURL();
         }
 
         // ==========================================
@@ -1121,37 +1614,18 @@
             return mid * 12 * 100; // APR
         }
 
-        function calculateLoan() {
-            // 讀取輸入值
-            const loanAmount = parseNumberFromCommas(document.getElementById('input-loan-amount').value);
-            const periodVal = parseFloat(document.getElementById('input-period').value) || 0;
-            const graceVal = parseFloat(document.getElementById('input-grace-period').value) || 0;
-            const fee = parseNumberFromCommas(document.getElementById('input-fee').value);
-
-            // 1. 計算期數
+        function calculateSingleLoanDetail(loanAmount, periodVal, periodUnit, graceVal, graceUnit, rateType, singleRate, stageList, repayType) {
             const totalMonths = Math.max(0, periodUnit === 'year' ? Math.round(periodVal * 12) : Math.round(periodVal));
             let graceMonths = Math.max(0, graceUnit === 'year' ? Math.round(graceVal * 12) : Math.round(graceVal));
-            
-            // 限制寬限期不超過總貸款期間
-            if (graceMonths > totalMonths) {
-                graceMonths = totalMonths;
-            }
+            if (graceMonths > totalMonths) graceMonths = totalMonths;
 
-            // 2. 確定多段式或單一利率
-            let stageRates = []; // 每期對應的年利率陣列
-
+            let stageRates = [];
             if (rateType === 'single') {
-                const r = parseFloat(document.getElementById('input-single-rate').value) || 0;
-                for (let k = 0; k < totalMonths; k++) stageRates.push(r);
+                for (let k = 0; k < totalMonths; k++) stageRates.push(singleRate);
             } else {
-                // 多段式：動態讀取 stages 陣列
-                // 建立一個依時間區間的利率序列
-                // stageRates[m-1] = 第 m 期的年利率（百分比）
-                // 最後一段為剩餘期數
-                stageRates = [];
                 let consumed = 0;
-                for (let si = 0; si < stages.length - 1; si++) {
-                    const s = stages[si];
+                for (let si = 0; si < stageList.length - 1; si++) {
+                    const s = stageList[si];
                     const sMonths = s.durationUnit === 'year'
                         ? Math.round((s.durationValue || 0) * 12)
                         : Math.round(s.durationValue || 0);
@@ -1160,19 +1634,15 @@
                     }
                     consumed += sMonths;
                 }
-                // 最後一段填滿剩餘期數
-                const lastRate = stages[stages.length - 1].rate || 0;
+                const lastRate = stageList[stageList.length - 1].rate || 0;
                 for (let k = consumed; k < totalMonths; k++) {
                     stageRates.push(lastRate);
                 }
             }
 
             const resultData = [];
-            const paymentArray = []; // 用於 APR 計算，存放實質月付金
+            const paymentArray = [];
             let totalInterest = 0;
-            let firstPayment = 0;
-            
-
 
             // 期數 0 初始狀態
             resultData.push({
@@ -1184,20 +1654,14 @@
                 endBalance: loanAmount
             });
 
-            let principalPerMonth = 0;
-
             if (totalMonths > 0 && loanAmount > 0) {
                 let remainingBalance = loanAmount;
-                const graceBal = loanAmount; // 寬限期期末餘額，也是後續還本基數
-                
-                // 本金平均攤還的每期本金 (寬限期後)
+                const graceBal = loanAmount;
                 const repayMonths = totalMonths - graceMonths;
-                principalPerMonth = repayMonths > 0 ? (graceBal / repayMonths) : 0;
+                const principalPerMonth = repayMonths > 0 ? (graceBal / repayMonths) : 0;
 
                 for (let m = 1; m <= totalMonths; m++) {
                     const startBal = remainingBalance;
-                    
-                    // 當期月利率（從 stageRates 陣列讀取，索引從 0 開始）
                     const currentAnnualRate = (stageRates[m - 1] !== undefined ? stageRates[m - 1] : 0);
                     const r_m = (currentAnnualRate / 100) / 12;
 
@@ -1205,19 +1669,14 @@
                     let interestPaid = 0;
                     let totalPayment = 0;
 
-                    // 判斷是否在寬限期內
                     if (m <= graceMonths) {
-                        // 寬限期：只付利息
                         interestPaid = startBal * r_m;
                         principalPaid = 0;
                         totalPayment = interestPaid;
                         remainingBalance = startBal;
                     } else {
-                        // 寬限期外：開始還本金
-                        const activeRepayMonthsLeft = totalMonths - m + 1; // 剩餘還款期數
-                        
+                        const activeRepayMonthsLeft = totalMonths - m + 1;
                         if (repayType === 'equal-total') {
-                            // 本息均攤：當期本息月付金 (隨當期剩餘本金、利率、剩餘期數動態調整，完美相容多段利率與寬限)
                             if (r_m === 0) {
                                 totalPayment = startBal / activeRepayMonthsLeft;
                             } else {
@@ -1227,7 +1686,6 @@
                             principalPaid = totalPayment - interestPaid;
                             remainingBalance = startBal - principalPaid;
                         } else {
-                            // 本金均攤
                             principalPaid = principalPerMonth;
                             interestPaid = startBal * r_m;
                             totalPayment = principalPaid + interestPaid;
@@ -1235,7 +1693,6 @@
                         }
                     }
 
-                    // 微調最後一期防浮點數誤差
                     if (m === totalMonths) {
                         remainingBalance = 0;
                         principalPaid = startBal;
@@ -1244,10 +1701,6 @@
 
                     totalInterest += interestPaid;
                     paymentArray.push(totalPayment);
-
-                    if (m === 1) {
-                        firstPayment = totalPayment;
-                    }
 
                     resultData.push({
                         period: m,
@@ -1260,58 +1713,194 @@
                 }
             }
 
-            // 3. 計算與呈現結果
+            return {
+                totalMonths: totalMonths,
+                graceMonths: graceMonths,
+                totalInterest: totalInterest,
+                paymentArray: paymentArray,
+                resultData: resultData
+            };
+        }
+
+        function calculateLoan() {
+            if (loanMode === 'single') {
+                const loanAmount = parseNumberFromCommas(document.getElementById('input-loan-amount').value);
+                const periodVal = parseFloat(document.getElementById('input-period').value) || 0;
+                const graceVal = parseFloat(document.getElementById('input-grace-period').value) || 0;
+                const fee = parseNumberFromCommas(document.getElementById('input-fee').value);
+                const singleRate = parseFloat(document.getElementById('input-single-rate').value) || 0;
+
+                const detail = calculateSingleLoanDetail(
+                    loanAmount, periodVal, periodUnit, graceVal, graceUnit, rateType, singleRate, stages, repayType
+                );
+
+                renderResults(loanAmount, fee, detail.totalMonths, detail.graceMonths, detail.totalInterest, detail.paymentArray, detail.resultData);
+            } else {
+                const totalAmount = parseNumberFromCommas(document.getElementById('input-loan-amount').value);
+                
+                // 貸款 A
+                const loanAmount1 = parseNumberFromCommas(document.getElementById('input-loan-amount-1').value);
+                const periodVal1 = parseFloat(document.getElementById('input-period-1').value) || 0;
+                const graceVal1 = parseFloat(document.getElementById('input-grace-period-1').value) || 0;
+                const singleRate1 = parseFloat(document.getElementById('input-single-rate-1').value) || 0;
+                const fee1 = parseNumberFromCommas(document.getElementById('input-fee-1').value);
+
+                // 貸款 B
+                const loanAmount2 = parseNumberFromCommas(document.getElementById('input-loan-amount-2').value);
+                const periodVal2 = parseFloat(document.getElementById('input-period-2').value) || 0;
+                const graceVal2 = parseFloat(document.getElementById('input-grace-period-2').value) || 0;
+                const singleRate2 = parseFloat(document.getElementById('input-single-rate-2').value) || 0;
+                const fee2 = parseNumberFromCommas(document.getElementById('input-fee-2').value);
+
+                const detail1 = calculateSingleLoanDetail(
+                    loanAmount1, periodVal1, periodUnit1, graceVal1, graceUnit1, rateType1, singleRate1, stages1, repayType1
+                );
+                const detail2 = calculateSingleLoanDetail(
+                    loanAmount2, periodVal2, periodUnit2, graceVal2, graceUnit2, rateType2, singleRate2, stages2, repayType2
+                );
+
+                const maxMonths = Math.max(detail1.totalMonths, detail2.totalMonths);
+                const combinedResultData = [];
+                const combinedPaymentArray = [];
+                let combinedTotalInterest = 0;
+
+                // 第 0 期
+                combinedResultData.push({
+                    period: 0,
+                    startBalance: 0,
+                    principalPaid: 0,
+                    interestPaid: 0,
+                    totalPayment: 0,
+                    endBalance: loanAmount1 + loanAmount2,
+                    detail1: detail1.resultData[0],
+                    detail2: detail2.resultData[0]
+                });
+
+                for (let m = 1; m <= maxMonths; m++) {
+                    const item1 = detail1.resultData[m] || {
+                        period: m, startBalance: 0, principalPaid: 0, interestPaid: 0, totalPayment: 0, endBalance: 0
+                    };
+                    const item2 = detail2.resultData[m] || {
+                        period: m, startBalance: 0, principalPaid: 0, interestPaid: 0, totalPayment: 0, endBalance: 0
+                    };
+
+                    const totalPayment = item1.totalPayment + item2.totalPayment;
+                    const interestPaid = item1.interestPaid + item2.interestPaid;
+
+                    combinedTotalInterest += interestPaid;
+                    combinedPaymentArray.push(totalPayment);
+
+                    combinedResultData.push({
+                        period: m,
+                        startBalance: item1.startBalance + item2.startBalance,
+                        principalPaid: item1.principalPaid + item2.principalPaid,
+                        interestPaid: interestPaid,
+                        totalPayment: totalPayment,
+                        endBalance: item1.endBalance + item2.endBalance,
+                        detail1: item1,
+                        detail2: item2
+                    });
+                }
+
+                const inGrace = (detail1.resultData[1] && detail1.resultData[1].principalPaid === 0 && loanAmount1 > 0) ||
+                                (detail2.resultData[1] && detail2.resultData[1].principalPaid === 0 && loanAmount2 > 0);
+
+                renderResults(totalAmount, fee1 + fee2, maxMonths, inGrace ? 1 : 0, combinedTotalInterest, combinedPaymentArray, combinedResultData, true);
+            }
+        }
+
+        function renderResults(loanAmount, fee, totalMonths, graceMonths, totalInterest, paymentArray, resultData, isCombined = false) {
             const totalRepay = loanAmount + totalInterest;
 
-            // 實質年利率 APR
+            let name1 = '貸款 A';
+            let name2 = '貸款 B';
+            if (isCombined) {
+                const el1 = document.getElementById('input-loan-name-1');
+                const el2 = document.getElementById('input-loan-name-2');
+                if (el1 && el1.value.trim()) name1 = el1.value.trim();
+                if (el2 && el2.value.trim()) name2 = el2.value.trim();
+            }
+
             let apr = 0;
             if (loanAmount > 0 && totalMonths > 0) {
                 apr = calculateAPR(loanAmount, fee, paymentArray);
             }
             document.getElementById('val-apr').textContent = apr.toFixed(2) + ' %';
 
-            // 看板數值
+            const firstPayment = paymentArray[0] || 0;
             document.getElementById('val-monthly').textContent = Math.round(firstPayment).toLocaleString('zh-TW') + ' 元';
             document.getElementById('val-interest').textContent = Math.round(totalInterest).toLocaleString('zh-TW') + ' 元';
             document.getElementById('val-total').textContent = Math.round(totalRepay).toLocaleString('zh-TW') + ' 元';
 
-            // 修改看板月付金標題 (是否包含寬限)
             const monthlyTitle = document.getElementById('monthly-payment-title');
-            if (graceMonths > 0) {
-                monthlyTitle.innerHTML = `首期每月還款額 <span class="badge" style="margin-left: 0; background: rgba(139,92,246,0.15)">寬限期內</span>`;
+            if (isCombined) {
+                if (graceMonths > 0) {
+                    monthlyTitle.innerHTML = `首期每月還款額 <span class="badge" style="margin-left: 0; background: rgba(0,245,160,0.15)">含寬限期</span>`;
+                } else {
+                    monthlyTitle.textContent = '首期每月還款額';
+                }
             } else {
-                monthlyTitle.textContent = '首期每月還款額';
+                if (graceMonths > 0) {
+                    monthlyTitle.innerHTML = `首期每月還款額 <span class="badge" style="margin-left: 0; background: rgba(0,245,160,0.15)">寬限期內</span>`;
+                } else {
+                    monthlyTitle.textContent = '首期每月還款額';
+                }
             }
 
-
-            // 5. 渲染明細表格
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
             resultData.forEach(item => {
                 const tr = document.createElement('tr');
                 const isInitial = item.period === 0;
-                tr.innerHTML = `
-                    <td style="text-align: left; color: var(--text-secondary);">${isInitial ? '初始' : '第 ' + item.period + ' 期'}</td>
-                    <td>${isInitial ? '-' : Math.round(item.startBalance).toLocaleString('zh-TW')} 元</td>
-                    <td>${isInitial ? '-' : Math.round(item.principalPaid).toLocaleString('zh-TW')} 元</td>
-                    <td>${isInitial ? '-' : Math.round(item.interestPaid).toLocaleString('zh-TW')} 元</td>
-                    <td>${isInitial ? '-' : Math.round(item.totalPayment).toLocaleString('zh-TW')} 元</td>
-                    <td style="color: #8b5cf6; font-weight: 500;">${Math.round(item.endBalance).toLocaleString('zh-TW')} 元</td>
-                `;
+
+                if (isInitial) {
+                    tr.innerHTML = `
+                        <td style="text-align: left; color: var(--text-secondary);">初始</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td style="color: #00f5a0; font-weight: 500;">${Math.round(item.endBalance).toLocaleString('zh-TW')} 元</td>
+                    `;
+                } else {
+                    let principalContent = `${Math.round(item.principalPaid).toLocaleString('zh-TW')} 元`;
+                    let interestContent = `${Math.round(item.interestPaid).toLocaleString('zh-TW')} 元`;
+                    let paymentContent = `${Math.round(item.totalPayment).toLocaleString('zh-TW')} 元`;
+
+                    if (isCombined && item.detail1 && item.detail2) {
+                        const p1 = Math.round(item.detail1.principalPaid);
+                        const p2 = Math.round(item.detail2.principalPaid);
+                        const i1 = Math.round(item.detail1.interestPaid);
+                        const i2 = Math.round(item.detail2.interestPaid);
+                        const pay1 = Math.round(item.detail1.totalPayment);
+                        const pay2 = Math.round(item.detail2.totalPayment);
+
+                        principalContent += `<br><span style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 300;">${name1}:${p1.toLocaleString('zh-TW')} / ${name2}:${p2.toLocaleString('zh-TW')}</span>`;
+                        interestContent += `<br><span style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 300;">${name1}:${i1.toLocaleString('zh-TW')} / ${name2}:${i2.toLocaleString('zh-TW')}</span>`;
+                        paymentContent += `<br><span style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 300;">${name1}:${pay1.toLocaleString('zh-TW')} / ${name2}:${pay2.toLocaleString('zh-TW')}</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td style="text-align: left; color: var(--text-secondary);">第 ${item.period} 期</td>
+                        <td>${Math.round(item.startBalance).toLocaleString('zh-TW')} 元</td>
+                        <td>${principalContent}</td>
+                        <td>${interestContent}</td>
+                        <td>${paymentContent}</td>
+                        <td style="color: #00f5a0; font-weight: 500;">${Math.round(item.endBalance).toLocaleString('zh-TW')} 元</td>
+                    `;
+                }
                 tbody.appendChild(tr);
             });
 
-            // 6. 渲染 Chart.js 折線圖
             const labels = resultData.map(item => item.period === 0 ? '初始' : `第 ${item.period} 期`);
             const balanceDataset = resultData.map(item => Math.round(item.endBalance));
+            const paymentDataset = resultData.map(item => item.period === 0 ? 0 : Math.round(item.totalPayment));
 
             if (chartInstance) {
                 chartInstance.destroy();
             }
 
             const ctxChart = document.getElementById('balance-chart').getContext('2d');
-            
-            // 設定合適的點半徑，若期數太多則不顯示點點，只留線條
             const pointRadius = labels.length > 60 ? 0 : 2;
 
             chartInstance = new Chart(ctxChart, {
@@ -1322,13 +1911,26 @@
                         {
                             label: '剩餘貸款餘額',
                             data: balanceDataset,
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            borderColor: 'rgba(139, 92, 246, 0.85)',
+                            backgroundColor: 'rgba(0, 245, 160, 0.05)',
+                            borderColor: 'rgba(0, 245, 160, 0.85)',
                             borderWidth: 2.5,
                             fill: true,
                             tension: 0.15,
                             pointRadius: pointRadius,
-                            pointHoverRadius: 5
+                            pointHoverRadius: 5,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '每月還款金額',
+                            data: paymentDataset,
+                            backgroundColor: 'transparent',
+                            borderColor: 'rgba(255, 184, 0, 0.85)',
+                            borderWidth: 2.5,
+                            fill: false,
+                            tension: 0.15,
+                            pointRadius: pointRadius,
+                            pointHoverRadius: 5,
+                            yAxisID: 'y1'
                         }
                     ]
                 },
@@ -1356,10 +1958,12 @@
                             ticks: { 
                                 color: '#8892b0', 
                                 font: { family: 'Inter', size: 10 },
-                                maxTicksLimit: 12 // 限制 X 軸標籤顯示數量，避免重疊
+                                maxTicksLimit: 12
                             }
                         },
                         y: {
+                            type: 'linear',
+                            position: 'left',
                             grid: { color: 'rgba(255, 255, 255, 0.03)' },
                             ticks: { 
                                 color: '#8892b0', 
@@ -1372,13 +1976,37 @@
                                     }
                                     return value;
                                 }
+                            },
+                            title: {
+                                display: true,
+                                text: '剩餘餘額 (元)',
+                                color: '#8892b0'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                color: '#8892b0',
+                                font: { family: 'Inter' },
+                                callback: function(value) {
+                                    if (value >= 10000) {
+                                        return (value / 10000).toFixed(1) + ' 萬';
+                                    }
+                                    return value + ' 元';
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: '月付金 (元)',
+                                color: '#8892b0'
                             }
                         }
                     }
                 }
             });
 
-            // 顯示結果面板
             document.getElementById('results-sec').classList.add('show');
         }
 
@@ -1392,24 +2020,59 @@
 
         function syncToURL() {
             const params = new URLSearchParams();
+            params.set('m', loanMode);
             params.set('tp', document.getElementById('input-total-price').value.replace(/,/g, ''));
             params.set('dp', document.getElementById('input-down-payment-percent').value);
             params.set('da', document.getElementById('input-down-payment-amount').value.replace(/,/g, ''));
             params.set('la', document.getElementById('input-loan-amount').value.replace(/,/g, ''));
-            params.set('t',  document.getElementById('input-period').value);
-            params.set('gv', document.getElementById('input-grace-period').value);
-            params.set('sr', document.getElementById('input-single-rate').value);
-            params.set('f',  document.getElementById('input-fee').value.replace(/,/g, ''));
-            params.set('pu', periodUnit);
-            params.set('gu', graceUnit);
-            params.set('rt', rateType);
-            params.set('rp', repayType);
-            // 多段式利率將 stages 對象序列化存入
-            params.set('stages', JSON.stringify(stages.map(s => ({
-                d: s.durationValue,
-                u: s.durationUnit,
-                r: s.rate
-            }))));
+
+            if (loanMode === 'single') {
+                params.set('f',  document.getElementById('input-fee').value.replace(/,/g, ''));
+                params.set('t',  document.getElementById('input-period').value);
+                params.set('gv', document.getElementById('input-grace-period').value);
+                params.set('sr', document.getElementById('input-single-rate').value);
+                params.set('pu', periodUnit);
+                params.set('gu', graceUnit);
+                params.set('rt', rateType);
+                params.set('rp', repayType);
+                params.set('stages', JSON.stringify(stages.map(s => ({
+                    d: s.durationValue,
+                    u: s.durationUnit,
+                    r: s.rate
+                }))));
+            } else {
+                params.set('ln1', document.getElementById('input-loan-name-1').value);
+                params.set('la1', document.getElementById('input-loan-amount-1').value.replace(/,/g, ''));
+                params.set('t1',  document.getElementById('input-period-1').value);
+                params.set('gv1', document.getElementById('input-grace-period-1').value);
+                params.set('sr1', document.getElementById('input-single-rate-1').value);
+                params.set('f1',  document.getElementById('input-fee-1').value.replace(/,/g, ''));
+                params.set('pu1', periodUnit1);
+                params.set('gu1', graceUnit1);
+                params.set('rt1', rateType1);
+                params.set('rp1', repayType1);
+                params.set('stages1', JSON.stringify(stages1.map(s => ({
+                    d: s.durationValue,
+                    u: s.durationUnit,
+                    r: s.rate
+                }))));
+
+                params.set('ln2', document.getElementById('input-loan-name-2').value);
+                params.set('la2', document.getElementById('input-loan-amount-2').value.replace(/,/g, ''));
+                params.set('t2',  document.getElementById('input-period-2').value);
+                params.set('gv2', document.getElementById('input-grace-period-2').value);
+                params.set('sr2', document.getElementById('input-single-rate-2').value);
+                params.set('f2',  document.getElementById('input-fee-2').value.replace(/,/g, ''));
+                params.set('pu2', periodUnit2);
+                params.set('gu2', graceUnit2);
+                params.set('rt2', rateType2);
+                params.set('rp2', repayType2);
+                params.set('stages2', JSON.stringify(stages2.map(s => ({
+                    d: s.durationValue,
+                    u: s.durationUnit,
+                    r: s.rate
+                }))));
+            }
             history.replaceState(null, '', '?' + params.toString());
         }
 
@@ -1423,14 +2086,13 @@
             const params = new URLSearchParams(window.location.search);
             if (!params.toString()) return false;
 
-            const puParam = params.get('pu');
-            const guParam = params.get('gu');
-            const rtParam = params.get('rt');
-            const rpParam = params.get('rp');
-            if (puParam === 'year' || puParam === 'month') periodUnit = puParam;
-            if (guParam === 'year' || guParam === 'month') graceUnit = guParam;
-            if (rtParam === 'single' || rtParam === 'multi') rateType = rtParam;
-            if (rpParam === 'equal-total' || rpParam === 'equal-principal') repayType = rpParam;
+            document.getElementById('input-total-price').value          = safeParseFloat(params.get('tp'), 15000000).toLocaleString('zh-TW');
+            document.getElementById('input-down-payment-percent').value  = safeParseFloat(params.get('dp'), 20);
+            document.getElementById('input-down-payment-amount').value   = safeParseFloat(params.get('da'), 3000000).toLocaleString('zh-TW');
+            document.getElementById('input-loan-amount').value           = safeParseFloat(params.get('la'), 12000000).toLocaleString('zh-TW');
+
+            const mParam = params.get('m') || 'single';
+            loanMode = mParam === 'combined' ? 'combined' : 'single';
 
             function activateBtn(containerId, unit) {
                 const c = document.getElementById(containerId);
@@ -1440,43 +2102,141 @@
                     else b.classList.remove('active');
                 });
             }
-            activateBtn('period-unit-selector', periodUnit);
-            activateBtn('grace-unit-selector', graceUnit);
-            activateBtn('rate-type-selector', rateType);
-            activateBtn('repay-type-selector', repayType);
 
-            // 切換利率類型 UI
-            const singleBox = document.getElementById('single-rate-box');
-            const multiBox  = document.getElementById('multi-rate-box');
-            if (rateType === 'single') {
-                singleBox.style.display = 'block';
-                multiBox.style.display  = 'none';
-            } else {
-                singleBox.style.display = 'none';
-                multiBox.style.display  = 'block';
-            }
+            activateBtn('loan-mode-selector', loanMode);
 
-            // 金額欄位
-            document.getElementById('input-total-price').value          = safeParseFloat(params.get('tp'), 15000000).toLocaleString('zh-TW');
-            document.getElementById('input-down-payment-percent').value  = safeParseFloat(params.get('dp'), 20);
-            document.getElementById('input-down-payment-amount').value   = safeParseFloat(params.get('da'), 3000000).toLocaleString('zh-TW');
-            document.getElementById('input-loan-amount').value           = safeParseFloat(params.get('la'), 12000000).toLocaleString('zh-TW');
-            document.getElementById('input-single-rate').value           = safeParseFloat(params.get('sr'), 2.1);
-            document.getElementById('input-fee').value                   = safeParseFloat(params.get('f'), 5000).toLocaleString('zh-TW');
-            document.getElementById('input-period').value                = safeParseFloat(params.get('t'), 30);
-            document.getElementById('input-grace-period').value          = safeParseFloat(params.get('gv'), 3);
+            if (loanMode === 'single') {
+                document.getElementById('single-loan-inputs').style.display = 'block';
+                document.getElementById('combined-loan-inputs').style.display = 'none';
 
-            // 解析多段式利率 stages
-            try {
-                const stagesRaw = JSON.parse(params.get('stages') || 'null');
-                if (Array.isArray(stagesRaw) && stagesRaw.length >= 2) {
-                    stages = stagesRaw.map((s, i, arr) => ({
-                        durationValue: i < arr.length - 1 ? (safeParseFloat(s.d, 1)) : null,
-                        durationUnit:  i < arr.length - 1 ? (s.u === 'month' ? 'month' : 'year') : null,
-                        rate: safeParseFloat(s.r, 2.0)
-                    }));
+                document.getElementById('input-fee').value = safeParseFloat(params.get('f'), 5000).toLocaleString('zh-TW');
+
+                const puParam = params.get('pu');
+                const guParam = params.get('gu');
+                const rtParam = params.get('rt');
+                const rpParam = params.get('rp');
+                if (puParam === 'year' || puParam === 'month') periodUnit = puParam;
+                if (guParam === 'year' || guParam === 'month') graceUnit = guParam;
+                if (rtParam === 'single' || rtParam === 'multi') rateType = rtParam;
+                if (rpParam === 'equal-total' || rpParam === 'equal-principal') repayType = rpParam;
+
+                activateBtn('period-unit-selector', periodUnit);
+                activateBtn('grace-unit-selector', graceUnit);
+                activateBtn('rate-type-selector', rateType);
+                activateBtn('repay-type-selector', repayType);
+
+                document.getElementById('input-period').value       = safeParseFloat(params.get('t'), 30);
+                document.getElementById('input-grace-period').value = safeParseFloat(params.get('gv'), 3);
+                document.getElementById('input-single-rate').value  = safeParseFloat(params.get('sr'), 2.1);
+
+                const singleBox = document.getElementById('single-rate-box');
+                const multiBox  = document.getElementById('multi-rate-box');
+                if (rateType === 'single') {
+                    singleBox.style.display = 'block';
+                    multiBox.style.display  = 'none';
+                } else {
+                    singleBox.style.display = 'none';
+                    multiBox.style.display  = 'block';
                 }
-            } catch(e) { /* 解析失敗則保留預設 */ }
+
+                try {
+                    const stagesRaw = JSON.parse(params.get('stages') || 'null');
+                    if (Array.isArray(stagesRaw) && stagesRaw.length >= 2) {
+                        stages = stagesRaw.map((s, i, arr) => ({
+                            durationValue: i < arr.length - 1 ? (safeParseFloat(s.d, 1)) : null,
+                            durationUnit:  i < arr.length - 1 ? (s.u === 'month' ? 'month' : 'year') : null,
+                            rate: safeParseFloat(s.r, 2.0)
+                        }));
+                    }
+                } catch(e) {}
+            } else {
+                document.getElementById('single-loan-inputs').style.display = 'none';
+                document.getElementById('combined-loan-inputs').style.display = 'block';
+
+                document.getElementById('input-loan-name-1').value = params.get('ln1') || '貸款 A';
+                document.getElementById('input-loan-amount-1').value = safeParseFloat(params.get('la1'), 10000000).toLocaleString('zh-TW');
+                document.getElementById('input-period-1').value       = safeParseFloat(params.get('t1'), 40);
+                document.getElementById('input-grace-period-1').value = safeParseFloat(params.get('gv1'), 5);
+                document.getElementById('input-single-rate-1').value  = safeParseFloat(params.get('sr1'), 1.775);
+                document.getElementById('input-fee-1').value          = safeParseFloat(params.get('f1'), 3000).toLocaleString('zh-TW');
+                
+                const puParam1 = params.get('pu1') || 'year';
+                const guParam1 = params.get('gu1') || 'year';
+                const rtParam1 = params.get('rt1') || 'single';
+                const rpParam1 = params.get('rp1') || 'equal-total';
+                periodUnit1 = puParam1;
+                graceUnit1 = guParam1;
+                rateType1 = rtParam1;
+                repayType1 = rpParam1;
+
+                activateBtn('period-unit-selector-1', periodUnit1);
+                activateBtn('grace-unit-selector-1', graceUnit1);
+                activateBtn('rate-type-selector-1', rateType1);
+                activateBtn('repay-type-selector-1', repayType1);
+
+                const singleBox1 = document.getElementById('single-rate-box-1');
+                const multiBox1  = document.getElementById('multi-rate-box-1');
+                if (rateType1 === 'single') {
+                    singleBox1.style.display = 'block';
+                    multiBox1.style.display  = 'none';
+                } else {
+                    singleBox1.style.display = 'none';
+                    multiBox1.style.display  = 'block';
+                }
+
+                try {
+                    const stagesRaw1 = JSON.parse(params.get('stages1') || 'null');
+                    if (Array.isArray(stagesRaw1) && stagesRaw1.length >= 2) {
+                        stages1 = stagesRaw1.map((s, i, arr) => ({
+                            durationValue: i < arr.length - 1 ? (safeParseFloat(s.d, 1)) : null,
+                            durationUnit:  i < arr.length - 1 ? (s.u === 'month' ? 'month' : 'year') : null,
+                            rate: safeParseFloat(s.r, 1.775)
+                        }));
+                    }
+                } catch(e) {}
+
+                document.getElementById('input-loan-name-2').value = params.get('ln2') || '貸款 B';
+                document.getElementById('input-loan-amount-2').value = safeParseFloat(params.get('la2'), 2000000).toLocaleString('zh-TW');
+                document.getElementById('input-period-2').value       = safeParseFloat(params.get('t2'), 30);
+                document.getElementById('input-grace-period-2').value = safeParseFloat(params.get('gv2'), 3);
+                document.getElementById('input-single-rate-2').value  = safeParseFloat(params.get('sr2'), 2.185);
+                document.getElementById('input-fee-2').value          = safeParseFloat(params.get('f2'), 3000).toLocaleString('zh-TW');
+
+                const puParam2 = params.get('pu2') || 'year';
+                const guParam2 = params.get('gu2') || 'year';
+                const rtParam2 = params.get('rt2') || 'single';
+                const rpParam2 = params.get('rp2') || 'equal-total';
+                periodUnit2 = puParam2;
+                graceUnit2 = guParam2;
+                rateType2 = rtParam2;
+                repayType2 = rpParam2;
+
+                activateBtn('period-unit-selector-2', periodUnit2);
+                activateBtn('grace-unit-selector-2', graceUnit2);
+                activateBtn('rate-type-selector-2', rateType2);
+                activateBtn('repay-type-selector-2', repayType2);
+
+                const singleBox2 = document.getElementById('single-rate-box-2');
+                const multiBox2  = document.getElementById('multi-rate-box-2');
+                if (rateType2 === 'single') {
+                    singleBox2.style.display = 'block';
+                    multiBox2.style.display  = 'none';
+                } else {
+                    singleBox2.style.display = 'none';
+                    multiBox2.style.display  = 'block';
+                }
+
+                try {
+                    const stagesRaw2 = JSON.parse(params.get('stages2') || 'null');
+                    if (Array.isArray(stagesRaw2) && stagesRaw2.length >= 2) {
+                        stages2 = stagesRaw2.map((s, i, arr) => ({
+                            durationValue: i < arr.length - 1 ? (safeParseFloat(s.d, 1)) : null,
+                            durationUnit:  i < arr.length - 1 ? (s.u === 'month' ? 'month' : 'year') : null,
+                            rate: safeParseFloat(s.r, 2.185)
+                        }));
+                    }
+                } catch(e) {}
+            }
 
             return true;
         }
@@ -1502,7 +2262,6 @@
         // 頁面初始化與事件綁定
         // ==========================================
         window.addEventListener('load', () => {
-            // 先嘗試從 URL 初始化
             const loadedFromURL = initFromURL();
 
             // 雙向連動初始化
@@ -1511,10 +2270,19 @@
             initFormattedInput('input-loan-amount',         () => syncInputs('input-loan-amount'));
             initFormattedInput('input-fee', () => calculateLoan());
 
-            // 金額欄位 URL 防抖同步
-            ['input-total-price', 'input-down-payment-amount', 'input-loan-amount', 'input-fee'].forEach(id => {
-                document.getElementById(id).addEventListener('input', syncToURLDebounced);
-                document.getElementById(id).addEventListener('blur', syncToURL);
+            // 組合貸款金額與開辦費初始化與連動
+            initFormattedInput('input-loan-amount-1', () => syncCombinedAmounts('input-loan-amount-1'));
+            initFormattedInput('input-loan-amount-2', () => syncCombinedAmounts('input-loan-amount-2'));
+            initFormattedInput('input-fee-1', () => calculateLoan());
+            initFormattedInput('input-fee-2', () => calculateLoan());
+
+            // 金額與開辦費欄位 URL 防抖同步
+            ['input-total-price', 'input-down-payment-amount', 'input-loan-amount', 'input-fee', 'input-loan-amount-1', 'input-loan-amount-2', 'input-fee-1', 'input-fee-2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', syncToURLDebounced);
+                    el.addEventListener('blur', syncToURL);
+                }
             });
 
             // 其他輸入框監聽
@@ -1523,12 +2291,32 @@
             document.getElementById('input-grace-period').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
             document.getElementById('input-single-rate').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
 
+            // 組合貸款 A
+            document.getElementById('input-period-1').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+            document.getElementById('input-grace-period-1').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+            document.getElementById('input-single-rate-1').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+
+            // 組合貸款 B
+            document.getElementById('input-period-2').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+            document.getElementById('input-grace-period-2').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+            document.getElementById('input-single-rate-2').addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+
             // 初始化動態多段式利率
-            renderStages();
+            renderStagesAll();
+
+            // 名稱欄位監聽
+            ['input-loan-name-1', 'input-loan-name-2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => { calculateLoan(); syncToURLDebounced(); });
+                    el.addEventListener('blur', syncToURL);
+                }
+            });
 
             // 重新綁定切換按鈕（包含 URL 同步）
             function setupWithURL(containerId, callback) {
                 const container = document.getElementById(containerId);
+                if (!container) return;
                 container.querySelectorAll('.unit-btn').forEach(btn => {
                     const fresh = btn.cloneNode(true);
                     btn.parentNode.replaceChild(fresh, btn);
@@ -1544,6 +2332,34 @@
                     });
                 });
             }
+
+            setupWithURL('loan-mode-selector', (mode) => {
+                loanMode = mode;
+                const singleSection = document.getElementById('single-loan-inputs');
+                const combinedSection = document.getElementById('combined-loan-inputs');
+                if (mode === 'single') {
+                    singleSection.style.display = 'block';
+                    combinedSection.style.display = 'none';
+                } else {
+                    singleSection.style.display = 'none';
+                    combinedSection.style.display = 'block';
+                    // 切換時智慧金額分配
+                    const loanInput = document.getElementById('input-loan-amount');
+                    const loanInput1 = document.getElementById('input-loan-amount-1');
+                    const loanInput2 = document.getElementById('input-loan-amount-2');
+                    const loanTotal = parseNumberFromCommas(loanInput.value);
+                    const currentA = parseNumberFromCommas(loanInput1.value);
+                    const currentB = parseNumberFromCommas(loanInput2.value);
+                    if (currentA + currentB !== loanTotal) {
+                        const newLoanA = Math.min(loanTotal, 10000000);
+                        const newLoanB = Math.max(0, loanTotal - newLoanA);
+                        loanInput1.value = formatNumberWithCommas(newLoanA);
+                        loanInput2.value = formatNumberWithCommas(newLoanB);
+                    }
+                }
+                calculateLoan();
+            });
+
             setupWithURL('period-unit-selector', (unit) => { periodUnit = unit; calculateLoan(); });
             setupWithURL('grace-unit-selector',  (unit) => { graceUnit  = unit; calculateLoan(); });
             setupWithURL('rate-type-selector', (type) => {
@@ -1560,6 +2376,42 @@
                 calculateLoan();
             });
             setupWithURL('repay-type-selector', (type) => { repayType = type; calculateLoan(); });
+
+            // 組合 A
+            setupWithURL('period-unit-selector-1', (unit) => { periodUnit1 = unit; calculateLoan(); });
+            setupWithURL('grace-unit-selector-1',  (unit) => { graceUnit1  = unit; calculateLoan(); });
+            setupWithURL('repay-type-selector-1', (type) => { repayType1 = type; calculateLoan(); });
+            setupWithURL('rate-type-selector-1', (type) => {
+                rateType1 = type;
+                const singleBox = document.getElementById('single-rate-box-1');
+                const multiBox  = document.getElementById('multi-rate-box-1');
+                if (type === 'single') {
+                    singleBox.style.display = 'block';
+                    multiBox.style.display  = 'none';
+                } else {
+                    singleBox.style.display = 'none';
+                    multiBox.style.display  = 'block';
+                }
+                calculateLoan();
+            });
+
+            // 組合 B
+            setupWithURL('period-unit-selector-2', (unit) => { periodUnit2 = unit; calculateLoan(); });
+            setupWithURL('grace-unit-selector-2',  (unit) => { graceUnit2  = unit; calculateLoan(); });
+            setupWithURL('repay-type-selector-2', (type) => { repayType2 = type; calculateLoan(); });
+            setupWithURL('rate-type-selector-2', (type) => {
+                rateType2 = type;
+                const singleBox = document.getElementById('single-rate-box-2');
+                const multiBox  = document.getElementById('multi-rate-box-2');
+                if (type === 'single') {
+                    singleBox.style.display = 'block';
+                    multiBox.style.display  = 'none';
+                } else {
+                    singleBox.style.display = 'none';
+                    multiBox.style.display  = 'block';
+                }
+                calculateLoan();
+            });
 
             // 執行首次計算
             calculateLoan();
@@ -1606,10 +2458,10 @@
                 
                 let alpha = this.isBurst ? this.life : this.size / 3.5;
                 
-                // 霓虹紫發光粒子
+                // 霓虹綠發光粒子
                 ctx.fillStyle = this.isBurst 
-                    ? `rgba(139, 92, 246, ${alpha})` 
-                    : `rgba(139, 92, 246, ${alpha * 0.75})`; 
+                    ? `rgba(0, 245, 160, ${alpha})` 
+                    : `rgba(0, 245, 160, ${alpha * 0.75})`; 
                 ctx.fill();
             }
             update() {
