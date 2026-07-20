@@ -3,17 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>目標計時器</title>
+    <title>線上目標計時器 - 免費倒數計時與時間累計工具 | SmallTools</title>
     <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
-    <meta name="description" content="唯美精緻的目標計時器，清楚顯示倒數與累計時間。">
+    <link rel="canonical" href="https://tools.cjkuo.net/time/index.html">
+    <meta name="description" content="唯美精緻的線上目標計時器與倒數工具！支援自訂事件標題、時分秒與年月日時顯示格式、全螢幕播放與一鍵複製分享連結。適用於考試倒數、紀念日、旅行倒數與時間管理，免安裝即可即時使用。">
+    <meta name="keywords" content="目標計時器,倒數計時器,線上倒數,時間累計,考試倒數,紀念日倒數,時間管理工具,全螢幕計時器">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="目標計時器">
-    <meta property="og:description" content="唯美精緻的目標計時器，清楚顯示倒數與累計時間。">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="線上目標計時器 - 免費倒數計時與時間累計工具">
+    <meta property="og:description" content="唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。">
     <meta property="og:url" content="https://tools.cjkuo.net/time/index.html">
     <meta property="og:image" content="https://tools.cjkuo.net/time/StockSnap_BS8YSPFEGT.webp">
-    <!-- 引入 Google Fonts -->
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="線上目標計時器 - 免費倒數計時與時間累計工具">
+    <meta name="twitter:description" content="唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/time/StockSnap_BS8YSPFEGT.webp">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "線上目標計時器",
+      "url": "https://tools.cjkuo.net/time/index.html",
+      "description": "唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -408,8 +440,8 @@
         </div>
 
         <div id="setup-view" class="hidden">
-            <h1>Create Timer</h1>
-        <p class="page-description">線上目標計時器與倒數工具，支援自訂事件名稱可自訂顯示方式，提供精確到秒的倒數計時與全螢幕展示，適合活動倒數與專注管理。</p>
+            <h1>線上目標倒數計時器</h1>
+            <p class="page-description">唯美精緻的線上目標計時器與倒數工具！支援自訂事件標題、時分秒與年月日時顯示格式、全螢幕播放與一鍵複製分享連結，適合考試倒數、紀念日與時間管理。</p>
             <div class="input-group">
                 <label class="group-label" for="input-title">Event Title (事件名稱)</label>
                 <input type="text" id="input-title" placeholder="例如：曼谷自由行倒數" autocomplete="off">
@@ -494,12 +526,13 @@
         const MS_PER_MINUTE = 60000;
         const MS_PER_SECOND = 1000;
 
-        const basePageTitle = "目標計時器";
+        const basePageTitle = "線上目標計時器";
+        const fullPageTitle = "線上目標計時器 - 免費倒數計時與時間累計工具 | SmallTools";
         if (titleParam) {
             document.title = `${titleParam} - ${basePageTitle}`;
             document.getElementById('event-title').textContent = titleParam;
         } else {
-            document.title = basePageTitle;
+            document.title = fullPageTitle;
             document.getElementById('event-title').textContent = basePageTitle;
         }
 
