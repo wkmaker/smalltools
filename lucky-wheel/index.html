@@ -965,6 +965,243 @@
             opacity: 0.7;
         }
 
+        /* 雙模式切換按鈕組 Mode Toggle Group */
+        .mode-toggle-group {
+            display: flex;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 3px;
+            gap: 3px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .mode-btn.active {
+            background: var(--accent-cyan);
+            color: #000000;
+            font-weight: 700;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* 🎰 擬真拉霸機 Slot Machine 樣式 */
+        .slot-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .slot-frame {
+            position: relative;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(30, 27, 50, 0.9), rgba(15, 12, 28, 0.95));
+            border: 4px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1rem;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 15px 35px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        [data-theme="light"] .slot-frame {
+            background: linear-gradient(145deg, #eef2ff, #c7d2fe);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 霓虹燈點綴 */
+        .slot-lights {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .slot-lights span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: blinkLight 1.2s infinite alternate;
+        }
+        .slot-lights span:nth-child(2) { animation-delay: 0.3s; background: #ff0055; box-shadow: 0 0 10px #ff0055; }
+        .slot-lights span:nth-child(3) { animation-delay: 0.6s; background: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
+        .slot-lights span:nth-child(4) { animation-delay: 0.9s; background: #00f5a0; box-shadow: 0 0 10px #00f5a0; }
+
+        @keyframes blinkLight {
+            from { opacity: 0.3; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* 滾動視窗 */
+        .slot-window {
+            position: relative;
+            width: 100%;
+            height: 270px;
+            overflow: hidden;
+            border-radius: 16px;
+            background: rgba(5, 5, 12, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 15px 25px rgba(0,0,0,0.8), inset 0 -15px 25px rgba(0,0,0,0.8);
+        }
+
+        [data-theme="light"] .slot-window {
+            background: #ffffff;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.15), inset 0 -10px 20px rgba(0,0,0,0.15);
+        }
+
+        /* 中線紅框 / 中獎線 Payline */
+        .slot-payline {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 76px;
+            transform: translateY(-50%);
+            border-top: 2px solid #ff0055;
+            border-bottom: 2px solid #ff0055;
+            background: rgba(255, 0, 85, 0.1);
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+        }
+
+        .slot-payline::before, .slot-payline::after {
+            content: '►';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff0055;
+            font-size: 1.2rem;
+            text-shadow: 0 0 8px #ff0055;
+        }
+        .slot-payline::before { left: 8px; }
+        .slot-payline::after { right: 8px; content: '◄'; }
+
+        /* 滾動軌道 Strip */
+        .slot-strip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 0;
+            will-change: transform;
+        }
+
+        /* 滾動卡片 Slot Card */
+        .slot-card {
+            width: 88%;
+            height: 66px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0 1rem;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease;
+            user-select: none;
+        }
+
+        [data-theme="light"] .slot-card {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #1e293b;
+        }
+
+        .slot-card-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .slot-spin-btn {
+            margin-top: 1rem;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: linear-gradient(135deg, #ff0055, #ff6600);
+            border: 3px solid #ffffff;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.6);
+            transition: all 0.2s ease;
+        }
+
+        .slot-spin-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 35px rgba(255, 0, 85, 0.9);
+        }
+
+        .slot-spin-btn:disabled {
+            background: #64748b;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* 全螢幕拉霸機適配 */
+        .fs-slot-wrapper {
+            position: relative;
+            width: min(88vh, 60vw);
+            height: min(88vh, 60vw);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .fs-slot-frame {
+            width: 100%;
+            height: 80%;
+            border-width: 6px;
+            border-radius: 32px;
+            padding: 1.5rem;
+        }
+
+        .fs-slot-window {
+            height: 100%;
+            border-radius: 20px;
+        }
+
+        .fs-payline {
+            height: 90px;
+            border-width: 3px;
+        }
+
+        .fs-slot-spin-btn {
+            position: absolute;
+            bottom: -20px;
+        }
+
         /* 歷史紀錄彈窗 Modal */
         .modal-overlay {
             position: fixed;
@@ -1094,80 +1331,90 @@
         </button>
     </div>
 
-    <!-- 頂部導覽列 Top Navigation -->
-    <header class="top-nav">
-        <a href="../index.html" class="back-btn">
-            ← 回工具庫首頁
-        </a>
-        <div class="nav-actions">
-            <button class="icon-btn" id="sound-toggle-btn" title="切換音效">🔊</button>
-            <button class="icon-btn" id="theme-toggle-btn" title="切換亮暗模式">🌙</button>
-            <button class="btn-fullscreen" id="enter-fullscreen-btn">
-                ⛶ 全螢幕抽獎
-            </button>
-        </div>
-    </header>
-
-    <!-- 頁面主容器 Container -->
-    <main class="glass-container">
-        <div class="page-header">
-            <h1 class="page-title">幸運轉盤抽獎小工具</h1>
-            <p class="page-description">
-                適用於尾牙、會議、線上活動與娛樂抽獎。彈性自訂獎項數量、權重比例與色彩，搭配真實物理旋轉動畫與音效，自動維護剩餘機率與抽完狀態。
-            </p>
-        </div>
-
-        <!-- 主工作區 (編輯模式 Main Layout) -->
-        <div class="main-layout" id="edit-stage">
-            
-            <!-- 左側/上半部：轉盤即時預覽區 Preview Section -->
-            <section class="card preview-section" id="wheel-preview-card">
-                <div class="canvas-wrapper">
-                    <canvas id="preview-canvas" width="800" height="800"></canvas>
-                    <button class="spin-btn-center" id="preview-spin-btn">抽獎</button>
+        <!-- 頂部導覽列 Top Navigation -->
+        <header class="top-nav">
+            <a href="../index.html" class="back-btn">
+                ← 回工具庫首頁
+            </a>
+            <div class="nav-actions">
+                <div class="mode-toggle-group" title="選擇抽獎展示視覺風格">
+                    <button class="mode-btn active" id="mode-wheel-btn" data-mode="wheel">🎡 幸運轉盤</button>
+                    <button class="mode-btn" id="mode-slot-btn" data-mode="slot">🎰 擬真拉霸機</button>
                 </div>
+                <button class="icon-btn" id="sound-toggle-btn" title="切換音效">🔊</button>
+                <button class="icon-btn" id="theme-toggle-btn" title="切換亮暗模式">🌙</button>
+                <button class="btn-fullscreen" id="enter-fullscreen-btn">
+                    ⛶ 全螢幕抽獎
+                </button>
+            </div>
+        </header>
+
+        <!-- 頁面主容器 Container -->
+        <main class="glass-container">
+            <div class="page-header">
+                <h1 class="page-title">幸運轉盤與拉霸抽獎小工具</h1>
+                <p class="page-description">
+                    適用於尾牙、會議、線上活動與娛樂抽獎。支援雙視覺模式（幸運轉盤 / 擬真拉霸機），彈性自訂獎項數量、權重比例與色彩，支援文字檔與人員名單一鍵匯入。
+                </p>
+            </div>
+
+            <!-- 主工作區 (編輯模式 Main Layout) -->
+            <div class="main-layout" id="edit-stage">
                 
-
-            </section>
-
-            <!-- 右側/下半部：獎項設定清單表單 Settings Section -->
-            <section class="card settings-section" id="prize-settings-card">
-                <div class="settings-header">
-                    <div class="settings-title">
-                        ⚙️ 獎項設定與機率
+                <!-- 左側/上半部：抽獎展示預覽區 Preview Section -->
+                <section class="card preview-section" id="wheel-preview-card">
+                    <!-- 🎡 轉盤預覽容器 -->
+                    <div class="canvas-wrapper" id="wheel-preview-wrapper">
+                        <canvas id="preview-canvas" width="800" height="800"></canvas>
+                        <button class="spin-btn-center" id="preview-spin-btn">抽獎</button>
                     </div>
-                    <div class="btn-group">
-                        <select class="template-select" id="spin-mode-select" title="設定抽獎開獎順序模式">
-                            <option value="random">🎲 隨機加權</option>
-                            <option value="forward">⬇️ 順序開獎 (前→後)</option>
-                            <option value="backward">⬆️ 逆序開獎 (後→前)</option>
-                        </select>
-                        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; background: var(--input-bg); padding: 0.35rem 0.65rem; border-radius: 8px; border: 1px solid var(--glass-border);" title="關閉數量限制後，所有獎項皆可無限次抽取 (適合展場活動)">
-                            <input type="checkbox" id="qty-limit-toggle" checked style="cursor: pointer;">
-                            <span>啟用數量限制</span>
-                        </label>
-                        <select class="template-select" id="template-select">
-                            <option value="" disabled selected>快速載入模板...</option>
-                            <option value="empty">🗑️ 空白轉盤 (全新自訂)</option>
-                            <option value="annual">🎉 公司年會尾牙</option>
-                            <option value="lucky">✨ 幸運大轉盤 (6項)</option>
-                            <option value="punish">🔥 歡樂懲罰遊戲</option>
-                            <option value="dinner">🍱 晚餐吃什麼？</option>
-                        </select>
-                        <button class="btn-sm" id="export-txt-btn" title="將目前的獎項清單匯出為 TXT 檔案">📤 匯出 TXT</button>
-                        <button class="btn-sm" id="import-txt-btn" title="從 TXT 檔載入獎項清單">📥 匯入 TXT</button>
-                        <input type="file" id="txt-file-input" accept=".txt,.csv" style="display: none;">
-                        <button class="btn-sm btn-primary" id="add-prize-btn">＋ 新增獎項</button>
-                        <button class="btn-sm btn-danger" id="reset-prizes-btn">重置</button>
+                    
+                    <!-- 🎰 拉霸機預覽容器 -->
+                    <div class="slot-wrapper" id="slot-preview-wrapper" style="display: none;">
+                        <div class="slot-frame">
+                            <div class="slot-lights"><span></span><span></span><span></span><span></span></div>
+                            <div class="slot-window" id="slot-preview-window">
+                                <div class="slot-payline"></div>
+                                <div class="slot-strip" id="preview-slot-strip"></div>
+                            </div>
+                        </div>
+                        <button class="slot-spin-btn" id="preview-slot-spin-btn">🎰 開始拉霸</button>
                     </div>
-                </div>
+                </section>
+
+                <!-- 右側/下半部：獎項設定清單表單 Settings Section -->
+                <section class="card settings-section" id="prize-settings-card">
+                    <div class="settings-header">
+                        <div class="settings-title">
+                            ⚙️ 獎項與人員設定
+                        </div>
+                        <div class="btn-group">
+                            <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; background: var(--input-bg); padding: 0.35rem 0.65rem; border-radius: 8px; border: 1px solid var(--glass-border);" title="關閉數量限制後，所有獎項皆可無限次抽取 (適合展場活動)">
+                                <input type="checkbox" id="qty-limit-toggle" checked style="cursor: pointer;">
+                                <span>啟用數量限制</span>
+                            </label>
+                            <select class="template-select" id="template-select">
+                                <option value="" disabled selected>快速載入模板...</option>
+                                <option value="empty">🗑️ 空白轉盤 (全新自訂)</option>
+                                <option value="annual">🎉 公司年會尾牙</option>
+                                <option value="lucky">✨ 幸運大轉盤 (6項)</option>
+                                <option value="punish">🔥 歡樂懲罰遊戲</option>
+                                <option value="dinner">🍱 晚餐吃什麼？</option>
+                            </select>
+                            <button class="btn-sm" id="export-txt-btn" title="將目前的獎項清單匯出為 TXT 檔案">📤 匯出 TXT</button>
+                            <button class="btn-sm" id="import-txt-btn" title="匯入 TXT 文字檔 (支援單行姓名名單自動設定為人員抽獎)">📥 匯入 TXT/名單</button>
+                            <input type="file" id="txt-file-input" accept=".txt,.csv" style="display: none;">
+                            <button class="btn-sm btn-primary" id="add-prize-btn">＋ 新增項目</button>
+                            <button class="btn-sm btn-danger" id="reset-prizes-btn">重置</button>
+                        </div>
+                    </div>
 
                 <div class="prize-table-header">
                     <span>顏色</span>
-                    <span>獎項名稱</span>
+                    <span>抽獎項目 / 姓名</span>
                     <span style="text-align: center;">權重 (佔比)</span>
                     <span style="text-align: center;">數量</span>
-                    <span style="text-align: center;">抽完狀態</span>
+                    <span style="text-align: center;">狀態</span>
                     <span>刪除</span>
                 </div>
 
@@ -1183,10 +1430,22 @@
         <button class="fs-close-btn" id="exit-fullscreen-btn">✕ 退出全螢幕 (Esc)</button>
 
         <div class="fs-body">
-            <!-- 左：轉盤 Canvas -->
-            <div class="fs-canvas-container">
+            <!-- 左：轉盤 Canvas 容器 -->
+            <div class="fs-canvas-container" id="fs-wheel-container">
                 <canvas id="fullscreen-canvas" width="1000" height="1000"></canvas>
                 <button class="fs-spin-btn" id="fs-spin-btn">抽獎</button>
+            </div>
+
+            <!-- 左：拉霸機容器 (拉霸模式) -->
+            <div class="fs-slot-wrapper" id="fs-slot-wrapper" style="display: none;">
+                <div class="slot-frame fs-slot-frame">
+                    <div class="slot-lights"><span></span><span></span><span></span><span></span></div>
+                    <div class="slot-window fs-slot-window" id="fs-slot-window">
+                        <div class="slot-payline fs-payline"></div>
+                        <div class="slot-strip" id="fs-slot-strip"></div>
+                    </div>
+                </div>
+                <button class="fs-spin-btn fs-slot-spin-btn" id="fs-slot-spin-btn">🎰 抽獎</button>
             </div>
 
             <!-- 右：資訊側板 -->
@@ -1196,13 +1455,13 @@
 
                 <!-- 順序/逆序模式：下一個獎項 -->
                 <div class="fs-next-prize-box" id="fs-next-prize-box">
-                    <div class="fs-next-label">下一個獎項</div>
+                    <div class="fs-next-label">下一個項目</div>
                     <div class="fs-next-title" id="fs-next-title"></div>
                 </div>
 
-                <!-- 隨機模式：剩餘獎品列表 -->
+                <!-- 隨機模式：剩餘項目列表 -->
                 <div class="fs-remain-list" id="fs-remain-list">
-                    <div class="fs-panel-section-title">剩餘獎品</div>
+                    <div class="fs-panel-section-title">可抽項目列表</div>
                     <div class="fs-prize-chips" id="fs-prize-chips"></div>
                 </div>
 
@@ -1327,7 +1586,7 @@
             soundEnabled: true,
             theme: 'dark',
             enableQuantityLimit: true, // 展場無限抽獎/數量限制切換
-            spinMode: 'random',        // 抽獎模式: random (隨機加權), forward (從前到後), backward (從後到前)
+            displayMode: 'wheel',      // 展示模式: wheel (幸運轉盤), slot (擬真拉霸機)
             isSpinning: false,
             currentRotationAngle: 0
         };
@@ -1340,6 +1599,19 @@
 
         const previewSpinBtn = document.getElementById('preview-spin-btn');
         const fsSpinBtn = document.getElementById('fs-spin-btn');
+
+        // 雙模式與拉霸機 DOM
+        const modeWheelBtn = document.getElementById('mode-wheel-btn');
+        const modeSlotBtn = document.getElementById('mode-slot-btn');
+        const wheelPreviewWrapper = document.getElementById('wheel-preview-wrapper');
+        const slotPreviewWrapper = document.getElementById('slot-preview-wrapper');
+        const previewSlotStrip = document.getElementById('preview-slot-strip');
+        const previewSlotSpinBtn = document.getElementById('preview-slot-spin-btn');
+
+        const fsWheelContainer = document.getElementById('fs-wheel-container');
+        const fsSlotWrapper = document.getElementById('fs-slot-wrapper');
+        const fsSlotStrip = document.getElementById('fs-slot-strip');
+        const fsSlotSpinBtn = document.getElementById('fs-slot-spin-btn');
 
         const announcementContent = document.getElementById('announcement-content');
         const historyCount = document.getElementById('history-count');
@@ -1373,7 +1645,6 @@
         const resetPrizesBtn = document.getElementById('reset-prizes-btn');
         const templateSelect = document.getElementById('template-select');
         const qtyLimitToggle = document.getElementById('qty-limit-toggle');
-        const spinModeSelect = document.getElementById('spin-mode-select');
         const exportTxtBtn = document.getElementById('export-txt-btn');
         const importTxtBtn = document.getElementById('import-txt-btn');
         const txtFileInput = document.getElementById('txt-file-input');
@@ -1453,7 +1724,38 @@
             renderPrizeForm();
             updateStats();
             renderWheel();
+            renderSlotStrips();
+            setDisplayMode(appState.displayMode);
             updateHistoryUI();
+        }
+
+        function setDisplayMode(mode) {
+            appState.displayMode = mode;
+            saveState();
+
+            if (mode === 'slot') {
+                if (modeWheelBtn) modeWheelBtn.classList.remove('active');
+                if (modeSlotBtn) modeSlotBtn.classList.add('active');
+
+                if (wheelPreviewWrapper) wheelPreviewWrapper.style.display = 'none';
+                if (slotPreviewWrapper) slotPreviewWrapper.style.display = 'flex';
+
+                if (fsWheelContainer) fsWheelContainer.style.display = 'none';
+                if (fsSlotWrapper) fsSlotWrapper.style.display = 'flex';
+            } else {
+                if (modeSlotBtn) modeSlotBtn.classList.remove('active');
+                if (modeWheelBtn) modeWheelBtn.classList.add('active');
+
+                if (slotPreviewWrapper) slotPreviewWrapper.style.display = 'none';
+                if (wheelPreviewWrapper) wheelPreviewWrapper.style.display = 'flex';
+
+                if (fsSlotWrapper) fsSlotWrapper.style.display = 'none';
+                if (fsWheelContainer) fsWheelContainer.style.display = 'flex';
+
+                renderWheel();
+            }
+
+            updateFullscreenInfo();
         }
 
         function loadState() {
@@ -1479,12 +1781,9 @@
                     qtyLimitToggle.checked = appState.enableQuantityLimit;
                 }
 
-                const savedSpinMode = localStorage.getItem('lw_spin_mode');
-                if (savedSpinMode) {
-                    appState.spinMode = savedSpinMode;
-                }
-                if (spinModeSelect) {
-                    spinModeSelect.value = appState.spinMode;
+                const savedDisplayMode = localStorage.getItem('lw_display_mode');
+                if (savedDisplayMode) {
+                    appState.displayMode = savedDisplayMode;
                 }
 
                 const savedPrizes = localStorage.getItem('lw_prizes');
@@ -1508,7 +1807,7 @@
                 localStorage.setItem('lw_theme', appState.theme);
                 localStorage.setItem('lw_sound', appState.soundEnabled);
                 localStorage.setItem('lw_qty_limit', appState.enableQuantityLimit);
-                localStorage.setItem('lw_spin_mode', appState.spinMode);
+                localStorage.setItem('lw_display_mode', appState.displayMode);
                 localStorage.setItem('lw_prizes', JSON.stringify(appState.prizes));
                 localStorage.setItem('lw_history', JSON.stringify(appState.history));
             } catch (e) {}
@@ -1825,7 +2124,7 @@
             updateFullscreenInfo();
         }
 
-        // --- 全螢幕側板更新 (下一個獎項 / 剩餘列表 / 歷史) ---
+        // --- 全螢幕側板更新 (剩餘列表 / 歷史) ---
 
         // 計算某獎項的剩餘數量文字（僅在啟用數量限制時回傳，否則回傳空字串）
         function getRemainText(prize) {
@@ -1837,63 +2136,29 @@
         function updateFullscreenInfo() {
             const unfinishedPrizes = getUnfinishedPrizes();
 
-            if (appState.spinMode === 'forward') {
-                // 順序模式：顯示下一個要抽的獎項 + 剩餘數量
-                if (fsPanelMode) fsPanelMode.textContent = '⬇️ 順序開獎 (前→後)';
-                if (fsNextPrizeBox) fsNextPrizeBox.classList.add('show');
-                if (fsRemainList) fsRemainList.classList.remove('show');
+            // 側板標題與列表
+            if (fsPanelMode) {
+                fsPanelMode.textContent = (appState.displayMode === 'slot') ? '🎰 擬真拉霸抽獎' : '🎲 隨機加權抽獎';
+            }
+            if (fsNextPrizeBox) fsNextPrizeBox.classList.remove('show');
+            if (fsRemainList) fsRemainList.classList.add('show');
 
-                if (fsNextTitle) {
-                    if (unfinishedPrizes.length > 0) {
-                        const next = unfinishedPrizes[0];
-                        const remainText = getRemainText(next);
-                        fsNextTitle.style.color = next.color;
-                        fsNextTitle.innerHTML = `${escapeHtml(next.title)}${remainText ? ` <span style="font-size:0.75em;font-weight:600;opacity:0.7;background:rgba(255,255,255,0.12);padding:0.15em 0.5em;border-radius:6px;vertical-align:middle;">${remainText}</span>` : ''}`;
-                    } else {
-                        fsNextTitle.textContent = '✅ 全部抽完';
-                        fsNextTitle.style.color = '';
-                    }
-                }
-            } else if (appState.spinMode === 'backward') {
-                // 逆序模式：顯示下一個要抽的獎項（從末尾）+ 剩餘數量
-                if (fsPanelMode) fsPanelMode.textContent = '⬆️ 逆序開獎 (後→前)';
-                if (fsNextPrizeBox) fsNextPrizeBox.classList.add('show');
-                if (fsRemainList) fsRemainList.classList.remove('show');
-
-                if (fsNextTitle) {
-                    if (unfinishedPrizes.length > 0) {
-                        const next = unfinishedPrizes[unfinishedPrizes.length - 1];
-                        const remainText = getRemainText(next);
-                        fsNextTitle.style.color = next.color;
-                        fsNextTitle.innerHTML = `${escapeHtml(next.title)}${remainText ? ` <span style="font-size:0.75em;font-weight:600;opacity:0.7;background:rgba(255,255,255,0.12);padding:0.15em 0.5em;border-radius:6px;vertical-align:middle;">${remainText}</span>` : ''}`;
-                    } else {
-                        fsNextTitle.textContent = '✅ 全部抽完';
-                        fsNextTitle.style.color = '';
-                    }
-                }
-            } else {
-                // 隨機模式：顯示剩餘獎品種類列表（含各自剩餘數量）
-                if (fsPanelMode) fsPanelMode.textContent = '🎲 隨機加權抽獎';
-                if (fsNextPrizeBox) fsNextPrizeBox.classList.remove('show');
-                if (fsRemainList) fsRemainList.classList.add('show');
-
-                if (fsPrizeChips) {
-                    fsPrizeChips.innerHTML = '';
-                    if (unfinishedPrizes.length === 0) {
-                        fsPrizeChips.innerHTML = '<div style="font-size:0.85rem;color:rgba(255,255,255,0.35);padding:0.5rem 0;">✅ 全部獎項已抽完</div>';
-                    } else {
-                        unfinishedPrizes.forEach(p => {
-                            const remainText = getRemainText(p);
-                            const chip = document.createElement('div');
-                            chip.className = 'fs-prize-chip';
-                            chip.innerHTML = `
-                                <div class="fs-prize-chip-dot" style="background:${p.color};box-shadow:0 0 6px ${p.color}88;"></div>
-                                <span style="flex:1;">${escapeHtml(p.title)}</span>
-                                ${remainText ? `<span class="fs-chip-remain">${remainText}</span>` : ''}
-                            `;
-                            fsPrizeChips.appendChild(chip);
-                        });
-                    }
+            if (fsPrizeChips) {
+                fsPrizeChips.innerHTML = '';
+                if (unfinishedPrizes.length === 0) {
+                    fsPrizeChips.innerHTML = '<div style="font-size:0.85rem;color:rgba(255,255,255,0.35);padding:0.5rem 0;">✅ 全部獎項已抽完</div>';
+                } else {
+                    unfinishedPrizes.forEach(p => {
+                        const remainText = getRemainText(p);
+                        const chip = document.createElement('div');
+                        chip.className = 'fs-prize-chip';
+                        chip.innerHTML = `
+                            <div class="fs-prize-chip-dot" style="background:${p.color};box-shadow:0 0 6px ${p.color}88;"></div>
+                            <span style="flex:1;">${escapeHtml(p.title)}</span>
+                            ${remainText ? `<span class="fs-chip-remain">${remainText}</span>` : ''}
+                        `;
+                        fsPrizeChips.appendChild(chip);
+                    });
                 }
             }
 
@@ -1907,6 +2172,144 @@
                     fsLastWinner.innerHTML = '<span class="fs-last-winner-empty">尚無抽獎紀錄</span>';
                 }
             }
+        }
+
+        // --- 🎰 拉霸機 (Slot Machine) 核心繪製與滾動動畫邏輯 ---
+        function renderSlotStrips() {
+            const validPrizes = getUnfinishedPrizes();
+            
+            [previewSlotStrip, fsSlotStrip].forEach(strip => {
+                if (!strip) return;
+                strip.innerHTML = '';
+                
+                if (validPrizes.length === 0) {
+                    strip.innerHTML = '<div class="slot-card" style="width:100%;"><span style="opacity:0.6;">✅ 全部獎項已抽完</span></div>';
+                    return;
+                }
+
+                // 生成預覽預設卡片帶 (重覆複製 6 輪以無縫填滿視窗上下)
+                const displayList = [];
+                for (let r = 0; r < 6; r++) {
+                    displayList.push(...validPrizes);
+                }
+                displayList.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'slot-card';
+                    card.innerHTML = `
+                        <div class="slot-card-dot" style="background:${p.color};box-shadow:0 0 8px ${p.color}aa;"></div>
+                        <span>${escapeHtml(p.title)}</span>
+                    `;
+                    strip.appendChild(card);
+                });
+
+                strip.style.transform = `translateY(0px)`;
+            });
+        }
+
+        function startSlotSpin() {
+            if (appState.isSpinning) return;
+
+            const { sectors, totalWeight } = calculateSectors();
+            if (sectors.length === 0 || totalWeight === 0) {
+                alert('所有獎項皆已抽完或權重為 0！');
+                return;
+            }
+
+            appState.isSpinning = true;
+            updateStats();
+
+            // 🎲 隨機加權選出獲獎項目
+            const randomWeight = Math.random() * totalWeight;
+            let accumulated = 0;
+            let winningSector = sectors[0];
+            for (let sec of sectors) {
+                accumulated += sec.prize.weight;
+                if (randomWeight < accumulated) {
+                    winningSector = sec;
+                    break;
+                }
+            }
+            const winningPrize = winningSector.prize;
+
+            // 準備拉霸條 DOM
+            const isFS = fullscreenStage.classList.contains('active');
+            const activeStrip = isFS ? fsSlotStrip : previewSlotStrip;
+            const activeWindow = isFS ? document.getElementById('fs-slot-window') : document.getElementById('slot-preview-window');
+
+            if (!activeStrip || !activeWindow) return;
+
+            const validPrizes = getUnfinishedPrizes();
+            
+            // 構建滾動鏈：前置 12 輪衝刺滾動 + 中獎卡片 + 後置 6 輪緩衝墊底 (保證視窗下方絕不露白)
+            const stripPrizes = [];
+            const spinRounds = 12;
+            for (let r = 0; r < spinRounds; r++) {
+                stripPrizes.push(...validPrizes);
+            }
+
+            const winnerIndex = stripPrizes.length;
+            stripPrizes.push(winningPrize);
+
+            // 追加後置緩衝卡片
+            const bufferRounds = 6;
+            for (let r = 0; r < bufferRounds; r++) {
+                stripPrizes.push(...validPrizes);
+            }
+
+            // 渲染卡片列
+            activeStrip.innerHTML = '';
+            stripPrizes.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'slot-card';
+                card.innerHTML = `
+                    <div class="slot-card-dot" style="background:${p.color};box-shadow:0 0 8px ${p.color}aa;"></div>
+                    <span>${escapeHtml(p.title)}</span>
+                `;
+                activeStrip.appendChild(card);
+            });
+
+            // 計算動態尺寸
+            const firstCard = activeStrip.children[0];
+            const cardHeight = firstCard ? firstCard.offsetHeight : 66;
+            const cardGap = 10;
+            const stepY = cardHeight + cardGap;
+            const windowHeight = activeWindow.offsetHeight;
+            
+            // 中線居中偏移算式：讓第 winnerIndex 張卡片完美置中
+            const targetTranslateY = -(winnerIndex * stepY - (windowHeight / 2 - cardHeight / 2 - cardGap / 2));
+
+            const duration = 4200; // 4.2 秒經典拉霸時長
+            const startTime = performance.now();
+            let lastStep = -1;
+
+            function easeOutQuart(t) {
+                return 1 - Math.pow(1 - t, 4);
+            }
+
+            function animateSlot(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeOutQuart(progress);
+
+                const currentY = targetTranslateY * easedProgress;
+                activeStrip.style.transform = `translateY(${currentY}px)`;
+
+                // 每滾過一張卡片發出喀喀音效
+                const currentStepIndex = Math.floor(Math.abs(currentY) / stepY);
+                if (currentStepIndex !== lastStep) {
+                    playTickSound();
+                    lastStep = currentStepIndex;
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSlot);
+                } else {
+                    activeStrip.style.transform = `translateY(${targetTranslateY}px)`;
+                    onSpinEnd(winningPrize);
+                }
+            }
+
+            requestAnimationFrame(animateSlot);
         }
 
         function renderPrizeForm() {
@@ -1929,7 +2332,7 @@
 
                 row.innerHTML = `
                     <input type="color" class="color-picker" value="${prize.color}" data-id="${prize.id}" data-field="color">
-                    <input type="text" class="form-input" value="${escapeHtml(prize.title)}" placeholder="獎項名稱" data-id="${prize.id}" data-field="title">
+                    <input type="text" class="form-input" value="${escapeHtml(prize.title)}" placeholder="獎項或人員姓名" data-id="${prize.id}" data-field="title">
                     <div class="weight-cell">
                         <input type="number" class="form-input" value="${prize.weight}" min="0" placeholder="權重" data-id="${prize.id}" data-field="weight">
                         <span class="ratio-badge" data-id="${prize.id}" title="未抽完獎項中佔據的機率百分比">${ratioStr}</span>
@@ -1941,7 +2344,7 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <button class="btn-del" data-id="${prize.id}" title="刪除獎項">✕</button>
+                    <button class="btn-del" data-id="${prize.id}" title="刪除">✕</button>
                 `;
 
                 prizeListContainer.appendChild(row);
@@ -1955,11 +2358,17 @@
         // --- TXT 檔案匯入與匯出 (TXT Import & Export) ---
         function exportTxt() {
             if (appState.prizes.length === 0) {
-                alert('目前沒有獎項可供匯出！');
+                alert('目前沒有獎項或人員資料可供匯出！');
                 return;
             }
 
-            let txtContent = '# 幸運轉盤獎項清單 (格式: 獎項名稱, 權重, 數量, 色彩)\n';
+            let txtContent = '# -----------------------------------------------------------------\n';
+            txtContent += '# 幸運轉盤與拉霸抽獎 - 獎項與人員名單檔案\n';
+            txtContent += '# 【說明】\n';
+            txtContent += '# 1. 若為人員/姓名抽獎：每行填寫一個姓名即可，後面都不需要填寫 (例: 張小明)\n';
+            txtContent += '# 2. 若要自訂權重數量：格式為 "名稱, 權重, 數量, 色彩" (例: 頭獎 - iPhone 16, 2, 1, #ff7700)\n';
+            txtContent += '# -----------------------------------------------------------------\n\n';
+
             appState.prizes.forEach(p => {
                 txtContent += `${p.title},${p.weight},${p.quantity},${p.color}\n`;
             });
@@ -1968,7 +2377,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `lucky_wheel_prizes_${Date.now()}.txt`;
+            a.download = `lucky_draw_prizes_${Date.now()}.txt`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1982,18 +2391,24 @@
                 const text = e.target.result;
                 const lines = text.split(/\r?\n/);
                 const newPrizes = [];
+                let singleColumnLines = 0;
 
                 lines.forEach(line => {
                     line = line.trim();
                     if (!line || line.startsWith('#') || line.startsWith('//')) return;
 
                     // 支援逗點、分號或 Tab 分隔
-                    const parts = line.split(/[,;\t]/).map(p => p.trim());
-                    if (parts.length > 0 && parts[0]) {
+                    const parts = line.split(/[,;\t]/).map(p => p.trim()).filter(Boolean);
+                    if (parts.length > 0) {
                         const title = parts[0];
-                        const weight = parts[1] ? Math.max(0, parseInt(parts[1]) || 1) : 1;
-                        const quantity = parts[2] ? Math.max(1, parseInt(parts[2]) || 1) : 1;
-                        const color = (parts[3] && /^#[0-9A-Fa-f]{6}$/.test(parts[3])) ? parts[3] : getUniqueColor();
+                        // 若每一行只有姓名/單一欄位，預設權重=1, 數量=1 (人員抽獎模式)
+                        const weight = (parts.length > 1 && parts[1]) ? Math.max(0, parseInt(parts[1]) || 1) : 1;
+                        const quantity = (parts.length > 2 && parts[2]) ? Math.max(1, parseInt(parts[2]) || 1) : 1;
+                        const color = (parts.length > 3 && /^#[0-9A-Fa-f]{6}$/.test(parts[3])) ? parts[3] : getUniqueColor();
+
+                        if (parts.length === 1) {
+                            singleColumnLines++;
+                        }
 
                         newPrizes.push({
                             id: generateId(),
@@ -2013,9 +2428,14 @@
                     renderPrizeForm();
                     updateStats();
                     renderWheel();
-                    alert(`🎉 成功匯入 ${newPrizes.length} 個獎項！`);
+                    renderSlotStrips();
+                    if (singleColumnLines / newPrizes.length >= 0.7) {
+                        alert(`🎉 成功匯入 ${newPrizes.length} 位抽獎人員！(已自動設定權重 1、數量 1 人員抽獎模式)`);
+                    } else {
+                        alert(`🎉 成功匯入 ${newPrizes.length} 個獎項！`);
+                    }
                 } else {
-                    alert('未找到有效的獎項資料，請檢查 TXT 格式。');
+                    alert('未找到有效的獎項或人員名單，請檢查 TXT 格式。');
                 }
             };
             reader.readAsText(file, 'UTF-8');
@@ -2023,13 +2443,12 @@
 
         // --- 事件綁定 Event Listeners ---
         function setupEventListeners() {
-            // 抽獎開獎模式切換
-            if (spinModeSelect) {
-                spinModeSelect.addEventListener('change', (e) => {
-                    appState.spinMode = e.target.value;
-                    saveState();
-                    updateFullscreenInfo(); // 立即更新全螢幕側板
-                });
+            // 雙展示模式切換 (🎡 幸運轉盤 vs 🎰 擬真拉霸機)
+            if (modeWheelBtn) {
+                modeWheelBtn.addEventListener('click', () => setDisplayMode('wheel'));
+            }
+            if (modeSlotBtn) {
+                modeSlotBtn.addEventListener('click', () => setDisplayMode('slot'));
             }
 
             // 數量限制切換
@@ -2040,6 +2459,7 @@
                     renderPrizeForm();
                     updateStats();
                     renderWheel();
+                    renderSlotStrips();
                 });
             }
 
@@ -2081,6 +2501,7 @@
                 saveState();
                 updateStats();
                 renderWheel();
+                renderSlotStrips();
             });
 
             prizeListContainer.addEventListener('change', (e) => {
@@ -2104,6 +2525,7 @@
                 saveState();
                 updateStats();
                 renderWheel();
+                renderSlotStrips();
             });
 
             // 刪除獎項
@@ -2115,15 +2537,16 @@
                     renderPrizeForm();
                     updateStats();
                     renderWheel();
+                    renderSlotStrips();
                 }
             });
 
-            // 新增獎項
+            // 新增項目
             addPrizeBtn.addEventListener('click', () => {
                 const newColor = getUniqueColor();
                 appState.prizes.push({
                     id: generateId(),
-                    title: `獎項 ${appState.prizes.length + 1}`,
+                    title: `項目 ${appState.prizes.length + 1}`,
                     weight: 1,
                     quantity: 1,
                     drawnCount: 0,
@@ -2134,6 +2557,7 @@
                 renderPrizeForm();
                 updateStats();
                 renderWheel();
+                renderSlotStrips();
             });
 
             // 重置獎項
@@ -2144,27 +2568,32 @@
                     renderPrizeForm();
                     updateStats();
                     renderWheel();
+                    renderSlotStrips();
                 }
             });
 
-            // 快速載入模板 Dropdown
+            // 模板切換
             templateSelect.addEventListener('change', (e) => {
-                const templateKey = e.target.value;
-                if (PRIZE_TEMPLATES[templateKey]) {
-                    appState.prizes = PRIZE_TEMPLATES[templateKey].map(p => ({ ...p, id: generateId() }));
+                const key = e.target.value;
+                if (PRIZE_TEMPLATES[key]) {
+                    appState.prizes = PRIZE_TEMPLATES[key].map(p => ({ ...p, id: generateId() }));
                     saveState();
                     renderPrizeForm();
                     updateStats();
                     renderWheel();
-                    e.target.value = '';
+                    renderSlotStrips();
                 }
+                templateSelect.selectedIndex = 0;
             });
 
-            // 觸發抽獎
+            // 抽獎按鈕綁定 (轉盤 & 拉霸機)
             previewSpinBtn.addEventListener('click', startSpin);
             fsSpinBtn.addEventListener('click', startSpin);
 
-            // 主題切換
+            if (previewSlotSpinBtn) previewSlotSpinBtn.addEventListener('click', startSlotSpin);
+            if (fsSlotSpinBtn) fsSlotSpinBtn.addEventListener('click', startSlotSpin);
+
+            // 頂部按鈕綁定
             themeToggleBtn.addEventListener('click', () => {
                 appState.theme = appState.theme === 'dark' ? 'light' : 'dark';
                 document.documentElement.setAttribute('data-theme', appState.theme);
@@ -2173,30 +2602,26 @@
                 renderWheel();
             });
 
-            // 音效切換
             soundToggleBtn.addEventListener('click', () => {
                 appState.soundEnabled = !appState.soundEnabled;
                 soundToggleBtn.textContent = appState.soundEnabled ? '🔊' : '🔇';
                 saveState();
             });
 
-            // 全螢幕切換
             enterFullscreenBtn.addEventListener('click', enterFullscreen);
             exitFullscreenBtn.addEventListener('click', exitFullscreen);
 
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && fullscreenStage.classList.contains('active')) {
-                    exitFullscreen();
-                }
+            openHistoryBtn.addEventListener('click', () => {
+                historyModal.classList.add('active');
+            });
+            closeHistoryModal.addEventListener('click', () => {
+                historyModal.classList.remove('active');
+            });
+            closeHistoryBtn.addEventListener('click', () => {
+                historyModal.classList.remove('active');
             });
 
-            // 歷史紀錄 Modal
-            openHistoryBtn.addEventListener('click', () => historyModal.classList.add('active'));
-            closeHistoryModal.addEventListener('click', () => historyModal.classList.remove('active'));
-            closeHistoryBtn.addEventListener('click', () => historyModal.classList.remove('active'));
-
             clearHistoryBtn.addEventListener('click', (e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 appState.history = [];
                 saveState();
@@ -2205,8 +2630,30 @@
                 announcementContent.innerHTML = '✨ 歷史紀錄已清空，隨時準備開啟新一輪抽獎！';
             });
 
-            winnerConfirmBtn.addEventListener('click', () => {
-                winnerModal.classList.remove('active');
+            // 關閉中獎歡呼彈窗 Winner Modal
+            if (winnerConfirmBtn) {
+                winnerConfirmBtn.addEventListener('click', () => {
+                    winnerModal.classList.remove('active');
+                });
+            }
+
+            if (winnerModal) {
+                winnerModal.addEventListener('click', (e) => {
+                    if (e.target === winnerModal) {
+                        winnerModal.classList.remove('active');
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                    if (winnerModal && winnerModal.classList.contains('active')) {
+                        winnerModal.classList.remove('active');
+                    }
+                }
+                if (e.key === 'Escape' && fullscreenStage.classList.contains('active')) {
+                    exitFullscreen();
+                }
             });
         }
 
@@ -2241,26 +2688,16 @@
             appState.isSpinning = true;
             updateStats();
 
-            // 根據抽獎模式決定中獎目標扇區 (Winning Sector Strategy)
+            // 🎲 隨機加權抽獎 (Weighted Random Selection)
+            const randomWeight = Math.random() * totalWeight;
+            let accumulated = 0;
             let winningSector = sectors[0];
 
-            if (appState.spinMode === 'forward') {
-                // ⬇️ 順序開獎：從最前面的第一個未抽完獎項開始
-                winningSector = sectors[0];
-            } else if (appState.spinMode === 'backward') {
-                // ⬆️ 逆序開獎：從最後面的最後一個未抽完獎項開始
-                winningSector = sectors[sectors.length - 1];
-            } else {
-                // 🎲 隨機加權抽獎 (Weighted Random Selection)
-                const randomWeight = Math.random() * totalWeight;
-                let accumulated = 0;
-
-                for (let sec of sectors) {
-                    accumulated += sec.prize.weight;
-                    if (randomWeight < accumulated) {
-                        winningSector = sec;
-                        break;
-                    }
+            for (let sec of sectors) {
+                accumulated += sec.prize.weight;
+                if (randomWeight < accumulated) {
+                    winningSector = sec;
+                    break;
                 }
             }
 
