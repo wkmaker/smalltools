@@ -507,7 +507,7 @@
 
         .prize-row {
             display: grid;
-            grid-template-columns: 36px 1.5fr 1.2fr 0.8fr 70px 36px;
+            grid-template-columns: 36px 1.5fr 1.2fr 1.2fr 70px 36px;
             gap: 0.6rem;
             align-items: center;
             background: var(--input-bg);
@@ -592,7 +592,7 @@
             margin: 0;
         }
 
-        .weight-cell {
+        .weight-cell, .qty-cell {
             display: flex;
             align-items: center;
             gap: 0.4rem;
@@ -612,6 +612,45 @@
             min-width: 58px;
             text-align: center;
             flex-shrink: 0;
+        }
+
+        [data-theme="light"] .ratio-badge {
+            color: #0284c7;
+            background: rgba(2, 132, 199, 0.1);
+            border-color: rgba(2, 132, 199, 0.25);
+        }
+
+        .remain-badge {
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #00f5a0;
+            background: rgba(0, 245, 160, 0.12);
+            border: 1px solid rgba(0, 245, 160, 0.28);
+            padding: 0.25rem 0.45rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            min-width: 52px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        [data-theme="light"] .remain-badge {
+            color: #047857;
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.35);
+        }
+
+        .remain-badge.is-zero {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        [data-theme="light"] .remain-badge.is-zero {
+            color: #dc2626;
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.35);
         }
 
         /* Toggle Switch */
@@ -1404,8 +1443,9 @@
                             <button class="btn-sm" id="export-txt-btn" title="將目前的獎項清單匯出為 TXT 檔案">📤 匯出 TXT</button>
                             <button class="btn-sm" id="import-txt-btn" title="匯入 TXT 文字檔 (支援單行姓名名單自動設定為人員抽獎)">📥 匯入 TXT/名單</button>
                             <input type="file" id="txt-file-input" accept=".txt,.csv" style="display: none;">
+                            <button class="btn-sm" id="reset-qty-btn" title="將所有項目的已抽次數歸零，重新發起新一輪抽獎">🔄 重置次數</button>
                             <button class="btn-sm btn-primary" id="add-prize-btn">＋ 新增項目</button>
-                            <button class="btn-sm btn-danger" id="reset-prizes-btn">重置</button>
+                            <button class="btn-sm btn-danger" id="reset-prizes-btn">重置範例</button>
                         </div>
                     </div>
 
@@ -1413,7 +1453,7 @@
                     <span>顏色</span>
                     <span>抽獎項目 / 姓名</span>
                     <span style="text-align: center;">權重 (佔比)</span>
-                    <span style="text-align: center;">數量</span>
+                    <span style="text-align: center;">數量 (剩餘)</span>
                     <span style="text-align: center;">狀態</span>
                     <span>刪除</span>
                 </div>
@@ -1643,6 +1683,7 @@
 
         const addPrizeBtn = document.getElementById('add-prize-btn');
         const resetPrizesBtn = document.getElementById('reset-prizes-btn');
+        const resetQtyBtn = document.getElementById('reset-qty-btn');
         const templateSelect = document.getElementById('template-select');
         const qtyLimitToggle = document.getElementById('qty-limit-toggle');
         const exportTxtBtn = document.getElementById('export-txt-btn');
@@ -2098,14 +2139,30 @@
             const { sectors, totalWeight } = calculateSectors();
             const availableCount = sectors.length;
 
-            // 即時線上動態更新所有獎項列表上的權重佔比標籤 (Ratio Badges)
+            // 即時線上動態更新所有項目列表上的權重佔比標籤 (Ratio Badges) 與剩餘數量標籤 (Remain Badges)
             const unfinishedPrizes = getUnfinishedPrizes();
             appState.prizes.forEach(prize => {
-                const badge = prizeListContainer.querySelector(`.ratio-badge[data-id="${prize.id}"]`);
-                if (badge) {
+                const ratioBadge = prizeListContainer.querySelector(`.ratio-badge[data-id="${prize.id}"]`);
+                if (ratioBadge) {
                     const isUnfinished = unfinishedPrizes.some(p => p.id === prize.id);
                     const ratioStr = (isUnfinished && totalWeight > 0) ? ((prize.weight / totalWeight) * 100).toFixed(2) + '%' : '0.00%';
-                    badge.textContent = ratioStr;
+                    ratioBadge.textContent = ratioStr;
+                }
+
+                const remainBadge = prizeListContainer.querySelector(`.remain-badge[data-id="${prize.id}"]`);
+                if (remainBadge) {
+                    if (!appState.enableQuantityLimit) {
+                        remainBadge.textContent = '∞';
+                        remainBadge.classList.remove('is-zero');
+                    } else {
+                        const remain = Math.max(0, prize.quantity - prize.drawnCount);
+                        remainBadge.textContent = remain > 0 ? `剩 ${remain}` : '已抽完';
+                        if (remain === 0) {
+                            remainBadge.classList.add('is-zero');
+                        } else {
+                            remainBadge.classList.remove('is-zero');
+                        }
+                    }
                 }
             });
 
@@ -2326,8 +2383,14 @@
                 const isUnfinished = unfinishedPrizes.some(p => p.id === prize.id);
                 const ratioStr = (isUnfinished && totalWeight > 0) ? ((prize.weight / totalWeight) * 100).toFixed(2) + '%' : '0.00%';
 
+                const remain = Math.max(0, prize.quantity - prize.drawnCount);
+                const isZero = remain === 0;
+
                 const qtyValueHtml = appState.enableQuantityLimit 
-                    ? `<input type="number" class="form-input" value="${prize.quantity}" min="1" placeholder="數量" data-id="${prize.id}" data-field="quantity">`
+                    ? `<div class="qty-cell">
+                        <input type="number" class="form-input" value="${prize.quantity}" min="1" placeholder="數量" data-id="${prize.id}" data-field="quantity">
+                        <span class="remain-badge ${isZero ? 'is-zero' : ''}" data-id="${prize.id}">${remain > 0 ? `剩 ${remain}` : '已抽完'}</span>
+                       </div>`
                     : `<div style="text-align:center; font-weight:700; color:var(--accent-cyan); font-size:1.1rem;" title="展場不限數量模式">∞</div >`;
 
                 row.innerHTML = `
@@ -2560,7 +2623,24 @@
                 renderSlotStrips();
             });
 
-            // 重置獎項
+            // 重置所有項目的已抽次數 (歸零)
+            if (resetQtyBtn) {
+                resetQtyBtn.addEventListener('click', () => {
+                    appState.prizes.forEach(p => {
+                        p.drawnCount = 0;
+                        p.isFinished = false;
+                    });
+                    saveState();
+                    renderPrizeForm();
+                    updateStats();
+                    renderWheel();
+                    renderSlotStrips();
+                    updateFullscreenInfo();
+                    announcementContent.innerHTML = '🔄 已成功重置所有項目的抽獎次數與剩餘數量！';
+                });
+            }
+
+            // 重置預設範例獎項
             resetPrizesBtn.addEventListener('click', () => {
                 if (confirm('確定要將獎項與抽完狀態重置為預設年會範例嗎？')) {
                     appState.prizes = PRIZE_TEMPLATES.annual.map(p => ({ ...p, id: generateId() }));
