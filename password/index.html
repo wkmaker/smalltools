@@ -3,18 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全密碼生成器</title>
+    <title>安全密碼產生器 - 免費線上強密碼生成與 CSPRNG 密碼強度檢測工具 | SmallTools</title>
     <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
-    <meta name="description" content="專業的密碼生成工具，基於 Web Crypto API 密碼學安全隨機數 (CSPRNG)，支援排除混淆字元、字元強制分佈、密碼強度動態視覺化分析及歷史記錄管理。">
+    <link rel="canonical" href="https://tools.cjkuo.net/password/index.html">
+    <meta name="description" content="專業免費的線上安全密碼生成器！基於 Web Crypto API (CSPRNG) 密碼學安全亂數，支援自訂長度、符號、排除混淆字元、密碼強度與資訊熵值評估。">
+    <meta name="keywords" content="密碼生成器,安全密碼,密碼產生器,強密碼,亂數密碼,CSPRNG,密碼強度檢測,隨機密碼">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="安全密碼生成器 - 唯美極客工具">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="安全密碼產生器 - 免費線上強密碼生成與 CSPRNG 密碼強度檢測工具">
     <meta property="og:description" content="基於 CSPRNG 密碼學隨機數生成，支援強度分析與混淆排除。">
     <meta property="og:url" content="https://tools.cjkuo.net/password/index.html">
     <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
 
-    <!-- 引入 Google Fonts -->
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="安全密碼產生器 - 免費線上強密碼生成與 CSPRNG 密碼強度檢測工具">
+    <meta name="twitter:description" content="基於 CSPRNG 密碼學隨機數生成，支援強度分析與混淆排除。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "安全密碼生成器",
+      "url": "https://tools.cjkuo.net/password/index.html",
+      "description": "專業免費的線上安全密碼生成器，基於 Web Crypto API (CSPRNG) 密碼學安全隨機數。",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
@@ -582,9 +613,9 @@
             返回首頁
         </a>
 
-        <h1>安全密碼生成</h1>
+        <h1>線上安全密碼產生器</h1>
         <div class="subtitle-top">CSPRNG Password Generator</div>
-        <p class="page-description">線上免費且無廣告的安全密碼生成器，採用瀏覽器安全的 CSPRNG 亂數引擎，支援自訂長度、大小寫字母、數字及特殊符號，並可即時評估密碼強度與熵值。</p>
+        <p class="page-description">專業免費的線上安全密碼生成器，採用 CSPRNG 密碼學隨機數引擎，支援自訂長度、大小寫字母、數字及特殊符號，並可即時評估密碼強度與熵值。</p>
 
         <div class="password-layout">
             <!-- 左欄：控制選項 -->

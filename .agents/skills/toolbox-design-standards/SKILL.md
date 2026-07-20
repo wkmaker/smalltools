@@ -116,8 +116,17 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
 7. **站點與部署規範**
    * **Sitemap 維護規範**：專案根目錄必須維護一份 `sitemap.xml`，每次新增工具頁面後，必須同步更新 `sitemap.xml`，並更新所有現有頁面的 `lastmod` 日期。首頁的 `priority` 設為 `1.0`，工具頁設為 `0.8`。
    * **部署 CI/CD 安全排除**：開發工具庫的配置設定與本地 Skill 定義（即 `.agents/` 目錄）切勿同步至生產環境。必須在部署腳本中強制配置 `--exclude ".agents*"` 以防止內部檔案外流。
-   * **Favicon 與 Open Graph 標籤規範**：每個頁面必須加入 Open Graph 與 favicon 設定，且必須使用絕對路徑以確保轉傳時的正確性。
+   * **Favicon 與 Open Graph 標籤規範**：每個頁面必須加入 Open Graph（`og:type`, `og:site_name`, `og:locale`, `og:title`, `og:description`, `og:url`, `og:image`）、Twitter Card (`twitter:card="summary_large_image"`) 與 favicon 設定，且圖片與 URL 一律使用絕對路徑以確保轉傳時的正確性。
+   * **Canonical URL 防重複內容規範**：凡支援 URL 參數帶入（如 `?t=...` 或 `?rate=...` 等分享連結）的工具頁面，必須於 `<head>` 配置絕對路徑之 `<link rel="canonical" href="https://tools.cjkuo.net/工具名稱/index.html">`，防止搜尋引擎將帶參數的分享網址歸類為重複內容。
+   * **Schema.org 結構化資料 (JSON-LD) 規範**：每個小工具頁面的 `<head>` 中必須包含 `WebApplication` 類型的 JSON-LD 標籤，明確定義工具名稱、URL、描述與免費價格規格（`offers: { "@type": "Offer", "price": "0", "priceCurrency": "TWD" }`），以爭取搜尋結果豐富摘要 (Rich Snippets)。
+   * **Google Fonts 預連線 (Preconnect) 效能規範**：引入 Google Fonts 時，必須優先於 `<head>` 配置連線優化標籤：
+     ```html
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     ```
+     務必確保 `fonts.gstatic.com` 包含 `crossorigin` 屬性，防範跨網域字型檔載入時的握手延遲，優化 FCP/LCP 指標。
 
 8. **頁面主標題功能描述與 SEO 優化規範**
-    * **描述區段配置**：工具頁面的 `<h1>` 標題下方應配置 `<p class="page-description">` 用於描述工具特色，並自然融入「免費」、「線上製作」、「無廣告」等高搜尋意圖關鍵字。
-    * **CSS 美感標準**：`.page-description` 需限制 `max-width: 800px`（防大螢幕拉長），字型大小設於 `0.9rem` ~ `0.95rem`，字重 `300 (Light)`，行高 `1.6`，使用次要文字色（如 `var(--text-secondary)`）並配置置中對齊，維持全站精緻暗色毛玻璃的視覺平衡。
+   * **描述區段配置**：工具頁面的 `<h1>` 標題下方應配置 `<p class="page-description">` 用於描述工具特色，並自然融入「免費」、「線上」、「無廣告」等高搜尋意圖關鍵字。
+   * **語意化 H1 標題中文化與預設 Title 標準**：工具頁面之 `<h1>` 標題與 JavaScript 動態設定的預設 Title 必須優先採用繁體中文並融入核心意圖關鍵字（例如使用「線上目標倒數計時器」取代純英文「Create Timer」），以增強關鍵字相關性與搜尋排名。
+   * **CSS 美感標準**：`.page-description` 需限制 `max-width: 800px`（防大螢幕拉長），字型大小設於 `0.9rem` ~ `0.95rem`，字重 `300 (Light)`，行高 `1.6`，使用次要文字色（如 `var(--text-secondary)`）並配置置中對齊，維持全站精緻暗色毛玻璃的視覺平衡。

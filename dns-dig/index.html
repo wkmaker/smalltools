@@ -3,18 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIG 網路診斷工具 (DNS Lookup)</title>
+    <title>DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器 | SmallTools</title>
     <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
-    <meta name="description" content="專業的線上 DNS DIG 網路診斷工具，利用 fetch 串接 Cloudflare 與 Google DoH API，支援 A, CNAME, MX, TXT 等各類別 DNS 記錄即時查詢，並具備網址自動清理與提取網域功能。">
+    <link rel="canonical" href="https://tools.cjkuo.net/dns-dig/index.html">
+    <meta name="description" content="專業免費的線上 DNS DIG 網路診斷工具！支援 Cloudflare 與 Google DNS over HTTPS (DoH) API，即時檢索 A, AAAA, CNAME, MX, TXT, NS 等紀錄。">
+    <meta name="keywords" content="DNS查詢,DIG工具,DNS Lookup,DNS記錄,Cloudflare DoH,Google DoH,網域診斷,MX記錄查詢">
     
-    <!-- Open Graph -->
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="DIG 網路診斷工具 (DNS Lookup)">
-    <meta property="og:description" content="工程師的線上 DNS 診斷利器。支援 Cloudflare/Google DoH 自由切換、自動網域清理、記錄類型檢索與 Raw JSON 解析。">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器">
+    <meta property="og:description" content="工程師的線上 DNS 診斷利器。支援 Cloudflare/Google DoH 自由切換、自動網域清理與記錄檢索。">
     <meta property="og:url" content="https://tools.cjkuo.net/dns-dig/index.html">
     <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
 
-    <!-- 引入 Google Fonts & JetBrains Mono -->
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器">
+    <meta name="twitter:description" content="工程師的線上 DNS 診斷利器。支援 Cloudflare/Google DoH 自由切換、自動網域清理與記錄檢索。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "DIG 網路診斷工具 (DNS Lookup)",
+      "url": "https://tools.cjkuo.net/dns-dig/index.html",
+      "description": "專業免費的線上 DNS DIG 網路診斷工具，利用 Cloudflare 與 Google DoH API 即時查詢各類 DNS 記錄。",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts & JetBrains Mono (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
@@ -680,9 +711,9 @@
 
         <!-- 標題 -->
         <div class="header-section">
-            <h1>DIG 網路診斷工具</h1>
+            <h1>線上 DNS DIG 網路診斷工具</h1>
             <div class="subtitle-top">DNS Dig Web Tool</div>
-            <p class="page-description">線上免費無廣告的 DNS DIG 工具，支援多種 DNS 服務商線上即時查詢 A, AAAA, CNAME, MX, TXT 等多種 DNS 記錄，可自動清理與提取網域功能，提供流暢的網路診斷與網域查詢體驗。</p>
+            <p class="page-description">專業免費的線上 DNS DIG 查詢工具，串接 Cloudflare 與 Google DoH API，支援 A, CNAME, MX, TXT 等全紀錄類型即時檢索與自動網域清理。</p>
         </div>
 
         <!-- 主要雙欄應用區域 -->
