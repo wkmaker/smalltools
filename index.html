@@ -61,7 +61,8 @@
         { "@type": "WebPage", "name": "幸運轉盤抽獎小工具", "url": "https://tools.cjkuo.net/lucky-wheel/index.html", "description": "免費線上幸運轉盤抽獎小工具，支援機率加權與全螢幕舞台" },
         { "@type": "WebPage", "name": "Epoch 時間戳記轉換", "url": "https://tools.cjkuo.net/epoch/index.html", "description": "免費線上 Unix Epoch 時間戳記轉換工具" },
         { "@type": "WebPage", "name": "萬能圖片處理大師", "url": "https://tools.cjkuo.net/image-processor/index.html", "description": "免費線上圖片裁切壓縮格式轉換批次處理工具" },
-        { "@type": "WebPage", "name": "純前端 PDF 工具箱", "url": "https://tools.cjkuo.net/pdf-processor/index.html", "description": "免費線上 PDF 多檔合併、拖曳排序、單頁旋轉與圖片轉檔工具" }
+        { "@type": "WebPage", "name": "PDF 頁面組合器", "url": "https://tools.cjkuo.net/pdf-processor/index.html", "description": "免費線上 PDF 多檔合併、拖曳排序、單頁旋轉與圖片轉檔工具" },
+        { "@type": "WebPage", "name": "PDF 壓縮大師", "url": "https://tools.cjkuo.net/pdf-compressor/index.html", "description": "免費線上 PDF 內嵌圖片深度壓縮、降採樣與文字無損瘦身工具" }
       ]
     }
     </script>
@@ -693,6 +694,27 @@
 
         .tool-card.pdf-processor-card .card-action {
             color: #ff4757;
+        }
+
+        /* 純前端 PDF 圖片深度壓縮工具專屬 hover 效果 */
+        .tool-card.pdf-compressor-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%);
+        }
+
+        .tool-card.pdf-compressor-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 240, 255, 0.15),
+                        inset 0 0 15px rgba(0, 240, 255, 0.02);
+        }
+
+        .tool-card.pdf-compressor-card:hover h3 {
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .tool-card.pdf-compressor-card .card-action {
+            color: #00f0ff;
         }
 
         /* ====== 預留卡片樣式 ====== */
@@ -1378,12 +1400,25 @@
                     </div>
                 </a>
 
-                <!-- 純前端 PDF 工具箱 -->
-                <a href="./pdf-processor/index.html" class="tool-card pdf-processor-card" data-category="utility" data-keywords="pdf processor merge sort rotate delete pdf-lib pdfjs sortablejs 合併 排序 旋轉 刪除 圖片轉檔 轉檔 珊瑚紅">
+                <!-- PDF 頁面組合器 -->
+                <a href="./pdf-processor/index.html" class="tool-card pdf-processor-card" data-category="utility" data-keywords="pdf processor page composer merge sort rotate delete pdf-lib pdfjs sortablejs 頁面組合器 合併 排序 旋轉 刪除 圖片轉檔 轉檔 珊瑚紅">
                     <div>
-                        <h3>純前端 PDF 工具箱</h3>
-                        <span class="subtitle">PDF Processor & Utility</span>
+                        <h3>PDF 頁面組合器</h3>
+                        <span class="subtitle">PDF Page Composer</span>
                         <p>強大且安全的純前端 PDF 處理神器。支援多檔 PDF 與圖片合併、拖曳頁面任意排序、單頁 90° 旋轉、頁面刪除與無失真匯出，100% 瀏覽器本機運算。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
+
+                <!-- PDF 壓縮大師 -->
+                <a href="./pdf-compressor/index.html" class="tool-card pdf-compressor-card" data-category="utility" data-keywords="pdf compressor master image compression dpi quality pdf-lib pdfjs 壓縮大師 圖片壓縮 瘦身 降採樣 減小體積 零伺服器">
+                    <div>
+                        <h3>PDF 壓縮大師</h3>
+                        <span class="subtitle">PDF Compressor Master</span>
+                        <p>專針對 PDF 內嵌點陣圖進行深度壓縮與降採樣！100% 瀏覽器本地極速運算，保持原生文字與向量 100% 清晰可選取，達成 30%~80% 極致瘦身。</p>
                     </div>
                     <div class="card-action">
                         開啟工具

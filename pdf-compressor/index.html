@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 壓縮大師 - 免費線上圖片深度壓縮、文字無損與頂級隱私 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/pdf-compressor/index.html">
+    <meta name="description" content="專業免費的線上 PDF 壓縮大師！支援多檔批次壓縮、即時預檢估算與圖片明細清單。100% 保持原生文字與向量線條清晰可複製，零伺服器依賴，隱私最安全。">
+    <meta name="keywords" content="PDF壓縮大師,PDF壓縮,PDF圖片壓縮,PDF瘦身,PDF檔案縮小,線上PDF壓縮,免費PDF工具,純前端PDF壓縮,PDF圖片降採樣,PDF批次壓縮">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="CJKuo">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="PDF 壓縮大師 - 免費線上瘦身與頂級隱私">
+    <meta property="og:description" content="純前端極速 PDF 壓縮大師！支援多檔批次處理、即時預檢估算與圖片明細，100% 本地端運算，維持文字與向量完全無損清晰。">
+    <meta property="og:url" content="https://tools.cjkuo.net/pdf-compressor/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/img/StockSnap_00F7DB5857.webp">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PDF 壓縮大師 - 免費線上瘦身與頂級隱私">
+    <meta name="twitter:description" content="純前端極速 PDF 壓縮大師！支援多檔批次處理、即時預檢估算與圖片明細，100% 本地端運算，維持文字與向量完全無損清晰。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/img/StockSnap_00F7DB5857.webp">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "PDF 壓縮大師",
+      "url": "https://tools.cjkuo.net/pdf-compressor/index.html",
+      "description": "專業免費的純前端 PDF 壓縮大師，支援多檔批次、結構預檢估算與圖片明細，100% 瀏覽器本地運算。",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 核心庫 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --glass-card: rgba(18, 18, 26, 0.65);
+            --accent-glow: #00f0ff;
+            --accent-glow-rgb: 0, 240, 255;
+            --accent-purple: #7000ff;
+            --accent-green: #00f5a0;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        /* 背景微粒 Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .main-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        /* 頂部導覽按鈕 */
+        .back-btn {
+            position: absolute;
+            top: -3.5rem;
+            left: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--accent-glow);
+            border-color: rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+            transform: translateX(-3px);
+        }
+
+        /* 毛玻璃主容器 */
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+            width: 100%;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #00f0ff 50%, #7000ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
+        }
+
+        .page-description {
+            max-width: 780px;
+            margin: 0 auto;
+            font-size: 0.95rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .feature-badge-group {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        .feature-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: rgba(0, 240, 255, 0.06);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            color: var(--accent-glow);
+        }
+
+        /* 檔案上傳 Dropzone */
+        .dropzone {
+            background: var(--glass-card);
+            border: 2px dashed rgba(0, 240, 255, 0.25);
+            border-radius: 18px;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--accent-glow);
+            background: rgba(0, 240, 255, 0.03);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .dropzone-icon {
+            font-size: 3.5rem;
+            color: var(--accent-glow);
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .dropzone:hover .dropzone-icon {
+            transform: scale(1.1);
+        }
+
+        .dropzone-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .dropzone-subtext {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 檔案佇列清單 */
+        .queue-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .queue-item-card {
+            background: var(--glass-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .queue-item-card:hover {
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        .queue-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .file-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(112, 0, 255, 0.2));
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--accent-glow);
+            flex-shrink: 0;
+        }
+
+        .file-meta {
+            overflow: hidden;
+        }
+
+        .file-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-badges {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .file-size-badge {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .inspect-badge {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.6rem;
+            border-radius: 12px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            color: var(--accent-glow);
+            font-weight: 500;
+        }
+
+        .inspect-badge.est {
+            background: rgba(0, 245, 160, 0.1);
+            border-color: rgba(0, 245, 160, 0.3);
+            color: var(--accent-green);
+        }
+
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .toggle-details-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: color 0.2s;
+        }
+
+        .toggle-details-btn:hover {
+            color: var(--accent-glow);
+        }
+
+        .remove-item-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .remove-item-btn:hover {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border-color: rgba(255, 71, 87, 0.4);
+        }
+
+        /* 明細表格/摺疊視圖 */
+        .image-details-drawer {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+
+        .image-details-drawer.open {
+            display: block;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            text-align: left;
+        }
+
+        .details-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .details-table td {
+            padding: 0.5rem 0.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            font-weight: 500;
+        }
+
+        .status-pill.compressible {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-glow);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .status-pill.protected {
+            background: rgba(255, 184, 0, 0.1);
+            color: #ffb800;
+            border: 1px solid rgba(255, 184, 0, 0.3);
+        }
+
+        .status-pill.compressed {
+            background: rgba(0, 245, 160, 0.1);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 245, 160, 0.3);
+        }
+
+        /* 檔案進度與結果小卡 */
+        .item-progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.85rem;
+            display: none;
+        }
+
+        .item-progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00f0ff, #7000ff);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .item-result-badge {
+            display: none;
+            margin-top: 0.85rem;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 245, 160, 0.06);
+            border: 1px solid rgba(0, 245, 160, 0.2);
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .single-download-link {
+            color: var(--accent-green);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: opacity 0.2s;
+        }
+
+        .single-download-link:hover {
+            opacity: 0.8;
+        }
+
+        /* 壓縮品質控制區 */
+        .controls-section {
+            background: var(--glass-card);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 膠囊切換器 Segmented Control */
+        .segmented-control {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.35rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .segment-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.85rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .segment-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .segment-btn.active {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(112, 0, 255, 0.3));
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.15);
+            font-weight: 600;
+        }
+
+        .segment-desc {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        /* 高級設定 Accordion */
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            user-select: none;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+            margin-top: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .accordion-header:hover {
+            color: var(--accent-glow);
+        }
+
+        .accordion-content {
+            display: none;
+            padding-top: 1.25rem;
+        }
+
+        .accordion-content.open {
+            display: block;
+        }
+
+        .slider-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-value {
+            color: var(--accent-glow);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .custom-range {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .custom-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .custom-range::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* 主按鈕組 */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-direction: column;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 1.1rem;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #00f0ff 0%, #7000ff 100%);
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.25);
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 240, 255, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            filter: grayscale(0.8);
+        }
+
+        .batch-zip-btn {
+            display: none;
+            width: 100%;
+            padding: 1.1rem;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #00f5a0 0%, #00b894 100%);
+            color: #030305;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 245, 160, 0.3);
+            text-decoration: none;
+            margin-top: 1rem;
+        }
+
+        .batch-zip-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 245, 160, 0.5);
+            filter: brightness(1.05);
+        }
+
+        /* 提示 Toast */
+        .toast-info {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--accent-glow);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* 響應式微調 */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .main-wrapper {
+                margin-top: 3.5rem;
+            }
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+            .glass-container {
+                padding: 1.5rem;
+            }
+            .page-title {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 微粒氣泡動效 Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="main-wrapper">
+        <a href="../index.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> 回工具庫首頁
+        </a>
+
+        <main class="glass-container">
+            <!-- 標題與簡介區 -->
+            <header class="header-section">
+                <h1 class="page-title">PDF 壓縮大師</h1>
+                <p class="page-description">
+                    專針對 PDF 內嵌點陣圖（照片、掃描圖）進行極致瘦身！100% 瀏覽器本地運算，支援多檔批次處理、即時預檢估算與圖片明細，維持文字與向量 100% 無損清晰自由選取。
+                </p>
+                <div class="feature-badge-group">
+                    <span class="feature-badge"><i class="fa-solid fa-shield-halved"></i> 100% 本地運算隱私</span>
+                    <span class="feature-badge"><i class="fa-solid fa-magnifying-glass-chart"></i> 即時結構預檢與估算</span>
+                    <span class="feature-badge"><i class="fa-solid fa-boxes-packing"></i> 多檔批次 ZIP 打包</span>
+                </div>
+            </header>
+
+            <!-- 檔案拖曳上傳區 -->
+            <div class="dropzone" id="dropzone">
+                <i class="fa-solid fa-file-circle-plus dropzone-icon"></i>
+                <div class="dropzone-text">點擊或將一至多個 PDF 檔案拖曳至此處</div>
+                <div class="dropzone-subtext">支援多檔 PDF 批次處理，全程離線安全預檢與壓縮</div>
+                <input type="file" id="fileInput" class="file-input" accept="application/pdf" multiple>
+            </div>
+
+            <!-- 已選取檔案佇列清單 -->
+            <div class="queue-container" id="queueContainer"></div>
+
+            <!-- 提示訊息 -->
+            <div class="toast-info" id="toastInfo">
+                <i class="fa-solid fa-circle-info"></i>
+                <span id="toastText"></span>
+            </div>
+
+            <!-- 壓縮控制項 -->
+            <section class="controls-section">
+                <div class="section-label">
+                    <i class="fa-solid fa-sliders"></i> 壓縮品質快選模式
+                </div>
+
+                <!-- 膠囊切換器 -->
+                <div class="segmented-control">
+                    <button type="button" class="segment-btn" data-mode="low">
+                        <span>輕度壓縮</span>
+                        <span class="segment-desc">品質 85% / 200 DPI (降約 30%)</span>
+                    </button>
+                    <button type="button" class="segment-btn active" data-mode="medium">
+                        <span>推薦壓縮</span>
+                        <span class="segment-desc">品質 65% / 144 DPI (降約 60%)</span>
+                    </button>
+                    <button type="button" class="segment-btn" data-mode="high">
+                        <span>極致壓縮</span>
+                        <span class="segment-desc">品質 45% / 96 DPI (降約 80%)</span>
+                    </button>
+                </div>
+
+                <!-- 高級設定摺疊 Accordion -->
+                <div class="accordion-header" id="accordionToggle">
+                    <span><i class="fa-solid fa-gear"></i> 自訂高級設定 (Quality & Resolution)</span>
+                    <i class="fa-solid fa-chevron-down" id="accordionIcon"></i>
+                </div>
+                <div class="accordion-content" id="accordionContent">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>JPEG 壓縮品質 (Quality)</span>
+                            <span class="slider-value" id="qualityValDisplay">65%</span>
+                        </div>
+                        <input type="range" id="qualitySlider" class="custom-range" min="10" max="90" value="65" step="5">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>解析度上限 (Max DPI / Scaling)</span>
+                            <span class="slider-value" id="dpiValDisplay">144 DPI</span>
+                        </div>
+                        <input type="range" id="dpiSlider" class="custom-range" min="72" max="300" value="144" step="24">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 按鈕組 -->
+            <div class="btn-group">
+                <button class="action-btn" id="startCompressBtn" disabled>
+                    <i class="fa-solid fa-compress"></i> 開始圖片深度壓縮
+                </button>
+                <button class="batch-zip-btn" id="batchZipBtn">
+                    <i class="fa-solid fa-file-zipper"></i> 打包下載所有壓縮 PDF (ZIP)
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- 頁面邏輯 Script -->
+    <script>
+        // ----------------------------------------------------
+        // 1. 全域變數與 DOM 元素存取
+        // ----------------------------------------------------
+        let fileQueue = []; // { id, file, name, size, buffer, status, inspectData, resultData }
+        let worker = null;
+        let isCompressing = false;
+
+        let config = {
+            quality: 0.65,
+            scale: 0.65,
+            maxDpi: 144
+        };
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const queueContainer = document.getElementById('queueContainer');
+        const startCompressBtn = document.getElementById('startCompressBtn');
+        const batchZipBtn = document.getElementById('batchZipBtn');
+
+        const toastInfo = document.getElementById('toastInfo');
+        const toastText = document.getElementById('toastText');
+
+        const segmentBtns = document.querySelectorAll('.segment-btn');
+        const accordionToggle = document.getElementById('accordionToggle');
+        const accordionContent = document.getElementById('accordionContent');
+        const accordionIcon = document.getElementById('accordionIcon');
+
+        const qualitySlider = document.getElementById('qualitySlider');
+        const qualityValDisplay = document.getElementById('qualityValDisplay');
+        const dpiSlider = document.getElementById('dpiSlider');
+        const dpiValDisplay = document.getElementById('dpiValDisplay');
+
+        // ----------------------------------------------------
+        // 2. 初始化與網址參數雙向連動 (URL Parameter State Syncing)
+        // ----------------------------------------------------
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+            const qParam = parseInt(params.get('quality'), 10);
+            const dpiParam = parseInt(params.get('dpi'), 10);
+
+            if (mode && ['low', 'medium', 'high'].includes(mode)) {
+                applyModePreset(mode);
+            } else if (!isNaN(qParam) || !isNaN(dpiParam)) {
+                if (!isNaN(qParam) && qParam >= 10 && qParam <= 90) {
+                    config.quality = qParam / 100;
+                    qualitySlider.value = qParam;
+                    qualityValDisplay.textContent = `${qParam}%`;
+                }
+                if (!isNaN(dpiParam) && dpiParam >= 72 && dpiParam <= 300) {
+                    config.maxDpi = dpiParam;
+                    dpiSlider.value = dpiParam;
+                    dpiValDisplay.textContent = `${dpiParam} DPI`;
+                }
+                segmentBtns.forEach(b => b.classList.remove('active'));
+            }
+        }
+
+        function syncToURL() {
+            const params = new URLSearchParams();
+            const activeSeg = document.querySelector('.segment-btn.active');
+            if (activeSeg) {
+                params.set('mode', activeSeg.dataset.mode);
+            } else {
+                params.set('quality', Math.round(config.quality * 100));
+                params.set('dpi', config.maxDpi);
+            }
+            const newUrl = params.toString() ? '?' + params.toString() : window.location.pathname;
+            history.replaceState(null, '', newUrl);
+        }
+
+        function applyModePreset(mode) {
+            segmentBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+            if (mode === 'low') {
+                config.quality = 0.85;
+                config.maxDpi = 200;
+                config.scale = 0.8;
+            } else if (mode === 'medium') {
+                config.quality = 0.65;
+                config.maxDpi = 144;
+                config.scale = 0.65;
+            } else if (mode === 'high') {
+                config.quality = 0.45;
+                config.maxDpi = 96;
+                config.scale = 0.5;
+            }
+            qualitySlider.value = Math.round(config.quality * 100);
+            qualityValDisplay.textContent = `${qualitySlider.value}%`;
+            dpiSlider.value = config.maxDpi;
+            dpiValDisplay.textContent = `${config.maxDpi} DPI`;
+            syncToURL();
+            renderQueueList();
+        }
+
+        // ----------------------------------------------------
+        // 3. Web Worker 訊息處置
+        // ----------------------------------------------------
+        function initWorker() {
+            if (worker) worker.terminate();
+            worker = new Worker('pdf-worker.js');
+
+            worker.onmessage = function(e) {
+                const data = e.data;
+                const item = fileQueue.find(f => f.id === data.fileId);
+
+                if (data.type === 'inspect_result') {
+                    if (item) {
+                        item.inspectData = data;
+                        item.status = 'ready';
+                        renderQueueList();
+                        updateActionButtons();
+                    }
+                } else if (data.type === 'progress') {
+                    if (item) {
+                        updateItemProgressUI(item.id, data.message, data.current, data.totalImages);
+                    }
+                } else if (data.type === 'complete') {
+                    if (item) {
+                        item.status = 'done';
+                        item.resultData = data;
+                        updateItemResultUI(item.id, data);
+                        checkBatchCompletion();
+                    }
+                } else if (data.type === 'error') {
+                    if (item) {
+                        item.status = 'error';
+                        updateItemErrorUI(item.id, data.message);
+                        checkBatchCompletion();
+                    }
+                }
+            };
+
+            worker.onerror = function(err) {
+                showToast(`Worker 執行遭遇錯誤: ${err.message}`);
+                isCompressing = false;
+                updateActionButtons();
+            };
+        }
+
+        // ----------------------------------------------------
+        // 4. 事件綁定
+        // ----------------------------------------------------
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFilesSelect(Array.from(e.dataTransfer.files));
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFilesSelect(Array.from(e.target.files));
+            }
+        });
+
+        segmentBtns.forEach(btn => {
+            btn.addEventListener('click', () => applyModePreset(btn.dataset.mode));
+        });
+
+        accordionToggle.addEventListener('click', () => {
+            accordionContent.classList.toggle('open');
+            accordionIcon.style.transform = accordionContent.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        });
+
+        qualitySlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            config.quality = val / 100;
+            qualityValDisplay.textContent = `${val}%`;
+            segmentBtns.forEach(b => b.classList.remove('active'));
+            syncToURL();
+            renderQueueList();
+        });
+
+        dpiSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            config.maxDpi = val;
+            dpiValDisplay.textContent = `${val} DPI`;
+            // 連動更新 scale
+            config.scale = val <= 96 ? 0.5 : (val <= 144 ? 0.65 : (val <= 200 ? 0.8 : 1.0));
+            segmentBtns.forEach(b => b.classList.remove('active'));
+            syncToURL();
+            renderQueueList();
+        });
+
+        startCompressBtn.addEventListener('click', startBatchCompression);
+        batchZipBtn.addEventListener('click', downloadAllAsZip);
+
+        // ----------------------------------------------------
+        // 5. 檔案選擇、預檢與佇列 UI 渲染
+        // ----------------------------------------------------
+        function handleFilesSelect(files) {
+            const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+
+            if (pdfFiles.length === 0) {
+                showToast('請選擇正確的 PDF 格式檔案 (.pdf)');
+                return;
+            }
+
+            hideToast();
+
+            pdfFiles.forEach(file => {
+                const id = 'f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                const queueItem = {
+                    id,
+                    file,
+                    name: file.name,
+                    size: file.size,
+                    buffer: null,
+                    status: 'inspecting',
+                    inspectData: null,
+                    resultData: null
+                };
+
+                fileQueue.push(queueItem);
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    queueItem.buffer = e.target.result;
+                    // 即時發起 Worker 預檢
+                    if (worker) {
+                        worker.postMessage({
+                            type: 'inspect',
+                            fileId: queueItem.id,
+                            pdfBuffer: queueItem.buffer.slice(0)
+                        });
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+
+            renderQueueList();
+            updateActionButtons();
+            fileInput.value = '';
+        }
+
+        function removeQueueItem(id) {
+            fileQueue = fileQueue.filter(f => f.id !== id);
+            renderQueueList();
+            updateActionButtons();
+        }
+
+        function getDynamicEstRatio(item) {
+            if (!item.inspectData || !item.inspectData.images) return 0;
+            const { images, originalSize } = item.inspectData;
+            if (!images || images.length === 0 || originalSize <= 0) return 0;
+
+            let totalSaved = 0;
+            let maxDim = 4000;
+            if (config.maxDpi <= 96) maxDim = 960;
+            else if (config.maxDpi <= 144) maxDim = 1440;
+            else if (config.maxDpi <= 200) maxDim = 2000;
+            else if (config.maxDpi <= 300) maxDim = 3000;
+
+            images.forEach(img => {
+                if (img.status === 'compressible') {
+                    const origW = img.width || 1000;
+                    const origH = img.height || 1000;
+                    const origBytes = img.byteLen || (origW * origH * 0.35);
+
+                    let targetW = origW * config.scale;
+                    let targetH = origH * config.scale;
+                    const currentMax = Math.max(targetW, targetH);
+                    if (currentMax > maxDim) {
+                        const factor = maxDim / currentMax;
+                        targetW *= factor;
+                        targetH *= factor;
+                    }
+
+                    const areaRatio = (targetW * targetH) / (origW * origH);
+                    const compressionFactor = Math.min(0.85, config.quality * 0.7);
+                    const estNewBytes = origBytes * areaRatio * compressionFactor;
+
+                    if (estNewBytes < origBytes) {
+                        totalSaved += (origBytes - estNewBytes);
+                    }
+                }
+            });
+
+            if (totalSaved <= 0) return 0;
+            return Math.min(92, Math.max(5, Math.round((totalSaved / originalSize) * 100)));
+        }
+
+        function renderQueueList() {
+            if (fileQueue.length === 0) {
+                queueContainer.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            fileQueue.forEach(item => {
+                let badgeText = '正在掃描結構...';
+                let estText = '';
+                if (item.status === 'ready' && item.inspectData) {
+                    const d = item.inspectData;
+                    if (d.totalImages === 0) {
+                        badgeText = '無內嵌圖片 (純文字 PDF)';
+                    } else {
+                        badgeText = `含 ${d.totalImages} 張圖片 (${d.compressibleCount} 張可降採樣)`;
+                        const estRatio = getDynamicEstRatio(item) || d.estRatio;
+                        if (estRatio > 0) estText = `預估瘦身 ~${estRatio}%`;
+                    }
+                } else if (item.status === 'done') {
+                    badgeText = '壓縮重構完成';
+                }
+
+                html += `
+                <div class="queue-item-card" id="card_${item.id}">
+                    <div class="queue-item-header">
+                        <div class="file-info">
+                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div class="file-meta">
+                                <div class="file-name">${escapeHtml(item.name)}</div>
+                                <div class="file-badges">
+                                    <span class="file-size-badge">${formatBytes(item.size)}</span>
+                                    <span class="inspect-badge">${badgeText}</span>
+                                    ${estText ? `<span class="inspect-badge est">${estText}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            ${item.inspectData && item.inspectData.images && item.inspectData.images.length > 0 ? `
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('${item.id}')">
+                                    <i class="fa-solid fa-circle-info"></i> 明細 <i class="fa-solid fa-chevron-down"></i>
+                                </button>
+                            ` : ''}
+                            <button type="button" class="remove-item-btn" onclick="removeQueueItem('${item.id}')" title="移除檔案">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 進度條 -->
+                    <div class="item-progress-bar-container" id="prog_box_${item.id}">
+                        <div class="item-progress-bar-fill" id="prog_fill_${item.id}"></div>
+                    </div>
+
+                    <!-- 結果明細列 -->
+                    <div class="item-result-badge" id="res_badge_${item.id}"></div>
+
+                    <!-- 明細圖片表格 Drawer -->
+                    ${item.inspectData && item.inspectData.images ? renderDetailsDrawer(item) : ''}
+                </div>`;
+            });
+
+            queueContainer.innerHTML = html;
+        }
+
+        function renderDetailsDrawer(item) {
+            const images = item.inspectData.images;
+            let rows = '';
+            images.forEach((img, idx) => {
+                let statusClass = img.status === 'compressible' ? 'compressible' : 'protected';
+                rows += `
+                <tr>
+                    <td>#${idx + 1}</td>
+                    <td>${img.width} × ${img.height}</td>
+                    <td>${img.filter || 'Raw'} (${img.colorSpace})</td>
+                    <td><span class="status-pill ${statusClass}">${img.statusReason}</span></td>
+                </tr>`;
+            });
+
+            return `
+            <div class="image-details-drawer" id="drawer_${item.id}">
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>維度 (WxH)</th>
+                            <th>格式/色彩</th>
+                            <th>預檢決策</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+        }
+
+        function toggleDetails(id) {
+            const drawer = document.getElementById(`drawer_${id}`);
+            if (drawer) drawer.classList.toggle('open');
+        }
+
+        // ----------------------------------------------------
+        // 6. 批次壓縮處理邏輯
+        // ----------------------------------------------------
+        function startBatchCompression() {
+            if (fileQueue.length === 0 || isCompressing) return;
+
+            isCompressing = true;
+            updateActionButtons();
+            hideToast();
+
+            // 依序處理佇列中未完成的檔案
+            processNextQueueItem();
+        }
+
+        function processNextQueueItem() {
+            const target = fileQueue.find(f => f.status === 'ready' || f.status === 'inspecting');
+            if (!target) {
+                isCompressing = false;
+                updateActionButtons();
+                return;
+            }
+
+            target.status = 'compressing';
+            const progBox = document.getElementById(`prog_box_${target.id}`);
+            if (progBox) progBox.style.display = 'block';
+
+            worker.postMessage({
+                type: 'compress',
+                fileId: target.id,
+                pdfBuffer: target.buffer.slice(0),
+                config: config
+            });
+        }
+
+        function updateItemProgressUI(fileId, msg, current, total) {
+            const fill = document.getElementById(`prog_fill_${fileId}`);
+            if (fill) {
+                const pct = total ? Math.round((current / total) * 90) : 30;
+                fill.style.width = `${Math.max(10, pct)}%`;
+            }
+        }
+
+        function updateItemResultUI(fileId, data) {
+            const item = fileQueue.find(f => f.id === fileId);
+            const fill = document.getElementById(`prog_fill_${fileId}`);
+            const resBadge = document.getElementById(`res_badge_${fileId}`);
+
+            if (fill) fill.style.width = '100%';
+
+            if (resBadge && item) {
+                const savedBytes = data.originalSize - data.compressedSize;
+                let ratio = 0;
+                if (data.originalSize > 0) ratio = Math.max(0, ((savedBytes / data.originalSize) * 100)).toFixed(1);
+
+                const blob = new Blob([data.pdfBuffer], { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(blob);
+                item.blobUrl = blobUrl;
+
+                const nameWithoutExt = item.name.replace(/\.pdf$/i, '');
+                const downloadName = `${nameWithoutExt}_compressed.pdf`;
+
+                resBadge.innerHTML = `
+                    <div>
+                        <strong>原檔: ${formatBytes(data.originalSize)}</strong> ➔
+                        <strong style="color: var(--accent-green)">壓縮檔: ${formatBytes(data.compressedSize)}</strong>
+                        (減小 ${ratio}%)
+                    </div>
+                    <a href="${blobUrl}" download="${downloadName}" class="single-download-link">
+                        <i class="fa-solid fa-download"></i> 下載 PDF
+                    </a>`;
+                resBadge.style.display = 'flex';
+            }
+        }
+
+        function updateItemErrorUI(fileId, msg) {
+            const resBadge = document.getElementById(`res_badge_${fileId}`);
+            if (resBadge) {
+                resBadge.innerHTML = `<span style="color: #ff4757"><i class="fa-solid fa-triangle-exclamation"></i> 處理失敗: ${escapeHtml(msg)}</span>`;
+                resBadge.style.display = 'flex';
+            }
+        }
+
+        function checkBatchCompletion() {
+            // 自動推進下一個檔案
+            processNextQueueItem();
+        }
+
+        // ----------------------------------------------------
+        // 7. 多檔 ZIP 打包下載
+        // ----------------------------------------------------
+        async function downloadAllAsZip() {
+            const completedItems = fileQueue.filter(f => f.status === 'done' && f.resultData && f.resultData.pdfBuffer);
+            if (completedItems.length === 0) return;
+
+            const zip = new JSZip();
+            completedItems.forEach(item => {
+                const nameWithoutExt = item.name.replace(/\.pdf$/i, '');
+                zip.file(`${nameWithoutExt}_compressed.pdf`, item.resultData.pdfBuffer);
+            });
+
+            showToast('正在打包 ZIP 壓縮檔，請稍候...');
+            const content = await zip.generateAsync({ type: 'blob' });
+            const zipUrl = URL.createObjectURL(content);
+
+            const a = document.createElement('a');
+            a.href = zipUrl;
+            a.download = `PDF_Compressed_Batch_${new Date().toISOString().slice(0, 10)}.zip`;
+            a.click();
+            URL.revokeObjectURL(zipUrl);
+            hideToast();
+        }
+
+        function updateActionButtons() {
+            const hasFiles = fileQueue.length > 0;
+            const hasCompleted = fileQueue.some(f => f.status === 'done');
+
+            startCompressBtn.disabled = !hasFiles || isCompressing;
+            batchZipBtn.style.display = (hasCompleted && fileQueue.length > 1) ? 'flex' : 'none';
+        }
+
+        // ----------------------------------------------------
+        // 8. 輔助函數
+        // ----------------------------------------------------
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showToast(text) {
+            toastText.textContent = text;
+            toastInfo.style.display = 'flex';
+        }
+
+        function hideToast() {
+            toastInfo.style.display = 'none';
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        // 初始化頁面與 Worker
+        initFromURL();
+        initWorker();
+
+        // ----------------------------------------------------
+        // 9. 粒子背景動效 Canvas
+        // ----------------------------------------------------
+        const particleCanvas = document.getElementById('particle-canvas');
+        const ctx = particleCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeParticleCanvas() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeParticleCanvas);
+        resizeParticleCanvas();
+
+        class Particle {
+            constructor(x, y, isBurst = false) {
+                this.x = x || Math.random() * particleCanvas.width;
+                this.y = y || particleCanvas.height + Math.random() * 20;
+                this.radius = isBurst ? Math.random() * 3 + 1 : Math.random() * 2 + 0.5;
+                this.vx = isBurst ? (Math.random() - 0.5) * 6 : (Math.random() - 0.5) * 0.5;
+                this.vy = isBurst ? (Math.random() - 0.5) * 6 : -(Math.random() * 0.8 + 0.2);
+                this.alpha = isBurst ? 1 : Math.random() * 0.4 + 0.1;
+                this.color = Math.random() > 0.5 ? '#00f0ff' : '#7000ff';
+                this.life = isBurst ? 40 : Infinity;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.life !== Infinity) {
+                    this.life--;
+                    this.alpha = Math.max(0, this.life / 40);
+                } else {
+                    if (this.y < -10) {
+                        this.y = particleCanvas.height + 10;
+                        this.x = Math.random() * particleCanvas.width;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 45; i++) {
+            particles.push(new Particle());
+        }
+
+        window.addEventListener('click', (e) => {
+            for (let i = 0; i < 12; i++) {
+                particles.push(new Particle(e.clientX, e.clientY, true));
+            }
+        });
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+    </script>
+</body>
+</html>
