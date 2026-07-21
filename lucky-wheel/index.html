@@ -714,7 +714,7 @@
         /* 欄位表頭 Column Header Labels */
         .prize-table-header {
             display: grid;
-            grid-template-columns: 36px 1.5fr 1.2fr 0.8fr 70px 36px;
+            grid-template-columns: 36px 1.5fr 1.2fr 1.2fr 70px 36px;
             gap: 0.6rem;
             padding: 0 0.75rem 0.5rem 0.75rem;
             font-size: 0.75rem;
@@ -1354,6 +1354,231 @@
             width: 100vw; height: 100vh;
             pointer-events: none;
             z-index: 20005;
+        }
+
+        /* 📱 行動端防撐寬與手機版 RWD 響應式佈局 (Mobile Responsive) */
+        .card, .settings-section, .preview-section, .prize-list {
+            min-width: 0;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .announcement-bar {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.8rem;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            .announcement-text {
+                font-size: 0.8rem;
+                white-space: normal;
+                text-align: center;
+                line-height: 1.3;
+            }
+
+            .btn-history-trigger {
+                padding: 0.2rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .top-nav {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+                padding: 0.75rem 1rem;
+            }
+
+            .back-btn {
+                align-self: flex-start;
+            }
+
+            .nav-actions {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .mode-toggle-group {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .mode-btn {
+                flex: 1;
+                text-align: center;
+                padding: 0.35rem 0.4rem;
+                font-size: 0.8rem;
+            }
+
+            .btn-fullscreen {
+                padding: 0.45rem 0.8rem;
+                font-size: 0.825rem;
+            }
+
+            .glass-container {
+                max-width: 95%;
+                padding: 1rem 0.85rem;
+                margin-bottom: 1.5rem;
+                border-radius: 16px;
+            }
+
+            .page-header {
+                margin-bottom: 1.25rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .page-description {
+                font-size: 0.85rem;
+            }
+
+            .main-layout {
+                gap: 1.25rem;
+            }
+
+            .card {
+                padding: 1rem 0.85rem;
+                border-radius: 14px;
+            }
+
+            .settings-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .btn-group {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                gap: 0.4rem;
+            }
+
+            .btn-group label, .btn-group select, .btn-group button {
+                width: 100%;
+                justify-content: center;
+                font-size: 0.78rem;
+                padding: 0.4rem 0.5rem;
+            }
+
+            .canvas-wrapper {
+                max-width: 320px;
+            }
+
+            .spin-btn-center {
+                width: 68px;
+                height: 68px;
+                font-size: 0.9rem;
+            }
+
+            .slot-wrapper {
+                max-width: 320px;
+            }
+
+            .stats-bar {
+                gap: 0.4rem;
+            }
+
+            .stat-item {
+                padding: 0.5rem 0.25rem;
+            }
+
+            .stat-val {
+                font-size: 1.05rem;
+            }
+
+            .stat-lbl {
+                font-size: 0.7rem;
+            }
+
+            /* 全螢幕舞台行動端適配 */
+            .fs-body {
+                flex-direction: column;
+                overflow-y: auto;
+                padding: 3.5rem 1rem 1.5rem 1rem;
+                gap: 1.25rem;
+                justify-content: flex-start;
+            }
+
+            .fs-canvas-container, .fs-slot-wrapper {
+                width: min(78vw, 42vh);
+                height: min(78vw, 42vh);
+                max-width: 340px;
+                max-height: 340px;
+            }
+
+            .fs-spin-btn {
+                width: 76px;
+                height: 76px;
+                font-size: 1rem;
+            }
+
+            .fs-side-panel {
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                flex: none;
+                max-height: 250px;
+            }
+
+            .fs-close-btn {
+                top: 0.6rem;
+                right: 0.6rem;
+                padding: 0.35rem 0.75rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .prize-table-header {
+                display: none;
+            }
+
+            .prize-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding: 0.75rem;
+                align-items: center;
+            }
+
+            .prize-row .color-picker {
+                order: 1;
+                flex: 0 0 34px;
+            }
+
+            .prize-row .form-input[data-field="title"] {
+                order: 2;
+                flex: 1 1 calc(100% - 90px);
+                min-width: 0;
+            }
+
+            .prize-row .btn-del {
+                order: 3;
+                flex: 0 0 32px;
+            }
+
+            .prize-row .weight-cell {
+                order: 4;
+                flex: 1 1 calc(50% - 30px);
+                min-width: 115px;
+            }
+
+            .prize-row .qty-cell {
+                order: 5;
+                flex: 1 1 calc(50% - 30px);
+                min-width: 115px;
+            }
+
+            .prize-row .status-cell {
+                order: 6;
+                flex: 0 0 auto;
+                margin-left: auto;
+            }
         }
     </style>
 </head>
@@ -2401,7 +2626,7 @@
                         <span class="ratio-badge" data-id="${prize.id}" title="未抽完獎項中佔據的機率百分比">${ratioStr}</span>
                     </div>
                     ${qtyValueHtml}
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 0.3rem;">
+                    <div class="status-cell" style="display: flex; justify-content: center; align-items: center; gap: 0.3rem;">
                         <label class="switch-label" title="${appState.enableQuantityLimit ? '手動標記抽完' : '展場模式中可手動標記'}">
                             <input type="checkbox" ${prize.isFinished ? 'checked' : ''} data-id="${prize.id}" data-field="isFinished">
                             <span class="slider"></span>
