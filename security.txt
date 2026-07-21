@@ -1,0 +1,8 @@
+# Security Contact Information for tools.cjkuo.net
+# RFC 9116 - https://www.rfc-editor.org/rfc/rfc9116
+
+Contact: mailto:security@cjkuo.net
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: zh-TW, en
+Canonical: https://tools.cjkuo.net/.well-known/security.txt
+Policy: https://tools.cjkuo.net/
