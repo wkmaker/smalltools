@@ -53,6 +53,7 @@
         { "@type": "WebPage", "name": "JSON 格式化與美化器", "url": "https://tools.cjkuo.net/json/index.html", "description": "免費線上 JSON 格式化、美化、壓縮與驗證工具" },
         { "@type": "WebPage", "name": "SSL 憑證格式轉換器", "url": "https://tools.cjkuo.net/ssl-converter/index.html", "description": "免費線上 SSL 憑證 PFX PEM DER 格式轉換工具" },
         { "@type": "WebPage", "name": "DIG 網路診斷工具", "url": "https://tools.cjkuo.net/dns-dig/index.html", "description": "線上 DNS DIG 查詢工具，支援 Cloudflare Google DoH" },
+        { "@type": "WebPage", "name": "DNS HTTPS 紀錄設定產生器", "url": "https://tools.cjkuo.net/https-dns-generator/index.html", "description": "免費線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄視覺化產生與填寫教學工具" },
         { "@type": "WebPage", "name": "IP 檢測助手", "url": "https://tools.cjkuo.net/ip-detector/index.html", "description": "免費線上 IPv4 IPv6 IP 位址與連線延遲診斷工具" },
         { "@type": "WebPage", "name": "文字處理助手", "url": "https://tools.cjkuo.net/text-utility/index.html", "description": "免費線上文字大小寫轉換與字數統計工具" },
         { "@type": "WebPage", "name": "Designer QR Code 產生器", "url": "https://tools.cjkuo.net/qr-generator/index.html", "description": "免費線上藝術 QR Code 設計生成工具" },
@@ -547,6 +548,27 @@
 
         .tool-card.dig-card .card-action {
             color: #8b5cf6;
+        }
+
+        /* DNS HTTPS 紀錄設定產生器專屬 hover 效果 */
+        .tool-card.https-dns-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%);
+        }
+
+        .tool-card.https-dns-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 240, 255, 0.15),
+                        inset 0 0 15px rgba(0, 240, 255, 0.02);
+        }
+
+        .tool-card.https-dns-card:hover h3 {
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .tool-card.https-dns-card .card-action {
+            color: #00f0ff;
         }
 
         /* 文字處理助手專屬 hover 效果 */
@@ -1290,6 +1312,19 @@
                         <h3>IP 檢測助手</h3>
                         <span class="subtitle">IP Diagnostic Tool</span>
                         <p>專業的網路與 IP 連線診斷工具。支援即時 IPv4/IPv6 雙棧偵測、Cloudflare 與 Mullvad 隱私節點查詢，以及公有雲服務連線延遲診斷。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
+
+                <!-- DNS HTTPS 紀錄設定產生器 -->
+                <a href="./https-dns-generator/index.html" class="tool-card https-dns-card" data-category="network" data-keywords="dns https record type 65 rfc 9460 svcb cloudflare route53 alpn ipv4hint ipv6hint 設定 產生器 教學">
+                    <div>
+                        <h3>DNS HTTPS 紀錄設定產生器</h3>
+                        <span class="subtitle">DNS HTTPS (Type 65) Generator</span>
+                        <p>免費線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄產生器與對照指南。透過視覺化勾選與填空即時生成 ALPN、IP Hint 等參數，並提供各大 DNS 代管商 4 大欄位填寫教學。</p>
                     </div>
                     <div class="card-action">
                         開啟工具
