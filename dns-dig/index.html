@@ -1037,6 +1037,136 @@
             1: "A", 2: "NS", 5: "CNAME", 6: "SOA", 12: "PTR", 15: "MX", 16: "TXT", 28: "AAAA", 33: "SRV", 35: "NAPTR", 43: "DS", 46: "RRSIG", 47: "NSEC", 48: "DNSKEY", 50: "NSEC3", 52: "TLSA", 55: "HIP", 59: "CDS", 60: "CDNSKEY", 61: "OPENPGPKEY", 62: "CSYNC", 64: "SVCB", 65: "HTTPS", 250: "TSIG", 251: "IXFR", 252: "AXFR", 255: "ANY", 257: "CAA", 32768: "TA", 32769: "DLV"
         };
 
+        // RFC 3597 Raw Hex 自動轉譯處理器
+        function formatDnsData(ans) {
+            if (!ans || !ans.data) return '';
+            const rawData = String(ans.data);
+
+            // 判斷是否為 RFC 3597 通用二進位格式 (例如: \# 13 00 01...)
+            if (/^\\?\#\s*/.test(rawData)) {
+                const parsed = parseRfc3597(rawData, ans.type);
+                if (parsed) {
+                    return parsed;
+                }
+            }
+            return rawData;
+        }
+
+        function parseRfc3597(dataStr, recordType) {
+            try {
+                const cleaned = dataStr.replace(/^\\?\#\s*/, '').trim();
+                const tokens = cleaned.split(/\s+/);
+                if (tokens.length < 2) return null;
+
+                const expectedLen = parseInt(tokens[0], 10);
+                const hexBytes = tokens.slice(1);
+                const bytes = new Uint8Array(hexBytes.map(h => parseInt(h, 16)));
+
+                // 針對 HTTPS (65) 與 SVCB (64) 解析 (RFC 9460)
+                if (recordType === 65 || recordType === 64) {
+                    return parseSvcbHttps(bytes);
+                }
+            } catch (e) {
+                console.warn("RFC 3597 解析失敗:", e);
+            }
+            return null;
+        }
+
+        function parseSvcbHttps(bytes) {
+            if (bytes.length < 3) return null;
+            let offset = 0;
+
+            // 1. SvcPriority (2 bytes)
+            const priority = (bytes[offset] << 8) | bytes[offset + 1];
+            offset += 2;
+
+            // 2. TargetName (Length-prefixed domain labels)
+            const targetParts = [];
+            while (offset < bytes.length) {
+                const len = bytes[offset++];
+                if (len === 0) break; // root domain '.'
+                if (offset + len > bytes.length) return null;
+                const labelBytes = bytes.subarray(offset, offset + len);
+                targetParts.push(new TextDecoder().decode(labelBytes));
+                offset += len;
+            }
+            const targetName = targetParts.length === 0 ? '.' : targetParts.join('.') + '.';
+
+            // 3. SvcParams
+            const params = [];
+            const KEY_NAMES = {
+                0: 'mandatory',
+                1: 'alpn',
+                2: 'no-default-alpn',
+                3: 'port',
+                4: 'ipv4hint',
+                5: 'ech',
+                6: 'ipv6hint',
+                7: 'dohpath'
+            };
+
+            while (offset + 4 <= bytes.length) {
+                const key = (bytes[offset] << 8) | bytes[offset + 1];
+                const valLen = (bytes[offset + 2] << 8) | bytes[offset + 3];
+                offset += 4;
+
+                if (offset + valLen > bytes.length) break;
+                const valBytes = bytes.subarray(offset, offset + valLen);
+                offset += valLen;
+
+                const keyName = KEY_NAMES[key] || `key${key}`;
+                let valStr = '';
+
+                if (key === 1) { // alpn
+                    const alpnList = [];
+                    let aOffset = 0;
+                    while (aOffset < valBytes.length) {
+                        const aLen = valBytes[aOffset++];
+                        if (aOffset + aLen > valBytes.length) break;
+                        alpnList.push(new TextDecoder().decode(valBytes.subarray(aOffset, aOffset + aLen)));
+                        aOffset += aLen;
+                    }
+                    valStr = alpnList.join(',');
+                } else if (key === 3) { // port
+                    if (valBytes.length === 2) {
+                        valStr = ((valBytes[0] << 8) | valBytes[1]).toString();
+                    }
+                } else if (key === 4) { // ipv4hint
+                    const ips = [];
+                    for (let i = 0; i + 4 <= valBytes.length; i += 4) {
+                        ips.push(`${valBytes[i]}.${valBytes[i+1]}.${valBytes[i+2]}.${valBytes[i+3]}`);
+                    }
+                    valStr = ips.join(',');
+                } else if (key === 6) { // ipv6hint
+                    const ips = [];
+                    for (let i = 0; i + 16 <= valBytes.length; i += 16) {
+                        const groups = [];
+                        for (let j = 0; j < 16; j += 2) {
+                            groups.push(((valBytes[i + j] << 8) | valBytes[i + j + 1]).toString(16));
+                        }
+                        ips.push(groups.join(':'));
+                    }
+                    valStr = ips.join(',');
+                } else if (key === 2) { // no-default-alpn
+                    valStr = '';
+                } else {
+                    valStr = new TextDecoder().decode(valBytes);
+                }
+
+                if (key === 2 && !valStr) {
+                    params.push(keyName);
+                } else {
+                    params.push(`${keyName}=${valStr}`);
+                }
+            }
+
+            let result = `${priority} ${targetName}`;
+            if (params.length > 0) {
+                result += ` ${params.join(' ')}`;
+            }
+            return result;
+        }
+
         // 自動網址清理 Hostname 提取
         function cleanInputDomain() {
             let input = domainInput.value.trim();
@@ -1266,9 +1396,13 @@
                         ttlCell.classList.add('td-ttl');
 
                         const dataCell = document.createElement('td');
-                        let dispData = ans.data;
+                        const rawData = ans.data;
+                        const dispData = formatDnsData(ans);
                         dataCell.innerText = dispData;
                         dataCell.classList.add('td-data', 'copyable-cell');
+                        if (dispData !== rawData) {
+                            dataCell.title = `已自動解碼 RFC 3597 原始資料：\n${rawData}`;
+                        }
                         dataCell.addEventListener('click', () => copyCellText(dispData));
 
                         row.appendChild(nameCell);
