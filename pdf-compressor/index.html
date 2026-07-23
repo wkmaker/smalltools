@@ -49,6 +49,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- 核心庫 CDN -->
@@ -57,47 +58,11 @@
 
     <style>
         :root {
-            --bg-color: #030305;
-            --glass-bg: rgba(255, 255, 255, 0.02);
-            --glass-border: rgba(255, 255, 255, 0.05);
-            --glass-card: rgba(18, 18, 26, 0.65);
+            --theme-color: #00f0ff;
             --accent-glow: #00f0ff;
             --accent-glow-rgb: 0, 240, 255;
             --accent-purple: #7000ff;
             --accent-green: #00f5a0;
-            --text-primary: #ffffff;
-            --text-secondary: #8892b0;
-            color-scheme: dark;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow-x: hidden;
-            position: relative;
-            padding: 2rem 1rem;
-        }
-
-        /* 背景微粒 Canvas */
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
         }
 
         .main-wrapper {
@@ -155,6 +120,7 @@
             font-weight: 700;
             background: linear-gradient(135deg, #ffffff 0%, #00f0ff 50%, #7000ff 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.75rem;
             letter-spacing: -0.5px;
@@ -595,6 +561,7 @@
             background: rgba(255, 255, 255, 0.1);
             outline: none;
             -webkit-appearance: none;
+            appearance: none;
         }
 
         .custom-range::-webkit-slider-thumb {

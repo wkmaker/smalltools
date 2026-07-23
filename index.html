@@ -73,27 +73,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- 引入全站共用毛玻璃與暗色主題 CSS -->
+    <link rel="stylesheet" href="css/common-glassmorphism.css">
     <style>
         :root {
-            --bg-color: #030305;
-            --glass-bg: rgba(255, 255, 255, 0.015);
-            --glass-border: rgba(255, 255, 255, 0.05);
+            --theme-color: #00f0ff;
             --accent-glow: rgba(0, 240, 255, 0.6);
             --accent-purple: rgba(180, 0, 255, 0.4);
-            --text-primary: #ffffff;
-            --text-secondary: #8892b0;
-            color-scheme: dark;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
             display: flex;
