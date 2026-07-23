@@ -77,12 +77,16 @@
 
 .chip {
     font-size: 0.78rem;
+    line-height: 1.4;
     padding: 0.35rem 0.75rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     color: var(--text-secondary);
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
     transition: all 0.2s ease;
 }
 
@@ -307,8 +311,11 @@
 .highlight-badge {
     background: rgba(0, 245, 160, 0.15);
     color: var(--neon-green);
-    font-size: 0.72rem;
-    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    padding: 0.2rem 0.45rem;
     border-radius: 4px;
     font-family: var(--font-code);
+    display: inline-block;
+    vertical-align: middle;
 }

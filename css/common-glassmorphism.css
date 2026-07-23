@@ -255,6 +255,7 @@ select {
     font-family: var(--font-main);
     font-size: 0.95rem;
     font-weight: 500;
+    line-height: 1.4;
 }
 
 /* 暗色系下拉選單支援 */
