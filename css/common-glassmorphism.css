@@ -59,6 +59,8 @@ input[type=number] {
 }
 
 /* 全域 Canvas 背景定位 */
+#particle-canvas,
+#particleCanvas,
 #bgCanvas {
     position: fixed;
     top: 0;

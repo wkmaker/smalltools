@@ -24,12 +24,23 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
    * **車貸計算器**：運動與速度主題，發光色採用霓虹紅 `#ff0055`。
    * **互動狀態**：輸入框聚焦 (focus) 與按鈕懸停 (hover) 時，必須亮起對應主題色的發光效果與陰影。
 
-3. **全站容器寬度規範 (Max-Width Standard)**
+3. **全站共用 CSS 模組化與內聯樣式洗淨原則 (common-glassmorphism.css)**
+   * **路徑引用規範**：所有 HTML 檔案均應於 `<head>` 的 Google Fonts 之後引進全站共用 CSS：
+     - 根目錄：`<link rel="stylesheet" href="css/common-glassmorphism.css">`
+     - 第一層工具目錄：`<link rel="stylesheet" href="../css/common-glassmorphism.css">`
+     - 第二層子目錄（如 `en/`）：`<link rel="stylesheet" href="../../css/common-glassmorphism.css">`
+   * **冗餘 CSS 洗淨原則**：引入 `common-glassmorphism.css` 後，個別工具 HTML 的 `<style>` 內**嚴禁重複編寫全站共用宣告**（如 `:root` 中的 `--bg-color`、`--glass-bg`、`--glass-border`、`* { box-sizing: border-box; }`、`body` 基礎置中佈局與 `#particle-canvas` 定位）。
+   * **乾淨內聯樣式**：每個小工具的內聯 `<style>` 應僅保留 **該工具專屬的主題發光色 (`--theme-color: #...;`)** 與 **該工具獨有的特色佈局/元件樣式**。
+
+4. **全站容器寬度規範 (Max-Width Standard)**
    * 所有計算機與首頁的 `.glass-container` 必須使用 `max-width: 90%`（而非固定像素值如 1000px），確保在大螢幕（如 1920px 寬的顯示器）上有足夠的展示空間，同時在小螢幕上仍保持適當的左右留白。
 
-4. **背景粒子與氣泡爆炸反饋動效 (Dynamic Particle Effects)**
-   * 背景應配備一個 Canvas，持續繪製緩慢向上飄動的微透明金黃或冰藍或翠綠粒子。
-   * 點選 Selector 切換按鈕時，需在滑鼠點擊座標觸發一小撮粒子的「氣泡爆炸效果」做為微動效反饋。
+5. **背景粒子與動態物理 (Dynamic Particle Physics & Direction Control)**
+   * **通用引用**：全站統一於 `</body>` 之前引用 `js/common-particles.js`。
+   * **RWD 動態密度**：粒子數量需依據螢幕面積動態計算 `Math.floor(width * height / 10000)`（自動調整在 60 ~ 200 顆之間），兼顧行動端效能與大螢幕豐富度。
+   * **主題色動態解構**：粒子腳本應自動讀取並解構工具 CSS 變數 `--theme-color` 或 `--accent-glow` 之 RGB 數值，防止雙重透明度疊加造成色彩暗淡。
+   * **滑鼠避讓與氣泡爆破**：預設配備 160px 半徑之滑鼠避讓排斥物理，並在互動點擊時觸發氣泡爆破反饋。
+   * **方向性物理 API (`setParticleFlowDirection`)**：提供 `setParticleFlowDirection('up'|'down')` API。在倒數計時情境（如時間遞減）下調為 `'down'`（粒子向下滑動與向下爆破）；在累計計時或正數情境下調為 `'up'`（粒子向上漂浮與向上爆破）。
 
 ---
 
@@ -76,30 +87,37 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
 
 ## 三、 元件設計與編碼細節規範 (UI Component & Code Specifications)
 
-1. **行動端防撐寬與手機版 Sticky 橫向滾動表格**
+1. **W3C 跨瀏覽器 CSS 屬性相容規範**
+   * **`background-clip` 相容**：使用 `-webkit-background-clip: text;` 實現漸層文字時，必須緊接著補上 W3C 標準屬性 `background-clip: text;`。
+   * **`appearance` 相容**：使用 `-webkit-appearance: none;` 或 `-moz-appearance: textfield;` 自訂輸入框或微調按鈕時，必須緊接著補上 W3C 標準屬性 `appearance: none;` 或 `appearance: textfield;`。
+
+2. **標籤關閉與腳本引入結構完整性規範**
+   * 內聯 `<script>` 區塊在引入外部 JS 檔案（如 `common-particles.js`）前，必須確認 `</script>` 標籤已明確閉合，嚴禁發生縮排縮進丟失或語法未閉合情況。
+
+3. **行動端防撐寬與手機版 Sticky 橫向滾動表格**
    * **防止強行撐開**：在 CSS Grid 佈局中，如果子元素具有較大最小寬度（如 650px 的表格），會強行撐開 Grid Item。必須在 Grid Item（如 `.results-section`）上加上 `min-width: 0;`。
    * **手機版橫向滾動**：表格容器必須配置 `width: 100%; max-width: 100%; overflow-x: auto;`。
    * **首欄凍結與重疊防護**：最左側的「時間 (期數)」欄必須利用 `position: sticky; left: 0;` 進行固定，且必須配置與頁面相近的「實底深色背景」（如 `#0b0b0e`）與微弱側邊陰影，防止橫向滑動時右側數值與時間欄文字重疊。
 
-2. **輸入控制項與格式化細節**
+4. **輸入控制項與格式化細節**
    * **隱藏預設微調按鈕**：當輸入框為 `type="number"` 且右側塞有自訂的單位按鈕時，必須隱藏瀏覽器預設的 Spinners 上下箭頭：
      ```css
-     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-     input[type=number] { -moz-appearance: textfield; }
+     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+     input[type=number] { -moz-appearance: textfield; appearance: textfield; }
      ```
    * **千分位逗號游標修正**：金額輸入框在鍵入數字時需動態以逗號格式化，且必須用 JS 計算逗號增加數量並修正游標 `setSelectionRange`，避免游標跳動到最右側。
    * **雙向連動格式化**：當多個欄位存在依存關係且需雙向連動時，應僅對使用者正在鍵入的活動輸入框 (active input) 修正游標定位，其他連動欄位則由程式直接格式化填值，避免多重更新觸發游標亂跳或循環計算。
    * **輸入框分行堆疊**：在含有「成數 (%)」與「金額 (元)」雙向連動的介面中（如自備款），當兩者數字較大，必須將兩個欄位**分開為各自獨立的 `input-group` 行**，不可並排，確保在所有螢幕尺寸下數值均能完整顯示。
 
-3. **下拉選單與日期選擇器暗色系支援**
+5. **下拉選單與日期選擇器暗色系支援**
    * **下拉選單顏色可見性**：必須強制為所有 `<select>` 及 `<option>` 設定明確的深色背景（如 `background-color: #121218 !important`）與亮白色文字色（如 `color: #ffffff !important`），防止在部分瀏覽器預設的展開背景下產生白底白字的「文字隱形消失」Bug。
    * **日期選擇器暗色系支援**：為所有 `input[type="date"]` 等輸入框明確套用 CSS 屬性 `color-scheme: dark;`，指示瀏覽器將彈出的月曆與時間選擇面板自動轉為深色模式。
    * **文字輸入框對比度**：輸入框容器（`.input-wrapper`）的背景透明度應維持在 `0.035` 以上，且非聚焦邊框的不透明度應至少為 `0.15`。輸入文字必須使用明亮的純白（`#ffffff`），字型大小建議 `1.1rem` 以上且適度加粗（如 `font-weight: 500`）。
 
-4. **時區選單優化設計**
+6. **時區選單優化設計**
    * **時區簡化**：對於非特定指名的時區轉換，時區下拉選單不宜列出長串的全球城市名稱。應改用乾淨直觀的 **「UTC 數值偏移量」**（如 `UTC -08:00 (PST)`、`UTC +08:00`），簡化下拉選單長度並讓 JS 運算更高效。
 
-5. **表單防重疊與手機版返回按鈕定位**
+7. **表單防重疊與手機版返回按鈕定位**
    * **行動端覆蓋**：「回工具庫首頁」按鈕在電腦版為 `position: absolute` 定位在左上角。在手機版媒體查詢下，必須覆蓋為：
      ```css
      .back-btn { position: static; display: inline-flex; margin-bottom: 1.5rem; }
@@ -107,13 +125,13 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
      將返回按鈕排在標題的最上方單獨一行，徹底防範其與標題文字重合。
    * **動態 DOM 安全佔位符**：預設空圖片或動態加載的圖像元件，其預設 `src` 必須設置為 1x1 像素的透明 Base64 GIF 佔位符 (`src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"`)，徹底預防相對路徑 `"null"` 產生的 404 報錯。
 
-6. **金融/計算工具求解標準**
+8. **金融/計算工具求解標準**
    * **實質年利率 (APR) 求解標準**：凡是包含開辦費/手續費攤提的貸款工具，必須提供實質年利率 (APR) 試算。使用 **二分搜尋法 (Bisection Method)** 求解內含報酬率 (IRR)。
    * **多方案金流 IRR 求解**：當試算工具支援多種還款方案時，APR 應基於實際產生的月付金流陣列 (paymentArray) 作為參數帶入二分搜尋法求解，維持擴充性與高精度。
    * **多段式利率動態增減**：不應使用固定數量的靜態 HTML 段落（如寫死 3 段），必須改以 **JS 動態渲染 `stages` 陣列**，讓使用者可以自由新增與移除段落。最少需保留 2 段，最多上限 6 段，且最後一段永遠為剩餘期數適用段（不填期間）。
    * **還款模擬的浮點誤差微調**：在本息/本金均攤模擬計算時，最後一期的「期末餘額」必須手動強設為 `0`，防止 JS 底層浮點數運算造成的些微殘留誤差。
 
-7. **站點與部署規範**
+9. **站點與部署規範**
    * **Sitemap 維護規範**：專案根目錄必須維護一份 `sitemap.xml`，每次新增工具頁面後，必須同步更新 `sitemap.xml`，並更新所有現有頁面的 `lastmod` 日期。首頁的 `priority` 設為 `1.0`，工具頁設為 `0.8`。
    * **部署 CI/CD 安全排除**：開發工具庫的配置設定與本地 Skill 定義（即 `.agents/` 目錄）切勿同步至生產環境。必須在部署腳本中強制配置 `--exclude ".agents*"` 以防止內部檔案外流。
    * **Favicon 與 Open Graph 標籤規範**：每個頁面必須加入 Open Graph（`og:type`, `og:site_name`, `og:locale`, `og:title`, `og:description`, `og:url`, `og:image`）、Twitter Card (`twitter:card="summary_large_image"`) 與 favicon 設定，且圖片與 URL 一律使用絕對路徑以確保轉傳時的正確性。
@@ -126,7 +144,7 @@ description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風�
      ```
      務必確保 `fonts.gstatic.com` 包含 `crossorigin` 屬性，防範跨網域字型檔載入時的握手延遲，優化 FCP/LCP 指標。
 
-8. **頁面主標題功能描述與 SEO 優化規範**
-   * **描述區段配置**：工具頁面的 `<h1>` 標題下方應配置 `<p class="page-description">` 用於描述工具特色，並自然融入「免費」、「線上」、「無廣告」等高搜尋意圖關鍵字。
-   * **語意化 H1 標題中文化與預設 Title 標準**：工具頁面之 `<h1>` 標題與 JavaScript 動態設定的預設 Title 必須優先採用繁體中文並融入核心意圖關鍵字（例如使用「線上目標倒數計時器」取代純英文「Create Timer」），以增強關鍵字相關性與搜尋排名。
-   * **CSS 美感標準**：`.page-description` 需限制 `max-width: 800px`（防大螢幕拉長），字型大小設於 `0.9rem` ~ `0.95rem`，字重 `300 (Light)`，行高 `1.6`，使用次要文字色（如 `var(--text-secondary)`）並配置置中對齊，維持全站精緻暗色毛玻璃的視覺平衡。
+10. **頁面主標題功能描述與 SEO 優化規範**
+    * **描述區段配置**：工具頁面的 `<h1>` 標題下方應配置 `<p class="page-description">` 用於描述工具特色，並自然融入「免費」、「線上」、「無廣告」等高搜尋意圖關鍵字。
+    * **語意化 H1 標題中文化與預設 Title 標準**：工具頁面之 `<h1>` 標題與 JavaScript 動態設定的預設 Title 必須優先採用繁體中文並融入核心意圖關鍵字（例如使用「線上目標倒數計時器」取代純英文「Create Timer」），以增強關鍵字相關性與搜尋排名。
+    * **CSS 美感標準**：`.page-description` 需限制 `max-width: 800px`（防大螢幕拉長），字型大小設於 `0.9rem` ~ `0.95rem`，字重 `300 (Light)`，行高 `1.6`，使用次要文字色（如 `var(--text-secondary)`）並配置置中對齊，維持全站精緻暗色毛玻璃的視覺平衡。
