@@ -5,55 +5,111 @@
  */
 
 (function () {
-    let canvas = document.getElementById('bgCanvas');
+    let canvas = document.getElementById('particle-canvas') || 
+                 document.getElementById('particleCanvas') || 
+                 document.getElementById('bgCanvas');
     if (!canvas) {
         canvas = document.createElement('canvas');
-        canvas.id = 'bgCanvas';
+        canvas.id = 'particle-canvas';
+        canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1;';
         document.body.prepend(canvas);
+    } else {
+        canvas.style.position = 'fixed';
+        canvas.style.pointerEvents = 'none';
     }
 
     const ctx = canvas.getContext('2d');
     let particles = [];
     let burstParticles = [];
+    let mouse = { x: null, y: null, radius: 160 };
+    let flowDirection = 'up'; // 'up' or 'down'
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        adjustParticles();
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
 
-    // 取得當前工具設定的主題色 (預設 #00f0ff)
+    // 取得當前工具設定的主題色 (優先讀取 inline 與 computed 的 --theme-color、--accent-glow、--accent-color)
     function getActiveThemeColor() {
-        const themeColor = getComputedStyle(document.documentElement)
-                            .getPropertyValue('--theme-color').trim();
-        return themeColor || '#00f0ff';
+        const docEl = document.documentElement;
+        let color = docEl.style.getPropertyValue('--theme-color').trim() || 
+                    getComputedStyle(docEl).getPropertyValue('--theme-color').trim() ||
+                    docEl.style.getPropertyValue('--accent-glow').trim() || 
+                    getComputedStyle(docEl).getPropertyValue('--accent-glow').trim() ||
+                    getComputedStyle(docEl).getPropertyValue('--accent-color').trim();
+        
+        if (color) {
+            // 如果是 rgba(r, g, b, a)，抽取出純 rgb(r, g, b) 以避免與 globalAlpha 二次乘積導致過暗
+            const rgbaMatch = color.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+            if (rgbaMatch) {
+                return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
+            }
+            return color;
+        }
+        return '#00f0ff';
     }
 
     class Particle {
         constructor() {
-            this.reset();
+            this.reset('random');
         }
-        reset() {
+        reset(fromPos = 'random') {
             this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speedY = Math.random() * 0.4 + 0.1;
-            this.opacity = Math.random() * 0.5 + 0.1;
-            this.hue = Math.random() > 0.5 ? 270 : 190; // 紫色與青藍色交替
+            if (fromPos === 'top') {
+                this.y = -10 - Math.random() * 20;
+            } else if (fromPos === 'bottom') {
+                this.y = canvas.height + Math.random() * 20;
+            } else {
+                this.y = Math.random() * canvas.height;
+            }
+            this.size = Math.random() * 1.8 + 0.6;
+            this.speedY = Math.random() * 0.45 + 0.15;
+            this.speedX = (Math.random() - 0.5) * 0.25;
+            this.opacity = Math.random() * 0.55 + 0.15;
+            this.density = Math.random() * 25 + 5;
         }
         update() {
-            this.y -= this.speedY;
-            if (this.y < 0) {
-                this.y = canvas.height;
+            if (flowDirection === 'down') {
+                // 倒數中：背景粒子向下飄
+                this.y += this.speedY;
+                this.x += this.speedX;
+                if (this.y > canvas.height + 10) {
+                    this.reset('top');
+                }
+            } else {
+                // 累計中/預設：背景粒子向上飄
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                if (this.y < -10) {
+                    this.reset('bottom');
+                }
+            }
+
+            if (this.x < -10 || this.x > canvas.width + 10) {
                 this.x = Math.random() * canvas.width;
+            }
+
+            // 滑鼠排斥效果
+            if (mouse.x !== null) {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    this.x -= (dx / distance) * force * (this.density * 0.4);
+                    this.y -= (dy / distance) * force * (this.density * 0.4);
+                }
             }
         }
         draw() {
-            ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.opacity})`;
+            ctx.save();
+            ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = getActiveThemeColor();
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
         }
     }
 
@@ -65,45 +121,69 @@
 
             if (isCountUp === true) {
                 // 往上噴發 (累計時間/向上計時)
-                this.vx = (Math.random() - 0.5) * 3;
-                this.vy = -(Math.random() * 2 + 1);
+                this.vx = (Math.random() - 0.5) * 3.5;
+                this.vy = -(Math.random() * 2.5 + 1);
             } else if (isCountUp === false) {
                 // 往下噴發 (倒數時間/向下計時)
-                this.vx = (Math.random() - 0.5) * 3;
-                this.vy = (Math.random() * 2 + 1);
+                this.vx = (Math.random() - 0.5) * 3.5;
+                this.vy = (Math.random() * 2.5 + 1);
             } else {
                 // 預設全方位氣泡擴散 (點擊反饋)
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 3 + 1;
+                const speed = Math.random() * 3.5 + 1;
                 this.vx = Math.cos(angle) * speed;
                 this.vy = Math.sin(angle) * speed;
             }
 
             this.alpha = 1;
-            this.color = Math.random() > 0.5 ? getActiveThemeColor() : '#a855f7';
+            this.color = Math.random() > 0.4 ? getActiveThemeColor() : '#ffffff';
         }
         update() {
             this.x += this.vx;
             this.y += this.vy;
-            this.alpha -= 0.03;
+            this.alpha -= 0.028;
         }
         draw() {
+            ctx.save();
             ctx.globalAlpha = Math.max(0, this.alpha);
             ctx.fillStyle = this.color;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = this.color;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
-            ctx.globalAlpha = 1;
+            ctx.restore();
         }
     }
 
-    for (let i = 0; i < 40; i++) {
-        particles.push(new Particle());
+    function adjustParticles() {
+        // 依視窗面積動態計算目標粒子數量 (每 10,000 px² 1 顆，60 ~ 200 顆)
+        const targetCount = Math.min(200, Math.max(60, Math.floor((canvas.width * canvas.height) / 10000)));
+        if (particles.length < targetCount) {
+            const toAdd = targetCount - particles.length;
+            for (let i = 0; i < toAdd; i++) {
+                particles.push(new Particle());
+            }
+        } else if (particles.length > targetCount) {
+            particles.length = targetCount;
+        }
     }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+    window.addEventListener('mouseout', () => {
+        mouse.x = null;
+        mouse.y = null;
+    });
+
+    resizeCanvas();
 
     // 全域觸發氣泡爆炸微動效
     window.triggerParticleBurst = function (x, y) {
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
             burstParticles.push(new BurstParticle(x, y));
         }
     };
@@ -112,11 +192,18 @@
     // 方向性粒子噴發 (用於計時器向上/向下翻頁噴發粒子)
     window.triggerDirectionalBurst = function (x, y, isCountUp) {
         const offsetY = isCountUp ? y - 10 : y + 10;
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 15; i++) {
             burstParticles.push(new BurstParticle(x, offsetY, isCountUp));
         }
     };
     window.createDirectionalBurst = window.triggerDirectionalBurst;
+
+    // 動態切換背景粒子飄浮方向 ('up' 或 'down')
+    window.setParticleFlowDirection = function (dir) {
+        if (dir === 'up' || dir === 'down') {
+            flowDirection = dir;
+        }
+    };
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);

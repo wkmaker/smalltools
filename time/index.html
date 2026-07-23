@@ -838,10 +838,14 @@
                 if (diff > 0) {
                     elStatus.innerHTML = '<span class="status-english">REMAINING TIME</span><span class="status-chinese">剩餘時間</span>';
                     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 240, 255, 0.6)');
+                    document.documentElement.style.setProperty('--theme-color', '#00f0ff');
+                    if (window.setParticleFlowDirection) window.setParticleFlowDirection('down');
                     currentColorMode = 0;
                 } else {
                     elStatus.innerHTML = '<span class="status-english">TIME ELAPSED</span><span class="status-chinese">累計時間</span>';
                     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 128, 0.6)');
+                    document.documentElement.style.setProperty('--theme-color', '#ff3296');
+                    if (window.setParticleFlowDirection) window.setParticleFlowDirection('up');
                     currentColorMode = 1;
                 }
             };
