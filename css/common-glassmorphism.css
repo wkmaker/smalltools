@@ -309,6 +309,8 @@ input[type="date"] {
     word-break: break-all;
     line-height: 1.5;
     user-select: all;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
 }
 
 /* 全域 Toast 訊息框 */
