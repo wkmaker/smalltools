@@ -55,6 +55,7 @@
         { "@type": "WebPage", "name": "DIG 網路診斷工具", "url": "https://tools.cjkuo.net/dns-dig/index.html", "description": "線上 DNS DIG 查詢工具，支援 Cloudflare Google DoH" },
         { "@type": "WebPage", "name": "DNS HTTPS 紀錄設定產生器", "url": "https://tools.cjkuo.net/https-dns-generator/index.html", "description": "免費線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄視覺化產生與填寫教學工具" },
         { "@type": "WebPage", "name": "IP 檢測助手", "url": "https://tools.cjkuo.net/ip-detector/index.html", "description": "免費線上 IPv4 IPv6 IP 位址與連線延遲診斷工具" },
+        { "@type": "WebPage", "name": "IP 子網段與可用 IP 計算器", "url": "https://tools.cjkuo.net/ip-calculator/index.html", "description": "免費線上 IPv4 與 CIDR 子網段位元運算與可用 IP 列表工具" },
         { "@type": "WebPage", "name": "文字處理助手", "url": "https://tools.cjkuo.net/text-utility/index.html", "description": "免費線上文字大小寫轉換與字數統計工具" },
         { "@type": "WebPage", "name": "Designer QR Code 產生器", "url": "https://tools.cjkuo.net/qr-generator/index.html", "description": "免費線上藝術 QR Code 設計生成工具" },
         { "@type": "WebPage", "name": "兩份文件比對工具", "url": "https://tools.cjkuo.net/diff-checker/index.html", "description": "免費線上文字比對 Diff Checker 工具" },
@@ -568,6 +569,27 @@
         }
 
         .tool-card.https-dns-card .card-action {
+            color: #00f0ff;
+        }
+
+        /* IP 子網段計算器專屬 hover 效果 */
+        .tool-card.ip-calculator-card::before {
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%);
+        }
+
+        .tool-card.ip-calculator-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 
+                        0 0 20px rgba(0, 240, 255, 0.15),
+                        inset 0 0 15px rgba(0, 240, 255, 0.02);
+        }
+
+        .tool-card.ip-calculator-card:hover h3 {
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .tool-card.ip-calculator-card .card-action {
             color: #00f0ff;
         }
 
@@ -1325,6 +1347,19 @@
                         <h3>DNS HTTPS 紀錄設定產生器</h3>
                         <span class="subtitle">DNS HTTPS (Type 65) Generator</span>
                         <p>免費線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄產生器與對照指南。透過視覺化勾選與填空即時生成 ALPN、IP Hint 等參數，並提供各大 DNS 代管商 4 大欄位填寫教學。</p>
+                    </div>
+                    <div class="card-action">
+                        開啟工具
+                        <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                    </div>
+                </a>
+
+                <!-- IP 子網段與可用 IP 計算器 -->
+                <a href="./ip-calculator/index.html" class="tool-card ip-calculator-card" data-category="network" data-keywords="ip calculator subnet subnet mask cidr usable ip network broadcast total ips 位址 計算器 網段 遮罩 可用IP 廣播位址 網路位址">
+                    <div>
+                        <h3>IP 子網段計算器</h3>
+                        <span class="subtitle">IP Subnet Calculator</span>
+                        <p>快速計算 IPv4 / CIDR 的網段資訊，精確列出網路位址、廣播位址與可用 IP 位址列表與數量，支援大網段極速 TXT/CSV 下載。</p>
                     </div>
                     <div class="card-action">
                         開啟工具

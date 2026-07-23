@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 子網遮罩運算工具 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/ip-calculator/index.html">
+    <meta name="description" content="專業免費的線上 IP 子網段與可用 IP 計算器！支援 CIDR 標記與點分十進制切換，毫秒級精確計算網路位址、廣播位址、子網遮罩、可用 IP 範圍與數量，提供分頁過濾與百萬級 IP 極速 TXT/CSV 導出。">
+    <meta name="keywords" content="IP計算器,子網計算器,IP Subnet Calculator,CIDR計算,子網遮罩,網路位址,廣播位址,可用IP範圍,IPv4,點分十進制">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="CJKuo">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 計算工具">
+    <meta property="og:description" content="毫秒級精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址與可用 IP 列表，支援極速導出與 RWD 響應式介面。">
+    <meta property="og:url" content="https://tools.cjkuo.net/ip-calculator/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 計算工具">
+    <meta name="twitter:description" content="毫秒級精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址與可用 IP 列表，支援極速導出與 RWD 響應式介面。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "IP 子網段與可用 IP 計算器",
+      "url": "https://tools.cjkuo.net/ip-calculator/index.html",
+      "description": "專業免費的線上 IP 子網段與可用 IP 計算器，支援 CIDR 標記法與標準 IP/Subnet Mask 計算、大網段數據過濾與 TXT/CSV 導出。",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-glow: #00f0ff; /* 科技冰藍 */
+            --accent-glow-rgb: 0, 240, 255;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            --success-color: #00ff66;
+            --warning-color: #ffaa00;
+            --danger-color: #ff3366;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+            position: relative;
+            padding: 3rem 1rem;
+        }
+
+        /* 互動式 Canvas 背景 */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 90%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* 返回按鈕手機防重疊 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-glow);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* 頂部標題 */
+        .header-section {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .main-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-glow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .page-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 300;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 控制卡片 / 輸入區 */
+        .card {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent-glow);
+        }
+
+        /* 頁籤 Toggle Tabs */
+        .tabs-container {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.4rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-glow);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
+        /* 表單與輸入組件 */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .text-input, .select-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .select-input {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #121218 !important;
+            color: #ffffff !important;
+            cursor: pointer;
+            padding-right: 2.5rem;
+        }
+
+        .select-input option {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+            padding: 0.5rem;
+        }
+
+        .select-arrow {
+            position: absolute;
+            right: 1rem;
+            pointer-events: none;
+            fill: var(--text-secondary);
+            width: 14px;
+            height: 14px;
+        }
+
+        .text-input:focus, .select-input:focus {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+            background: rgba(0, 240, 255, 0.03);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            min-height: 1.2em;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        /* 按鈕組 */
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.4rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 180, 255, 0.4) 100%);
+            border-color: var(--accent-glow);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.35) 0%, rgba(0, 180, 255, 0.6) 100%);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 7px;
+        }
+
+        /* 摘要結果 Summary Grid */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .summary-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            transition: all 0.3s ease;
+        }
+
+        .summary-item:hover {
+            border-color: rgba(0, 240, 255, 0.3);
+            background: rgba(0, 240, 255, 0.02);
+        }
+
+        .summary-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #ffffff;
+            word-break: break-all;
+        }
+
+        .summary-value.highlight-cyan {
+            color: var(--accent-glow);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .summary-value.highlight-green {
+            color: var(--success-color);
+        }
+
+        .summary-value.highlight-yellow {
+            color: var(--warning-color);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.4rem;
+        }
+
+        .badge-private {
+            background: rgba(0, 255, 102, 0.15);
+            color: #00ff66;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+        }
+
+        .badge-public {
+            background: rgba(0, 240, 255, 0.15);
+            color: #00f0ff;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+
+        .badge-special {
+            background: rgba(255, 170, 0, 0.15);
+            color: #ffaa00;
+            border: 1px solid rgba(255, 170, 0, 0.3);
+        }
+
+        /* 可用 IP 列表區段 */
+        .list-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem 0.5rem 2.2rem;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            fill: var(--text-secondary);
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* 提示 Banner */
+        .info-banner {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-banner svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-glow);
+            flex-shrink: 0;
+        }
+
+        /* 列表表格與滾動 */
+        .table-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        .ip-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .ip-table th {
+            position: sticky;
+            top: 0;
+            background: #0b0b0e;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 10;
+        }
+
+        .ip-table td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+        }
+
+        .ip-table tr:hover {
+            background: rgba(0, 240, 255, 0.04);
+        }
+
+        .index-col {
+            width: 100px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .action-col {
+            width: 120px;
+            text-align: right;
+        }
+
+        .copy-icon-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .copy-icon-btn:hover {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-glow);
+            border-color: var(--accent-glow);
+        }
+
+        /* 分頁控制條 */
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-btn:not(:disabled):hover {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-glow);
+            border-color: var(--accent-glow);
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(10, 10, 15, 0.95);
+            border: 1px solid var(--accent-glow);
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-glow);
+        }
+
+        /* 頁尾 Footer */
+        .footer-section {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .footer-section a {
+            color: var(--accent-glow);
+            text-decoration: none;
+        }
+
+        /* 響應式微調 */
+        @media (max-width: 768px) {
+            .glass-container {
+                padding: 1.5rem;
+                max-width: 100%;
+            }
+
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+                align-self: flex-start;
+            }
+
+            .main-title {
+                font-size: 1.5rem;
+            }
+
+            .list-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar-actions {
+                justify-content: space-between;
+            }
+
+            .pagination-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景 Canvas 粒子效果 -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- 主毛玻璃容器 -->
+    <main class="glass-container">
+        
+        <!-- 返回首頁按鈕 -->
+        <a href="../index.html" class="back-btn" id="backBtn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            返回工具庫
+        </a>
+
+        <!-- 頁面標題 -->
+        <header class="header-section">
+            <h1 class="main-title">IP Subnet Calculator / IP 子網段計算器</h1>
+            <p class="page-description">
+                線上免費工具，即時精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址、子網遮罩及可用 IP 範圍。支援大網段極速過濾與全量 TXT/CSV 下載。
+            </p>
+        </header>
+
+        <!-- 輸入控制卡片 -->
+        <section class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    輸入網段參數
+                </div>
+                <div class="tabs-container">
+                    <button class="tab-btn active" id="tabCidr" onclick="switchMode('cidr')">CIDR 標記法</button>
+                    <button class="tab-btn" id="tabStd" onclick="switchMode('std')">標準 IP + 遮罩</button>
+                </div>
+            </div>
+
+            <!-- CIDR 模式輸入框 -->
+            <div id="modeCidrContainer" class="input-grid">
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label class="input-label" for="inputCidr">IP 位址 / CIDR 前綴 (例如: 192.168.1.50/24)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="inputCidr" class="text-input" placeholder="192.168.1.50/24" value="192.168.1.50/24" spellcheck="false" autocomplete="off">
+                    </div>
+                    <div class="error-message" id="errCidr">請輸入有效的 CIDR 格式 (例如 192.168.1.50/24)</div>
+                </div>
+            </div>
+
+            <!-- 標準模式輸入框 (預設隱藏) -->
+            <div id="modeStdContainer" class="input-grid" style="display: none;">
+                <div class="input-group">
+                    <label class="input-label" for="inputIp">IP 位址 (例如: 192.168.1.50)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="inputIp" class="text-input" placeholder="192.168.1.50" value="192.168.1.50" spellcheck="false" autocomplete="off">
+                    </div>
+                    <div class="error-message" id="errIp">請輸入有效的 IPv4 位址 (0.0.0.0 ~ 255.255.255.255)</div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="selectMask">子網遮罩 Subnet Mask</label>
+                    <div class="input-wrapper">
+                        <select id="selectMask" class="select-input">
+                            <!-- JS 動態生成 0~32 遮罩選項 -->
+                        </select>
+                        <svg class="select-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </div>
+                    <div class="error-message" id="errMask">請選擇或輸入有效的子網遮罩</div>
+                </div>
+            </div>
+
+            <!-- 按鈕組 -->
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="btnClear" onclick="handleClear()">
+                    <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    清空重填
+                </button>
+                <button class="btn btn-secondary" id="btnExample" onclick="loadExample()">
+                    <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                    載入範例 (/24)
+                </button>
+            </div>
+        </section>
+
+        <!-- 網段摘要結果 Summary Section -->
+        <section class="card" id="summaryCard">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    計算摘要 Summary
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">網路位址 (Network IP)</span>
+                    <span class="summary-value highlight-cyan" id="resNetwork">192.168.1.0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">廣播位址 (Broadcast IP)</span>
+                    <span class="summary-value highlight-cyan" id="resBroadcast">192.168.1.255</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">子網遮罩 (Subnet Mask)</span>
+                    <span class="summary-value" id="resMask">255.255.255.0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">通配符遮罩 (Wildcard Mask)</span>
+                    <span class="summary-value" id="resWildcard">0.0.0.255</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">CIDR 標記法 (Notation)</span>
+                    <span class="summary-value" id="resCidr">/24</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">IP 總數 (Total IPs)</span>
+                    <span class="summary-value" id="resTotalIps">256</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">可用 IP 總數 (Usable Hosts)</span>
+                    <span class="summary-value highlight-green" id="resUsableCount">254</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">可用 IP 範圍 (Usable Range)</span>
+                    <span class="summary-value" id="resUsableRange" style="font-size: 0.95rem;">192.168.1.1 ~ 192.168.1.254</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">IP 類別與屬性 (Class & Scope)</span>
+                    <span class="summary-value" id="resIpClass">
+                        C Class <span class="badge badge-private">Private</span>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 可用 IP 列表 List Card -->
+        <section class="card" id="listCard">
+            <div class="list-toolbar">
+                <div class="card-title">
+                    <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+                    可用 IP 位址列表
+                </div>
+                <div class="toolbar-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="copyAllUsableIps()">
+                        <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                        複製全量
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportFile('txt')">
+                        <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        匯出 TXT
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportFile('csv')">
+                        <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        匯出 CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- 關鍵字過濾搜尋 -->
+            <div class="list-toolbar" style="margin-top: 0.2rem;">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="filterInput" class="search-input" placeholder="過濾 IP 位址 (例如 .100)..." oninput="handleFilterInput()">
+                </div>
+            </div>
+
+            <!-- 效能優化提示 Banner (大網段專用) -->
+            <div class="info-banner" id="infoBanner" style="display: none;">
+                <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                <span id="bannerText">目前網段可用 IP 較多，畫面上採用分頁展示；完整數據可點擊右上角「匯出」線上下載。</span>
+            </div>
+
+            <!-- IP 列表表格 -->
+            <div class="table-container">
+                <table class="ip-table">
+                    <thead>
+                        <tr>
+                            <th class="index-col">編號 #</th>
+                            <th>IP 位址</th>
+                            <th class="action-col">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ipTableBody">
+                        <!-- JS 動態渲染列 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分頁控制條 -->
+            <div class="pagination-bar">
+                <div id="pageInfo">顯示第 1 - 100 筆 / 共 254 筆</div>
+                <div class="pagination-controls">
+                    <button class="page-btn" id="btnPrevPage" onclick="changePage(-1)">上一頁</button>
+                    <span id="currentPageText">1 / 3</span>
+                    <button class="page-btn" id="btnNextPage" onclick="changePage(1)">下一頁</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 頁尾聲明 -->
+        <footer class="footer-section">
+            <p>100% Pure Client-side JavaScript • 純前端位元運算 • 無資料傳輸與資安防護保障</p>
+            <p style="margin-top: 0.4rem;">© SmallTools 工具庫. All rights reserved.</p>
+        </footer>
+    </main>
+
+    <!-- Copy Toast 提示 -->
+    <div class="toast" id="toast">
+        <svg class="toast-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toastMsg">複製成功！</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. Particle Canvas 動態背景與微動效
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+        }
+
+        class Particle {
+            constructor(x, y, isBurst = false) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = isBurst ? (Math.random() - 0.5) * 6 : (Math.random() - 0.5) * 0.4;
+                this.speedY = isBurst ? (Math.random() - 0.5) * 6 : -Math.random() * 0.5 - 0.2;
+                this.opacity = isBurst ? 1 : Math.random() * 0.5 + 0.1;
+                this.life = isBurst ? 30 + Math.random() * 20 : Infinity;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.life !== Infinity) {
+                    this.life--;
+                    this.opacity -= 0.025;
+                } else if (this.y < 0) {
+                    this.y = canvas.height;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+
+            draw() {
+                if (this.opacity <= 0) return;
+                ctx.fillStyle = `rgba(0, 240, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            resizeCanvas();
+            particles = [];
+            for (let i = 0; i < 45; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function createBurst(x, y) {
+            for (let i = 0; i < 18; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('click', (e) => {
+            if (e.target.closest('button, .tab-btn, a, .summary-item')) {
+                createBurst(e.clientX, e.clientY);
+            }
+        });
+
+        // ==========================================
+        // 2. 核心 IPv4 位元運算與數據結構定義
+        // ==========================================
+
+        // IP 字串轉 32 位無符號整數 (Unsigned 32-bit Integer)
+        function ipToInt(ipStr) {
+            if (typeof ipStr !== 'string') return null;
+            const parts = ipStr.trim().split('.');
+            if (parts.length !== 4) return null;
+            let num = 0;
+            for (let i = 0; i < 4; i++) {
+                const p = parts[i];
+                if (!/^\d+$/.test(p)) return null;
+                const n = parseInt(p, 10);
+                if (n < 0 || n > 255 || (p.length > 1 && p.startsWith('0'))) return null;
+                num = (num << 8) + n;
+            }
+            return num >>> 0;
+        }
+
+        // 32 位無符號整數轉 IP 字串
+        function intToIp(intVal) {
+            return [
+                (intVal >>> 24) & 255,
+                (intVal >>> 16) & 255,
+                (intVal >>> 8) & 255,
+                intVal & 255
+            ].join('.');
+        }
+
+        // CIDR 前綴長度轉遮罩整數
+        function cidrToMaskInt(cidr) {
+            if (cidr === 0) return 0;
+            return (~0 << (32 - cidr)) >>> 0;
+        }
+
+        // 驗證 Subnet Mask 是否合法 (連續的二进制 1 後接連續 0)
+        function isValidSubnetMaskInt(maskInt) {
+            const inv = (~maskInt) >>> 0;
+            return ((inv + 1) & inv) === 0;
+        }
+
+        // 遮罩整數轉 CIDR 前綴 (無效傳回 -1)
+        function maskIntToCidr(maskInt) {
+            if (!isValidSubnetMaskInt(maskInt)) return -1;
+            let count = 0;
+            let temp = maskInt;
+            while (temp) {
+                count += temp & 1;
+                temp = temp >>> 1;
+            }
+            return count;
+        }
+
+        // 判斷 IP 類別與屬性 (Class A/B/C/D/E & Private/Public)
+        function getIpScopeInfo(ipInt) {
+            const firstOctet = (ipInt >>> 24) & 255;
+            let ipClass = 'C';
+            if (firstOctet <= 127) ipClass = 'A';
+            else if (firstOctet <= 191) ipClass = 'B';
+            else if (firstOctet <= 223) ipClass = 'C';
+            else if (firstOctet <= 239) ipClass = 'D (Multicast)';
+            else ipClass = 'E (Experimental)';
+
+            // Scope 判斷
+            // 10.0.0.0/8
+            if ((ipInt >>> 24) === 10) return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: 'badge-private' };
+            // 172.16.0.0/12
+            if ((ipInt >>> 20) === (ipToInt('172.16.0.0') >>> 20)) return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: 'badge-private' };
+            // 192.168.0.0/16
+            if ((ipInt >>> 16) === (ipToInt('192.168.0.0') >>> 16)) return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: 'badge-private' };
+            // 127.0.0.0/8
+            if (firstOctet === 127) return { classStr: `${ipClass} Class`, scope: 'Loopback', badgeClass: 'badge-special' };
+            // 100.64.0.0/10 (CGNAT)
+            if ((ipInt >>> 22) === (ipToInt('100.64.0.0') >>> 22)) return { classStr: `${ipClass} Class`, scope: 'CGNAT', badgeClass: 'badge-special' };
+            // 169.254.0.0/16 (Link-Local)
+            if ((ipInt >>> 16) === (ipToInt('169.254.0.0') >>> 16)) return { classStr: `${ipClass} Class`, scope: 'Link-Local', badgeClass: 'badge-special' };
+
+            if (firstOctet >= 224) return { classStr: `${ipClass} Class`, scope: 'Reserved', badgeClass: 'badge-special' };
+
+            return { classStr: `${ipClass} Class`, scope: 'Public', badgeClass: 'badge-public' };
+        }
+
+        // ==========================================
+        // 3. UI 狀態與表單初始化
+        // ==========================================
+        let currentMode = 'cidr'; // 'cidr' | 'std'
+        let currentCalculation = null;
+        let currentPage = 1;
+        const pageSize = 100;
+        let filteredUsableInts = []; // 用於分頁與過濾的可用 IP 整數數組 [firstUsableInt ... lastUsableInt]
+
+        // 綁定 DOM 元素
+        const selectMask = document.getElementById('selectMask');
+        const inputCidr = document.getElementById('inputCidr');
+        const inputIp = document.getElementById('inputIp');
+        const modeCidrContainer = document.getElementById('modeCidrContainer');
+        const modeStdContainer = document.getElementById('modeStdContainer');
+        const tabCidr = document.getElementById('tabCidr');
+        const tabStd = document.getElementById('tabStd');
+        
+        const errCidr = document.getElementById('errCidr');
+        const errIp = document.getElementById('errIp');
+        const errMask = document.getElementById('errMask');
+
+        const filterInput = document.getElementById('filterInput');
+        const ipTableBody = document.getElementById('ipTableBody');
+        const infoBanner = document.getElementById('infoBanner');
+        const bannerText = document.getElementById('bannerText');
+
+        const pageInfo = document.getElementById('pageInfo');
+        const currentPageText = document.getElementById('currentPageText');
+        const btnPrevPage = document.getElementById('btnPrevPage');
+        const btnNextPage = document.getElementById('btnNextPage');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+
+        // 初始化 Mask 下拉選單 (從 /32 排到 /0)
+        function initMaskSelect() {
+            selectMask.innerHTML = '';
+            for (let cidr = 32; cidr >= 0; cidr--) {
+                const maskInt = cidrToMaskInt(cidr);
+                const maskIp = intToIp(maskInt);
+                const total = Math.pow(2, 32 - cidr);
+                const option = document.createElement('option');
+                option.value = cidr;
+                option.textContent = `/${cidr} (${maskIp}) - ${total.toLocaleString()} IPs`;
+                if (cidr === 24) option.selected = true;
+                selectMask.appendChild(option);
+            }
+        }
+
+        // 切換輸入模式 Tabs
+        function switchMode(mode) {
+            currentMode = mode;
+            if (mode === 'cidr') {
+                tabCidr.classList.add('active');
+                tabStd.classList.remove('active');
+                modeCidrContainer.style.display = 'grid';
+                modeStdContainer.style.display = 'none';
+            } else {
+                tabStd.classList.add('active');
+                tabCidr.classList.remove('active');
+                modeStdContainer.style.display = 'grid';
+                modeCidrContainer.style.display = 'none';
+            }
+            clearErrors();
+            handleLiveInput();
+        }
+
+        function clearErrors() {
+            errCidr.classList.remove('visible');
+            errIp.classList.remove('visible');
+            errMask.classList.remove('visible');
+        }
+
+        function showToast(msg) {
+            toastMsg.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // ==========================================
+        // 4. 計算發動機與 UI 更新
+        // ==========================================
+
+        function parseAndValidateInputs() {
+            let rawIpStr = '';
+            let cidr = 24;
+
+            if (currentMode === 'cidr') {
+                const val = inputCidr.value.trim();
+                if (!val) {
+                    return { status: 'EMPTY' };
+                }
+                const parts = val.split('/');
+                rawIpStr = parts[0].trim();
+
+                if (parts.length > 2) {
+                    return { status: 'INVALID', errElem: errCidr, msg: 'CIDR 格式錯誤，僅能包含一個斜線 (例如 192.168.1.1/24)' };
+                }
+
+                if (parts.length === 2) {
+                    const cStr = parts[1].trim();
+                    if (cStr === '') {
+                        return { status: 'INCOMPLETE' };
+                    }
+                    const c = parseInt(cStr, 10);
+                    if (isNaN(c) || c < 0 || c > 32 || cStr !== c.toString()) {
+                        return { status: 'INVALID', errElem: errCidr, msg: 'CIDR 前綴長度必須在 0 到 32 之間的整數 (例如 /24)' };
+                    }
+                    cidr = c;
+                } else {
+                    cidr = 32; // 預設單一 Host /32
+                }
+
+                if (rawIpStr.endsWith('.')) {
+                    return { status: 'INCOMPLETE' };
+                }
+
+                const ipIntCheck = ipToInt(rawIpStr);
+                if (ipIntCheck === null) {
+                    const octets = rawIpStr.split('.');
+                    const hasBadOctet = octets.some(o => {
+                        if (!/^\d+$/.test(o) && o !== '') return true;
+                        const n = parseInt(o, 10);
+                        return !isNaN(n) && (n < 0 || n > 255);
+                    });
+                    if (hasBadOctet || octets.length > 4) {
+                        return { status: 'INVALID', errElem: errCidr, msg: `無效的 IP 位址: "${rawIpStr}"，各 Octet 需為 0~255` };
+                    }
+                    return { status: 'INCOMPLETE' };
+                }
+            } else {
+                // 標準模式
+                rawIpStr = inputIp.value.trim();
+                if (!rawIpStr) {
+                    return { status: 'EMPTY' };
+                }
+                if (rawIpStr.endsWith('.')) {
+                    return { status: 'INCOMPLETE' };
+                }
+                const ipIntCheck = ipToInt(rawIpStr);
+                if (ipIntCheck === null) {
+                    const octets = rawIpStr.split('.');
+                    const hasBadOctet = octets.some(o => {
+                        if (!/^\d+$/.test(o) && o !== '') return true;
+                        const n = parseInt(o, 10);
+                        return !isNaN(n) && (n < 0 || n > 255);
+                    });
+                    if (hasBadOctet || octets.length > 4) {
+                        return { status: 'INVALID', errElem: errIp, msg: '請輸入有效的 IPv4 位址 (例如 192.168.1.50)' };
+                    }
+                    return { status: 'INCOMPLETE' };
+                }
+                cidr = parseInt(selectMask.value, 10);
+            }
+
+            const ipInt = ipToInt(rawIpStr);
+            if (ipInt === null) return { status: 'INCOMPLETE' };
+
+            return { status: 'VALID', ipInt, rawIpStr, cidr };
+        }
+
+        function calculateSubnet(parsed) {
+            const { ipInt, rawIpStr, cidr } = parsed;
+            const maskInt = cidrToMaskInt(cidr);
+            const maskStr = intToIp(maskInt);
+            const wildcardInt = (~maskInt) >>> 0;
+            const wildcardStr = intToIp(wildcardInt);
+
+            const netInt = (ipInt & maskInt) >>> 0;
+            const netStr = intToIp(netInt);
+
+            const broadcastInt = (netInt | wildcardInt) >>> 0;
+            const broadcastStr = intToIp(broadcastInt);
+
+            const totalIps = Math.pow(2, 32 - cidr);
+
+            let usableCount = 0;
+            let firstUsableInt = 0;
+            let lastUsableInt = 0;
+
+            if (cidr === 31) {
+                // RFC 3021 Point-to-Point
+                usableCount = 2;
+                firstUsableInt = netInt;
+                lastUsableInt = broadcastInt;
+            } else if (cidr === 32) {
+                // Single Host
+                usableCount = 1;
+                firstUsableInt = netInt;
+                lastUsableInt = netInt;
+            } else {
+                // Standard subnet (<= 30)
+                usableCount = totalIps - 2;
+                firstUsableInt = netInt + 1;
+                lastUsableInt = broadcastInt - 1;
+            }
+
+            const firstUsableStr = intToIp(firstUsableInt);
+            const lastUsableStr = intToIp(lastUsableInt);
+            const scopeInfo = getIpScopeInfo(ipInt);
+
+            return {
+                inputIp: rawIpStr,
+                cidr,
+                subnetMask: maskStr,
+                wildcardMask: wildcardStr,
+                networkAddress: netStr,
+                networkInt: netInt,
+                broadcastAddress: broadcastStr,
+                broadcastInt: broadcastInt,
+                totalIps,
+                usableCount,
+                firstUsableInt,
+                lastUsableInt,
+                firstUsableStr,
+                lastUsableStr,
+                scopeInfo
+            };
+        }
+
+        function updateSummaryUI(res) {
+            document.getElementById('resNetwork').textContent = res.networkAddress;
+            document.getElementById('resBroadcast').textContent = res.broadcastAddress;
+            document.getElementById('resMask').textContent = res.subnetMask;
+            document.getElementById('resWildcard').textContent = res.wildcardMask;
+            document.getElementById('resCidr').textContent = `/${res.cidr}`;
+            document.getElementById('resTotalIps').textContent = res.totalIps.toLocaleString();
+            document.getElementById('resUsableCount').textContent = res.usableCount.toLocaleString();
+
+            if (res.cidr === 32) {
+                document.getElementById('resUsableRange').textContent = `${res.firstUsableStr} (Single Host)`;
+            } else {
+                document.getElementById('resUsableRange').textContent = `${res.firstUsableStr} ~ ${res.lastUsableStr}`;
+            }
+
+            document.getElementById('resIpClass').innerHTML = `
+                ${res.scopeInfo.classStr}
+                <span class="badge ${res.scopeInfo.badgeClass}">${res.scopeInfo.scope}</span>
+            `;
+        }
+
+        // 重置列表與分頁數據
+        function updateListAndPagination() {
+            if (!currentCalculation) return;
+
+            const { firstUsableInt, lastUsableInt, usableCount, cidr } = currentCalculation;
+            const filterKeyword = filterInput.value.trim().toLowerCase();
+
+            // 若超大網段 (可用 IP > 65,534)
+            if (usableCount > 65534) {
+                infoBanner.style.display = 'flex';
+                bannerText.textContent = `此網段共有 ${usableCount.toLocaleString()} 個可用 IP。畫面列表提供線上關鍵字過濾與前 1,000 筆渲染；完整數據可點擊「匯出 TXT / CSV」進行極速下載。`;
+            } else if (usableCount > 1000) {
+                infoBanner.style.display = 'flex';
+                bannerText.textContent = `此網段共有 ${usableCount.toLocaleString()} 個可用 IP。畫面上採用分頁展示；完整資料可隨時點擊「匯出」下載檔。`;
+            } else {
+                infoBanner.style.display = 'none';
+            }
+
+            // 產生或過濾 IP 整數陣列 (限定畫面過濾上限為前 5,000 筆 matches 或範圍，防止 CPU 耗盡)
+            filteredUsableInts = [];
+            const maxEvaluate = (usableCount > 100000 && filterKeyword) ? 100000 : usableCount;
+            
+            for (let i = 0; i < maxEvaluate; i++) {
+                const currentIpInt = firstUsableInt + i;
+                const ipStr = intToIp(currentIpInt);
+
+                if (!filterKeyword || ipStr.includes(filterKeyword)) {
+                    filteredUsableInts.push({ index: i + 1, ipStr });
+                    if (filteredUsableInts.length >= 1000 && usableCount > 1000 && !filterKeyword) {
+                        // 畫面上保留前 1,000 筆即可
+                        break;
+                    }
+                }
+            }
+
+            currentPage = 1;
+            renderTablePage();
+        }
+
+        // 渲染表格頁面
+        function renderTablePage() {
+            const totalItems = filteredUsableInts.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, totalItems);
+            const pageData = filteredUsableInts.slice(startIdx, endIdx);
+
+            let html = '';
+            if (pageData.length === 0) {
+                html = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            查無符合關鍵字 "${filterInput.value.trim()}" 的可用 IP
+                        </td>
+                    </tr>
+                `;
+            } else {
+                pageData.forEach(item => {
+                    html += `
+                        <tr>
+                            <td class="index-col">#${item.index.toLocaleString()}</td>
+                            <td style="font-weight: 500;">${item.ipStr}</td>
+                            <td class="action-col">
+                                <button class="copy-icon-btn" onclick="copyText('${item.ipStr}')">
+                                    <svg style="width: 12px; height: 12px; fill: currentColor;" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                                    複製
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            ipTableBody.innerHTML = html;
+
+            // 更新分頁控制標籤
+            const actualTotalUsable = currentCalculation ? currentCalculation.usableCount : 0;
+            if (totalItems === 0) {
+                pageInfo.textContent = '顯示第 0 筆 / 共 0 筆';
+            } else {
+                const countNotice = (totalItems < actualTotalUsable && !filterInput.value.trim()) 
+                    ? ` (預設僅 DOM 展示前 ${totalItems.toLocaleString()} 筆)` 
+                    : '';
+                pageInfo.textContent = `顯示第 ${(startIdx + 1).toLocaleString()} - ${endIdx.toLocaleString()} 筆 / 共 ${totalItems.toLocaleString()} 筆${countNotice}`;
+            }
+
+            currentPageText.textContent = `${currentPage} / ${totalPages}`;
+            btnPrevPage.disabled = (currentPage <= 1);
+            btnNextPage.disabled = (currentPage >= totalPages);
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderTablePage();
+        }
+
+        let filterDebounceTimer = null;
+        function handleFilterInput() {
+            clearTimeout(filterDebounceTimer);
+            filterDebounceTimer = setTimeout(() => {
+                updateListAndPagination();
+            }, 150);
+        }
+
+
+
+        function handleClear() {
+            inputCidr.value = '';
+            inputIp.value = '';
+            filterInput.value = '';
+            clearErrors();
+            clearResultsUI();
+        }
+
+        function clearResultsUI() {
+            currentCalculation = null;
+            filteredUsableInts = [];
+            
+            document.getElementById('resNetwork').textContent = '-';
+            document.getElementById('resBroadcast').textContent = '-';
+            document.getElementById('resMask').textContent = '-';
+            document.getElementById('resWildcard').textContent = '-';
+            document.getElementById('resCidr').textContent = '-';
+            document.getElementById('resTotalIps').textContent = '-';
+            document.getElementById('resUsableCount').textContent = '-';
+            document.getElementById('resUsableRange').textContent = '-';
+            document.getElementById('resIpClass').innerHTML = '-';
+            
+            document.getElementById('ipTableBody').innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        請輸入 IP 位址與子網遮罩進行計算
+                    </td>
+                </tr>
+            `;
+            
+            document.getElementById('infoBanner').style.display = 'none';
+            document.getElementById('pageInfo').textContent = '顯示第 0 筆 / 共 0 筆';
+            document.getElementById('currentPageText').textContent = '1 / 1';
+            document.getElementById('btnPrevPage').disabled = true;
+            document.getElementById('btnNextPage').disabled = true;
+        }
+
+        function loadExample() {
+            switchMode('cidr');
+            inputCidr.value = '192.168.1.50/24';
+            handleCalculate();
+        }
+
+        // ==========================================
+        // 5. 複製與全量匯出 (Chunked Stream Blob)
+        // ==========================================
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`已複製: ${text}`);
+            }).catch(err => {
+                showToast('複製失敗，請手動選取');
+            });
+        }
+
+        function copyAllUsableIps() {
+            if (!currentCalculation) return;
+
+            const { usableCount, firstUsableInt } = currentCalculation;
+            if (usableCount > 50000) {
+                showToast(`此網段 IP 數量過大 (${usableCount.toLocaleString()} 筆)，請直接使用「匯出」下載檔案`);
+                return;
+            }
+
+            const list = [];
+            for (let i = 0; i < usableCount; i++) {
+                list.push(intToIp(firstUsableInt + i));
+            }
+            copyText(list.join('\n'));
+        }
+
+        // 全量檔案導出 (分塊 Chunk 處理，預防大網段卡死瀏覽器)
+        function exportFile(type) {
+            if (!currentCalculation) return;
+
+            const { usableCount, firstUsableInt, inputIp, cidr } = currentCalculation;
+            const chunks = [];
+            const chunkSize = 20000;
+
+            if (type === 'csv') {
+                chunks.push('\uFEFFIndex,IP Address\n'); // UTF-8 BOM
+            }
+
+            let renderedCount = 0;
+            
+            function processChunk() {
+                const end = Math.min(renderedCount + chunkSize, usableCount);
+                const lines = [];
+
+                for (let i = renderedCount; i < end; i++) {
+                    const ipStr = intToIp(firstUsableInt + i);
+                    if (type === 'csv') {
+                        lines.push(`${i + 1},${ipStr}`);
+                    } else {
+                        lines.push(ipStr);
+                    }
+                }
+
+                chunks.push(lines.join('\n') + '\n');
+                renderedCount = end;
+
+                if (renderedCount < usableCount) {
+                    setTimeout(processChunk, 0); // 讓出主執行緒
+                } else {
+                    // 完成 Blob 導出
+                    const mimeType = (type === 'csv') ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;';
+                    const blob = new Blob(chunks, { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const safeFilename = inputIp.replace(/[^a-zA-Z0-9.]/g, '_');
+                    a.download = `ip_subnet_${safeFilename}_slash${cidr}.${type}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    showToast(`全量 ${usableCount.toLocaleString()} 筆 IP 已成功匯出 .${type} 檔案！`);
+                }
+            }
+
+            showToast(`正在產生 ${usableCount.toLocaleString()} 筆可用 IP 匯出檔...`);
+            setTimeout(processChunk, 10);
+        }
+
+        // ==========================================
+        // 6. URL 雙向狀態連動 (History replaceState)
+        // ==========================================
+        function updateUrlParams(parsed) {
+            const params = new URLSearchParams();
+            if (currentMode === 'cidr') {
+                params.set('cidr', `${parsed.rawIpStr}/${parsed.cidr}`);
+            } else {
+                params.set('ip', parsed.rawIpStr);
+                params.set('mask', parsed.cidr);
+            }
+            history.replaceState(null, '', '?' + params.toString());
+        }
+
+        function loadFromUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const cidrParam = params.get('cidr');
+            const ipParam = params.get('ip');
+            const maskParam = params.get('mask');
+
+            if (cidrParam) {
+                switchMode('cidr');
+                inputCidr.value = cidrParam;
+                handleCalculate();
+            } else if (ipParam) {
+                switchMode('std');
+                inputIp.value = ipParam;
+                if (maskParam !== null) {
+                    selectMask.value = maskParam;
+                }
+                handleCalculate();
+            } else {
+                // 預設預載範例 192.168.1.50/24
+                handleCalculate();
+            }
+        }
+
+        let liveCalcDebounceTimer = null;
+        function handleLiveInput() {
+            clearTimeout(liveCalcDebounceTimer);
+            liveCalcDebounceTimer = setTimeout(() => {
+                const res = parseAndValidateInputs();
+                if (res.status === 'VALID') {
+                    clearErrors();
+                    currentCalculation = calculateSubnet(res);
+                    updateSummaryUI(currentCalculation);
+                    updateListAndPagination();
+                    updateUrlParams(res);
+                } else if (res.status === 'INVALID') {
+                    clearErrors();
+                    res.errElem.textContent = res.msg;
+                    res.errElem.classList.add('visible');
+                } else if (res.status === 'EMPTY') {
+                    clearErrors();
+                    clearResultsUI();
+                } else if (res.status === 'INCOMPLETE') {
+                    clearErrors();
+                }
+            }, 120);
+        }
+
+        function handleCalculate() {
+            handleLiveInput();
+        }
+
+        // ==========================================
+        // 7. 頁面初始化
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            initParticles();
+            animateParticles();
+            initMaskSelect();
+            loadFromUrlParams();
+
+            // 即時無感輸入監聽 (Input / Change)
+            inputCidr.addEventListener('input', handleLiveInput);
+            inputIp.addEventListener('input', handleLiveInput);
+            selectMask.addEventListener('change', handleLiveInput);
+
+            // 監聽 Enter 鍵自動觸發計算
+            inputCidr.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleCalculate();
+            });
+            inputIp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleCalculate();
+            });
+        });
+    </script>
+</body>
+</html>
