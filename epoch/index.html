@@ -362,6 +362,7 @@
         }
         .styled-input[type=number] {
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .input-addon {
@@ -1206,143 +1207,6 @@
 
     <script>
         // ==========================================
-        // 1. 背景粒子與滑鼠特效動畫
-        // ==========================================
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let mouse = { x: null, y: null, radius: 150 };
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            adjustParticles();
-        }
-
-        class Particle {
-            constructor(x = null, y = null, isBurst = false) {
-                this.x = x !== null ? x : Math.random() * canvas.width;
-                this.y = y !== null ? y : Math.random() * canvas.height;
-                this.size = Math.random() * 1.5 + 0.5;
-                this.density = (Math.random() * 30) + 1;
-                this.isBurst = isBurst;
-                this.life = isBurst ? 1.0 : -1;
-
-                if (isBurst) {
-                    this.velocityX = (Math.random() - 0.5) * 5;
-                    this.velocityY = (Math.random() - 0.5) * 5;
-                } else {
-                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 緩慢向上漂浮
-                    this.velocityX = (Math.random() - 0.5) * 0.2;
-                }
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.closePath();
-                let alpha = this.isBurst ? this.life : this.size / 3.5;
-                // 極客綠主題配色
-                ctx.fillStyle = this.isBurst 
-                    ? `rgba(0, 255, 153, ${alpha})` 
-                    : `rgba(0, 255, 153, ${alpha * 0.7})`;
-                ctx.fill();
-            }
-            update() {
-                if (this.isBurst) {
-                    this.x += this.velocityX;
-                    this.y += this.velocityY;
-                    this.life -= 0.025;
-                    this.velocityX *= 0.95;
-                    this.velocityY *= 0.95;
-                } else {
-                    this.y += this.velocityY;
-                    this.x += this.velocityX;
-
-                    if (this.y < 0) {
-                        this.y = canvas.height;
-                        this.x = Math.random() * canvas.width;
-                    }
-                    if (this.x < 0 || this.x > canvas.width) {
-                        this.x = Math.random() * canvas.width;
-                    }
-                }
-
-                // 滑鼠斥力
-                let dx = mouse.x - this.x;
-                let dy = mouse.y - this.y;
-                let distance = Math.sqrt(dx * dx + dy * dy);
-                if (mouse.x !== null && distance < mouse.radius) {
-                    let force = (mouse.radius - distance) / mouse.radius;
-                    this.x -= (dx / distance) * force * this.density * 0.5;
-                    this.y -= (dy / distance) * force * this.density * 0.5;
-                }
-            }
-        }
-
-        function adjustParticles() {
-            const targetCount = Math.floor((canvas.width * canvas.height) / 12000);
-            let bgParticles = particles.filter(p => !p.isBurst);
-            const burstParticles = particles.filter(p => p.isBurst);
-
-            bgParticles.forEach(p => {
-                if (p.x > canvas.width) p.x = Math.random() * canvas.width;
-                if (p.y > canvas.height) p.y = Math.random() * canvas.height;
-            });
-
-            if (bgParticles.length < targetCount) {
-                const toAdd = targetCount - bgParticles.length;
-                for (let i = 0; i < toAdd; i++) {
-                    bgParticles.push(new Particle());
-                }
-            } else if (bgParticles.length > targetCount) {
-                bgParticles = bgParticles.slice(0, targetCount);
-            }
-            particles = [...bgParticles, ...burstParticles];
-        }
-
-        function createBurst(x, y) {
-            for(let i = 0; i < 18; i++) {
-                particles.push(new Particle(x, y, true));
-            }
-        }
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.update();
-                p.draw();
-                if (p.isBurst && p.life <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-            requestAnimationFrame(animateParticles);
-        }
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-        window.addEventListener('mousedown', (e) => {
-            mouse.radius = 250;
-            createBurst(e.clientX, e.clientY);
-        });
-        window.addEventListener('mouseup', () => { mouse.radius = 150; });
-        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
-
-        // 綁定輸入框與按鈕的氣泡爆發效果
-        document.querySelectorAll('input, select, button, a').forEach(el => {
-            el.addEventListener('click', (e) => {
-                createBurst(e.clientX, e.clientY);
-            });
-        });
-
-        animateParticles();
-
-        // ==========================================
         // 2. 時區與時間轉換核心邏輯
         // ==========================================
         let liveInterval = null;
@@ -2035,5 +1899,6 @@
         initInputs();
         loadHistory();
     </script>
+    <script src="../js/common-particles.js" defer></script>
 </body>
 </html>

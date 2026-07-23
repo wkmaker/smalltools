@@ -521,6 +521,7 @@
         }
         input[type=number] {
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         /* ====== 分享連結按鈕 (霧虹紅主題) ====== */
@@ -1686,121 +1687,6 @@
         });
     </script>
 
-    <script>
-        // ==========================================
-        // 背景粒子與特效動畫 (霓虹紅主題)
-        // ==========================================
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let mouse = { x: null, y: null, radius: 150 };
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if (typeof adjustParticles === 'function') {
-                adjustParticles();
-            }
-        }
-
-        class Particle {
-            constructor(x = null, y = null, isBurst = false) {
-                this.x = x !== null ? x : Math.random() * canvas.width;
-                this.y = y !== null ? y : Math.random() * canvas.height;
-                this.size = Math.random() * 1.5 + 0.5; 
-                this.density = (Math.random() * 30) + 1;
-                
-                this.isBurst = isBurst;
-                this.life = isBurst ? 1.0 : -1; 
-                
-                if (isBurst) {
-                    this.velocityX = (Math.random() - 0.5) * 5; 
-                    this.velocityY = (Math.random() - 0.5) * 5;
-                } else {
-                    this.velocityY = -((Math.random() * 0.4) + 0.1); // 紅色泡沫緩慢往上飄
-                    this.velocityX = (Math.random() - 0.5) * 0.2;
-                }
-            }
-            draw() {
-                ctx.beginPath(); 
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
-                ctx.closePath();
-                
-                let alpha = this.isBurst ? this.life : this.size / 3.5;
-                
-                // 霓虹紅 (#ff0055)
-                ctx.fillStyle = this.isBurst 
-                    ? `rgba(255, 0, 85, ${alpha})` 
-                    : `rgba(255, 0, 85, ${alpha * 0.8})`; 
-                ctx.fill();
-            }
-            update() {
-                if (this.isBurst) {
-                    this.x += this.velocityX;
-                    this.y += this.velocityY;
-                    this.life -= 0.025; 
-                    this.velocityX *= 0.95;
-                    this.velocityY *= 0.95;
-                } else {
-                    this.y += this.velocityY;
-                    this.x += this.velocityX;
-                    
-                    if (this.y < 0) {
-                        this.y = canvas.height;
-                        this.x = Math.random() * canvas.width;
-                    }
-                }
-            }
-        }
-
-        function adjustParticles() {
-            particles = [];
-            const numberOfParticles = Math.min(60, (canvas.width * canvas.height) / 25000);
-            for (let i = 0; i < numberOfParticles; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function createBurst(x, y) {
-            if (x === undefined || y === undefined) return;
-            const burstCount = 15;
-            for (let i = 0; i < burstCount; i++) {
-                particles.push(new Particle(x, y, true));
-            }
-        }
-
-        function initParticles() {
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-            
-            // 監聽滑鼠
-            window.addEventListener('mousemove', (e) => {
-                mouse.x = e.x;
-                mouse.y = e.y;
-            });
-            window.addEventListener('mouseout', () => {
-                mouse.x = null;
-                mouse.y = null;
-            });
-
-            animate();
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-                
-                if (particles[i].isBurst && particles[i].life <= 0) {
-                    particles.splice(i, 1);
-                    i--;
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-
-        window.addEventListener('load', initParticles);
-    </script>
+    <script src="../js/common-particles.js" defer></script>
 </body>
 </html>

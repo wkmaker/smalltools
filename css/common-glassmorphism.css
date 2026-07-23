@@ -55,6 +55,7 @@ input::-webkit-inner-spin-button {
 }
 input[type=number] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 /* 全域 Canvas 背景定位 */

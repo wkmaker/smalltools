@@ -58,14 +58,27 @@
     }
 
     class BurstParticle {
-        constructor(x, y) {
+        constructor(x, y, isCountUp = null) {
             this.x = x;
             this.y = y;
             this.size = Math.random() * 4 + 2;
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 3 + 1;
-            this.vx = Math.cos(angle) * speed;
-            this.vy = Math.sin(angle) * speed;
+
+            if (isCountUp === true) {
+                // 往上噴發 (累計時間/向上計時)
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = -(Math.random() * 2 + 1);
+            } else if (isCountUp === false) {
+                // 往下噴發 (倒數時間/向下計時)
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() * 2 + 1);
+            } else {
+                // 預設全方位氣泡擴散 (點擊反饋)
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 3 + 1;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+            }
+
             this.alpha = 1;
             this.color = Math.random() > 0.5 ? getActiveThemeColor() : '#a855f7';
         }
@@ -94,6 +107,16 @@
             burstParticles.push(new BurstParticle(x, y));
         }
     };
+    window.createBurst = window.triggerParticleBurst;
+
+    // 方向性粒子噴發 (用於計時器向上/向下翻頁噴發粒子)
+    window.triggerDirectionalBurst = function (x, y, isCountUp) {
+        const offsetY = isCountUp ? y - 10 : y + 10;
+        for (let i = 0; i < 12; i++) {
+            burstParticles.push(new BurstParticle(x, offsetY, isCountUp));
+        }
+    };
+    window.createDirectionalBurst = window.triggerDirectionalBurst;
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
