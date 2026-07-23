@@ -396,9 +396,23 @@
         }
 
         .summary-label {
-            font-size: 0.78rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-label .label-zh {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .summary-label .label-en {
+            font-size: 0.72rem;
             color: var(--text-secondary);
-            font-weight: 500;
+            font-weight: 400;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -726,9 +740,9 @@
 
         <!-- 頁面標題 -->
         <header class="header-section">
-            <h1 class="main-title">IP Subnet Calculator / IP 子網段計算器</h1>
+            <h1 class="main-title">IP 子網段計算器</h1>
             <p class="page-description">
-                線上免費工具，即時精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址、子網遮罩及可用 IP 範圍。支援大網段極速過濾與全量 TXT/CSV 下載。
+                IP Subnet Calculator - 免費線上 IPv4 / CIDR 子網段計算工具，即時精確計算網路位址、廣播位址、子網遮罩及可用 IP 範圍，支援大網段極速過濾與全量 TXT/CSV 下載。
             </p>
         </header>
 
@@ -801,39 +815,66 @@
 
             <div class="summary-grid">
                 <div class="summary-item">
-                    <span class="summary-label">網路位址 (Network IP)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">網路位址</span>
+                        <span class="label-en">Network IP</span>
+                    </div>
                     <span class="summary-value highlight-cyan" id="resNetwork">192.168.1.0</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">廣播位址 (Broadcast IP)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">廣播位址</span>
+                        <span class="label-en">Broadcast IP</span>
+                    </div>
                     <span class="summary-value highlight-cyan" id="resBroadcast">192.168.1.255</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">子網遮罩 (Subnet Mask)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">子網遮罩</span>
+                        <span class="label-en">Subnet Mask</span>
+                    </div>
                     <span class="summary-value" id="resMask">255.255.255.0</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">通配符遮罩 (Wildcard Mask)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">通配符遮罩</span>
+                        <span class="label-en">Wildcard Mask</span>
+                    </div>
                     <span class="summary-value" id="resWildcard">0.0.0.255</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">CIDR 標記法 (Notation)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">CIDR 標記法</span>
+                        <span class="label-en">CIDR Notation</span>
+                    </div>
                     <span class="summary-value" id="resCidr">/24</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">IP 總數 (Total IPs)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">IP 總數</span>
+                        <span class="label-en">Total IPs</span>
+                    </div>
                     <span class="summary-value" id="resTotalIps">256</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">可用 IP 總數 (Usable Hosts)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">可用 IP 總數</span>
+                        <span class="label-en">Usable Hosts</span>
+                    </div>
                     <span class="summary-value highlight-green" id="resUsableCount">254</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">可用 IP 範圍 (Usable Range)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">可用 IP 範圍</span>
+                        <span class="label-en">Usable IP Range</span>
+                    </div>
                     <span class="summary-value" id="resUsableRange" style="font-size: 0.95rem;">192.168.1.1 ~ 192.168.1.254</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">IP 類別與屬性 (Class & Scope)</span>
+                    <div class="summary-label">
+                        <span class="label-zh">IP 類別與屬性</span>
+                        <span class="label-en">Class & Scope</span>
+                    </div>
                     <span class="summary-value" id="resIpClass">
                         C Class <span class="badge badge-private">Private</span>
                     </span>
