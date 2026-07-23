@@ -22,16 +22,19 @@ jobs:
 
       - name: Sync files to S3
         run: |
-          # 1. 先同步所有檔案（排除 SVG, img/, .agents, .git, .github，設定快取 300 秒）
-          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "*.svg" --exclude "img/*" --exclude ".agents*" --exclude ".git*" --exclude ".github*" --cache-control "max-age=600"
+          # 1. 同步 HTML 與一般內容檔案（排除 CSS, JS, SVG, img/, .agents, .git, .github，快取設定 300 秒）
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "*.css" --exclude "*.js" --exclude "*.svg" --exclude "img/*" --exclude ".agents*" --exclude ".git*" --exclude ".github*" --cache-control "max-age=300"
           
-          # 2. 單獨同步非 img/ 下的 SVG 檔案，並強制指定正確的 MIME 類型與快取 300 秒
+          # 2. 單獨同步 CSS 與 JS 靜態檔案（全站共用與工具專屬 CSS/JS，設定快取 600 秒）
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --exclude "*" --include "*.css" --include "*.js" --exclude ".agents*" --exclude ".git*" --exclude ".github*" --cache-control "public, max-age=600"
+          
+          # 3. 單獨同步非 img/ 下的 SVG 檔案，並強制指定正確的 MIME 類型與快取 300 秒
           aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --exclude "*" --include "*.svg" --exclude "img/*" --content-type "image/svg+xml" --cache-control "max-age=300"
           
-          # 3. 同步 img/ 目錄下的非 SVG 圖片檔案（快取設定為 1 天 = 86400 秒）
+          # 4. 同步 img/ 目錄下的非 SVG 圖片檔案（快取設定為 1 天 = 86400 秒）
           aws s3 sync ./img s3://${{ secrets.AWS_S3_BUCKET }}/img --delete --exclude "*.svg" --cache-control "max-age=86400"
           
-          # 4. 同步 img/ 目錄下的 SVG 圖片檔案，並強制指定 MIME 與快取 1 天
+          # 5. 同步 img/ 目錄下的 SVG 圖片檔案，並強制指定 MIME 與快取 1 天
           aws s3 sync ./img s3://${{ secrets.AWS_S3_BUCKET }}/img --exclude "*" --include "*.svg" --content-type "image/svg+xml" --cache-control "max-age=86400"
 
       - name: Invalidate CloudFront Cache

@@ -1,0 +1,312 @@
+/**
+ * HTTPS DNS Generator (Type 65) 專屬樣式檔 (generator.css)
+ */
+
+/* 主雙欄網格佈局 */
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 模式選擇 Tab (Service vs Alias Mode) */
+.mode-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.4rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mode-tab {
+    text-align: center;
+    padding: 0.65rem 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+}
+
+.mode-tab:hover {
+    color: var(--text-primary);
+}
+
+.mode-tab.active {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.4), rgba(0, 240, 255, 0.2));
+    color: #ffffff;
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+}
+
+.mode-tab small {
+    display: block;
+    font-size: 0.73rem;
+    margin-top: 2px;
+    opacity: 0.75;
+}
+
+/* 預設情境 Chips */
+.presets-wrapper {
+    margin-bottom: 1.5rem;
+}
+
+.presets-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.preset-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.chip {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chip:hover {
+    color: var(--text-primary);
+    border-color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.1);
+}
+
+/* 表單雙欄排列 */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 複選框網格 */
+.checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--neon-purple);
+    cursor: pointer;
+}
+
+/* 展開參數分組 */
+.param-group {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.param-group-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--neon-cyan);
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+/* 右側輸出區塊 */
+.output-card {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.output-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--neon-green);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* 代管商對照欄位 Breakdown Grid */
+.breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .breakdown-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field-card {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0.85rem;
+    transition: border-color 0.2s ease;
+}
+
+.field-card:hover {
+    border-color: rgba(138, 43, 226, 0.3);
+}
+
+.field-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.field-value {
+    font-family: var(--font-code);
+    font-size: 0.88rem;
+    color: var(--neon-cyan);
+    word-break: break-all;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.field-copy {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.field-copy:hover {
+    color: var(--neon-cyan);
+}
+
+.field-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    line-height: 1.35;
+}
+
+/* 代管商教學面板 (Tutorial Box) */
+.tutorial-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1.25rem;
+}
+
+.provider-tabs {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+}
+
+.provider-tab {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.provider-tab.active {
+    background: rgba(138, 43, 226, 0.2);
+    border-color: var(--neon-purple);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.provider-content {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.provider-content ul {
+    margin-left: 1.2rem;
+    margin-top: 0.5rem;
+}
+
+.provider-content li {
+    margin-bottom: 0.4rem;
+}
+
+.provider-content strong {
+    color: var(--text-primary);
+}
+
+.highlight-badge {
+    background: rgba(0, 245, 160, 0.15);
+    color: var(--neon-green);
+    font-size: 0.72rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-family: var(--font-code);
+}
