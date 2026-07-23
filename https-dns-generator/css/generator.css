@@ -216,10 +216,12 @@
 .field-value {
     font-family: var(--font-code);
     font-size: 0.88rem;
+    line-height: 1.5;
     color: var(--neon-cyan);
     word-break: break-all;
     background: rgba(0, 0, 0, 0.4);
-    padding: 0.4rem 0.6rem;
+    padding: 0.45rem 0.65rem;
+    min-height: 2.2rem;
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
