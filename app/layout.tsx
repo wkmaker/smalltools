@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import ParticleCanvas from '@/components/ParticleCanvas';
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -66,8 +67,10 @@ export default function RootLayout({
       <body>
         {/* 全站粒子背景動效 */}
         <ParticleCanvas />
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>
   );
 }
+

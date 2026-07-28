@@ -55,6 +55,14 @@ jobs:
         env:
           NODE_ENV: production
 
+      # ── 5.5. 注入動態版本號至 sw.js (確保每版 sw.js 必定有字位元差異) ────
+      - name: Inject Version Stamp to Service Worker
+        run: |
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          GIT_SHA=${{ github.sha }}
+          echo "// PWA Build Version: ${GIT_SHA} | Built at: ${BUILD_TIME}" | cat - ./out/sw.js > ./out/sw.js.tmp && mv ./out/sw.js.tmp ./out/sw.js
+          echo "Successfully injected version stamp to sw.js"
+
       # ── 6. 設定 AWS 憑證 (使用 OIDC Role) ───────────────────
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
@@ -85,7 +93,15 @@ jobs:
             --exclude "*.woff" \
             --exclude "_next/static/*" \
             --exclude "img/*" \
+            --exclude "sw.js" \
             --cache-control "public, max-age=300, s-maxage=300"
+
+          # Service Worker (sw.js) & PWA 清單：完全不快取，確保版本即時感應與更新
+          aws s3 sync ./out s3://${{ secrets.AWS_S3_BUCKET }} \
+            --exclude "*" \
+            --include "sw.js" \
+            --include "manifest.webmanifest" \
+            --cache-control "no-cache, no-store, must-revalidate"
 
           # JS / CSS / 字型：Next.js 會生成 content hash 檔名，可長快取 1 年
           aws s3 sync ./out/_next/static s3://${{ secrets.AWS_S3_BUCKET }}/_next/static \
