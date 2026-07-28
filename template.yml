@@ -7,20 +7,14 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketName: web-tool-cjkuo
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
+        BlockPublicPolicy: false
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-
-  CloudFrontOAC:
-    Type: AWS::CloudFront::OriginAccessControl
-    Properties:
-      OriginAccessControlConfig:
-        Name: !Sub "${AWS::StackName}-OAC"
-        OriginAccessControlOriginType: s3
-        SigningBehavior: always
-        SigningProtocol: sigv4
+        RestrictPublicBuckets: false
 
   StaticWebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -30,15 +24,14 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Sid: AllowCloudFrontServicePrincipalReadOnly
+          - Sid: AllowCloudFrontCustomHeaderOnly
             Effect: Allow
-            Principal:
-              Service: cloudfront.amazonaws.com
+            Principal: "*"
             Action: s3:GetObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
             Condition:
               StringEquals:
-                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${StaticWebsiteDistribution}"
+                aws:UserAgent: !Sub "CF-Access-Header-${AWS::StackName}-${AWS::AccountId}"
 
   StaticWebsiteDistribution:
     Type: AWS::CloudFront::Distribution
@@ -49,15 +42,19 @@ Resources:
           - tools.cjkuo.net
         DefaultRootObject: index.html
         Origins:
-          - Id: S3Origin
-            DomainName: !GetAtt StaticWebsiteBucket.RegionalDomainName
-            OriginAccessControlId: !GetAtt CloudFrontOAC.Id
-            S3OriginConfig:
-              OriginAccessIdentity: ""
+          - Id: S3WebsiteOrigin
+            DomainName: web-tool-cjkuo.s3-website-us-west-2.amazonaws.com
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+            OriginCustomHeaders:
+              - HeaderName: User-Agent
+                HeaderValue: !Sub "CF-Access-Header-${AWS::StackName}-${AWS::AccountId}"
             ConnectionAttempts: 3
             ConnectionTimeout: 10
         DefaultCacheBehavior:
-          TargetOriginId: S3Origin
+          TargetOriginId: S3WebsiteOrigin
           ViewerProtocolPolicy: redirect-to-https
           AllowedMethods:
             - HEAD
