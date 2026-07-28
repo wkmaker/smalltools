@@ -170,6 +170,24 @@
   z-index: 30;
 }
 
+@media (max-width: 640px) {
+  .topControls {
+    top: -3.5rem;
+    right: 0;
+    gap: 0.4rem;
+  }
+  .controlsPanel {
+    gap: 0.4rem;
+  }
+  .controlsPanelExpanded {
+    max-width: 160px;
+  }
+  .iconBtn {
+    width: 34px;
+    height: 34px;
+  }
+}
+
 .controlsPanel {
   display: flex;
   align-items: center;
