@@ -48,7 +48,7 @@ jobs:
 
       # ── 6. 設定 AWS 憑證 (使用 OIDC Role) ───────────────────
       - name: Configure AWS Credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
