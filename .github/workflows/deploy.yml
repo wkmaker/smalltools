@@ -22,7 +22,7 @@ jobs:
 
       # ── 2. 檢測 template.yml 是否有修改 ─────────────────────
       - name: Check CloudFormation Template Changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -31,7 +31,7 @@ jobs:
 
       # ── 3. 設定 Node.js 環境（含 npm 快取） ──────────────────
       - name: Setup Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
