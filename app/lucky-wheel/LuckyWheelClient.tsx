@@ -178,6 +178,11 @@ export default function LuckyWheelClient() {
     }
   };
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--theme-color', '#f59e0b');
+    document.documentElement.style.setProperty('--accent-glow', 'rgba(245, 158, 11, 0.6)');
+  }, []);
+
   // 讀取 LocalStorage 數據
   useEffect(() => {
     setIsMounted(true);
@@ -846,21 +851,21 @@ export default function LuckyWheelClient() {
             <button
               type="button"
               onClick={() => setShowHistoryModal(true)}
-              className="px-3 py-1.5 text-xs font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main"
             >
               📜 歷史紀錄 ({history.length})
             </button>
             <button
               type="button"
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="px-3 py-1.5 text-xs font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main"
             >
               {soundEnabled ? '🔊 音效: 開' : '🔇 音效: 關'}
             </button>
             <button
               type="button"
               onClick={() => setIsFullscreen(true)}
-              className="px-3 py-1.5 text-xs font-bold bg-white text-indigo-900 rounded-xl hover:bg-slate-100 shadow-md transition-all cursor-pointer"
+              className="px-3.5 py-1.5 text-sm font-semibold bg-white text-indigo-900 rounded-xl hover:bg-slate-100 shadow-md transition-all cursor-pointer"
             >
               ⛶ 全螢幕抽獎
             </button>
@@ -873,10 +878,10 @@ export default function LuckyWheelClient() {
             <button
               type="button"
               onClick={() => setDisplayMode('wheel')}
-              className={`px-4 py-1.5 text-xs rounded-lg cursor-pointer transition-all font-medium ${
+              className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
                 displayMode === 'wheel'
                   ? 'bg-[#f59e0b] text-black font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-text-sub hover:text-text-main'
               }`}
             >
               🎡 幸運轉盤
@@ -884,10 +889,10 @@ export default function LuckyWheelClient() {
             <button
               type="button"
               onClick={() => setDisplayMode('slot')}
-              className={`px-4 py-1.5 text-xs rounded-lg cursor-pointer transition-all font-medium ${
+              className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
                 displayMode === 'slot'
                   ? 'bg-[#f59e0b] text-black font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-text-sub hover:text-text-main'
               }`}
             >
               🎰 擬真拉霸機
@@ -895,7 +900,7 @@ export default function LuckyWheelClient() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label htmlFor={qtyLimitToggleId} className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer">
+            <label htmlFor={qtyLimitToggleId} className="flex items-center gap-2 text-sm font-medium text-text-sub cursor-pointer">
               <input
                 id={qtyLimitToggleId}
                 type="checkbox"
@@ -968,7 +973,7 @@ export default function LuckyWheelClient() {
           {/* 右欄：獎項編輯與設定 */}
           <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
             <div className="flex justify-between items-center flex-wrap gap-3 border-b border-white/[.06] pb-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-text-main flex items-center gap-2">
                 ⚙️ 獎項與人員設定 ({prizes.length})
               </h3>
 
@@ -980,7 +985,7 @@ export default function LuckyWheelClient() {
                     loadTemplate(e.target.value);
                     e.target.selectedIndex = 0;
                   }}
-                  className="bg-select-bg text-text-main border border-border-glass rounded-lg px-2.5 py-1.5 text-xs outline-none cursor-pointer"
+                  className="bg-select-bg text-text-main border border-border-glass rounded-xl px-2.5 py-1.5 text-sm font-mono font-medium outline-none cursor-pointer"
                 >
                   <option value="" disabled>
                     快速範例模板...
@@ -995,14 +1000,14 @@ export default function LuckyWheelClient() {
                 <button
                   type="button"
                   onClick={exportTxt}
-                  className="px-2.5 py-1.5 text-xs font-medium text-slate-200 bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-slate-400 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer"
                 >
                   📤 匯出 TXT
                 </button>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-2.5 py-1.5 text-xs font-medium text-slate-200 bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-slate-400 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer"
                 >
                   📥 匯入 TXT/名單
                 </button>
@@ -1016,14 +1021,14 @@ export default function LuckyWheelClient() {
                 <button
                   type="button"
                   onClick={resetDrawnCounts}
-                  className="px-2.5 py-1.5 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl hover:bg-amber-500/20 transition-all cursor-pointer"
                 >
                   🔄 重置次數
                 </button>
                 <button
                   type="button"
                   onClick={addPrizeItem}
-                  className="px-2.5 py-1.5 text-xs font-bold text-black bg-[#f59e0b] rounded-lg hover:bg-[#f59e0b]/80 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-bold text-black bg-[#f59e0b] rounded-xl hover:bg-[#f59e0b]/80 transition-all cursor-pointer"
                 >
                   ＋ 新增項目
                 </button>
@@ -1064,7 +1069,7 @@ export default function LuckyWheelClient() {
                     />
 
                     {/* 權重與機率 */}
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-text-sub">
                       <span>權重:</span>
                       <input
                         type="number"
@@ -1080,7 +1085,7 @@ export default function LuckyWheelClient() {
 
                     {/* 數量上限 */}
                     {enableQuantityLimit ? (
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-text-sub">
                         <span>數量:</span>
                         <input
                           type="number"
@@ -1106,7 +1111,7 @@ export default function LuckyWheelClient() {
                     )}
 
                     <div className="flex items-center gap-2 ml-auto">
-                      <label className="flex items-center gap-1 text-xs text-text-sub cursor-pointer">
+                      <label className="flex items-center gap-1 text-sm font-medium text-text-sub cursor-pointer">
                         <input
                           type="checkbox"
                           checked={p.isFinished}

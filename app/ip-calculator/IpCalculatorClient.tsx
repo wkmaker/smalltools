@@ -453,10 +453,10 @@ export default function IpCalculatorClient() {
               <button
                 type="button"
                 onClick={() => setMode('cidr')}
-                className={`px-4 py-1.5 text-xs rounded-lg cursor-pointer transition-all font-medium ${
+                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
                   mode === 'cidr'
                     ? 'bg-[#00f0ff]/15 border border-[#00f0ff]/40 text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.2)]'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-text-sub hover:text-text-main'
                 }`}
               >
                 CIDR 標記法
@@ -464,10 +464,10 @@ export default function IpCalculatorClient() {
               <button
                 type="button"
                 onClick={() => setMode('std')}
-                className={`px-4 py-1.5 text-xs rounded-lg cursor-pointer transition-all font-medium ${
+                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
                   mode === 'std'
                     ? 'bg-[#00f0ff]/15 border border-[#00f0ff]/40 text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.2)]'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-text-sub hover:text-text-main'
                 }`}
               >
                 標準 IP + 遮罩
@@ -478,7 +478,7 @@ export default function IpCalculatorClient() {
           {/* CIDR 模式輸入 */}
           {mode === 'cidr' ? (
             <div className="flex flex-col gap-2">
-              <label htmlFor={inputCidrId} className="text-sm font-medium text-slate-300">
+              <label htmlFor={inputCidrId} className="text-sm font-medium text-text-sub">
                 IP 位址 / CIDR 前綴 (例如: 192.168.1.50/24)
               </label>
               <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00f0ff]/40 transition-colors">
@@ -498,7 +498,7 @@ export default function IpCalculatorClient() {
             /* 標準模式輸入 */
             <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
               <div className="flex flex-col gap-2">
-                <label htmlFor={inputIpId} className="text-sm font-medium text-slate-300">
+                <label htmlFor={inputIpId} className="text-sm font-medium text-text-sub">
                   IP 位址 (例如: 192.168.1.50)
                 </label>
                 <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00f0ff]/40 transition-colors">
@@ -516,7 +516,7 @@ export default function IpCalculatorClient() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={selectMaskId} className="text-sm font-medium text-slate-300">
+                <label htmlFor={selectMaskId} className="text-sm font-medium text-text-sub">
                   子網遮罩 Subnet Mask
                 </label>
                 <select
@@ -553,7 +553,7 @@ export default function IpCalculatorClient() {
             <button
               type="button"
               onClick={handleClear}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-slate-200 bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer"
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
@@ -563,7 +563,7 @@ export default function IpCalculatorClient() {
             <button
               type="button"
               onClick={loadExample}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-[#00f0ff] bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-xl hover:bg-[#00f0ff]/20 hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[#00f0ff] bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-xl hover:bg-[#00f0ff]/20 hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] transition-all cursor-pointer"
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                 <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
@@ -576,48 +576,48 @@ export default function IpCalculatorClient() {
         {/* 網段摘要結果 Summary Section */}
         {calcResult && (
           <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-6 shadow-lg backdrop-blur-md">
-            <h3 className="text-[#00f0ff] text-xs uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
+            <h3 className="text-[#00f0ff] text-sm uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
               計算摘要 Summary ({calcResult.inputIp}/{calcResult.cidr})
             </h3>
 
             <div className="grid grid-cols-4 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1 font-mono text-xs">
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">網路位址 (Network IP)</span>
+                <span className="text-sm font-semibold text-text-sub">網路位址 (Network IP)</span>
                 <span className="text-base text-[#00f0ff] font-bold">{calcResult.networkAddress}</span>
               </div>
 
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">廣播位址 (Broadcast IP)</span>
+                <span className="text-sm font-semibold text-text-sub">廣播位址 (Broadcast IP)</span>
                 <span className="text-base text-[#00f0ff] font-bold">{calcResult.broadcastAddress}</span>
               </div>
 
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">子網遮罩 (Subnet Mask)</span>
+                <span className="text-sm font-semibold text-text-sub">子網遮罩 (Subnet Mask)</span>
                 <span className="text-base text-white font-bold">{calcResult.subnetMask}</span>
               </div>
 
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">通配符遮罩 (Wildcard Mask)</span>
+                <span className="text-sm font-semibold text-text-sub">通配符遮罩 (Wildcard Mask)</span>
                 <span className="text-base text-slate-300 font-bold">{calcResult.wildcardMask}</span>
               </div>
 
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">CIDR 標記法</span>
+                <span className="text-sm font-semibold text-text-sub">CIDR 標記法</span>
                 <span className="text-base text-white font-bold">/{calcResult.cidr}</span>
               </div>
 
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">IP 總數量 (Total IPs)</span>
+                <span className="text-sm font-semibold text-text-sub">IP 總數量 (Total IPs)</span>
                 <span className="text-base text-white font-bold">{calcResult.totalIps.toLocaleString()}</span>
               </div>
 
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">可用 IP 總數 (Usable Hosts)</span>
+                <span className="text-sm font-semibold text-text-sub">可用 IP 總數 (Usable Hosts)</span>
                 <span className="text-base text-[#00ff66] font-bold">{calcResult.usableCount.toLocaleString()} 個</span>
               </div>
 
               <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-slate-400 text-xs">IP 類別與屬性 (Class & Scope)</span>
+                <span className="text-sm font-semibold text-text-sub">IP 類別與屬性 (Class & Scope)</span>
                 <div className="flex items-center gap-1 mt-1 text-sm font-bold text-white">
                   <span>{calcResult.scopeInfo.classStr}</span>
                   <span className={calcResult.scopeInfo.badgeClass}>{calcResult.scopeInfo.scope}</span>
@@ -627,7 +627,7 @@ export default function IpCalculatorClient() {
 
             {/* 可用 IP 範圍 */}
             <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex justify-between items-center flex-wrap gap-2 font-mono text-xs">
-              <span className="text-slate-400">可用 IP 範圍 (Usable IP Range)</span>
+              <span className="text-sm font-semibold text-text-sub">可用 IP 範圍 (Usable IP Range)</span>
               <span className="text-white font-bold text-sm">
                 {calcResult.cidr === 32
                   ? `${calcResult.firstUsableStr} (Single Host)`
@@ -637,7 +637,7 @@ export default function IpCalculatorClient() {
 
             {/* 二進制表示 */}
             <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-2">
-              <span className="text-xs text-slate-400">IP 二進制 (Binary Representation)</span>
+              <span className="text-sm font-semibold text-text-sub">IP 二進制 (Binary Representation)</span>
               <code className={styles.binaryCode}>{calcResult.binaryIp}</code>
             </div>
           </div>
@@ -647,8 +647,8 @@ export default function IpCalculatorClient() {
         {calcResult && (
           <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-5 shadow-lg backdrop-blur-md">
             <div className="flex justify-between items-center flex-wrap gap-4">
-              <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-slate-400">
+              <h3 className="text-sm font-semibold text-text-main flex items-center gap-2">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-text-sub">
                   <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
                 </svg>
                 可用 IP 位址列表
@@ -658,7 +658,7 @@ export default function IpCalculatorClient() {
                 <button
                   type="button"
                   onClick={copyAllUsableIps}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                     <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
@@ -668,7 +668,7 @@ export default function IpCalculatorClient() {
                 <button
                   type="button"
                   onClick={() => exportFile('txt')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
@@ -678,7 +678,7 @@ export default function IpCalculatorClient() {
                 <button
                   type="button"
                   onClick={() => exportFile('csv')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
@@ -692,7 +692,7 @@ export default function IpCalculatorClient() {
             <div className="w-full">
               <div className="bg-black/40 border border-white/[.08] rounded-xl px-4 py-2.5 flex items-center gap-2 focus-within:border-[#00f0ff]/40 transition-colors">
                 <label htmlFor={filterInputId}>
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-slate-400">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-text-sub">
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
                   </svg>
                 </label>
@@ -735,7 +735,7 @@ export default function IpCalculatorClient() {
                 <tbody>
                   {pageData.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="text-center py-8 text-slate-400 text-xs">
+                      <td colSpan={3} className="text-center py-8 text-text-sub text-sm">
                         查無符合關鍵字 &quot;{filterKeyword}&quot; 的可用 IP
                       </td>
                     </tr>
@@ -748,7 +748,7 @@ export default function IpCalculatorClient() {
                           <button
                             type="button"
                             onClick={() => copyText(item.ipStr)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[0.75rem] font-medium text-slate-300 bg-white/[0.03] border border-white/[0.08] rounded-lg hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-lg hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                           >
                             <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current">
                               <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
@@ -764,7 +764,7 @@ export default function IpCalculatorClient() {
             </div>
 
             {/* 分頁控制條 */}
-            <div className="flex justify-between items-center flex-wrap gap-4 text-xs text-slate-400 border-t border-white/[.05] pt-3">
+            <div className="flex justify-between items-center flex-wrap gap-4 text-sm text-text-sub border-t border-white/[.05] pt-3">
               <div>
                 顯示第 {(startIdx + 1).toLocaleString()} - {endIdx.toLocaleString()} 筆 / 共 {totalItems.toLocaleString()} 筆
               </div>
@@ -774,18 +774,18 @@ export default function IpCalculatorClient() {
                   type="button"
                   disabled={validCurrentPage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-200 bg-white/[0.03] border border-white/[0.08] rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   上一頁
                 </button>
-                <span className="font-mono text-slate-200">
+                <span className="font-mono text-text-main">
                   {validCurrentPage} / {totalPages}
                 </span>
                 <button
                   type="button"
                   disabled={validCurrentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-200 bg-white/[0.03] border border-white/[0.08] rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   下一頁
                 </button>

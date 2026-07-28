@@ -626,7 +626,7 @@ export default function MortgageLoanClient() {
           <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
             {/* 房屋總價 */}
             <div className="flex flex-col gap-2">
-              <label htmlFor={priceInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">房屋總價 (萬元)</label>
+              <label htmlFor={priceInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">房屋總價 (萬元)</label>
               <input
                 id={priceInputId}
                 type="number"
@@ -639,7 +639,7 @@ export default function MortgageLoanClient() {
             {/* 自備款成數 & 金額 雙向連動 */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <label htmlFor={percentInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">自備款成數 (%)</label>
+                <label htmlFor={percentInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">自備款成數 (%)</label>
                 <input
                   id={percentInputId}
                   type="number"
@@ -651,7 +651,7 @@ export default function MortgageLoanClient() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={downInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">自備款金額 (萬元)</label>
+                <label htmlFor={downInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">自備款金額 (萬元)</label>
                 <input
                   id={downInputId}
                   type="number"
@@ -665,33 +665,35 @@ export default function MortgageLoanClient() {
             {/* 貸款模式切換 */}
             <div className="flex flex-col gap-2 border-t border-white/[.05] pt-4">
               <div className="flex justify-between items-center">
-                <label className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">貸款模式</label>
+                <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">貸款模式</label>
                 <span className="text-sm text-[#00f5a0] font-semibold font-mono">
                   貸款總金額：{totalLoan.toLocaleString('zh-TW')} 萬元
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
                 <button
+                  type="button"
                   onClick={() => setLoanMode('single')}
-                  className={`py-2 text-sm rounded-lg cursor-pointer transition-all border ${
+                  className={`py-2 text-sm rounded-xl cursor-pointer transition-all border ${
                     loanMode === 'single'
                       ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0] font-semibold'
-                      : 'border-transparent text-slate-300'
+                      : 'border-transparent text-text-sub hover:text-white'
                   }`}
                 >
                   單一貸款
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setLoanMode('combined');
                     const loanA = Math.min(totalLoan, 1000);
                     setLoanAmount1(loanA);
                     setLoanAmount2(Math.max(0, totalLoan - loanA));
                   }}
-                  className={`py-2 text-sm rounded-lg cursor-pointer transition-all border ${
+                  className={`py-2 text-sm rounded-xl cursor-pointer transition-all border ${
                     loanMode === 'combined'
                       ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0] font-semibold'
-                      : 'border-transparent text-slate-300'
+                      : 'border-transparent text-text-sub hover:text-white'
                   }`}
                 >
                   組合貸款 (雙貸款 A+B)
@@ -704,7 +706,7 @@ export default function MortgageLoanClient() {
               <div className="flex flex-col gap-5 border-t border-white/[.05] pt-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={singlePeriodInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">貸款期間 (年)</label>
+                    <label htmlFor={singlePeriodInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">貸款期間 (年)</label>
                     <input
                       id={singlePeriodInputId}
                       type="number"
@@ -715,7 +717,7 @@ export default function MortgageLoanClient() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label htmlFor={singleGraceInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">寬限期 (年)</label>
+                    <label htmlFor={singleGraceInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">寬限期 (年)</label>
                     <input
                       id={singleGraceInputId}
                       type="number"
@@ -728,11 +730,12 @@ export default function MortgageLoanClient() {
 
                 {/* 利率類型 */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">利率類型</label>
+                  <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">利率類型</label>
                   <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
                     <button
+                      type="button"
                       onClick={() => setSingleRateType('single')}
-                      className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
+                      className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRateType === 'single'
                           ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
                           : 'border-transparent text-text-sub hover:text-white'
@@ -741,8 +744,9 @@ export default function MortgageLoanClient() {
                       單一利率
                     </button>
                     <button
+                      type="button"
                       onClick={() => setSingleRateType('multi')}
-                      className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
+                      className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRateType === 'multi'
                           ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
                           : 'border-transparent text-text-sub hover:text-white'
@@ -776,6 +780,7 @@ export default function MortgageLoanClient() {
                             <span>{isLast ? `第 ${sIdx + 1} 段 (剩餘期數)` : `第 ${sIdx + 1} 段`}</span>
                             {!isLast && singleStages.length > 2 && (
                               <button
+                                type="button"
                                 onClick={() => removeStageSingle(sIdx)}
                                 className="text-[0.75rem] text-[#ef4444] hover:underline cursor-pointer"
                               >
@@ -823,8 +828,9 @@ export default function MortgageLoanClient() {
                     })}
                     {singleStages.length < 6 && (
                       <button
+                        type="button"
                         onClick={addStageSingle}
-                        className="text-xs text-[#00f5a0] bg-[#00f5a0]/10 border border-[#00f5a0]/30 py-2 rounded-lg hover:bg-[#00f5a0]/20 transition-all cursor-pointer"
+                        className="text-xs text-[#00f5a0] bg-[#00f5a0]/10 border border-[#00f0ff]/30 py-2 rounded-lg hover:bg-[#00f5a0]/20 transition-all cursor-pointer"
                       >
                         ＋ 新增利率段落
                       </button>
@@ -837,8 +843,9 @@ export default function MortgageLoanClient() {
                   <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">還款方式</label>
                   <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
                     <button
+                      type="button"
                       onClick={() => setSingleRepayType('equal-total')}
-                      className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
+                      className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRepayType === 'equal-total'
                           ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
                           : 'border-transparent text-text-sub hover:text-white'
@@ -847,8 +854,9 @@ export default function MortgageLoanClient() {
                       本息平均攤還
                     </button>
                     <button
+                      type="button"
                       onClick={() => setSingleRepayType('equal-principal')}
-                      className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
+                      className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRepayType === 'equal-principal'
                           ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
                           : 'border-transparent text-text-sub hover:text-white'
@@ -905,12 +913,14 @@ export default function MortgageLoanClient() {
                     />
                     <div className="flex gap-2 mt-1">
                       <button
+                        type="button"
                         onClick={() => setLoanAQuickValue(1000)}
                         className="flex-1 py-1 text-[0.7rem] bg-[#00f5a0]/10 border border-[#00f5a0]/30 text-[#00f5a0] rounded-md cursor-pointer hover:bg-[#00f5a0]/20"
                       >
                         1,000 萬 (如新青安)
                       </button>
                       <button
+                        type="button"
                         onClick={() => setLoanAQuickValue(null)}
                         className="flex-1 py-1 text-[0.7rem] bg-white/[.05] border border-white/[.1] text-text-sub rounded-md cursor-pointer hover:bg-white/[.1]"
                       >
@@ -1018,6 +1028,7 @@ export default function MortgageLoanClient() {
 
             {/* 複製分享按鈕 */}
             <button
+              type="button"
               onClick={copyShareLink}
               className="mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
                 bg-[#00f5a0]/15 border border-[#00f5a0]/40 text-[#00f5a0] rounded-xl
@@ -1077,13 +1088,14 @@ export default function MortgageLoanClient() {
             {/* 還款明細表 (支援展開全期與 Mobile Sticky Column) */}
             <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs text-[#00f5a0] uppercase tracking-[1px] font-semibold">
+                <h3 className="text-sm text-[#00f5a0] uppercase tracking-[1px] font-semibold">
                   房貸還款期數明細表 ({showAllRows ? `共 ${schedule.length - 1} 期` : '前 120 期預覽'})
                 </h3>
                 {schedule.length > 121 && (
                   <button
+                    type="button"
                     onClick={() => setShowAllRows(!showAllRows)}
-                    className="text-xs bg-white/[.05] border border-white/[.1] text-[#00f5a0] px-3 py-1.5 rounded-lg hover:bg-[#00f5a0]/15 transition-all cursor-pointer"
+                    className="text-sm font-medium bg-white/[.05] border border-white/[.1] text-[#00f5a0] px-3.5 py-1.5 rounded-xl hover:bg-[#00f5a0]/15 transition-all cursor-pointer"
                   >
                     {showAllRows ? '收合為前 120 期' : `展開全期明細 (${schedule.length - 1} 期)`}
                   </button>

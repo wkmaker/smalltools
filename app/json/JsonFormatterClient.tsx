@@ -127,6 +127,11 @@ export default function JsonFormatterClient() {
     toastTimer.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--theme-color', '#ff00aa');
+    document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 170, 0.6)');
+  }, []);
+
   const processJson = useCallback((text: string, space: number) => {
     if (!text.trim()) {
       setFormattedText('');
@@ -238,10 +243,10 @@ export default function JsonFormatterClient() {
         <div className="grid grid-cols-2 gap-8 mb-6 max-[900px]:grid-cols-1">
           <div className="bg-white/[.02] border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 min-w-0">
             <div className="flex items-center justify-between">
-              <span className="text-base font-medium text-white tracking-wide">原始 JSON 輸入</span>
+              <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px]">原始 JSON 輸入</span>
               <div className="flex items-center gap-2">
-                <button onClick={loadExample} className="px-3 py-1.5 text-sm font-medium bg-white/[.03] border border-white/[.08] text-text-sub rounded hover:text-white hover:bg-white/[.06] transition-all cursor-pointer">載入範例</button>
-                <button onClick={clearInput} className="px-3 py-1.5 text-sm font-medium bg-white/[.03] border border-white/[.08] text-text-sub rounded hover:text-white hover:bg-white/[.06] transition-all cursor-pointer">清除</button>
+                <button type="button" onClick={loadExample} className="px-3.5 py-1.5 text-sm font-medium bg-white/[.03] border border-white/[.08] text-text-main rounded-xl hover:text-white hover:bg-white/[.06] transition-all cursor-pointer">載入範例</button>
+                <button type="button" onClick={clearInput} className="px-3.5 py-1.5 text-sm font-medium bg-white/[.03] border border-white/[.08] text-text-main rounded-xl hover:text-white hover:bg-white/[.06] transition-all cursor-pointer">清除</button>
               </div>
             </div>
 
@@ -275,7 +280,7 @@ export default function JsonFormatterClient() {
             </div>
 
             {lintError && (
-              <div className="flex items-start gap-3 bg-[rgba(255,68,68,0.07)] border border-[rgba(255,68,68,0.25)] rounded-xl p-3 text-xs text-[#ff9999]">
+              <div className="flex items-start gap-3 bg-[rgba(255,68,68,0.07)] border border-[rgba(255,68,68,0.25)] rounded-xl p-3.5 text-sm text-[#ff9999]">
                 <svg viewBox="0 0 24 24" width={18} height={18} fill="#ff4444" className="shrink-0 mt-0.5">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                 </svg>
@@ -291,8 +296,8 @@ export default function JsonFormatterClient() {
             <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/[.06] pb-3">
               <div className="flex gap-2">
                 {(['formatted', 'minified', 'tree'] as const).map(tab => (
-                  <button key={tab} onClick={() => setActiveTab(tab)}
-                    className={`px-3.5 py-1.5 text-sm font-medium rounded-lg cursor-pointer transition-all border-none
+                  <button key={tab} type="button" onClick={() => setActiveTab(tab)}
+                    className={`px-3.5 py-1.5 text-sm font-semibold rounded-xl cursor-pointer transition-all border-none
                       ${activeTab === tab
                         ? 'bg-[rgba(255,0,170,0.15)] text-[#ff00aa] border border-[rgba(255,0,170,0.3)] shadow-[0_0_10px_rgba(255,0,170,0.2)]'
                         : 'bg-transparent text-text-sub hover:text-white hover:bg-white/[.04]'
@@ -310,7 +315,7 @@ export default function JsonFormatterClient() {
                   <div className="flex items-center gap-1.5 text-sm font-medium text-text-sub">
                     <span>縮排:</span>
                     <select
-                      className="bg-select-bg border border-border-glass rounded px-2 py-1 text-text-main text-xs outline-none cursor-pointer"
+                      className="bg-select-bg border border-border-glass rounded-xl px-2.5 py-1 text-text-main text-sm font-mono font-medium outline-none cursor-pointer"
                       value={indentSize}
                       onChange={e => handleIndentChange(Number(e.target.value))}
                     >
@@ -320,10 +325,10 @@ export default function JsonFormatterClient() {
                     </select>
                   </div>
                 )}
-                <button onClick={copyResult} className="px-3 py-1.5 text-sm bg-[rgba(255,0,170,0.12)] border border-[rgba(255,0,170,0.3)] text-[#ff00aa] rounded hover:bg-[#ff00aa] hover:text-[#030305] transition-all cursor-pointer font-medium">
+                <button type="button" onClick={copyResult} className="px-3.5 py-1.5 text-sm bg-[rgba(255,0,170,0.15)] border border-[rgba(255,0,170,0.3)] text-[#ff00aa] rounded-xl hover:bg-[#ff00aa] hover:text-[#030305] transition-all cursor-pointer font-medium">
                   複製
                 </button>
-                <button onClick={downloadJson} className="px-3 py-1.5 text-sm font-medium bg-white/[.03] border border-white/[.08] text-text-sub rounded hover:text-white hover:bg-white/[.06] transition-all cursor-pointer">
+                <button type="button" onClick={downloadJson} className="px-3.5 py-1.5 text-sm font-medium bg-white/[.03] border border-white/[.08] text-text-main rounded-xl hover:text-white hover:bg-white/[.06] transition-all cursor-pointer">
                   下載 .json
                 </button>
               </div>

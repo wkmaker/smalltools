@@ -281,11 +281,12 @@ export default function IpDetectorClient() {
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">IPv4 地址</span>
+              <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">IPv4 地址</span>
               <button
+                type="button"
                 onClick={() => copyText(ipv4, 'IPv4 位址')}
                 disabled={ipv4Status !== 'success'}
-                className="text-xs text-[#00f0ff] hover:underline disabled:opacity-40 cursor-pointer"
+                className="text-sm font-medium text-[#00f0ff] hover:underline disabled:opacity-40 cursor-pointer"
               >
                 複製
               </button>
@@ -300,11 +301,12 @@ export default function IpDetectorClient() {
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">IPv6 地址</span>
+              <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">IPv6 地址</span>
               <button
+                type="button"
                 onClick={() => copyText(ipv6, 'IPv6 位址')}
                 disabled={ipv6Status !== 'success'}
-                className="text-xs text-[#00f0ff] hover:underline disabled:opacity-40 cursor-pointer"
+                className="text-sm font-medium text-[#00f0ff] hover:underline disabled:opacity-40 cursor-pointer"
               >
                 複製
               </button>
@@ -328,7 +330,7 @@ export default function IpDetectorClient() {
             </h3>
 
             {cfLoading ? (
-              <div className="py-8 text-center text-sm text-slate-400 font-mono">
+              <div className="py-8 text-center text-sm text-text-sub font-mono">
                 <span className={`${styles.statusDot} ${styles.statusDotLoading} mr-2`} /> 讀取連線資訊中...
               </div>
             ) : cfTrace?.error ? (
@@ -336,28 +338,28 @@ export default function IpDetectorClient() {
             ) : (
               <div className="flex flex-col gap-3 font-mono text-xs">
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">連線 IP:</span>
-                  <span className="text-white font-bold">{cfTrace?.ip || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">連線 IP:</span>
+                  <span className="text-sm text-white font-bold">{cfTrace?.ip || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">機房節點 (colo):</span>
-                  <span className="text-[#00f0ff] font-bold">{cfTrace?.colo || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">機房節點 (colo):</span>
+                  <span className="text-sm text-[#00f0ff] font-bold">{cfTrace?.colo || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">地理位置 (loc):</span>
-                  <span className="text-white font-bold">{cfTrace?.loc || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">地理位置 (loc):</span>
+                  <span className="text-sm text-white font-bold">{cfTrace?.loc || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">最高連線協定:</span>
-                  <span className="text-white font-bold">{cfTrace?.http || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">最高連線協定:</span>
+                  <span className="text-sm text-white font-bold">{cfTrace?.http || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">連線延遲 (Latency):</span>
-                  <span className="text-emerald-400 font-bold">{cfTrace?.latency !== undefined ? `${cfTrace.latency} ms` : '-'}</span>
+                  <span className="text-sm font-semibold text-text-sub">連線延遲 (Latency):</span>
+                  <span className="text-sm text-emerald-400 font-bold">{cfTrace?.latency !== undefined ? `${cfTrace.latency} ms` : '-'}</span>
                 </div>
                 <div className="flex flex-col gap-1 bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">瀏覽器 UA (User Agent):</span>
-                  <span className="text-slate-400 break-all leading-relaxed">{cfTrace?.uag || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">瀏覽器 UA (User Agent):</span>
+                  <span className="text-xs text-text-sub break-all leading-relaxed">{cfTrace?.uag || '未知'}</span>
                 </div>
               </div>
             )}
@@ -370,7 +372,7 @@ export default function IpDetectorClient() {
             </h3>
 
             {geoLoading ? (
-              <div className="py-8 text-center text-sm text-slate-400 font-mono">
+              <div className="py-8 text-center text-sm text-text-sub font-mono">
                 <span className={`${styles.statusDot} ${styles.statusDotLoading} mr-2`} /> 查詢地理位置資訊中...
               </div>
             ) : geoInfo?.error ? (
@@ -378,34 +380,34 @@ export default function IpDetectorClient() {
             ) : (
               <div className="flex flex-col gap-3 font-mono text-xs">
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">所屬機構 (ISP):</span>
-                  <span className="text-white font-bold truncate max-w-[60%]">{geoInfo?.org || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">所屬機構 (ISP):</span>
+                  <span className="text-sm text-white font-bold truncate max-w-[60%]">{geoInfo?.org || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">ASN:</span>
-                  <span className="text-white font-bold">{geoInfo?.asn || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">ASN:</span>
+                  <span className="text-sm text-white font-bold">{geoInfo?.asn || '未知'}</span>
                 </div>
                 {geoInfo?.network && (
                   <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                    <span className="text-slate-300 font-medium">網段 (CIDR):</span>
-                    <span className="text-white font-bold">{geoInfo.network}</span>
+                    <span className="text-sm font-semibold text-text-sub">網段 (CIDR):</span>
+                    <span className="text-sm text-white font-bold">{geoInfo.network}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">地理位置:</span>
-                  <span className="text-white font-bold truncate max-w-[60%]">{geoInfo?.location || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">地理位置:</span>
+                  <span className="text-sm text-white font-bold truncate max-w-[60%]">{geoInfo?.location || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">地理經緯度:</span>
-                  <span className="text-white font-bold">{geoInfo?.latlon || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">地理經緯度:</span>
+                  <span className="text-sm text-white font-bold">{geoInfo?.latlon || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">時區:</span>
-                  <span className="text-white font-bold truncate max-w-[60%]">{geoInfo?.timezone || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">時區:</span>
+                  <span className="text-sm text-white font-bold truncate max-w-[60%]">{geoInfo?.timezone || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-slate-300 font-medium">貨幣:</span>
-                  <span className="text-white font-bold">{geoInfo?.currency || '未知'}</span>
+                  <span className="text-sm font-semibold text-text-sub">貨幣:</span>
+                  <span className="text-sm text-white font-bold">{geoInfo?.currency || '未知'}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-text-sub pt-1">
                   <span>資料來源:</span>
@@ -423,8 +425,9 @@ export default function IpDetectorClient() {
               公有雲及重要服務連線延遲診斷 (Latency)
             </h3>
             <button
+              type="button"
               onClick={runCloudDiagnostics}
-              className="px-3 py-1 text-xs bg-[#00f0ff]/15 border border-[#00f0ff]/30 text-[#00f0ff] rounded-lg hover:bg-[#00f0ff] hover:text-[#030305] transition-all cursor-pointer font-medium"
+              className="px-3.5 py-1.5 text-sm bg-[#00f0ff]/15 border border-[#00f0ff]/30 text-[#00f0ff] rounded-xl hover:bg-[#00f0ff] hover:text-[#030305] transition-all cursor-pointer font-medium"
             >
               重新測速
             </button>
@@ -447,14 +450,14 @@ export default function IpDetectorClient() {
                     }`}
                   />
                 </div>
-                <span className="text-xs font-bold text-white">{t.name}</span>
+                <span className="text-sm font-bold text-white">{t.name}</span>
                 <span
-                  className={`text-xs font-mono font-bold ${
+                  className={`text-sm font-mono font-bold ${
                     t.status === 'connected'
                       ? 'text-emerald-400'
                       : t.status === 'failed'
                       ? 'text-red-400'
-                      : 'text-slate-400'
+                      : 'text-text-sub'
                   }`}
                 >
                   {t.status === 'loading'
@@ -469,6 +472,7 @@ export default function IpDetectorClient() {
 
           <div className="flex justify-center pt-2">
             <button
+              type="button"
               onClick={runAllChecks}
               className="py-3.5 px-10 bg-[#00f0ff]/15 border border-[#00f0ff]/40 text-[#00f0ff] font-semibold text-sm rounded-full hover:bg-[#00f0ff] hover:text-[#030305] transition-all cursor-pointer shadow-[0_0_20px_rgba(0,240,255,0.2)]"
             >

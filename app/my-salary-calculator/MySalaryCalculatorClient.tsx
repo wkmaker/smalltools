@@ -132,14 +132,14 @@ export default function MySalaryCalculatorClient() {
 
             {/* 法規年份切換 (下拉選單) */}
             <div className="flex flex-col gap-2">
-              <label htmlFor={yearSelectId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+              <label htmlFor={yearSelectId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                 適用法規年份
               </label>
               <select
                 id={yearSelectId}
                 value={selectedYear}
                 onChange={e => setSelectedYear(parseInt(e.target.value))}
-                className="w-full bg-select-bg border border-border-glass text-text-main px-4 py-3 rounded-xl text-sm outline-none cursor-pointer font-mono"
+                className="w-full bg-select-bg border border-border-glass text-text-main px-4 py-3 rounded-xl text-sm outline-none cursor-pointer font-mono font-medium"
               >
                 {SUPPORTED_YEARS.map((y, idx) => (
                   <option key={y} value={y}>
@@ -147,7 +147,7 @@ export default function MySalaryCalculatorClient() {
                   </option>
                 ))}
               </select>
-              <span className="text-xs text-slate-300">
+              <span className="text-xs text-text-sub">
                 {selectedYear} 年基本工資為 ${formatNumber(minSalary)} 元
               </span>
             </div>
@@ -155,7 +155,7 @@ export default function MySalaryCalculatorClient() {
             {/* 約定月薪與投保基底 */}
             <div className="flex flex-col gap-4 border-t border-white/[.05] pt-4">
               <div className="flex flex-col gap-2">
-                <label htmlFor={salaryInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                <label htmlFor={salaryInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                   約定月薪總額 (元)
                 </label>
                 <input
@@ -169,7 +169,7 @@ export default function MySalaryCalculatorClient() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={baseInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                <label htmlFor={baseInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                   申報投保薪資基底 (元)
                 </label>
                 <input
@@ -180,7 +180,7 @@ export default function MySalaryCalculatorClient() {
                   onChange={e => setCustomInsuranceBase(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
                   className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
                 />
-                <span className="text-xs text-slate-300">
+                <span className="text-xs text-text-sub">
                   可自訂投保薪資，預設自動採用約定月薪
                 </span>
               </div>
@@ -196,7 +196,7 @@ export default function MySalaryCalculatorClient() {
                   id={dependentsInputId}
                   value={dependents}
                   onChange={e => setDependents(parseInt(e.target.value))}
-                  className="w-full bg-select-bg border border-border-glass text-text-main px-3 py-3 rounded-xl text-sm outline-none cursor-pointer font-mono"
+                  className="w-full bg-select-bg border border-border-glass text-text-main px-3 py-3 rounded-xl text-sm outline-none cursor-pointer font-mono font-medium"
                 >
                   <option value={0}>0 人 (本人)</option>
                   <option value={1}>1 人 (本人 + 1眷)</option>
@@ -213,7 +213,7 @@ export default function MySalaryCalculatorClient() {
                   id={pensionInputId}
                   value={selfPensionRatio}
                   onChange={e => setSelfPensionRatio(parseFloat(e.target.value))}
-                  className="w-full bg-select-bg border border-border-glass text-text-main px-3 py-3 rounded-xl text-sm outline-none cursor-pointer font-mono"
+                  className="w-full bg-select-bg border border-border-glass text-text-main px-3 py-3 rounded-xl text-sm outline-none cursor-pointer font-mono font-medium"
                 >
                   <option value={0}>0% (不自提)</option>
                   <option value={1}>1%</option>
@@ -236,7 +236,7 @@ export default function MySalaryCalculatorClient() {
                   id={taxMethodInputId}
                   value={taxMethod}
                   onChange={e => setTaxMethod(e.target.value as 'none' | 'rate_5' | 'matrix')}
-                  className="w-full bg-select-bg border border-border-glass text-text-main px-4 py-3 rounded-xl text-sm outline-none cursor-pointer"
+                  className="w-full bg-select-bg border border-border-glass text-text-main px-4 py-3 rounded-xl text-sm outline-none cursor-pointer font-medium"
                 >
                   <option value="none">不預扣所得稅 (0%)</option>
                   <option value="rate_5">固定按 5% 預扣 (滿 $2,000 才起扣)</option>
@@ -253,7 +253,7 @@ export default function MySalaryCalculatorClient() {
                     id={taxDependentsInputId}
                     value={taxDependents}
                     onChange={e => setTaxDependents(parseInt(e.target.value))}
-                    className="w-full bg-select-bg border border-border-glass text-text-main px-3 py-2 rounded-lg text-sm outline-none font-mono"
+                    className="w-full bg-select-bg border border-border-glass text-text-main px-3 py-2 rounded-lg text-sm outline-none font-mono font-medium"
                   >
                     {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(n => (
                       <option key={n} value={n}>{n} 人</option>
@@ -265,6 +265,7 @@ export default function MySalaryCalculatorClient() {
 
             {/* 複製分享按鈕 */}
             <button
+              type="button"
               onClick={copyShareLink}
               className="mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
                 bg-[#00f5a0]/15 border border-[#00f5a0]/40 text-[#00f5a0] rounded-xl
@@ -283,7 +284,7 @@ export default function MySalaryCalculatorClient() {
                 <h3 className="text-sm text-[#00f5a0] uppercase tracking-[1px] font-semibold">
                   員工每月薪資結算表 ({selectedYear} 年法規)
                 </h3>
-                <span className="text-sm text-slate-300 font-medium">每月實領金額</span>
+                <span className="text-sm text-text-sub font-semibold">每月實領金額</span>
               </div>
 
               <div className="flex justify-between items-center bg-[#00f5a0]/15 border border-[#00f5a0]/40 p-4 rounded-xl">
@@ -296,40 +297,40 @@ export default function MySalaryCalculatorClient() {
               <div className="grid grid-cols-2 gap-3 text-sm font-mono max-sm:grid-cols-1">
                 <div className="bg-black/40 p-3.5 rounded-xl border border-white/[.04] flex flex-col gap-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300 font-medium">勞保自負額 (20%):</span>
+                    <span className="text-sm font-semibold text-text-sub">勞保自負額 (20%):</span>
                     <span className="text-white font-bold">${formatNumber(empLabor)} 元</span>
                   </div>
-                  <span className="text-xs text-slate-300">
+                  <span className="text-xs text-text-sub">
                     對應勞保投保級距：${formatNumber(insuredLabor)} 元
                   </span>
                 </div>
 
                 <div className="bg-black/40 p-3.5 rounded-xl border border-white/[.04] flex flex-col gap-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300 font-medium">健保自負額 ({1 + Math.min(3, dependents)}口):</span>
+                    <span className="text-sm font-semibold text-text-sub">健保自負額 ({1 + Math.min(3, dependents)}口):</span>
                     <span className="text-white font-bold">${formatNumber(empHealth)} 元</span>
                   </div>
-                  <span className="text-xs text-slate-300">
+                  <span className="text-xs text-text-sub">
                     對應健保投保級距：${formatNumber(insuredHealth)} 元
                   </span>
                 </div>
 
                 <div className="bg-black/40 p-3.5 rounded-xl border border-white/[.04] flex flex-col gap-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300 font-medium">勞退個人自提 ({selfPensionRatio}%):</span>
+                    <span className="text-sm font-semibold text-text-sub">勞退個人自提 ({selfPensionRatio}%):</span>
                     <span className="text-white font-bold">${formatNumber(empPension)} 元</span>
                   </div>
-                  <span className="text-xs text-slate-300">
+                  <span className="text-xs text-text-sub">
                     對應勞退提繳級距：${formatNumber(insuredPension)} 元
                   </span>
                 </div>
 
                 <div className="bg-black/40 p-3.5 rounded-xl border border-white/[.04] flex flex-col gap-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300 font-medium">預扣所得稅:</span>
+                    <span className="text-sm font-semibold text-text-sub">預扣所得稅:</span>
                     <span className="text-white font-bold">${formatNumber(empTax)} 元</span>
                   </div>
-                  <span className="text-xs text-slate-300">
+                  <span className="text-xs text-text-sub">
                     {taxMethod === 'none' ? '未預扣' : taxMethod === 'rate_5' ? '固定 5% 預扣' : `財政部扣繳稅額表 (扶養 ${taxDependents} 人)`}
                   </span>
                 </div>
@@ -339,7 +340,7 @@ export default function MySalaryCalculatorClient() {
             {/* 板塊 2：雇主人力負擔成本 */}
             <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
               <div className="flex justify-between items-center border-b border-white/[.06] pb-3">
-                <h3 className="text-sm text-slate-300 uppercase tracking-[1px] font-semibold">
+                <h3 className="text-sm text-text-sub uppercase tracking-[1px] font-semibold">
                   雇主營運總勞務成本 (Employer Total Cost)
                 </h3>
                 <span className="text-base font-bold text-white font-mono">
@@ -349,21 +350,21 @@ export default function MySalaryCalculatorClient() {
 
               <div className="grid grid-cols-3 gap-3 text-sm font-mono max-sm:grid-cols-1">
                 <div className="bg-black/40 p-3 rounded-xl border border-white/[.04] flex flex-col gap-1">
-                  <span className="text-slate-300 font-medium">雇主勞保 (70%)</span>
+                  <span className="text-sm font-semibold text-text-sub">雇主勞保 (70%)</span>
                   <span className="text-white font-bold">${formatNumber(emprLabor)} 元</span>
-                  <span className="text-xs text-slate-300">級距 ${formatNumber(insuredLabor)}</span>
+                  <span className="text-xs text-text-sub">級距 ${formatNumber(insuredLabor)}</span>
                 </div>
 
                 <div className="bg-black/40 p-3 rounded-xl border border-white/[.04] flex flex-col gap-1">
-                  <span className="text-slate-300 font-medium">雇主健保 (60% * 眷口)</span>
+                  <span className="text-sm font-semibold text-text-sub">雇主健保 (60% * 眷口)</span>
                   <span className="text-white font-bold">${formatNumber(emprHealth)} 元</span>
-                  <span className="text-xs text-slate-300">級距 ${formatNumber(insuredHealth)}</span>
+                  <span className="text-xs text-text-sub">級距 ${formatNumber(insuredHealth)}</span>
                 </div>
 
                 <div className="bg-black/40 p-3 rounded-xl border border-white/[.04] flex flex-col gap-1">
-                  <span className="text-slate-300 font-medium">雇主強制提繳 (6%)</span>
+                  <span className="text-sm font-semibold text-text-sub">雇主強制提繳 (6%)</span>
                   <span className="text-white font-bold">${formatNumber(emprPension)} 元</span>
-                  <span className="text-xs text-slate-300">級距 ${formatNumber(insuredPension)}</span>
+                  <span className="text-xs text-text-sub">級距 ${formatNumber(insuredPension)}</span>
                 </div>
               </div>
             </div>

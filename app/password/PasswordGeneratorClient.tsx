@@ -114,7 +114,7 @@ export default function PasswordGeneratorClient() {
     }
 
     const pool = processed.map(p => p.chars).join('');
-    for (let i = 0; i < length - chars.length; i++) {
+    while (chars.length < length) {
       chars.push(pool[secureRandomInt(pool.length)]);
     }
     secureShuffle(chars);
@@ -205,7 +205,7 @@ export default function PasswordGeneratorClient() {
             <div className="bg-white/[.005] border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
               {/* 密碼長度 Slider */}
               <div className="flex flex-col gap-2.5">
-                <div className="flex justify-between items-center text-sm font-medium text-text-sub uppercase tracking-[0.5px]">
+                <div className="flex justify-between items-center text-sm font-semibold text-text-sub uppercase tracking-[1px]">
                   <span>密碼長度 (Length)</span>
                   <span
                     className="font-mono text-xl font-bold text-[#00ff66]"
@@ -229,7 +229,7 @@ export default function PasswordGeneratorClient() {
                   { id: 'number', label: '數字 (0-9)',            val: useNumber, set: setUseNumber },
                   { id: 'symbol', label: '特殊符號 (!@#...)',     val: useSymbol, set: setUseSymbol },
                 ] as const).map(opt => (
-                  <label key={opt.id} className="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none text-[0.9rem] text-[#d1d5db] hover:text-white transition-colors">
+                  <label key={opt.id} className="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none text-sm font-medium text-text-sub hover:text-white transition-colors">
                     <input type="checkbox" checked={opt.val} onChange={e => (opt.set as (v: boolean) => void)(e.target.checked)} />
                     <span className="checkmark" />
                     {opt.label}
@@ -243,7 +243,7 @@ export default function PasswordGeneratorClient() {
                   { id: 'exclude', label: '排除相似與混淆字元 (如 1, l, I, 0, O, o 等)', val: excludeConfusable, set: setExcludeConfusable },
                   { id: 'strict',  label: '強制每種字元集至少出現一個 (分佈更均勻)',     val: strictMode,        set: setStrictMode },
                 ] as const).map(opt => (
-                  <label key={opt.id} className="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none text-[0.9rem] text-[#d1d5db] hover:text-white transition-colors">
+                  <label key={opt.id} className="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none text-sm font-medium text-text-sub hover:text-white transition-colors">
                     <input type="checkbox" checked={opt.val} onChange={e => (opt.set as (v: boolean) => void)(e.target.checked)} />
                     <span className="checkmark" />
                     {opt.label}
@@ -253,9 +253,10 @@ export default function PasswordGeneratorClient() {
 
               {/* 重新生成滿版按鈕 */}
               <button
+                type="button"
                 onClick={handleRegenerate}
-                className="mt-1 w-full h-[42px] flex items-center justify-center gap-2 text-[0.95rem] font-medium tracking-[1.5px]
-                  bg-[rgba(0,255,102,0.15)] border border-[rgba(0,255,102,0.4)] text-[#00ff66] rounded-lg
+                className="mt-1 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1.5px]
+                  bg-[rgba(0,255,102,0.15)] border border-[rgba(0,255,102,0.4)] text-[#00ff66] rounded-xl
                   transition-all duration-300 hover:bg-[#00ff66] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(0,255,102,0.4)]
                   cursor-pointer"
               >
@@ -277,15 +278,15 @@ export default function PasswordGeneratorClient() {
                   {password}
                 </span>
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={handleRegenerate} title="重新生成"
-                    className="flex items-center justify-center w-[38px] h-[38px] bg-white/[.03] border border-white/[.08] text-white rounded-lg
+                  <button type="button" onClick={handleRegenerate} title="重新生成"
+                    className="flex items-center justify-center w-[38px] h-[38px] bg-white/[.03] border border-white/[.08] text-white rounded-xl
                       cursor-pointer transition-all hover:bg-[rgba(0,255,102,0.08)] hover:border-[rgba(0,255,102,0.4)] hover:text-[#00ff66] hover:shadow-[0_0_12px_rgba(0,255,102,0.15)]">
                     <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                       <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
                     </svg>
                   </button>
-                  <button onClick={copyPassword} title="複製密碼"
-                    className="flex items-center gap-1.5 px-4 h-[38px] bg-[rgba(0,255,102,0.15)] border border-[rgba(0,255,102,0.4)] text-[#00ff66] rounded-lg
+                  <button type="button" onClick={copyPassword} title="複製密碼"
+                    className="flex items-center gap-1.5 px-4 h-[38px] bg-[rgba(0,255,102,0.15)] border border-[rgba(0,255,102,0.4)] text-[#00ff66] rounded-xl
                       cursor-pointer transition-all hover:bg-[#00ff66] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(0,255,102,0.4)] font-medium text-sm">
                     <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                       <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
@@ -297,7 +298,7 @@ export default function PasswordGeneratorClient() {
 
               {/* 密碼強度視覺看板 (strength-indicator-section) */}
               <div className="flex flex-col gap-1.5 pt-2">
-                <div className="flex justify-between text-xs uppercase tracking-[0.5px]">
+                <div className="flex justify-between text-sm font-semibold uppercase tracking-[0.5px]">
                   <span className="text-text-sub">密碼安全強度：</span>
                   <span className="font-bold transition-colors duration-300" style={{ color: strength.color }}>
                     {strength.label}
@@ -315,13 +316,13 @@ export default function PasswordGeneratorClient() {
             {/* 歷史紀錄卡片 (history-section - 有點擊重新生成才展開) */}
             {history.length > 0 && (
               <div className="bg-white/[.003] border border-white/[.08] rounded-2xl p-6 flex flex-col gap-3 slide-down mt-1">
-                <div className="text-xs text-text-sub uppercase tracking-[0.5px] mb-1">歷史生成記錄 (最近 5 組)</div>
+                <div className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">歷史生成記錄 (最近 5 組)</div>
                 <div className="flex flex-col gap-2">
                   {history.map((pwd, i) => (
-                    <div key={i} className="flex justify-between items-center gap-4 bg-black/20 border border-white/[.02] rounded-lg px-4 py-2.5
+                    <div key={i} className="flex justify-between items-center gap-4 bg-black/20 border border-white/[.02] rounded-xl px-4 py-2.5
                       transition-colors hover:bg-white/[.015]">
-                      <span className="font-mono text-[0.95rem] text-[#d1d5db] break-all select-all">{pwd}</span>
-                      <button onClick={() => copyHistoryItem(pwd)} title="複製此組密碼"
+                      <span className="font-mono text-sm text-text-main break-all select-all">{pwd}</span>
+                      <button type="button" onClick={() => copyHistoryItem(pwd)} title="複製此組密碼"
                         className="text-text-sub hover:text-[#00ff66] transition-colors p-1 cursor-pointer bg-none border-none flex shrink-0">
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
