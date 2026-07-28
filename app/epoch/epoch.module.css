@@ -2,10 +2,17 @@
 
 .liveClock {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 2.2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #00ff99;
   text-shadow: 0 0 12px rgba(0, 255, 153, 0.4);
+  word-break: break-all;
+}
+
+@media (min-width: 640px) {
+  .liveClock {
+    font-size: 2.2rem;
+  }
 }
 
 .monoCode {

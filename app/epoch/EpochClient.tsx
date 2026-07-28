@@ -447,44 +447,44 @@ export default function EpochClient() {
         {/* 當前時間動態看板 */}
         <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
           <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-1">
-            <div className="flex flex-col gap-1.5 bg-black/40 border border-white/[.05] p-4 rounded-xl">
+            <div className="flex flex-col gap-1.5 bg-black/40 border border-white/[.05] p-4 rounded-xl min-w-0">
               <span className="text-xs font-semibold text-text-sub">當前 UNIX TIMESTAMP (秒)</span>
-              <div className="flex items-center justify-between gap-2">
-                <span className={`font-mono ${styles.liveClock}`}>{isMounted ? liveSec : '-'}</span>
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <span className={`font-mono min-w-0 ${styles.liveClock}`}>{isMounted ? liveSec : '-'}</span>
                 <button
                   type="button"
                   onClick={() => copyText(liveSec.toString())}
-                  className="px-2.5 py-1 text-xs font-medium text-[#00ff99] bg-[#00ff99]/10 border border-[#00ff99]/30 rounded-lg hover:bg-[#00ff99]/20 transition-all cursor-pointer shrink-0"
+                  className="px-2.5 py-1 text-xs font-medium text-[#00ff99] bg-[#00ff99]/10 border border-[#00ff99]/30 rounded-lg hover:bg-[#00ff99]/20 transition-all cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   複製
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5 bg-black/40 border border-white/[.05] p-4 rounded-xl">
+            <div className="flex flex-col gap-1.5 bg-black/40 border border-white/[.05] p-4 rounded-xl min-w-0">
               <span className="text-xs font-semibold text-text-sub">當前時間戳記 (毫秒)</span>
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-xl font-bold text-[#00ff99] tracking-tight">
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <span className="font-mono text-base sm:text-xl font-bold text-[#00ff99] tracking-tight min-w-0 truncate">
                   {isMounted ? liveMs : '-'}
                 </span>
                 <button
                   type="button"
                   onClick={() => copyText(liveMs.toString())}
-                  className="px-2.5 py-1 text-xs font-medium text-[#00ff99] bg-[#00ff99]/10 border border-[#00ff99]/30 rounded-lg hover:bg-[#00ff99]/20 transition-all cursor-pointer shrink-0"
+                  className="px-2.5 py-1 text-xs font-medium text-[#00ff99] bg-[#00ff99]/10 border border-[#00ff99]/30 rounded-lg hover:bg-[#00ff99]/20 transition-all cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   複製
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5 bg-black/40 border border-white/[.05] p-4 rounded-xl">
+            <div className="flex flex-col gap-1.5 bg-black/40 border border-white/[.05] p-4 rounded-xl min-w-0">
               <span className="text-xs font-semibold text-text-sub">當前台北時間 (Asia/Taipei)</span>
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-sm font-bold text-white tracking-tight">{liveDateStr}</span>
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <span className="font-mono text-xs sm:text-sm font-bold text-white tracking-tight min-w-0 truncate">{liveDateStr}</span>
                 <button
                   type="button"
                   onClick={() => setIsPaused(!isPaused)}
-                  className={`px-3 py-1 text-sm font-medium border rounded-lg transition-all cursor-pointer shrink-0 ${
+                  className={`px-2.5 py-1 text-xs sm:text-sm font-medium border rounded-lg transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                     isPaused
                       ? 'bg-red-500/15 border-red-500/40 text-red-400 hover:bg-red-500/30'
                       : 'bg-white/[0.04] border-white/[0.08] text-text-sub hover:text-white'
@@ -558,10 +558,10 @@ export default function EpochClient() {
 
             {/* 轉換多時區結果 */}
             <div className="flex flex-col gap-3 font-mono text-xs border-t border-white/[.06] pt-5">
-              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05]">
-                <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05] min-w-0">
+                <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="text-text-sub text-[0.75rem]">台北時間 (Asia/Taipei)</span>
-                  <span className="text-white font-bold text-sm">
+                  <span className="text-white font-bold text-sm truncate">
                     {parsedTsResult ? parsedTsResult.taipeiStr : '-'}
                   </span>
                 </div>
@@ -569,17 +569,17 @@ export default function EpochClient() {
                   <button
                     type="button"
                     onClick={() => copyAndRecord(parsedTsResult.taipeiStr, 'ts2date')}
-                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer"
+                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
                     複製
                   </button>
                 )}
               </div>
 
-              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05]">
-                <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05] min-w-0">
+                <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="text-text-sub text-[0.75rem]">世界標準時間 (UTC)</span>
-                  <span className="text-[#00ff99] font-bold text-sm">
+                  <span className="text-[#00ff99] font-bold text-sm truncate">
                     {parsedTsResult ? parsedTsResult.utcStr : '-'}
                   </span>
                 </div>
@@ -587,24 +587,24 @@ export default function EpochClient() {
                   <button
                     type="button"
                     onClick={() => copyAndRecord(parsedTsResult.utcStr, 'ts2date')}
-                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer"
+                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
                     複製
                   </button>
                 )}
               </div>
 
-              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05]">
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-2">
+              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05] min-w-0">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-wrap">
                     <span className="text-text-sub text-[0.75rem]">美西時間 (Los Angeles)</span>
                     {parsedTsResult && (
-                      <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-[#00ff99]/10 text-[#00ff99] border border-[#00ff99]/20 font-sans font-semibold">
+                      <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-[#00ff99]/10 text-[#00ff99] border border-[#00ff99]/20 font-sans font-semibold shrink-0">
                         {parsedTsResult.laBadge}
                       </span>
                     )}
                   </div>
-                  <span className="text-slate-200 font-bold text-sm">
+                  <span className="text-slate-200 font-bold text-sm truncate">
                     {parsedTsResult ? parsedTsResult.laStr : '-'}
                   </span>
                 </div>
@@ -612,7 +612,7 @@ export default function EpochClient() {
                   <button
                     type="button"
                     onClick={() => copyAndRecord(parsedTsResult.laStr, 'ts2date')}
-                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer"
+                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
                     複製
                   </button>
@@ -620,8 +620,8 @@ export default function EpochClient() {
               </div>
 
               {/* 自訂選單時區 */}
-              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05]">
-                <div className="flex flex-col gap-1 w-full mr-2">
+              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05] min-w-0">
+                <div className="flex flex-col gap-1 w-full mr-2 min-w-0">
                   <label htmlFor={selectCustomTzId} className="sr-only">
                     選擇自訂時區
                   </label>
@@ -629,7 +629,7 @@ export default function EpochClient() {
                     id={selectCustomTzId}
                     value={customTzOffset}
                     onChange={(e) => setCustomTzOffset(parseFloat(e.target.value))}
-                    className="bg-select-bg text-text-main border border-border-glass rounded-lg px-2 py-1 outline-none text-xs font-mono cursor-pointer max-w-[220px]"
+                    className="bg-select-bg text-text-main border border-border-glass rounded-lg px-2 py-1 outline-none text-xs font-mono cursor-pointer w-full max-w-[220px]"
                   >
                     <option value="-12">UTC -12:00</option>
                     <option value="-11">UTC -11:00</option>
@@ -667,7 +667,7 @@ export default function EpochClient() {
                     <option value="13">UTC +13:00</option>
                     <option value="14">UTC +14:00</option>
                   </select>
-                  <span className="text-white font-bold text-sm">
+                  <span className="text-white font-bold text-sm truncate">
                     {parsedTsResult ? parsedTsResult.customStr : '-'}
                   </span>
                 </div>
@@ -675,7 +675,7 @@ export default function EpochClient() {
                   <button
                     type="button"
                     onClick={() => copyAndRecord(parsedTsResult.customStr, 'ts2date')}
-                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer shrink-0"
+                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
                     複製
                   </button>
@@ -711,24 +711,24 @@ export default function EpochClient() {
               日期時間 ➜ 時間戳記 (Date ➜ Timestamp)
             </h3>
 
-            <div className="grid grid-cols-[1fr_auto] gap-3">
-              <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+              <div className="flex flex-col gap-2 min-w-0">
                 <label htmlFor={dtInputId} className="text-sm font-medium text-text-sub">
                   選擇日期與時間
                 </label>
-                <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff99]/40 transition-colors">
+                <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff99]/40 transition-colors overflow-hidden">
                   <input
                     id={dtInputId}
                     type="datetime-local"
                     step="1"
                     value={dtInput}
                     onChange={(e) => setDtInput(e.target.value)}
-                    className="w-full bg-transparent border-none outline-none text-white text-base font-mono font-medium [color-scheme:dark]"
+                    className="w-full bg-transparent border-none outline-none text-white text-base font-mono font-medium [color-scheme:dark] min-w-0"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 w-[100px]">
+              <div className="flex flex-col gap-2 w-full sm:w-[100px]">
                 <label htmlFor={dtMsInputId} className="text-sm font-medium text-text-sub">
                   毫秒 (ms)
                 </label>
@@ -818,10 +818,10 @@ export default function EpochClient() {
 
             {/* 轉換結果 */}
             <div className="flex flex-col gap-3 font-mono text-xs border-t border-white/[.06] pt-5">
-              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05]">
-                <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05] min-w-0">
+                <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="text-text-sub text-[0.75rem]">Unix 時間戳記 (秒 - 10位)</span>
-                  <span className="text-[#00ff99] font-bold text-base">
+                  <span className="text-[#00ff99] font-bold text-base truncate">
                     {parsedDateResult ? parsedDateResult.secEpoch : '-'}
                   </span>
                 </div>
@@ -829,17 +829,17 @@ export default function EpochClient() {
                   <button
                     type="button"
                     onClick={() => copyAndRecord(parsedDateResult.secEpoch.toString(), 'date2ts')}
-                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer"
+                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
                     複製
                   </button>
                 )}
               </div>
 
-              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05]">
-                <div className="flex flex-col gap-0.5">
+              <div className="flex justify-between items-center bg-black/40 p-3.5 rounded-xl border border-white/[.05] min-w-0">
+                <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="text-text-sub text-[0.75rem]">Unix 時間戳記 (毫秒 - 13位)</span>
-                  <span className="text-white font-bold text-base">
+                  <span className="text-white font-bold text-base truncate">
                     {parsedDateResult ? parsedDateResult.msEpoch : '-'}
                   </span>
                 </div>
@@ -847,7 +847,7 @@ export default function EpochClient() {
                   <button
                     type="button"
                     onClick={() => copyAndRecord(parsedDateResult.msEpoch.toString(), 'date2ts')}
-                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer"
+                    className="px-2.5 py-1 text-[0.75rem] font-medium text-text-sub bg-white/[0.04] border border-white/[0.08] rounded-lg hover:border-[#00ff99] hover:text-[#00ff99] transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
                     複製
                   </button>
