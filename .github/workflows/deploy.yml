@@ -10,37 +10,59 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # OIDC 驗證所需的權限
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       # ── 1. 拉取代碼 ──────────────────────────────────────────
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # ── 2. 設定 Node.js 環境（含 npm 快取） ──────────────────
+      # ── 2. 檢測 template.yml 是否有修改 ─────────────────────
+      - name: Check CloudFormation Template Changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            cf_template:
+              - 'template.yml'
+
+      # ── 3. 設定 Node.js 環境（含 npm 快取） ──────────────────
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
 
-      # ── 3. 安裝依賴 ──────────────────────────────────────────
+      # ── 4. 安裝依賴 ──────────────────────────────────────────
       - name: Install Dependencies
         run: npm ci
 
-      # ── 4. Next.js SSG 建置 → 產出 out/ 目錄 ────────────────
+      # ── 5. Next.js SSG 建置 → 產出 out/ 目錄 ────────────────
       - name: Build Next.js SSG
         run: npm run build
         env:
           NODE_ENV: production
 
-      # ── 5. 設定 AWS 憑證 ─────────────────────────────────────
-      - name: Configure AWS Credentials
+      # ── 6. 設定 AWS 憑證 (使用 OIDC Role) ───────────────────
+      - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ── 6. 同步 out/ 至 S3 ───────────────────────────────────
+      # ── 7. 更新 CloudFormation 基礎架構（僅在 template.yml 變動時執行） ──
+      - name: Deploy CloudFormation Stack
+        if: steps.filter.outputs.cf_template == 'true'
+        uses: aws-actions/aws-cloudformation-deploy@v1
+        with:
+          name: web-tool-cjkuo-stack
+          template: template.yml
+          no-fail-on-empty-changeset: "1"
+
+      # ── 8. 同步 out/ 至 S3 ───────────────────────────────────
       - name: Sync to S3
         run: |
           # HTML 檔案：短快取 300 秒（確保更新後用戶能快速看到新版）
@@ -70,7 +92,7 @@ jobs:
             --content-type "image/svg+xml" \
             --cache-control "public, max-age=600"
 
-      # ── 7. 清除 CloudFront 快取 ──────────────────────────────
+      # ── 9. 清除 CloudFront 快取 ──────────────────────────────
       - name: Invalidate CloudFront Cache
         run: |
           aws cloudfront create-invalidation \

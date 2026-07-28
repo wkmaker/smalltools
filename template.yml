@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Infrastructure template for static website hosting with S3, CloudFront, and WAF'
+
+Resources:
+  StaticWebsiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: web-tool-cjkuo
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  StaticWebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    Properties:
+      Bucket: !Ref StaticWebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
+
+  StaticWebsiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    DeletionPolicy: Retain
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - tools.cjkuo.net
+        DefaultRootObject: index.html
+        Origins:
+          - Id: web-tool-cjkuo.s3.us-west-2.amazonaws.com-mr8xgesntcz
+            DomainName: web-tool-cjkuo.s3-website-us-west-2.amazonaws.com
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+              OriginSSLProtocols:
+                - SSLv3
+                - TLSv1
+                - TLSv1.1
+                - TLSv1.2
+              OriginReadTimeout: 30
+              OriginKeepaliveTimeout: 5
+            ConnectionAttempts: 3
+            ConnectionTimeout: 10
+        DefaultCacheBehavior:
+          TargetOriginId: web-tool-cjkuo.s3.us-west-2.amazonaws.com-mr8xgesntcz
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - HEAD
+            - GET
+          CachedMethods:
+            - HEAD
+            - GET
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponsePagePath: /404.html
+            ResponseCode: 404
+            ErrorCachingMinTTL: 10
+        Comment: tools_web
+        PriceClass: PriceClass_All
+        Enabled: true
+        ViewerCertificate:
+          AcmCertificateArn: arn:aws:acm:us-east-1:114571653217:certificate/3c20f7ce-b2ba-4ba3-b229-c11ecacc8582
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        WebACLId: arn:aws:wafv2:us-east-1:114571653217:global/webacl/CreatedByCloudFront-1368b7c6/b33d948b-c516-498c-afb7-cbb14fce7501
+        HttpVersion: http2and3
+        IPV6Enabled: true
+
+Outputs:
+  BucketName:
+    Description: "S3 Bucket Name"
+    Value: !Ref StaticWebsiteBucket
+  CloudFrontDistributionId:
+    Description: "CloudFront Distribution ID"
+    Value: !Ref StaticWebsiteDistribution
