@@ -438,6 +438,29 @@
 .placeholderCard p { color: rgba(255, 255, 255, 0.25); }
 .placeholderCard .cardAction { color: rgba(255, 255, 255, 0.3); }
 
+/* 工具卡片跳轉高亮動畫 */
+.highlightCard {
+    animation: highlightGlow 2s ease-in-out;
+}
+
+@keyframes highlightGlow {
+    0% {
+        border-color: rgba(0, 240, 255, 0.8);
+        box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+        transform: translateY(-4px) scale(1.02);
+    }
+    50% {
+        border-color: rgba(0, 240, 255, 0.8);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+        transform: translateY(-4px) scale(1.02);
+    }
+    100% {
+        border-color: var(--glass-border);
+        box-shadow: none;
+        transform: translateY(0) scale(1);
+    }
+}
+
 @media (max-width: 900px) {
     .toolsGrid { grid-template-columns: repeat(2, 1fr); }
 }

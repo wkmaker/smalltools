@@ -19,7 +19,10 @@
  *   - 響應式（手機版 padding 收縮、返回按鈕 static）
  */
 
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface ToolLayoutProps {
   title: string;
@@ -40,6 +43,10 @@ export default function ToolLayout({
   hideHeader = false,
   children,
 }: ToolLayoutProps) {
+  const pathname = usePathname();
+  const cleanPath = pathname ? pathname.replace(/^\/|\/$/g, '') : '';
+  const backHref = cleanPath ? `/#tool-${cleanPath}` : '/';
+
   return (
     /*
      * 最外層玻璃容器
@@ -62,7 +69,12 @@ export default function ToolLayout({
     >
       {/* ── 返回按鈕 ── */}
       <Link
-        href="/"
+        href={backHref}
+        onClick={() => {
+          if (typeof window !== 'undefined' && pathname) {
+            sessionStorage.setItem('lastVisitedTool', pathname);
+          }
+        }}
         className="
           tool-back-btn
           absolute top-6 left-6 z-[11]
@@ -74,6 +86,7 @@ export default function ToolLayout({
           hover:text-text-main hover:border-[var(--tool-accent)] hover:bg-white/[.06]
           hover:shadow-[0_0_15px_var(--tool-glow)]
           hover:-translate-y-0.5
+          w-fit self-start
           max-sm:static max-sm:inline-flex max-sm:mb-6
         "
         style={

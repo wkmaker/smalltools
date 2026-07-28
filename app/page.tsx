@@ -127,6 +127,46 @@ function HomePageContent() {
     if (searchInputRef.current) searchInputRef.current.value = q;
   }, [searchParams]);
 
+  useEffect(() => {
+    let targetId = '';
+    if (typeof window !== 'undefined') {
+      const rawHash = window.location.hash;
+      if (rawHash && rawHash.includes('tool-')) {
+        // 從可能包含多個 # 的字串中精確提取最後一個合法的 tool- 標籤
+        const matches = rawHash.match(/tool-[a-zA-Z0-9-]+/g);
+        if (matches && matches.length > 0) {
+          targetId = matches[matches.length - 1];
+          // 如果發現 URL 包含重複的 #，自動淨化網址列為單一標準 Hash
+          if (rawHash.indexOf('#', 1) !== -1) {
+            window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${targetId}`);
+          }
+        }
+      }
+      
+      if (!targetId) {
+        const lastTool = sessionStorage.getItem('lastVisitedTool');
+        if (lastTool) {
+          targetId = `tool-${lastTool.replace(/^\/|\/$/g, '')}`;
+        }
+      }
+
+      if (targetId) {
+        sessionStorage.removeItem('lastVisitedTool');
+        const timer = setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add(styles.highlightCard);
+            setTimeout(() => {
+              el.classList.remove(styles.highlightCard);
+            }, 2000);
+          }
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
+
   const syncURL = useCallback((tab: Tab, q: string, immediate = false) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const update = () => {
@@ -241,9 +281,18 @@ function HomePageContent() {
                 {visibleTools.map(tool => (
                   <Link
                     key={tool.href}
+                    id={`tool-${tool.href.replace(/^\/|\/$/g, '')}`}
                     href={tool.href}
                     className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
                     onMouseMove={handleCardMouseMove}
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.setItem('lastVisitedTool', tool.href);
+                        if (window.location.hash) {
+                          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                        }
+                      }
+                    }}
                   >
                     <div>
                       <h3>{tool.name}</h3>
