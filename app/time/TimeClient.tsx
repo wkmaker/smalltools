@@ -312,7 +312,7 @@ export default function TimeClient() {
       <div className="flex flex-col justify-center items-center w-full min-h-[70vh] my-auto">
         {!timerActive ? (
           /* 設定視圖 (Setup View) */
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg max-w-[800px] mx-auto w-full my-auto animate-fadeIn">
+          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg w-full my-auto animate-fadeIn">
             <h3 className="text-sm text-[#00f0ff] uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
               設定目標事件與時間
             </h3>
@@ -365,7 +365,10 @@ export default function TimeClient() {
                           : 'border-white/[.08] bg-black/40 text-text-sub hover:text-white'
                       }`}
                     >
-                      {UNIT_LABELS[unit].zh} ({UNIT_LABELS[unit].en})
+                      <span className="whitespace-nowrap">
+                        {UNIT_LABELS[unit].zh}
+                        <span className="max-sm:hidden"> ({UNIT_LABELS[unit].en})</span>
+                      </span>
                     </button>
                   );
                 })}
