@@ -1,0 +1,260 @@
+/**
+ * Smalltools 全站共用基底 CSS（Tailwind v4 CSS-first 模式）
+ * 設計規範：toolbox-design-standards 毛玻璃 Glassmorphism
+ */
+
+@import 'tailwindcss';
+
+/* ── Tailwind v4 CSS 變數主題設定 ── */
+@theme {
+  /* 字型 */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* 語意化面板與文字配色 Token (連動 :root CSS 變數) */
+  --color-bg-main: var(--bg-color);
+  --color-surface-glass: var(--glass-bg);
+  --color-surface-glass-btn: rgba(255, 255, 255, 0.03);
+  --color-border-glass: var(--card-border);
+  --color-border-glass-subtle: var(--glass-border);
+  --color-card-bg-solid: var(--card-bg-solid);
+
+  --color-text-main: var(--text-primary);
+  --color-text-sub: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --color-select-bg: var(--select-bg);
+
+  /* 品牌與霓虹配色 */
+  --color-bg-base: #030305;
+  --color-glass-bg: rgba(255, 255, 255, 0.02);
+  --color-glass-border: rgba(255, 255, 255, 0.05);
+  --color-glass-border-md: rgba(255, 255, 255, 0.08);
+
+  --color-neon-cyan: #00f0ff;
+  --color-neon-blue: #38bdf8;
+  --color-neon-purple: #a855f7;
+  --color-neon-green: #00f5a0;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #94a3b8;
+
+  /* 各工具主題色 */
+  --color-theme-default: #00f0ff;
+  --color-theme-gold: #ffb800;
+  --color-theme-green: #00f5a0;
+  --color-theme-red: #ff0055;
+  --color-theme-purple: #8b5cf6;
+  --color-theme-orange: #ff7300;
+
+  /* 共用動畫 token（供工具頁面 animate-[glow-pulse] 使用） */
+  --animate-glow-pulse: glowPulse 3s infinite ease-in-out;
+  --animate-slide-down: slideDown 0.4s ease forwards;
+  --animate-pulse-red: pulseRed 2s infinite;
+}
+
+/* ── 共用 @keyframes（工具頁面通用） ── */
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseRed {
+  0%, 100% { opacity: 0.8; }
+  50%       { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 全域基底 CSS 變數（向下相容，工具頁面仍使用 var(--theme-color)） ── */
+:root {
+  --bg-color: #030305;
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --card-bg: rgba(255, 255, 255, 0.02);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-bg-solid: #0b0b0e;
+  --select-bg: #121218;
+
+  --theme-color: #00f0ff;
+  --accent-glow: rgba(0, 240, 255, 0.6);
+  --theme-glow: rgba(0, 240, 255, 0.3);
+  --theme-glow-heavy: rgba(0, 240, 255, 0.6);
+
+  --primary-accent: #8a2be2;
+  --neon-purple: #a855f7;
+  --neon-blue: #00f0ff;
+  --neon-cyan: #38bdf8;
+  --neon-green: #00f5a0;
+
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --color-scheme: dark;
+
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-code: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── 全域重設 ── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow-x: hidden;
+  padding: 2rem 1rem 4rem;
+}
+
+/* ── 粒子 Canvas（固定背景） ── */
+#particle-canvas,
+#particleCanvas,
+#bgCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ── 隱藏 number input spinners ── */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ── 語意化 select / date 控制項樣式 ── */
+select {
+  background-color: var(--select-bg) !important;
+  color: var(--text-primary) !important;
+}
+select option {
+  background-color: var(--select-bg) !important;
+  color: var(--text-primary) !important;
+}
+input[type='date'] {
+  color-scheme: var(--color-scheme, dark);
+}
+
+/* ── 全站共用 Glass 容器 ── */
+.app-container {
+  width: 100%;
+  max-width: 90%;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 1024px) {
+  .app-container {
+    max-width: 95%;
+  }
+}
+
+.glass-container {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .glass-container {
+    padding: 2rem 1.25rem;
+    max-width: 98%;
+  }
+}
+
+/* ── 返回按鈕 ── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.back-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--theme-color);
+  box-shadow: 0 0 15px var(--theme-glow);
+  transform: translateY(-2px);
+}
+
+/* ── 全域 Toast ── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: rgba(0, 240, 255, 0.9);
+  color: #000;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ── page-description 全站共用 ── */
+.page-description {
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  text-align: center;
+}

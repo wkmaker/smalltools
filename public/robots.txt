@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /.agents/
+Disallow: /.git/
+Disallow: /.github/
+
+Sitemap: https://tools.cjkuo.net/sitemap.xml

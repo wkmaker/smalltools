@@ -1,0 +1,197 @@
+/* app/lucky-wheel/lucky-wheel.module.css */
+
+.wheelContainer {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wheelCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 🎰 擬真拉霸機 (Slot Machine) 樣式 */
+.slotWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fullscreenSlotWrapper {
+  max-width: min(85vh, 850px) !important;
+}
+
+.fullscreenSlotWindow {
+  height: min(58vh, 560px) !important;
+}
+
+.slotFrame {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(145deg, rgba(30, 27, 50, 0.9), rgba(15, 12, 28, 0.95));
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 1rem;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 15px 35px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.slotLights {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.slotLights span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+  animation: blinkLight 1.2s infinite alternate;
+}
+
+.slotLights span:nth-child(2) {
+  animation-delay: 0.3s;
+  background: #ff0055;
+  box-shadow: 0 0 10px #ff0055;
+}
+
+.slotLights span:nth-child(3) {
+  animation-delay: 0.6s;
+  background: #00f0ff;
+  box-shadow: 0 0 10px #00f0ff;
+}
+
+.slotLights span:nth-child(4) {
+  animation-delay: 0.9s;
+  background: #00ff99;
+  box-shadow: 0 0 10px #00ff99;
+}
+
+@keyframes blinkLight {
+  from {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.slotWindow {
+  position: relative;
+  width: 100%;
+  height: 270px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(5, 5, 12, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 15px 25px rgba(0, 0, 0, 0.8), inset 0 -15px 25px rgba(0, 0, 0, 0.8);
+}
+
+/* Payline 中獎紅線 */
+.slotPayline {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 72px;
+  transform: translateY(-50%);
+  border-top: 2px solid #ff0055;
+  border-bottom: 2px solid #ff0055;
+  background: rgba(255, 0, 85, 0.1);
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+}
+
+.slotStrip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 0;
+  will-change: transform;
+}
+
+.slotCard {
+  width: 88%;
+  height: 66px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+
+.slotCardDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 抽完項目斜線樣式 */
+.prizeFinished {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 10px,
+    rgba(255, 255, 255, 0.06) 10px,
+    rgba(255, 255, 255, 0.06) 20px
+  ) !important;
+  opacity: 0.65;
+}
+
+.prizeFinished input[type='text'],
+.prizeFinished input[type='number'] {
+  text-decoration: line-through;
+  color: #64748b !important;
+}
+
+/* 全螢幕舞台 Fullscreen Stage */
+.fullscreenStage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(ellipse at 30% 50%, #1a103c 0%, #05030a 70%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.confettiCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 20005;
+}

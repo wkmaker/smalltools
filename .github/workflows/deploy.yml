@@ -1,4 +1,4 @@
-name: Deploy to AWS S3 & Clear CloudFront Cache
+name: Build & Deploy to AWS S3 + CloudFront
 
 on:
   push:
@@ -6,37 +6,73 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
+      # ── 1. 拉取代碼 ──────────────────────────────────────────
       - name: Checkout Repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
+      # ── 2. 設定 Node.js 環境（含 npm 快取） ──────────────────
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # ── 3. 安裝依賴 ──────────────────────────────────────────
+      - name: Install Dependencies
+        run: npm ci
+
+      # ── 4. Next.js SSG 建置 → 產出 out/ 目錄 ────────────────
+      - name: Build Next.js SSG
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # ── 5. 設定 AWS 憑證 ─────────────────────────────────────
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Sync files to S3
+      # ── 6. 同步 out/ 至 S3 ───────────────────────────────────
+      - name: Sync to S3
         run: |
-          # 1. 同步 HTML 與一般內容檔案（排除 CSS, JS, SVG, img/, .agents, .git, .github，快取設定 300 秒）
-          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "*.css" --exclude "*.js" --exclude "*.svg" --exclude "img/*" --exclude ".agents*" --exclude ".git*" --exclude ".github*" --cache-control "max-age=300"
-          
-          # 2. 單獨同步 CSS 與 JS 靜態檔案（全站共用與工具專屬 CSS/JS，設定快取 600 秒）
-          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --exclude "*" --include "*.css" --include "*.js" --exclude ".agents*" --exclude ".git*" --exclude ".github*" --cache-control "public, max-age=600"
-          
-          # 3. 單獨同步非 img/ 下的 SVG 檔案，並強制指定正確的 MIME 類型與快取 300 秒
-          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --exclude "*" --include "*.svg" --exclude "img/*" --content-type "image/svg+xml" --cache-control "max-age=300"
-          
-          # 4. 同步 img/ 目錄下的非 SVG 圖片檔案（快取設定為 1 天 = 86400 秒）
-          aws s3 sync ./img s3://${{ secrets.AWS_S3_BUCKET }}/img --delete --exclude "*.svg" --cache-control "max-age=86400"
-          
-          # 5. 同步 img/ 目錄下的 SVG 圖片檔案，並強制指定 MIME 與快取 1 天
-          aws s3 sync ./img s3://${{ secrets.AWS_S3_BUCKET }}/img --exclude "*" --include "*.svg" --content-type "image/svg+xml" --cache-control "max-age=86400"
+          # HTML 檔案：短快取 300 秒（確保更新後用戶能快速看到新版）
+          aws s3 sync ./out s3://${{ secrets.AWS_S3_BUCKET }} \
+            --delete \
+            --exclude "*.css" \
+            --exclude "*.js" \
+            --exclude "*.woff2" \
+            --exclude "*.woff" \
+            --exclude "_next/static/*" \
+            --exclude "img/*" \
+            --cache-control "public, max-age=300, s-maxage=300"
 
+          # JS / CSS / 字型：Next.js 會生成 content hash 檔名，可長快取 1 年
+          aws s3 sync ./out/_next/static s3://${{ secrets.AWS_S3_BUCKET }}/_next/static \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # img/ 靜態圖片：快取 1 天
+          aws s3 sync ./out/img s3://${{ secrets.AWS_S3_BUCKET }}/img \
+            --delete \
+            --cache-control "public, max-age=86400"
+
+          # SVG 圖片（support.svg 等）：強制正確 MIME + 快取 300 秒
+          aws s3 sync ./out s3://${{ secrets.AWS_S3_BUCKET }} \
+            --exclude "*" \
+            --include "*.svg" \
+            --content-type "image/svg+xml" \
+            --cache-control "public, max-age=600"
+
+      # ── 7. 清除 CloudFront 快取 ──────────────────────────────
       - name: Invalidate CloudFront Cache
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

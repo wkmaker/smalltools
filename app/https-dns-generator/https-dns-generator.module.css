@@ -1,0 +1,8 @@
+/* app/https-dns-generator/https-dns-generator.module.css */
+
+.outputCode {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--theme-color);
+}

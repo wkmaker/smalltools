@@ -1,150 +1,169 @@
 ---
 name: toolbox-design-standards
-description: 適用於小型工具庫（smalltools）專案的毛玻璃 UI 風格規範、核心架構開發大原則與編碼細節規範。
+description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tailwind v4 架構的毛玻璃 UI 風格規範、核心開發大原則與編碼細節規範。
 ---
 
-# 工具庫專案 UI/UX 設計與開發規範
+# 工具庫專案 UI/UX 設計與 Next.js / Tailwind v4 開發規範
 
-本文件為「Smalltools 工具庫專案」的專屬 Skill 指南。在修改或新增任何小工具（例如目標計時器、複利計算機、圖片處理器等）時，必須嚴格遵守以下設計美學、核心開發原則與編碼細節，以確保專案的一體性與頂級使用者體驗。
+本文件為「Smalltools 工具庫專案」的專屬 Skill 指南。全站已全域移轉至 **Next.js App Router + Tailwind v4 (CSS-first 模式) + React 18+** 架構。在開發、修改或重構任何小工具時，必須嚴格遵守以下視覺美學、核心開發原則與編碼細節，以確保專案的一體性與頂級使用者體驗。
 
 ---
 
 ## 一、 視覺與設計美學標準 (Aesthetics Standards)
 
-1. **毛玻璃擬物化 (Glassmorphism)**
-   * **背景與模糊**：主要玻璃容器（`.glass-container`）使用半透明背景 `rgba(255, 255, 255, 0.02)`，搭配 `backdrop-filter: blur(20px)`。
-   * **細緻邊框**：邊框寬度為 `1px`，顏色為半透明白 `rgba(255, 255, 255, 0.05)`。
-   * **陰影**：使用柔和的深色投影，例如 `box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8)`。
+1. **毛玻璃擬物化 (Glassmorphism) 與語意化 Token (Semantic Tokens)**
+   * **背景與模糊**：主要玻璃容器統一使用 `ToolLayout` 元件，套用 Tailwind v4 語意化背景 `bg-surface-glass` (連動 `--glass-bg`)，搭配 `backdrop-blur-[12px]` 與 `-webkit-backdrop-filter: blur(12px)`。
+   * **細緻邊框與陰影**：邊框採用語意化類別 `border-border-glass` (連動 `--card-border`)，陰影採用 `shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]`。
+   * **文字語意類別**：主要標題統一採用 `text-text-main` (連動 `--text-primary`)，次要說明與標籤採用 `text-text-sub` (連動 `--text-secondary`)。全站嚴禁在組件中硬編碼寫死色標，以利未來雙向切換亮暗主題。
 
 2. **配色與主題霓虹發光 (Neon Theme Colors)**
-   * **主背景色**：使用純極黑 `#030305`，以凸顯半透明玻璃與發光元素。
-   * **倒數計時器**：冰藍色科技主題，發光色採用 `#00f0ff`。
-   * **複利計算機**：財富金黃色主題，發光色採用 `#ffb800`。
-   * **信貸計算機**：財務信任主題，發光色採用薄荷綠/翠綠色 `#00f5a0`。
-   * **車貸計算器**：運動與速度主題，發光色採用霓虹紅 `#ff0055`。
-   * **互動狀態**：輸入框聚焦 (focus) 與按鈕懸停 (hover) 時，必須亮起對應主題色的發光效果與陰影。
+   * **全站極黑背景**：使用純極黑 `#030305`，凸顯半透明玻璃與發光元素。
+   * **工具主題色定義**：
+     - **倒數計時 / 網路診斷 / DNS HTTPS 產生器**：科技冰藍 `#00f0ff` (`rgba(0,240,255,0.6)`)
+     - **複利計算機 / 股票質押 / 金融理財**：財富金黃 `#ffb800` (`rgba(255,184,0,0.6)`)
+     - **信貸試算 / 房貸試算 / 薪資算薪水**：薄荷翡翠綠 `#00f5a0` (`rgba(0,245,160,0.6)`)
+     - **安全密碼 / QR Code 產生器**：賽博極光綠 `#00ff66` (`rgba(0,255,102,0.6)`)
+     - **Epoch 時間戳記**：極客綠 `#00ff99` (`rgba(0,255,153,0.6)`)
+     - **SSL 憑證轉換器**：亮翠綠 `#00ffaa` (`rgba(0,255,170,0.6)`)
+     - **文件比對 (Diff Checker) / DNS DIG 查詢**：紫羅蘭色 `#8b5cf6` (`rgba(139,92,246,0.6)`)
+     - **萬能圖片處理大師**：霓虹桃粉 `#d946ef` (`rgba(217,70,239,0.6)`)
+     - **車貸計算器 / 期貨槓桿計算機**：霓虹紅 / 赤紅 `#ff3b30` (`rgba(255,59,48,0.6)`)
+     - **PDF 頁面組合器**：經典紅 `#ef4444` (`rgba(239,68,68,0.6)`)
+     - **PDF 壓縮大師**：耀眼黃 `#eab308` (`rgba(234,179,8,0.6)`)
+     - **Base64 處理器**：活力橘 `#ff7300` (`rgba(255,115,0,0.6)`)
+     - **JSON 格式化**：霓虹粉桃 `#ff00aa` (`rgba(255,0,170,0.6)`)
+     - **文字處理助手**：霓虹粉紅 `#ff007f` (`rgba(255,0,127,0.6)`)
+   * **互動狀態**：輸入框聚焦 (`focus:border-[var(--theme-color)]`) 與按鈕懸停 (`hover:shadow-[0_0_15px_var(--theme-color)]`) 時，必須亮起對應主題色的發光與陰影。
 
-3. **全站共用 CSS 模組化與內聯樣式洗淨原則 (common-glassmorphism.css)**
-   * **路徑引用規範**：所有 HTML 檔案均應於 `<head>` 的 Google Fonts 之後引進全站共用 CSS：
-     - 根目錄：`<link rel="stylesheet" href="css/common-glassmorphism.css">`
-     - 第一層工具目錄：`<link rel="stylesheet" href="../css/common-glassmorphism.css">`
-     - 第二層子目錄（如 `en/`）：`<link rel="stylesheet" href="../../css/common-glassmorphism.css">`
-   * **冗餘 CSS 洗淨原則**：引入 `common-glassmorphism.css` 後，個別工具 HTML 的 `<style>` 內**嚴禁重複編寫全站共用宣告**（如 `:root` 中的 `--bg-color`、`--glass-bg`、`--glass-border`、`* { box-sizing: border-box; }`、`body` 基礎置中佈局與 `#particle-canvas` 定位）。
-   * **乾淨內聯樣式**：每個小工具的內聯 `<style>` 應僅保留 **該工具專屬的主題發光色 (`--theme-color: #...;`)** 與 **該工具獨有的特色佈局/元件樣式**。
+3. **`ToolLayout` 全站共用外框規範**
+   * 所有工具頁面統一引用 `app/components/ToolLayout.tsx` 作為最外層容器。
+   * 必須傳入 `title` (中文大寫)、`subtitle` (英文大寫)、`description` (說明段落)、`accentColor` (主題色) 與 `accentGlow` (發光色)。
+   * **呼吸留白 (Breathing Room)**：容器寬度維持 `max-w-[90%]`（電腦版），標題下方自帶發光橫線與漸層。
 
-4. **全站容器寬度規範 (Max-Width Standard)**
-   * 所有計算機與首頁的 `.glass-container` 必須使用 `max-width: 90%`（而非固定像素值如 1000px），確保在大螢幕（如 1920px 寬的顯示器）上有足夠的展示空間，同時在小螢幕上仍保持適當的左右留白。
-
-5. **背景粒子與動態物理 (Dynamic Particle Physics & Direction Control)**
-   * **通用引用**：全站統一於 `</body>` 之前引用 `js/common-particles.js`。
-   * **RWD 動態密度**：粒子數量需依據螢幕面積動態計算 `Math.floor(width * height / 10000)`（自動調整在 60 ~ 200 顆之間），兼顧行動端效能與大螢幕豐富度。
-   * **主題色動態解構**：粒子腳本應自動讀取並解構工具 CSS 變數 `--theme-color` 或 `--accent-glow` 之 RGB 數值，防止雙重透明度疊加造成色彩暗淡。
-   * **滑鼠避讓與氣泡爆破**：預設配備 160px 半徑之滑鼠避讓排斥物理，並在互動點擊時觸發氣泡爆破反饋。
-   * **方向性物理 API (`setParticleFlowDirection`)**：提供 `setParticleFlowDirection('up'|'down')` API。在倒數計時情境（如時間遞減）下調為 `'down'`（粒子向下滑動與向下爆破）；在累計計時或正數情境下調為 `'up'`（粒子向上漂浮與向上爆破）。
+4. **背景粒子與動態主題連動 (Dynamic Particle Canvas)**
+   * 客戶端組件 (`[ToolName]Client.tsx`) 在 `useEffect` 掛載時，必須動態寫入主題色至 `:root`（變數名稱必須嚴格為 `--theme-color` 與 `--accent-glow`，不可帶有動態語法例如 `--theme-[#8b5cf6]`）：
+     ```typescript
+     useEffect(() => {
+       document.documentElement.style.setProperty('--theme-color', '#ff0055');
+       document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 85, 0.6)');
+     }, []);
+     ```
+   * 背景粒子 Canvas 組件 (`components/ParticleCanvas.tsx`) 會自動感應 CSS 自訂變數並即時切換粒子漂浮顏色。
 
 ---
 
-## 二、 核心架構與效能開發大原則 (Core Architectural & Performance Principles)
+## 二、 核心架構與效能開發大原則 (Core Architecture & Performance Principles)
 
-1. **高負載運算與大檔案處理的「預覽與導出分離」原則**
-   * **核心概念**：在執行高解析度、高精度或運算密集的處理任務時，嚴禁在使用者調整參數時同步執行完整的真實運算，以避免卡死瀏覽器主執行緒。
-   * **實作標準**：
-     - **即時預覽降級**：當進行即時操作（如品質調整、尺寸縮放、動態過濾）時，應在內存中將資料進行比例縮減（例如將圖片限制在低解析度、或採樣部分數據進行快速計算），確保每次預覽更新時間低於 100ms。
-     - **數據動態估算**：利用降級預覽計算出的損耗率或效能指標，反向精準投影出完整任務的最終檔案大小或指標，即時回饋給使用者。
-     - **JIT 最終執行 (Just-in-Time)**：僅在使用者點擊「下載」或「確認執行」主按鈕時，才對高畫質/高清原圖進行高負載真實運算，並在此時提供明確的「處理中/下載中」loading 狀態，確保 UI 操作的極致順暢。
+1. **Next.js App Router 檔案組織結構規範**
+   * **`app/[tool-name]/page.tsx`**：伺服器端渲染 (SSR)。配置 `Metadata`（包含 `alternates.canonical` 設定為 `https://tools.cjkuo.net/[tool-name]/`）、OpenGraph、Twitter Card 與 Schema.org JSON-LD 結構化資料。
+   * **`app/[tool-name]/[ToolName]Client.tsx`**：客戶端渲染 (`'use client'`)。負責 UI 狀態、事件處理、動態計算、Canvas 繪製與 URL 雙向同步。
+   * **`app/[tool-name]/[tool-name].module.css`**：放置工具專屬的 CSS Module 樣式（如 Sticky 明細欄、專屬 Toggle 按鈕）。
 
-2. **大型依賴模組的「非阻塞背景預熱」載入原則**
-   * **核心概念**：當工具需要載入體積較大的依賴項或運行庫（如 WebAssembly 模組、重型圖表庫、解壓引擎）時，其初始化不應阻塞頁面渲染或使用者首次點擊。
-   * **實作標準**：
-     - **背景預載**：主介面應優先瞬間渲染完成，隨後在背景非同步（Async）載入大模組，避免阻礙 FCP (First Contentful Paint)。
-     - **低載冷啟動預熱 (Warm-up)**：在模組載入完成後，應利用極低負載的虛擬測試數據（如 1x1 像素的空數據）在背景悄悄執行一次虛擬運算，強迫瀏覽器背景下載與編譯 Wasm 等底層資源，消除使用者真正操作時產生的「冷啟動延遲」。
+2. **歷史紀錄初始載入與「呼吸留白」原則 (Breathing Room)**
+   * 頁面初次載入時，試算看板需即時呈現在畫面上，但**歷史紀錄區塊（若有）預設必須保持隱藏 (空陣列)**。
+   * **嚴禁在初次掛載的 `useEffect` 中將初始生成結果推送進歷史陣列**，必須僅在使用者手動點擊「重新生成/計算」按鈕時才紀錄舊資料，確保頁面剛開啟時右側保有超過 60% 的清爽留白。
 
 3. **網址參數雙向狀態連動與防呆解析原則**
-   * **核心概念**：所有計算工具的輸入狀態均應雙向連動至瀏覽器網址列，使配置可直接分享。
-   * **實作標準**：
-     - **正向連動（無感更新網址）**：絕對禁止使用 `window.location.href = ...`（會導致頁面重新整理）。必須使用 `history.replaceState(null, '', '?' + params.toString())` 在不刷新頁面的前提下更新網址列。金額等文字輸入在「打字中」應使用 300ms 防抖延遲更新 URL，而單選框或切換按鈕應即時同步。
-     - **反向解析與防呆 Fallback**：載入時讀取 `window.location.search`，必須使用 `safeParse` 類型的安全解析函數進行過濾。任何格式錯誤（如 `?rate=abc`）或超出邊界的值，必須安全回退到預設安全數值，絕不能導致頁面報錯或死當。對複雜物件或陣列，必須用 `try...catch` 包裹 `JSON.parse` 防止損壞字串引發死當。
-     - **即時查詢自動觸發**：對於網路診斷或 Lookup 類工具，若從 URL 成功解析出查詢參數，載入完成後**必須自動觸發一次查詢**，使使用者開啟分享連結時能直接獲得解析結果，免去再次手動點擊的步驟。
+   * **正向連動（無感更新網址）**：嚴禁使用 `window.location.href`。必須使用 `window.history.replaceState(null, '', '?' + params.toString())` 更新網址。打字輸入時使用 300ms 防抖更新，切換按鈕即時同步。
+   * **反向解析與安全 Fallback**：讀取 `window.location.search` 時，必須使用 `safeParse` 或防呆校驗。若參數非法或超出邊界，必須安全回退至預設值，絕不能導致 React Hydration 崩潰。
 
-4. **批次/背景異步佇列之防抖與防競態 (Cancel Token) 原則**
-   * **核心概念**：當系統需要對多個項目進行背景排隊異步處理（如批次計算、背景預算），且使用者有可能在執行過程中頻繁修改參數時，必須防止舊的異步任務與新的異步任務產生競態衝突（Race Condition）。
-   * **實作標準**：
-     - **防抖延遲更新**：使用者連續修改參數時，應加入 300ms 左右的防抖（Debounce），避免頻繁重發大負載佇列。
-     - **Cancel Token 機制**：每一次新的異步佇列發起時，遞增一個全域的 `cancelToken`，並在每個異步任務的中間步驟或 `await` 返回後，立即檢查當前 token 是否依然等於該次佇列的 token。若 token 已被更新，必須**立刻中斷並退出舊的佇列循環**，釋放資源並防止舊資料覆蓋新資料。
+4. **高負載運算與大檔案處理的「預覽與導出分離」原則**
+   * 執行運算密集任務時（如高解析圖片處理、大檔 Base64 轉換），參數調整時進行低解析度降級預覽 (更新 < 100ms)。僅在點擊「下載」或「匯出」時執行 JIT 高負載真實運算並展現 Loading 狀態。
 
-5. **響應式即時無感計算與防呆回退原則**
-   * **核心概念**：不強求使用者手動點擊按鈕，必須為所有的 Inputs、Selects 和切換按鈕綁定即時監聽事件（`input` 和 `change`），只要數據變動，即時以毫秒級效率完成模擬並刷新介面。
-   * **實作標準**：
-     - **防呆回退**：當輸入框被刪空（`value = ''`）的打字中間狀態下，代碼中必須做好回退處理（使用 `0` 計算或保留上一狀態），不能觸發報錯或導致介面死當。
+5. **高頻重繪 UI 的「GPU 加速與動畫幀節流」原則**
+   * 隨游標拖曳或頻繁變更的 DOM 樣式，使用 CSS `will-change: transform` 與 `transform: translateZ(0)` 創建獨立 GPU 圖層。將樣式更新放入 `requestAnimationFrame` 進行節流。
 
-6. **高頻重繪 UI 的「GPU 加速與動畫幀節流」原則**
-   * **核心概念**：對於高頻率重繪或隨游標拖曳即時渲染的互動元素（如滑動分割線、動態視差容器、即時對比滑塊），必須確保渲染幀率達到 60FPS。
-   * **實作標準**：
-     - **硬體加速圖層**：為頻繁變更 `clip-path`、`transform` 等重繪樣式的元素，加入 CSS `will-change: clip-path, transform` 並設置 `transform: translateZ(0)`，強迫瀏覽器為其創建 GPU 獨立圖層進行硬體加速。
-     - **動畫幀節流 (`requestAnimationFrame`)**：嚴禁在 `mousemove` 或 `input` 監聽器中直接進行高開銷的 DOM 樣式變更。應將變更操作放入 `requestAnimationFrame` 中進行節流渲染，確保與螢幕刷新率完美同步，防範畫面撕裂與卡頓。
+6. **靜態資產與 `output: 'export'` 靜態導出規範**
+   * 所有靜態圖片與根目錄資產（`support.svg`、`img/`、`robots.txt`、`security.txt`）必須統一存放於 `public/` 目錄，確保 Next.js 編譯導出時 100% 複製至 `out/`。
+   * `app/layout.tsx` 必須配置 `metadataBase: new URL('https://tools.cjkuo.net')`，使相對路徑（如 `/support.svg`）自動轉換為完整絕對 URL，確保 OpenGraph 與 Twitter Cards 預覽正確。
+
+7. **舊版 HTML 歸檔規範 (Legacy Archiving)**
+   * 重構完成的舊版獨立 HTML/CSS/JS 資料夾統一歸檔至根目錄 `legacy/`，維護專案根目錄純淨。
+
+8. **多語言 (i18n) 路由與雙語切換設計規範**
+   * **路由與目錄命名**：
+     - 預設語系 (繁體中文)：`app/[tool-name]/page.tsx`
+     - 英文語系：`app/[tool-name]/en/page.tsx`
+     - 共享 Client 組件：`app/[tool-name]/[ToolName]Client.tsx`，接收 `lang?: 'zh-TW' | 'en'` 屬性傳入。
+   * **SEO Metadata & Hreflang 宣告**：
+     在語系頁面的 `metadata.alternates` 必須配置 `languages` 對照，確保搜尋引擎抓取：
+     ```typescript
+     alternates: {
+       canonical: 'https://tools.cjkuo.net/[tool-name]/',
+       languages: {
+         'zh-TW': 'https://tools.cjkuo.net/[tool-name]/',
+         en: 'https://tools.cjkuo.net/[tool-name]/en/',
+       },
+     }
+     ```
+   * **介面無縫切換鈕**：在 Client 試算面板右上方放置雙語切換開關，以 Next.js `<Link>` 連結至對應網址，並連動切換組件內部文案語系。
+
+9. **Next.js App Router 靜態 Sitemap 生成與 AWS 部署避坑規範 (Sitemap & AWS Deployment)**
+   * **`app/sitemap.ts` 原生動態生成**：全站統一採用 App Router 原生 `app/sitemap.ts` 定義 `MetadataRoute.Sitemap`。當執行 `next build` 進行靜態導出 (`output: 'export'`) 時，Next.js 會自動於 `out/sitemap.xml` 產出對應的 XML。
+   * **必須顯式宣告靜態導出 (`export const dynamic = 'force-static'`)**：在 `app/sitemap.ts` 檔案頂層**必須顯式加入 `export const dynamic = 'force-static';`**。若未宣告，Next.js 在 `output: export` 靜態導出模式下執行 `next build` 會拋出 `/sitemap.xml` 路由未設置靜態導出而中斷編譯的錯誤。
+   * **Sitemap 網址規範化 (Canonical URL)**：搭配 `trailingSlash: true`，Sitemap 內的所有 `<loc>` 網址必須採用目錄結尾斜線（如 `https://tools.cjkuo.net/time/`），嚴禁帶有 `/index.html`，以符合 SEO 規範網址。
+   * **清理 `public/` 重複檔案**：啟用 `app/sitemap.ts` 後，需確認 `public/sitemap.xml` 及根目錄 `sitemap.xml` 已刪除，避免編譯時靜態資源覆蓋 Next.js 自動生成之 `sitemap.xml`。
+   * **AWS 託管與相容性**：部署至 AWS S3 (開啟 Index document: `index.html`) 或搭配 CloudFront Rewrite 時，無檔名目錄路徑（`/time/`）即可自動對應至 `time/index.html`，無需於 Sitemap 標註副檔名。
 
 ---
 
-## 三、 元件設計與編碼細節規範 (UI Component & Code Specifications)
+## 三、 Tailwind v4 樣式與編碼細節規範 (Tailwind v4 & Code Details)
 
-1. **W3C 跨瀏覽器 CSS 屬性相容規範**
-   * **`background-clip` 相容**：使用 `-webkit-background-clip: text;` 實現漸層文字時，必須緊接著補上 W3C 標準屬性 `background-clip: text;`。
-   * **`appearance` 相容**：使用 `-webkit-appearance: none;` 或 `-moz-appearance: textfield;` 自訂輸入框或微調按鈕時，必須緊接著補上 W3C 標準屬性 `appearance: none;` 或 `appearance: textfield;`。
+1. **Tailwind v4 CSS-First 與 Cascade Layer 避坑原則 (CRITICAL)**
+   * 專案採用 Tailwind v4 `@import 'tailwindcss';` 與 `@theme` 宣告。
+   * **全域 Reset 禁忌**：**嚴禁在 CSS 頂層撰寫 unlayered 全域重設（如 `*, ::before, ::after { margin: 0; padding: 0; }`）**。在 Tailwind v4 的 Cascade Layers 機制中，未宣告 Layer 的頂層重設權重高於 Utilities Layer，會導致全站 `.p-8`、`.p-6` 等 Utility padding 被強制歸零並引發「文字貼邊死擠」Bug。所有全域重設必須包裹於 `@layer base { ... }` 內。
 
-2. **標籤關閉與腳本引入結構完整性規範**
-   * 內聯 `<script>` 區塊在引入外部 JS 檔案（如 `common-particles.js`）前，必須確認 `</script>` 標籤已明確閉合，嚴禁發生縮排縮進丟失或語法未閉合情況。
+2. **W3C 無障礙標籤對應與 React `useId()` 規範**
+   * 所有表單控制項之 `<label>` 必須設置 `htmlFor={inputId}`，且對應的 `<input>` 必須宣告 `id={inputId}`。
+   * 為防範 SSR 與 React Client Hydration 時產生 ID 不一致警告，必須統一使用 React 的 `useId()` 鉤子生成唯一元素 ID：
+     ```typescript
+     const carPriceInputId = useId();
+     ```
+   * **`<label>` 語意嚴格性防錯**：`<label>` 必須且只能搭配具備對應 `id` 的輸入控制項（如 `<input>`、`<select>`、`<textarea>`）。若區域僅為標籤標題、按鈕組（如多選模式切換、預設 Preset 按鈕、Checkbox 列表），**嚴禁使用 `<label>` 包裹無 `id` 的區塊**，否則會破壞 DOM accessibility 樹。應統一改用 `<span>` 或 `<legend>`，並配置適當字色 `text-text-sub`。
 
 3. **行動端防撐寬與手機版 Sticky 橫向滾動表格**
-   * **防止強行撐開**：在 CSS Grid 佈局中，如果子元素具有較大最小寬度（如 650px 的表格），會強行撐開 Grid Item。必須在 Grid Item（如 `.results-section`）上加上 `min-width: 0;`。
-   * **手機版橫向滾動**：表格容器必須配置 `width: 100%; max-width: 100%; overflow-x: auto;`。
-   * **首欄凍結與重疊防護**：最左側的「時間 (期數)」欄必須利用 `position: sticky; left: 0;` 進行固定，且必須配置與頁面相近的「實底深色背景」（如 `#0b0b0e`）與微弱側邊陰影，防止橫向滑動時右側數值與時間欄文字重疊。
+   * **防止強行撐開**：Grid Item 或結果區塊必須設定 `min-width: 0`。
+   * **手機版橫向滾動容器**：`width: 100%; max-width: 100%; overflow-x: auto;`。
+   * **首欄凍結與重疊防護**：表格最左側凍結欄（如「期數」）必須於 CSS Module 配置：
+     ```css
+     .stickyPeriod {
+       position: sticky;
+       left: 0;
+       background-color: var(--card-bg-solid, #0b0b0e) !important;
+       color: var(--text-primary) !important;
+       z-index: 5;
+       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+     }
+     ```
+     確保橫向滑動時右側數據不會與凍結欄文字重疊。
+   * **表格標頭與數據字級**：還款明細表、數據統計表之標頭 (`<thead> <th>`) 與列數據 (`<tbody> <td>`) 一律採用 14px (`text-sm`) 標註，確保數據可讀性。
 
 4. **輸入控制項與格式化細節**
-   * **隱藏預設微調按鈕**：當輸入框為 `type="number"` 且右側塞有自訂的單位按鈕時，必須隱藏瀏覽器預設的 Spinners 上下箭頭：
-     ```css
-     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
-     input[type=number] { -moz-appearance: textfield; appearance: textfield; }
-     ```
-   * **千分位逗號游標修正**：金額輸入框在鍵入數字時需動態以逗號格式化，且必須用 JS 計算逗號增加數量並修正游標 `setSelectionRange`，避免游標跳動到最右側。
-   * **雙向連動格式化**：當多個欄位存在依存關係且需雙向連動時，應僅對使用者正在鍵入的活動輸入框 (active input) 修正游標定位，其他連動欄位則由程式直接格式化填值，避免多重更新觸發游標亂跳或循環計算。
-   * **輸入框分行堆疊**：在含有「成數 (%)」與「金額 (元)」雙向連動的介面中（如自備款），當兩者數字較大，必須將兩個欄位**分開為各自獨立的 `input-group` 行**，不可並排，確保在所有螢幕尺寸下數值均能完整顯示。
+   * **隱藏預設 Number Spinners**：`app/globals.css` 已內建隱藏 `input[type='number']` 之上下箭頭。
+   * **活動輸入框格式化**：僅對使用者正在打字的活動輸入框 (active input) 修正游標定位 `setSelectionRange`，連動欄位由程式動態格式化。
 
-5. **下拉選單與日期選擇器暗色系支援**
-   * **下拉選單顏色可見性**：必須強制為所有 `<select>` 及 `<option>` 設定明確的深色背景（如 `background-color: #121218 !important`）與亮白色文字色（如 `color: #ffffff !important`），防止在部分瀏覽器預設的展開背景下產生白底白字的「文字隱形消失」Bug。
-   * **日期選擇器暗色系支援**：為所有 `input[type="date"]` 等輸入框明確套用 CSS 屬性 `color-scheme: dark;`，指示瀏覽器將彈出的月曆與時間選擇面板自動轉為深色模式。
-   * **文字輸入框對比度**：輸入框容器（`.input-wrapper`）的背景透明度應維持在 `0.035` 以上，且非聚焦邊框的不透明度應至少為 `0.15`。輸入文字必須使用明亮的純白（`#ffffff`），字型大小建議 `1.1rem` 以上且適度加粗（如 `font-weight: 500`）。
+5. **下拉選單與日期時間選擇器暗色系與語意 Token 支援**
+   * 所有 `<select>` 與 `<option>` 控制項背景統一套用語意類別 **`bg-select-bg`**（連動 `--select-bg`）與文字 `var(--text-primary)`，全站嚴禁在組件中硬編碼寫死 `#121218` 色值，防止瀏覽器預設白底白字或主題切換失效。
+   * 日期與時間輸入框 `input[type="date"]` 與 `input[type="datetime-local"]` 必須強制宣告 **`[color-scheme:dark]`**（例如在 Tailwind 類別寫入 `[color-scheme:dark]`），確保 Chrome / Edge 等瀏覽器彈出的原生 Date/Time Picker 呈現暗色系並保持標示可讀性。
 
-6. **時區選單優化設計**
-   * **時區簡化**：對於非特定指名的時區轉換，時區下拉選單不宜列出長串的全球城市名稱。應改用乾淨直觀的 **「UTC 數值偏移量」**（如 `UTC -08:00 (PST)`、`UTC +08:00`），簡化下拉選單長度並讓 JS 運算更高效。
+6. **金融/計算工具求解標準 (APR Bisection Solver)**
+   * 凡包含手續費/開辦費攤提之貸款試算，必須提供實質年利率 (APR) 試算。採用 **二分搜尋法 (Bisection Method)** 求解折現淨現值 (NPV = 0) 之內含報酬率 (IRR)。
+   * 本息/本金均攤模擬計算時，最後一期期末餘額需手動強制設定為 `0`，消弭 JS 底層浮點數殘留誤差。
 
-7. **表單防重疊與手機版返回按鈕定位**
-   * **行動端覆蓋**：「回工具庫首頁」按鈕在電腦版為 `position: absolute` 定位在左上角。在手機版媒體查詢下，必須覆蓋為：
-     ```css
-     .back-btn { position: static; display: inline-flex; margin-bottom: 1.5rem; }
-     ```
-     將返回按鈕排在標題的最上方單獨一行，徹底防範其與標題文字重合。
-   * **動態 DOM 安全佔位符**：預設空圖片或動態加載的圖像元件，其預設 `src` 必須設置為 1x1 像素的透明 Base64 GIF 佔位符 (`src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"`)，徹底預防相對路徑 `"null"` 產生的 404 報錯。
+7. **Windows UTF-8 編碼保護避坑原則**
+   * 在 Windows 環境下避免使用 PowerShell 預設管道（如 `Get-Content | Set-Content`），防止將 TypeScript/JSX 中的繁體中文字串轉為 ANSI/OEM 亂碼 (`?`)。必須確保所有原始碼檔案儲存為無 BOM 之 UTF-8 編碼。
 
-8. **金融/計算工具求解標準**
-   * **實質年利率 (APR) 求解標準**：凡是包含開辦費/手續費攤提的貸款工具，必須提供實質年利率 (APR) 試算。使用 **二分搜尋法 (Bisection Method)** 求解內含報酬率 (IRR)。
-   * **多方案金流 IRR 求解**：當試算工具支援多種還款方案時，APR 應基於實際產生的月付金流陣列 (paymentArray) 作為參數帶入二分搜尋法求解，維持擴充性與高精度。
-   * **多段式利率動態增減**：不應使用固定數量的靜態 HTML 段落（如寫死 3 段），必須改以 **JS 動態渲染 `stages` 陣列**，讓使用者可以自由新增與移除段落。最少需保留 2 段，最多上限 6 段，且最後一段永遠為剩餘期數適用段（不填期間）。
-   * **還款模擬的浮點誤差微調**：在本息/本金均攤模擬計算時，最後一期的「期末餘額」必須手動強設為 `0`，防止 JS 底層浮點數運算造成的些微殘留誤差。
+8. **全站字體可讀性與視覺高對比度規範 (Typography & Accessibility)**
+   * **Form Label 高對比度與字級**：表單標籤禁止使用過暗之 Slate-400 (`text-[#94a3b8]`) 或過小字體 (`text-xs` / 12px)。統一升級採用語意化類別 **`text-sm font-medium text-text-sub`** (14px)，符合 WCAG 2.1 行動端可讀性標準與 Google Mobile SEO 規範。
+   * **指標看板標題醒目化 (Stat Card Titles)**：核心數據或統計看板之卡片標題（如「首期月付額」、「實質年利率」、「總還款金額」、「總字元數」等）一律採用 **`text-sm font-semibold text-text-sub`** (14px 粗體醒目化)，嚴禁使用 12px 微縮字級。
+   * **模式切換與功能按鈕 (Toggle Buttons & Tabs)**：模式切換鈕、語系切換鈕及快捷操作按鈕，一律統一升級為 **14px (`text-sm font-semibold` / `font-medium`)**，以提升行動端點擊觸碰範圍與視覺識別度。
+   * **描述文案與次要備註**：頁面描述文案採用 **16px (`text-base text-text-sub`)** 最佳閱讀字級；次要備註與對應級距小字說明至少保持 **12px (`text-xs text-text-sub`)**，避免使用 10~11px 過小微縮字體。
 
-9. **站點與部署規範**
-   * **Sitemap 維護規範**：專案根目錄必須維護一份 `sitemap.xml`，每次新增工具頁面後，必須同步更新 `sitemap.xml`，並更新所有現有頁面的 `lastmod` 日期。首頁的 `priority` 設為 `1.0`，工具頁設為 `0.8`。
-   * **部署 CI/CD 安全排除**：開發工具庫的配置設定與本地 Skill 定義（即 `.agents/` 目錄）切勿同步至生產環境。必須在部署腳本中強制配置 `--exclude ".agents*"` 以防止內部檔案外流。
-   * **Favicon 與 Open Graph 標籤規範**：每個頁面必須加入 Open Graph（`og:type`, `og:site_name`, `og:locale`, `og:title`, `og:description`, `og:url`, `og:image`）、Twitter Card (`twitter:card="summary_large_image"`) 與 favicon 設定，且圖片與 URL 一律使用絕對路徑以確保轉傳時的正確性。
-   * **Canonical URL 防重複內容規範**：凡支援 URL 參數帶入（如 `?t=...` 或 `?rate=...` 等分享連結）的工具頁面，必須於 `<head>` 配置絕對路徑之 `<link rel="canonical" href="https://tools.cjkuo.net/工具名稱/index.html">`，防止搜尋引擎將帶參數的分享網址歸類為重複內容。
-   * **Schema.org 結構化資料 (JSON-LD) 規範**：每個小工具頁面的 `<head>` 中必須包含 `WebApplication` 類型的 JSON-LD 標籤，明確定義工具名稱、URL、描述與免費價格規格（`offers: { "@type": "Offer", "price": "0", "priceCurrency": "TWD" }`），以爭取搜尋結果豐富摘要 (Rich Snippets)。
-   * **Google Fonts 預連線 (Preconnect) 效能規範**：引入 Google Fonts 時，必須優先於 `<head>` 配置連線優化標籤：
-     ```html
-     <link rel="preconnect" href="https://fonts.googleapis.com">
-     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     ```
-     務必確保 `fonts.gstatic.com` 包含 `crossorigin` 屬性，防範跨網域字型檔載入時的握手延遲，優化 FCP/LCP 指標。
+9. **`number | ''` 輸入框狀態型態與清空防卡 0 原則 (Clean Input State Pattern)**
+   * 表單輸入框 state 狀態型態統一宣告為 `number | ''`（例如 `const [amount, setAmount] = useState<number | ''>(50000)`）。
+   * 當使用者全選刪除文字時，state 設為 `''`，輸入框維持乾淨清空狀態（不會強行補 `0` 在最前面）。
+   * 於計算邏輯中防呆轉譯為 `0`：`const numAmount = amount === '' ? 0 : amount;`，避免產生 `NaN` 錯誤。
 
-10. **頁面主標題功能描述與 SEO 優化規範**
-    * **描述區段配置**：工具頁面的 `<h1>` 標題下方應配置 `<p class="page-description">` 用於描述工具特色，並自然融入「免費」、「線上」、「無廣告」等高搜尋意圖關鍵字。
-    * **語意化 H1 標題中文化與預設 Title 標準**：工具頁面之 `<h1>` 標題與 JavaScript 動態設定的預設 Title 必須優先採用繁體中文並融入核心意圖關鍵字（例如使用「線上目標倒數計時器」取代純英文「Create Timer」），以增強關鍵字相關性與搜尋排名。
-    * **CSS 美感標準**：`.page-description` 需限制 `max-width: 800px`（防大螢幕拉長），字型大小設於 `0.9rem` ~ `0.95rem`，字重 `300 (Light)`，行高 `1.6`，使用次要文字色（如 `var(--text-secondary)`）並配置置中對齊，維持全站精緻暗色毛玻璃的視覺平衡。
+10. **舊版 JSON 資料檔完整性與動態選單擴充原則 (JSON Configuration & Dynamic Dropdown)**
+    * 包含多年份法規級距或扣繳大表（如勞健保/所得稅扣繳稅額表）的小工具，必須將原始 JSON 設定檔拷貝至 `app/[tool-name]/config/` 與 `public/[tool-name]/config/`，並於模組中直接導入，保證算薪與試算數據與官方 100% 精準對照無偏差。
+    * 適用年份或法規版本選擇器統一使用深色下拉選單 (`<select>`)，並與 `SUPPORTED_YEARS` 降冪陣列動態連動。未來新增新年份 JSON 檔時只需宣告導入，UI 下拉選單將自動感應顯示，無須重修頁面按鈕版面。

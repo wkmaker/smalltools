@@ -1,0 +1,60 @@
+/* app/ip-detector/ip-detector.module.css */
+
+.ipBadge {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #00f0ff;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+  word-break: break-all;
+}
+
+.ipCard {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.ipCardSuccess {
+  border-left: 4px solid #00ff66 !important;
+}
+
+.ipCardUnsupported {
+  border-left: 4px solid #ffaa00 !important;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: inline-block;
+}
+
+.statusDotLoading {
+  background: #00f0ff;
+  box-shadow: 0 0 10px #00f0ff;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.statusDotConnected {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+}
+
+.statusDotFailed {
+  background: #ff3366;
+  box-shadow: 0 0 10px #ff3366;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
