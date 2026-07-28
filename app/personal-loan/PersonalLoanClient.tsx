@@ -186,7 +186,7 @@ export default function PersonalLoanClient() {
         {/* 左欄：輸入選項 */}
         <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
           <div className="flex flex-col gap-2">
-            <label htmlFor={amountInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">貸款金額 (萬元)</label>
+            <label htmlFor={amountInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">貸款金額 (萬元)</label>
             <input
               id={amountInputId}
               type="number"
@@ -198,7 +198,7 @@ export default function PersonalLoanClient() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label htmlFor={yearsInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">貸款期限 (年)</label>
+              <label htmlFor={yearsInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">貸款期限 (年)</label>
               <input
                 id={yearsInputId}
                 type="number"
@@ -209,7 +209,7 @@ export default function PersonalLoanClient() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label htmlFor={rateInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">申貸利率 (%)</label>
+              <label htmlFor={rateInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">申貸利率 (%)</label>
               <input
                 id={rateInputId}
                 type="number"
@@ -222,7 +222,7 @@ export default function PersonalLoanClient() {
           </div>
 
           <div className="flex flex-col gap-2 border-t border-white/[.05] pt-4">
-            <label htmlFor={feeInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">開辦手續費 (元)</label>
+            <label htmlFor={feeInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">開辦手續費 (元)</label>
             <input
               id={feeInputId}
               type="number"
@@ -234,24 +234,26 @@ export default function PersonalLoanClient() {
 
           {/* 還款方式 */}
           <div className="flex flex-col gap-2 border-t border-white/[.05] pt-4">
-            <label className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">還款方式</label>
+            <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">還款方式</label>
             <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
               <button
+                type="button"
                 onClick={() => setMethod('equal-payment')}
-                className={`py-2 text-sm rounded-lg cursor-pointer transition-all border ${
+                className={`py-2 text-sm rounded-xl cursor-pointer transition-all border ${
                   method === 'equal-payment'
                     ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0] font-semibold'
-                    : 'border-transparent text-slate-300'
+                    : 'border-transparent text-text-sub hover:text-white'
                 }`}
               >
                 本息平均攤還
               </button>
               <button
+                type="button"
                 onClick={() => setMethod('equal-principal')}
-                className={`py-2 text-sm rounded-lg cursor-pointer transition-all border ${
+                className={`py-2 text-sm rounded-xl cursor-pointer transition-all border ${
                   method === 'equal-principal'
                     ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0] font-semibold'
-                    : 'border-transparent text-slate-300'
+                    : 'border-transparent text-text-sub hover:text-white'
                 }`}
               >
                 本金平均攤還
@@ -319,7 +321,7 @@ export default function PersonalLoanClient() {
                       <td className="p-3 text-[#00f5a0] font-semibold">${row.payment.toLocaleString('zh-TW')}</td>
                       <td className="p-3 text-white">${row.principal.toLocaleString('zh-TW')}</td>
                       <td className="p-3 text-[#fbbf24]">${row.interest.toLocaleString('zh-TW')}</td>
-                      <td className="p-3 text-slate-300">${row.remaining.toLocaleString('zh-TW')}</td>
+                      <td className="p-3 text-text-sub">${row.remaining.toLocaleString('zh-TW')}</td>
                     </tr>
                   ))}
                 </tbody>

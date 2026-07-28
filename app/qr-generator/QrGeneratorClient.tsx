@@ -461,8 +461,9 @@ export default function QrGeneratorClient() {
       {/* 頂部功能條：包含複製設計網址 */}
       <div className="flex justify-end mb-6 w-full px-4 max-sm:px-0">
         <button
+          type="button"
           onClick={copyShareLink}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-300 bg-white/[0.03] border border-white/[0.08] rounded-xl hover:bg-[#00ff66]/10 hover:text-[#00ff66] hover:border-[#00ff66] hover:shadow-[0_0_15px_rgba(0,255,102,0.25)] transition-all cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-sub bg-white/[0.03] border border-white/[0.08] rounded-xl hover:bg-[#00ff66]/10 hover:text-[#00ff66] hover:border-[#00ff66] hover:shadow-[0_0_15px_rgba(0,255,102,0.25)] transition-all cursor-pointer"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
             <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z" />
@@ -476,7 +477,7 @@ export default function QrGeneratorClient() {
         <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
           {/* 內容類型切換 */}
           <div className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-slate-300">內容類型</label>
+            <label className="text-sm font-medium text-text-sub">內容類型</label>
             <div className="flex gap-2 bg-white/[0.015] border border-white/[0.05] rounded-[50px] p-1.5 w-fit">
               <button
                 type="button"
@@ -484,7 +485,7 @@ export default function QrGeneratorClient() {
                 className={`border-none rounded-[50px] px-5 py-2 text-sm font-medium transition-all cursor-pointer ${
                   contentType === 'text'
                     ? 'bg-[#00ff66]/8 text-[#00ff66]'
-                    : 'bg-transparent text-slate-400 hover:text-white'
+                    : 'bg-transparent text-text-sub hover:text-white'
                 }`}
               >
                 文字 / 網址
@@ -495,7 +496,7 @@ export default function QrGeneratorClient() {
                 className={`border-none rounded-[50px] px-5 py-2 text-sm font-medium transition-all cursor-pointer ${
                   contentType === 'wifi'
                     ? 'bg-[#00ff66]/8 text-[#00ff66]'
-                    : 'bg-transparent text-slate-400 hover:text-white'
+                    : 'bg-transparent text-text-sub hover:text-white'
                 }`}
               >
                 WiFi 網路
@@ -506,7 +507,7 @@ export default function QrGeneratorClient() {
           {/* 內容輸入：文字/網址 */}
           {contentType === 'text' && (
             <div className="flex flex-col gap-3">
-              <label htmlFor={textInputId} className="text-sm font-medium text-slate-300">
+              <label htmlFor={textInputId} className="text-sm font-medium text-text-sub">
                 QR Code 內容
               </label>
               <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff66]/40 transition-colors">
@@ -528,7 +529,7 @@ export default function QrGeneratorClient() {
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div className="flex flex-col gap-3">
-                  <label htmlFor={wifiSsidId} className="text-sm font-medium text-slate-300">
+                  <label htmlFor={wifiSsidId} className="text-sm font-medium text-text-sub">
                     WiFi SSID (網路名稱)
                   </label>
                   <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff66]/40 transition-colors">
@@ -545,7 +546,7 @@ export default function QrGeneratorClient() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <label htmlFor={wifiPassId} className="text-sm font-medium text-slate-300">
+                  <label htmlFor={wifiPassId} className="text-sm font-medium text-text-sub">
                     WiFi 密碼
                   </label>
                   <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff66]/40 transition-colors">
@@ -564,7 +565,7 @@ export default function QrGeneratorClient() {
 
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div className="flex flex-col gap-3">
-                  <label htmlFor={wifiEncryptionId} className="text-sm font-medium text-slate-300">
+                  <label htmlFor={wifiEncryptionId} className="text-sm font-medium text-text-sub">
                     安全性類型
                   </label>
                   <select
@@ -580,7 +581,7 @@ export default function QrGeneratorClient() {
                 </div>
 
                 <div className="flex items-center h-full pt-6 max-sm:pt-2">
-                  <label className="flex items-center gap-3 cursor-pointer select-none text-slate-300 text-sm font-medium">
+                  <label className="flex items-center gap-3 cursor-pointer select-none text-text-sub text-sm font-medium">
                     <input
                       type="checkbox"
                       checked={wifiHidden}
@@ -596,7 +597,7 @@ export default function QrGeneratorClient() {
 
           {/* 碼體樣式 (網格) */}
           <div className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-slate-300">碼體樣式</label>
+            <label className="text-sm font-medium text-text-sub">碼體樣式</label>
             <div className="grid grid-cols-6 gap-2.5 max-md:grid-cols-3 max-sm:grid-cols-2">
               {[
                 {
@@ -678,7 +679,7 @@ export default function QrGeneratorClient() {
           <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
             {/* 定位點外框 (網格) */}
             <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-slate-300">定位點外框形狀</label>
+              <label className="text-sm font-medium text-text-sub">定位點外框形狀</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   {
@@ -735,7 +736,7 @@ export default function QrGeneratorClient() {
 
             {/* 定位點內核 (網格) */}
             <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-slate-300">定位點內核形狀</label>
+              <label className="text-sm font-medium text-text-sub">定位點內核形狀</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   {
@@ -785,7 +786,7 @@ export default function QrGeneratorClient() {
           <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
             {/* 背景色與透明設定 */}
             <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-slate-300">背景設定</label>
+              <label className="text-sm font-medium text-text-sub">背景設定</label>
               <div className="flex gap-4 items-center">
                 <div className="flex items-center gap-2.5 bg-white/[0.02] border border-white/[0.1] px-3 py-2 rounded-xl">
                   <input
@@ -796,11 +797,11 @@ export default function QrGeneratorClient() {
                     disabled={bgTransparent}
                     className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer disabled:opacity-30"
                   />
-                  <span className="font-mono text-sm text-slate-200">
+                  <span className="font-mono text-sm text-text-main font-medium">
                     {bgTransparent ? 'TRANSPARENT' : bgColor.toUpperCase()}
                   </span>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer select-none text-slate-300 text-sm font-medium">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-text-sub text-sm font-medium">
                   <input
                     type="checkbox"
                     checked={bgTransparent}
@@ -814,7 +815,7 @@ export default function QrGeneratorClient() {
 
             {/* 容錯率設定 */}
             <div className="flex flex-col gap-3">
-              <label htmlFor={errorCorrectionId} className="text-sm font-medium text-slate-300">
+              <label htmlFor={errorCorrectionId} className="text-sm font-medium text-text-sub">
                 容錯等級 (Error Correction)
               </label>
               <select
@@ -835,7 +836,7 @@ export default function QrGeneratorClient() {
           {/* 啟用漸層與配色 */}
           <div className="flex flex-col gap-4 border-t border-white/[.08] pt-6">
             <div className="flex items-center">
-              <label className="flex items-center gap-3 cursor-pointer select-none text-slate-300 text-base font-medium">
+              <label className="flex items-center gap-3 cursor-pointer select-none text-text-sub text-base font-medium">
                 <input
                   type="checkbox"
                   checked={useGradient}
@@ -850,7 +851,7 @@ export default function QrGeneratorClient() {
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                   <div className="flex flex-col gap-3">
-                    <label htmlFor={gradientTypeId} className="text-sm font-medium text-slate-300">
+                    <label htmlFor={gradientTypeId} className="text-sm font-medium text-text-sub">
                       漸層類型
                     </label>
                     <select
@@ -865,7 +866,7 @@ export default function QrGeneratorClient() {
                   </div>
 
                   <div className="flex flex-col gap-3">
-                    <label className="text-sm font-medium text-slate-300">
+                    <label className="text-sm font-medium text-text-sub">
                       配色設定 (Color 1 / Color 2)
                     </label>
                     <div className="flex gap-3">
@@ -876,7 +877,7 @@ export default function QrGeneratorClient() {
                           onChange={(e) => setColor1(e.target.value)}
                           className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer"
                         />
-                        <span className="font-mono text-xs text-slate-200">{color1.toUpperCase()}</span>
+                        <span className="font-mono text-xs text-text-main font-medium">{color1.toUpperCase()}</span>
                       </div>
                       <div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.1] px-3 py-2 rounded-xl flex-1">
                         <input
@@ -885,7 +886,7 @@ export default function QrGeneratorClient() {
                           onChange={(e) => setColor2(e.target.value)}
                           className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer"
                         />
-                        <span className="font-mono text-xs text-slate-200">{color2.toUpperCase()}</span>
+                        <span className="font-mono text-xs text-text-main font-medium">{color2.toUpperCase()}</span>
                       </div>
                     </div>
                   </div>
@@ -893,7 +894,7 @@ export default function QrGeneratorClient() {
 
                 {gradientType === 'linear' && (
                   <div className="flex flex-col gap-3">
-                    <div className="flex justify-between text-sm text-slate-300 font-medium">
+                    <div className="flex justify-between text-sm text-text-sub font-medium">
                       <span>漸層旋轉角度</span>
                       <span className="font-mono text-[#00ff66]">{gradientRotation}°</span>
                     </div>
@@ -910,7 +911,7 @@ export default function QrGeneratorClient() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <label className="text-sm font-medium text-slate-300">碼體單色設定</label>
+                <label className="text-sm font-medium text-text-sub">碼體單色設定</label>
                 <div className="flex items-center gap-2.5 bg-white/[0.02] border border-white/[0.1] px-3 py-2 rounded-xl w-fit">
                   <input
                     type="color"
@@ -918,7 +919,7 @@ export default function QrGeneratorClient() {
                     onChange={(e) => setSingleColor(e.target.value)}
                     className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer"
                   />
-                  <span className="font-mono text-sm text-slate-200">{singleColor.toUpperCase()}</span>
+                  <span className="font-mono text-sm text-text-main font-medium">{singleColor.toUpperCase()}</span>
                 </div>
               </div>
             )}
@@ -926,7 +927,7 @@ export default function QrGeneratorClient() {
 
           {/* 置中 Logo */}
           <div className="flex flex-col gap-3 border-t border-white/[.08] pt-6">
-            <label className="text-sm font-medium text-slate-300">置中 Logo / 頭像</label>
+            <label className="text-sm font-medium text-text-sub">置中 Logo / 頭像</label>
 
             {!logoBase64 ? (
               <div
@@ -947,10 +948,10 @@ export default function QrGeneratorClient() {
                   isDragOver ? styles.dropzoneContainerDragover : ''
                 }`}
               >
-                <svg viewBox="0 0 24 24" className="w-8 h-8 fill-slate-400 group-hover:fill-[#00ff66] transition-colors">
+                <svg viewBox="0 0 24 24" className="w-8 h-8 fill-text-sub group-hover:fill-[#00ff66] transition-colors">
                   <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
                 </svg>
-                <div className="text-xs text-slate-400 leading-normal">
+                <div className="text-xs text-text-sub font-medium leading-normal">
                   將圖片拖曳至此處，或點選此處上傳
                 </div>
                 <input
@@ -974,14 +975,15 @@ export default function QrGeneratorClient() {
                       alt="Logo Preview"
                       className="w-8 h-8 object-contain bg-white rounded border border-black/10"
                     />
-                    <span className="text-sm font-medium text-slate-200 max-w-[200px] truncate">
+                    <span className="text-sm font-medium text-text-main max-w-[200px] truncate">
                       {logoName}
                     </span>
                   </div>
                   <button
+                    type="button"
                     onClick={removeLogo}
                     title="移除 Logo"
-                    className="bg-transparent border-none text-slate-400 hover:text-red-500 hover:scale-115 transition-all cursor-pointer p-1"
+                    className="bg-transparent border-none text-text-sub hover:text-red-500 hover:scale-115 transition-all cursor-pointer p-1"
                   >
                     <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
                       <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
@@ -991,7 +993,7 @@ export default function QrGeneratorClient() {
 
                 {/* 調整 Logo 大小 */}
                 <div className="flex flex-col gap-3">
-                  <div className="flex justify-between text-sm text-slate-300 font-medium">
+                  <div className="flex justify-between text-sm text-text-sub font-medium">
                     <span>Logo 尺寸大小</span>
                     <span className="font-mono text-[#00ff66]">{logoSize}%</span>
                   </div>
@@ -1035,7 +1037,7 @@ export default function QrGeneratorClient() {
           <div className="flex flex-col gap-4 w-full max-w-[280px]">
             <div className="grid grid-cols-2 gap-3.5">
               <div className="flex flex-col gap-2">
-                <label htmlFor={downloadFormatId} className="text-sm font-medium text-slate-300">
+                <label htmlFor={downloadFormatId} className="text-sm font-medium text-text-sub">
                   下載格式
                 </label>
                 <select
@@ -1052,7 +1054,7 @@ export default function QrGeneratorClient() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={downloadSizeId} className="text-sm font-medium text-slate-300">
+                <label htmlFor={downloadSizeId} className="text-sm font-medium text-text-sub">
                   下載尺寸
                 </label>
                 <select
@@ -1070,6 +1072,7 @@ export default function QrGeneratorClient() {
             </div>
 
             <button
+              type="button"
               onClick={downloadQr}
               className="w-full h-12 bg-[#00ff66]/20 border border-[#00ff66]/40 text-[#00ff66] font-bold text-sm rounded-xl cursor-pointer hover:bg-[#00ff66] hover:text-[#030305] hover:shadow-[0_0_20px_rgba(0,255,102,0.5)] transition-all flex items-center justify-center gap-2 mt-2"
             >

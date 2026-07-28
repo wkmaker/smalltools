@@ -250,7 +250,7 @@ export default function PdfProcessorClient() {
 
     if (newItems.length > 0) {
       setPages((prev) => [...prev, ...newItems]);
-      showToast(`🎉 成功載入 ${newItems.length} 個頁面！`);
+      showToast(`成功載入 ${newItems.length} 個頁面！`);
     }
   };
 
@@ -300,7 +300,7 @@ export default function PdfProcessorClient() {
 
     try {
       await compilePagesToPdf(pages);
-      showToast('🎉 PDF 導出成功！已觸發列印/下載視窗');
+      showToast('PDF 導出成功！已觸發列印/下載視窗');
     } catch (err) {
       showToast('PDF 匯出失敗：' + (err as Error).message);
     } finally {
@@ -331,11 +331,14 @@ export default function PdfProcessorClient() {
             <button
               type="button"
               onClick={() => document.getElementById(fileInputId)?.click()}
-              className="px-5 py-2.5 bg-[#ef4444] text-white font-bold text-xs rounded-xl cursor-pointer hover:bg-red-600 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] transition-all flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#ef4444] text-white font-semibold text-sm rounded-xl cursor-pointer hover:bg-red-600 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] transition-all flex items-center gap-2"
             >
-              ＋ 新增 PDF / 圖片
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+              </svg>
+              新增 PDF / 圖片
             </button>
-            <span className="text-xs font-mono text-slate-300 bg-black/40 px-3 py-1.5 rounded-lg border border-white/10">
+            <span className="text-xs font-mono text-text-sub bg-black/40 px-3 py-1.5 rounded-xl border border-white/10">
               總計 <strong className="text-[#ef4444] font-bold">{pages.length}</strong> 個頁面
             </span>
           </div>
@@ -345,24 +348,33 @@ export default function PdfProcessorClient() {
               <button
                 type="button"
                 onClick={rotateAllPages}
-                className="px-3 py-2 text-xs font-semibold text-slate-200 bg-white/5 border border-white/10 rounded-xl hover:bg-white/15 transition-all cursor-pointer"
+                className="px-4 py-2.5 text-sm font-semibold text-text-sub bg-white/5 border border-white/10 rounded-xl hover:bg-white/15 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
               >
-                ↻ 全部旋轉 90°
+                <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                  <path d="M15.55 5.55L11 1v3.07C7.06 4.56 4 7.92 4 12c0 4.42 3.58 8 8 8 4.42 0 8-3.58 8-8h-2c0 3.31-2.69 6-6 6s-6-2.69-6-6c0-3.04 2.26-5.56 5.23-5.93L11 9l4.55-3.45z" />
+                </svg>
+                全部旋轉 90°
               </button>
               <button
                 type="button"
                 onClick={clearAllPages}
-                className="px-3 py-2 text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl hover:bg-red-500/20 transition-all cursor-pointer"
+                className="px-4 py-2.5 text-sm font-semibold text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl hover:bg-red-500/20 transition-all cursor-pointer flex items-center gap-1.5"
               >
-                🗑️ 清空全部
+                <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                </svg>
+                清空全部
               </button>
               <button
                 type="button"
                 onClick={exportPdf}
                 disabled={isExporting || isProcessing}
-                className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 text-white font-extrabold text-xs rounded-xl cursor-pointer hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] transition-all disabled:opacity-40"
+                className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 text-white font-bold text-sm rounded-xl cursor-pointer hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] transition-all disabled:opacity-40 flex items-center gap-2"
               >
-                {isExporting ? '⚡ 匯出編譯中...' : '⬇️ 匯出 PDF 檔案'}
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                  <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                </svg>
+                {isExporting ? '匯出編譯中...' : '匯出 PDF 檔案'}
               </button>
             </div>
           )}
@@ -379,14 +391,16 @@ export default function PdfProcessorClient() {
             onClick={() => document.getElementById(fileInputId)?.click()}
             className={`p-16 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer text-center ${styles.dropzone}`}
           >
-            <div className="w-20 h-20 rounded-3xl bg-[#ef4444]/15 text-[#ef4444] flex items-center justify-center text-3xl font-bold border border-[#ef4444]/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-              📑
+            <div className="w-20 h-20 rounded-3xl bg-[#ef4444]/15 text-[#ef4444] flex items-center justify-center border border-[#ef4444]/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+              <svg viewBox="0 0 24 24" width={36} height={36} fill="currentColor">
+                <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z" />
+              </svg>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-lg font-bold text-white">
+              <span className="text-lg font-bold text-text-main">
                 拖曳一或多個 PDF 或 PNG/JPG 圖片檔案至此即可開啟頁面組合器
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-text-sub">
                 100% 純前端無伺服器，頁面組合、旋轉、排序與導出全在本機完成
               </span>
             </div>
@@ -396,9 +410,9 @@ export default function PdfProcessorClient() {
             {pages.map((p, idx) => (
               <div key={p.id} className={styles.pageCard}>
                 {/* 頁面標頭與頁碼 Badge */}
-                <div className="w-full flex justify-between items-center text-[0.75rem] border-b border-white/[.08] pb-2">
+                <div className="w-full flex justify-between items-center text-xs border-b border-white/[.08] pb-2">
                   <span
-                    className="text-slate-400 truncate max-w-[100px]"
+                    className="text-text-sub truncate max-w-[100px]"
                     title={p.fileName}
                   >
                     {p.sourceType === 'PDF' ? `PDF (p.${p.pageIndex + 1})` : `圖片`}
@@ -429,7 +443,7 @@ export default function PdfProcessorClient() {
                     type="button"
                     onClick={() => movePage(idx, 'left')}
                     disabled={idx === 0}
-                    className="flex-1 py-1 text-xs font-bold bg-white/5 text-slate-400 rounded-lg hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer"
+                    className="flex-1 py-1.5 text-xs font-bold bg-white/5 text-text-sub rounded-xl hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer flex items-center justify-center"
                     title="向左移"
                   >
                     ◀
@@ -437,24 +451,30 @@ export default function PdfProcessorClient() {
                   <button
                     type="button"
                     onClick={() => rotatePage(p.id)}
-                    className="flex-1 py-1 text-xs font-bold bg-white/5 text-[#ef4444] rounded-lg hover:bg-[#ef4444]/20 cursor-pointer"
+                    className="flex-1 py-1.5 text-xs font-semibold bg-white/5 text-[#ef4444] rounded-xl hover:bg-[#ef4444]/20 cursor-pointer flex items-center justify-center gap-1"
                     title="順時針旋轉 90°"
                   >
-                    ↻ 旋轉
+                    <svg viewBox="0 0 24 24" width={13} height={13} fill="currentColor">
+                      <path d="M15.55 5.55L11 1v3.07C7.06 4.56 4 7.92 4 12c0 4.42 3.58 8 8 8 4.42 0 8-3.58 8-8h-2c0 3.31-2.69 6-6 6s-6-2.69-6-6c0-3.04 2.26-5.56 5.23-5.93L11 9l4.55-3.45z" />
+                    </svg>
+                    旋轉
                   </button>
                   <button
                     type="button"
                     onClick={() => removePage(p.id)}
-                    className="flex-1 py-1 text-xs font-bold bg-white/5 text-red-400 rounded-lg hover:bg-red-500/20 cursor-pointer"
+                    className="flex-1 py-1.5 text-xs font-semibold bg-white/5 text-red-400 rounded-xl hover:bg-red-500/20 cursor-pointer flex items-center justify-center gap-1"
                     title="刪除"
                   >
-                    ✕ 刪除
+                    <svg viewBox="0 0 24 24" width={13} height={13} fill="currentColor">
+                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                    </svg>
+                    刪除
                   </button>
                   <button
                     type="button"
                     onClick={() => movePage(idx, 'right')}
                     disabled={idx === pages.length - 1}
-                    className="flex-1 py-1 text-xs font-bold bg-white/5 text-slate-400 rounded-lg hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer"
+                    className="flex-1 py-1.5 text-xs font-bold bg-white/5 text-text-sub rounded-xl hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer flex items-center justify-center"
                     title="向右移"
                   >
                     ▶

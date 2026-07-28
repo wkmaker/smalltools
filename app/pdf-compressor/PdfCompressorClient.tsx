@@ -293,7 +293,7 @@ export default function PdfCompressorClient() {
     }
 
     setIsCompressing(false);
-    showToast('🎉 所有 PDF 檔案壓縮瘦身完成！');
+    showToast('所有 PDF 檔案壓縮瘦身完成！');
   };
 
   // 一鍵 ZIP 打包下載
@@ -379,12 +379,14 @@ export default function PdfCompressorClient() {
             className="hidden"
             onChange={(e) => e.target.files && handleFilesSelect(e.target.files)}
           />
-          <div className="w-18 h-18 rounded-3xl bg-[#eab308]/15 text-[#eab308] flex items-center justify-center text-3xl font-bold border border-[#eab308]/30 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
-            📄
+          <div className="w-18 h-18 rounded-3xl bg-[#eab308]/15 text-[#eab308] flex items-center justify-center border border-[#eab308]/30 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+            <svg viewBox="0 0 24 24" width={32} height={32} fill="currentColor">
+              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+            </svg>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-base font-bold text-white">點擊或將一至多個 PDF 檔案拖曳至此處</span>
-            <span className="text-xs text-slate-400">
+            <span className="text-base font-bold text-text-main">點擊或將一至多個 PDF 檔案拖曳至此處</span>
+            <span className="text-xs text-text-sub">
               支援多檔 PDF 批次處理，100% 瀏覽器本機端運算，零檔案上傳伺服器，隱私極致安全
             </span>
           </div>
@@ -404,13 +406,15 @@ export default function PdfCompressorClient() {
                 <div key={item.id} className={styles.queueCard}>
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-[#eab308]/15 border border-[#eab308]/30 flex items-center justify-center text-[#eab308] font-bold shrink-0">
-                        📄
+                      <div className="w-10 h-10 rounded-xl bg-[#eab308]/15 border border-[#eab308]/30 flex items-center justify-center text-[#eab308] shrink-0">
+                        <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
+                          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                        </svg>
                       </div>
                       <div className="flex flex-col text-left min-w-0">
-                        <span className="text-sm font-semibold text-white truncate">{item.name}</span>
+                        <span className="text-sm font-semibold text-text-main truncate">{item.name}</span>
                         <div className="flex items-center gap-2 text-xs">
-                          <span className="font-mono text-slate-400">{formatBytes(item.size)}</span>
+                          <span className="font-mono text-text-sub">{formatBytes(item.size)}</span>
                           <span className="text-[#eab308] font-mono font-bold bg-[#eab308]/10 px-2 py-0.5 rounded border border-[#eab308]/20">
                             {item.status === 'done' ? `瘦身容量 -${ratio}%` : `預估瘦身 ~${ratio}%`}
                           </span>
@@ -423,15 +427,18 @@ export default function PdfCompressorClient() {
                         <a
                           href={URL.createObjectURL(item.compressedBlob)}
                           download={`compressed_${item.name}`}
-                          className="px-4 py-1.5 text-xs font-bold text-black bg-emerald-400 rounded-lg hover:bg-emerald-300 transition-all shadow-md"
+                          className="px-4 py-1.5 text-xs font-bold text-black bg-emerald-400 rounded-xl hover:bg-emerald-300 transition-all shadow-md flex items-center gap-1.5"
                         >
-                          ⬇️ 下載 PDF ({formatBytes(item.compressedSize)})
+                          <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                          </svg>
+                          下載 PDF ({formatBytes(item.compressedSize)})
                         </a>
                       )}
                       <button
                         type="button"
                         onClick={() => removeQueueItem(item.id)}
-                        className="text-slate-400 text-sm hover:text-red-400 transition-colors cursor-pointer px-1"
+                        className="text-text-sub text-sm hover:text-red-400 transition-colors cursor-pointer px-1"
                       >
                         ✕
                       </button>
@@ -451,8 +458,11 @@ export default function PdfCompressorClient() {
 
         {/* 壓縮品質控制區 */}
         <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-5 text-left backdrop-blur-md">
-          <h4 className="text-sm font-bold text-white flex items-center gap-2">
-            ⚙️ 壓縮品質快選模式
+          <h4 className="text-sm font-semibold text-text-main flex items-center gap-2">
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#eab308]">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+            </svg>
+            壓縮品質快選模式
           </h4>
 
           {/* 膠囊切換器 */}
@@ -462,24 +472,24 @@ export default function PdfCompressorClient() {
               onClick={() => applyModePreset('low')}
               className={`${styles.segmentBtn} ${modePreset === 'low' ? styles.segmentBtnActive : ''}`}
             >
-              <span className="font-bold">輕度壓縮</span>
-              <span className="text-xs opacity-80">品質 85% / 200 DPI (降約 30%)</span>
+              <span className="text-sm font-semibold">輕度壓縮</span>
+              <span className="text-xs text-text-sub">品質 85% / 200 DPI (降約 30%)</span>
             </button>
             <button
               type="button"
               onClick={() => applyModePreset('medium')}
               className={`${styles.segmentBtn} ${modePreset === 'medium' ? styles.segmentBtnActive : ''}`}
             >
-              <span className="font-bold">推薦壓縮</span>
-              <span className="text-xs opacity-80">品質 65% / 144 DPI (降約 60%)</span>
+              <span className="text-sm font-semibold">推薦壓縮</span>
+              <span className="text-xs text-text-sub">品質 65% / 144 DPI (降約 60%)</span>
             </button>
             <button
               type="button"
               onClick={() => applyModePreset('high')}
               className={`${styles.segmentBtn} ${modePreset === 'high' ? styles.segmentBtnActive : ''}`}
             >
-              <span className="font-bold">極致壓縮</span>
-              <span className="text-xs opacity-80">品質 45% / 96 DPI (降約 80%)</span>
+              <span className="text-sm font-semibold">極致壓縮</span>
+              <span className="text-xs text-text-sub">品質 45% / 96 DPI (降約 80%)</span>
             </button>
           </div>
 
@@ -488,16 +498,19 @@ export default function PdfCompressorClient() {
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs font-semibold text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="text-xs font-semibold text-text-sub hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              ⚙️ 自訂高級設定 (Quality & DPI) {showAdvanced ? '▲' : '▼'}
+              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+              </svg>
+              自訂高級設定 (Quality & DPI) {showAdvanced ? '▲' : '▼'}
             </button>
 
             {showAdvanced && (
               <div className="flex flex-col gap-4 mt-3 p-4 bg-black/40 rounded-xl border border-white/10">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-300">JPEG 圖片品質 (Quality)</span>
+                    <span className="text-text-sub font-medium">JPEG 圖片品質 (Quality)</span>
                     <span className="text-[#eab308] font-mono font-bold">{Math.round(quality * 100)}%</span>
                   </div>
                   <input
@@ -517,7 +530,7 @@ export default function PdfCompressorClient() {
 
                 <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-300">解析度上限 (Max DPI)</span>
+                    <span className="text-text-sub font-medium">解析度上限 (Max DPI)</span>
                     <span className="text-[#eab308] font-mono font-bold">{maxDpi} DPI</span>
                   </div>
                   <input
@@ -547,7 +560,10 @@ export default function PdfCompressorClient() {
             disabled={fileQueue.length === 0 || isCompressing}
             className="w-full h-[54px] bg-[#eab308]/20 border border-[#eab308]/50 text-[#eab308] font-bold text-lg rounded-xl cursor-pointer hover:bg-[#eab308] hover:text-[#030305] hover:shadow-[0_0_25px_rgba(234,179,8,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
           >
-            {isCompressing ? '⚡ PDF 圖片深度壓縮中...' : '⚡ 開始 PDF 圖片深度壓縮'}
+            <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
+              <path d="M7 2v11h3v9l7-12h-4l4-8z" />
+            </svg>
+            {isCompressing ? 'PDF 圖片深度壓縮中...' : '開始 PDF 圖片深度壓縮'}
           </button>
 
           {hasCompleted && fileQueue.length > 1 && (
@@ -556,7 +572,10 @@ export default function PdfCompressorClient() {
               onClick={downloadAllAsZip}
               className="w-full h-[50px] bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-bold text-base rounded-xl cursor-pointer hover:bg-emerald-500 hover:text-black transition-all flex items-center justify-center gap-2 shadow-lg"
             >
-              📦 打包下載所有壓縮 PDF (ZIP)
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
+                <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-1 8h-3v3h-2v-3h-3v-2h3v-3h2v3h3v2z" />
+              </svg>
+              打包下載所有壓縮 PDF (ZIP)
             </button>
           )}
         </div>

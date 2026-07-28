@@ -80,7 +80,7 @@ export default function TextUtilityClient() {
 
           <div className={styles.statBadge}>
             <span className="text-sm font-semibold text-text-sub">總行數</span>
-            <span className="text-xl font-bold text-text-sub font-mono">{totalLines.toLocaleString()}</span>
+            <span className="text-xl font-bold text-text-main font-mono">{totalLines.toLocaleString()}</span>
           </div>
         </div>
 
@@ -90,14 +90,16 @@ export default function TextUtilityClient() {
             <span className="text-sm text-[#ff007f] font-semibold uppercase tracking-[1px]">文字內容編輯器</span>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => setText('')}
-                className="px-3 py-1 text-sm font-medium text-text-sub hover:text-white"
+                className="px-3 py-1.5 text-sm font-semibold text-text-sub hover:text-white rounded-xl cursor-pointer transition-colors"
               >
                 清空
               </button>
               <button
+                type="button"
                 onClick={copyText}
-                className="px-4 py-1 text-sm bg-[#ff007f]/20 border border-[#ff007f]/40 text-[#ff007f] font-semibold rounded-lg hover:bg-[#ff007f] hover:text-white transition-all"
+                className="px-4 py-1.5 text-sm bg-[#ff007f]/20 border border-[#ff007f]/40 text-[#ff007f] font-semibold rounded-xl hover:bg-[#ff007f] hover:text-white transition-all cursor-pointer shadow-md"
               >
                 複製內文
               </button>
@@ -114,40 +116,46 @@ export default function TextUtilityClient() {
           />
 
           {/* 快捷排版工具列 */}
-          <div className="flex flex-wrap gap-2 border-t border-white/[.05] pt-4">
+          <div className="flex flex-wrap gap-2.5 border-t border-white/[.05] pt-4">
             <button
+              type="button"
               onClick={toUppercase}
-              className="px-3 py-1.5 text-sm font-medium bg-white/[.04] border border-white/[.08] text-text-sub rounded-lg hover:text-white"
+              className="px-3.5 py-2 text-sm font-medium bg-white/[.04] border border-white/[.08] text-text-sub rounded-xl hover:text-white hover:bg-white/[.1] transition-all cursor-pointer"
             >
               大寫 (UPPER)
             </button>
             <button
+              type="button"
               onClick={toLowercase}
-              className="px-3 py-1.5 text-sm font-medium bg-white/[.04] border border-white/[.08] text-text-sub rounded-lg hover:text-white"
+              className="px-3.5 py-2 text-sm font-medium bg-white/[.04] border border-white/[.08] text-text-sub rounded-xl hover:text-white hover:bg-white/[.1] transition-all cursor-pointer"
             >
               小寫 (lower)
             </button>
             <button
+              type="button"
               onClick={toTitleCase}
-              className="px-3 py-1.5 text-sm font-medium bg-white/[.04] border border-white/[.08] text-text-sub rounded-lg hover:text-white"
+              className="px-3.5 py-2 text-sm font-medium bg-white/[.04] border border-white/[.08] text-text-sub rounded-xl hover:text-white hover:bg-white/[.1] transition-all cursor-pointer"
             >
               首字大寫 (Title)
             </button>
             <button
+              type="button"
               onClick={removeEmptyLines}
-              className="px-3 py-1.5 text-xs bg-white/[.04] border border-white/[.08] text-[#ff007f] rounded-lg hover:bg-[#ff007f]/20"
+              className="px-3.5 py-2 text-sm font-medium bg-[#ff007f]/10 border border-[#ff007f]/30 text-[#ff007f] rounded-xl hover:bg-[#ff007f]/20 transition-all cursor-pointer"
             >
               移除空行
             </button>
             <button
+              type="button"
               onClick={removeDups}
-              className="px-3 py-1.5 text-xs bg-white/[.04] border border-white/[.08] text-[#ff007f] rounded-lg hover:bg-[#ff007f]/20"
+              className="px-3.5 py-2 text-sm font-medium bg-[#ff007f]/10 border border-[#ff007f]/30 text-[#ff007f] rounded-xl hover:bg-[#ff007f]/20 transition-all cursor-pointer"
             >
               去除重複行
             </button>
             <button
+              type="button"
               onClick={trimLines}
-              className="px-3 py-1.5 text-xs bg-white/[.04] border border-white/[.08] text-[#ff007f] rounded-lg hover:bg-[#ff007f]/20"
+              className="px-3.5 py-2 text-sm font-medium bg-[#ff007f]/10 border border-[#ff007f]/30 text-[#ff007f] rounded-xl hover:bg-[#ff007f]/20 transition-all cursor-pointer"
             >
               修剪首尾空白
             </button>
@@ -156,7 +164,7 @@ export default function TextUtilityClient() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm rounded-lg bg-[#ff007f]/20 border border-[#ff007f]/40 text-[#ff007f] backdrop-blur-md">
+        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm rounded-xl bg-[#ff007f]/20 border border-[#ff007f]/40 text-[#ff007f] backdrop-blur-md shadow-lg z-[100]">
           {toast}
         </div>
       )}

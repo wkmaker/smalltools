@@ -48,7 +48,10 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
        document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 85, 0.6)');
      }, []);
      ```
-   * 背景粒子 Canvas 組件 (`components/ParticleCanvas.tsx`) 會自動感應 CSS 自訂變數並即時切換粒子漂浮顏色。
+5. **向量 SVG 圖示替代 Emoji 規範 (SVG Icons over Emojis)**
+   * **禁用系統預設 Emoji 作為 UI 主要 Icon**：嚴禁在按鈕、區塊標題、上傳 Dropzone、標籤或控制介面中直接使用 OS 原生 Emoji（如 ⚙️, 📄, 📑, 📦, ⚡）。原生 Emoji 在不同作業系統 (Windows, macOS, iOS, Android) 渲染樣式極度不一且無法縮放色標，破壞毛玻璃極簡美學。
+   * **採用極量向量 Inline SVG**：介面圖示一律採用精簡原生 Inline SVG 或 Lucide/Heroicons 規格 SVG，保持零額外套件負載與極速渲染。
+   * **主題色動態連動與發光 (Theme-aware SVG)**：SVG 之 `fill` 或 `stroke` 屬性統一採用 `currentColor`（或連動主題色 `text-[#ef4444]` / `text-[var(--theme-color)]`），確保在懸停 (hover) 與聚焦 (focus) 時能精準發光。
 
 ---
 

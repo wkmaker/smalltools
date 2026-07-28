@@ -544,15 +544,16 @@ export default function SslConverterClient() {
               { id: 'pem-to-der', label: 'PEM 轉 DER' },
             ].map(tab => (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id as TabType);
                   hideAlertMsg();
                 }}
-                className={`py-2.5 px-5 text-sm font-medium rounded-xl cursor-pointer transition-all border ${
+                className={`py-2.5 px-5 text-sm font-semibold rounded-xl cursor-pointer transition-all border ${
                   activeTab === tab.id
                     ? 'bg-[#00ffaa]/20 border-[#00ffaa]/40 text-[#00ffaa] shadow-[0_0_15px_rgba(0,255,170,0.2)]'
-                    : 'border-transparent text-slate-300 hover:text-white'
+                    : 'border-transparent text-text-sub hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -564,7 +565,7 @@ export default function SslConverterClient() {
           {activeTab === 'pfx-to-pem' && (
             <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
               <div className="flex flex-col gap-2">
-                <label className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                   上傳 PFX / P12 檔案 (.pfx / .p12)
                 </label>
                 {!pfxFile ? (
@@ -581,16 +582,16 @@ export default function SslConverterClient() {
                         }
                       }}
                     />
-                    <svg viewBox="0 0 24 24" className="w-12 h-12 fill-slate-400">
+                    <svg viewBox="0 0 24 24" className="w-12 h-12 fill-text-sub">
                       <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
                     </svg>
-                    <p className="text-sm text-slate-300">拖曳 .pfx 或 .p12 憑證至此，或點擊選擇檔案</p>
-                    <span className="text-xs text-slate-300">支援二進位 PKCS#12 憑證包</span>
+                    <p className="text-sm text-text-sub font-medium">拖曳 .pfx 或 .p12 憑證至此，或點擊選擇檔案</p>
+                    <span className="text-xs text-text-sub">支援二進位 PKCS#12 憑證包</span>
                   </div>
                 ) : (
                   <div className="bg-[#00ffaa]/10 border border-[#00ffaa]/30 p-4 rounded-xl flex justify-between items-center text-sm font-mono">
                     <span className="text-white font-medium">{pfxFile.name} ({(pfxFile.size / 1024).toFixed(1)} KB)</span>
-                    <button onClick={() => setPfxFile(null)} className="text-red-400 hover:underline cursor-pointer">
+                    <button type="button" onClick={() => setPfxFile(null)} className="text-red-400 hover:underline cursor-pointer">
                       移除檔案
                     </button>
                   </div>
@@ -598,7 +599,7 @@ export default function SslConverterClient() {
               </div>
 
               <div className="flex flex-col gap-2 border-t border-white/[.05] pt-4">
-                <label htmlFor={pfxPassId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                <label htmlFor={pfxPassId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                   PFX 解密保護密碼
                 </label>
                 <div className="relative">
@@ -613,7 +614,7 @@ export default function SslConverterClient() {
                   <button
                     type="button"
                     onClick={() => toggleShowPassword('pfx')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer text-xs"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-white cursor-pointer text-xs"
                   >
                     {showPassword['pfx'] ? '隱藏' : '顯示'}
                   </button>
@@ -621,6 +622,7 @@ export default function SslConverterClient() {
               </div>
 
               <button
+                type="button"
                 onClick={convertPfxToPem}
                 className="w-full py-3.5 bg-[#00ffaa]/15 border border-[#00ffaa]/40 text-[#00ffaa] font-semibold text-base rounded-xl hover:bg-[#00ffaa] hover:text-[#030305] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,170,0.2)]"
               >
@@ -634,7 +636,7 @@ export default function SslConverterClient() {
             <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={pemKeyId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                  <label htmlFor={pemKeyId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                     私鑰 Private Key (.key) <span className="text-red-400">*</span>
                   </label>
                   <textarea
@@ -648,7 +650,7 @@ export default function SslConverterClient() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={pemCertId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                  <label htmlFor={pemCertId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                     伺服器憑證 Certificate (.crt) <span className="text-red-400">*</span>
                   </label>
                   <textarea
@@ -663,7 +665,7 @@ export default function SslConverterClient() {
               </div>
 
               <div className="flex flex-col gap-2 border-t border-white/[.05] pt-4">
-                <label htmlFor={pemCaId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                <label htmlFor={pemCaId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                   中繼憑證鏈 CA Bundle (選填)
                 </label>
                 <textarea
@@ -678,7 +680,7 @@ export default function SslConverterClient() {
 
               <div className="grid grid-cols-2 gap-4 border-t border-white/[.05] pt-4 max-sm:grid-cols-1">
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={pemPassId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                  <label htmlFor={pemPassId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                     設定 PFX 保護密碼 <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
@@ -693,7 +695,7 @@ export default function SslConverterClient() {
                     <button
                       type="button"
                       onClick={() => toggleShowPassword('pemToPfx')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer text-xs"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-white cursor-pointer text-xs"
                     >
                       {showPassword['pemToPfx'] ? '隱藏' : '顯示'}
                     </button>
@@ -701,7 +703,7 @@ export default function SslConverterClient() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={pemFriendlyId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                  <label htmlFor={pemFriendlyId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                     憑證別名 Friendly Name (選填)
                   </label>
                   <input
@@ -716,6 +718,7 @@ export default function SslConverterClient() {
               </div>
 
               <button
+                type="button"
                 onClick={convertPemToPfx}
                 className="w-full py-3.5 bg-[#00ffaa]/15 border border-[#00ffaa]/40 text-[#00ffaa] font-semibold text-base rounded-xl hover:bg-[#00ffaa] hover:text-[#030305] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,170,0.2)]"
               >
@@ -728,7 +731,7 @@ export default function SslConverterClient() {
           {activeTab === 'der-to-pem' && (
             <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
               <div className="flex flex-col gap-2">
-                <label className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                   上傳二進位 DER / CER / CRT 檔案
                 </label>
                 {!derFile ? (
@@ -745,16 +748,16 @@ export default function SslConverterClient() {
                         }
                       }}
                     />
-                    <svg viewBox="0 0 24 24" className="w-12 h-12 fill-slate-400">
+                    <svg viewBox="0 0 24 24" className="w-12 h-12 fill-text-sub">
                       <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
                     </svg>
-                    <p className="text-sm text-slate-300">拖曳 .der, .cer 或 .crt 檔案至此，或點擊選擇檔案</p>
-                    <span className="text-xs text-slate-300">支援二進位 ASN.1 / DER 編碼之憑證或私鑰檔</span>
+                    <p className="text-sm text-text-sub font-medium">拖曳 .der, .cer 或 .crt 檔案至此，或點擊選擇檔案</p>
+                    <span className="text-xs text-text-sub">支援二進位 ASN.1 / DER 編碼之憑證或私鑰檔</span>
                   </div>
                 ) : (
                   <div className="bg-[#00ffaa]/10 border border-[#00ffaa]/30 p-4 rounded-xl flex justify-between items-center text-sm font-mono">
                     <span className="text-white font-medium">{derFile.name} ({(derFile.size / 1024).toFixed(1)} KB)</span>
-                    <button onClick={() => setDerFile(null)} className="text-red-400 hover:underline cursor-pointer">
+                    <button type="button" onClick={() => setDerFile(null)} className="text-red-400 hover:underline cursor-pointer">
                       移除檔案
                     </button>
                   </div>
@@ -762,6 +765,7 @@ export default function SslConverterClient() {
               </div>
 
               <button
+                type="button"
                 onClick={convertDerToPem}
                 className="w-full py-3.5 bg-[#00ffaa]/15 border border-[#00ffaa]/40 text-[#00ffaa] font-semibold text-base rounded-xl hover:bg-[#00ffaa] hover:text-[#030305] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,170,0.2)]"
               >
@@ -774,7 +778,7 @@ export default function SslConverterClient() {
           {activeTab === 'pem-to-der' && (
             <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
               <div className="flex flex-col gap-2">
-                <label htmlFor={pemDerInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">
+                <label htmlFor={pemDerInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                   粘貼 PEM 文字憑證或私鑰 (.crt / .pem / .key)
                 </label>
                 <textarea
@@ -788,6 +792,7 @@ export default function SslConverterClient() {
               </div>
 
               <button
+                type="button"
                 onClick={convertPemToDer}
                 className="w-full py-3.5 bg-[#00ffaa]/15 border border-[#00ffaa]/40 text-[#00ffaa] font-semibold text-base rounded-xl hover:bg-[#00ffaa] hover:text-[#030305] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,170,0.2)]"
               >
@@ -804,8 +809,9 @@ export default function SslConverterClient() {
                   憑證剖析與成果明細
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setResultData(null)}
-                  className="text-xs text-slate-300 hover:text-white cursor-pointer"
+                  className="text-xs text-text-sub hover:text-white cursor-pointer"
                 >
                   隱藏結果
                 </button>
@@ -815,7 +821,7 @@ export default function SslConverterClient() {
               <div className="grid grid-cols-2 gap-4 text-sm font-mono max-sm:grid-cols-1">
                 {resultData.meta.map((m, idx) => (
                   <div key={idx} className="bg-black/40 p-3.5 rounded-xl border border-white/[.04] flex flex-col gap-1">
-                    <span className="text-slate-300 font-medium">{m.label}</span>
+                    <span className="text-text-sub font-medium">{m.label}</span>
                     <span className={m.className || 'text-white font-bold'}>{m.value}</span>
                   </div>
                 ))}
@@ -836,35 +842,39 @@ export default function SslConverterClient() {
                         <span className="text-sm font-bold text-[#00ffaa] font-mono">{out.label}</span>
                         <div className="flex items-center gap-2">
                           {out.isPrivateKey && (
-                            <div className="flex items-center gap-1 bg-black/60 px-2 py-1 rounded-lg border border-white/[.08] text-xs">
+                            <div className="flex items-center gap-1 bg-black/60 px-2 py-1 rounded-xl border border-white/[.08] text-xs">
                               <button
+                                type="button"
                                 onClick={() => setKeyFormat('pkcs8')}
-                                className={`px-2 py-0.5 rounded ${keyFormat === 'pkcs8' ? 'bg-[#00ffaa]/20 text-[#00ffaa] font-bold' : 'text-slate-400'}`}
+                                className={`px-2 py-0.5 rounded-lg ${keyFormat === 'pkcs8' ? 'bg-[#00ffaa]/20 text-[#00ffaa] font-bold' : 'text-text-sub'}`}
                               >
                                 PKCS#8
                               </button>
                               <button
+                                type="button"
                                 onClick={() => setKeyFormat('pkcs1')}
-                                className={`px-2 py-0.5 rounded ${keyFormat === 'pkcs1' ? 'bg-[#00ffaa]/20 text-[#00ffaa] font-bold' : 'text-slate-400'}`}
+                                className={`px-2 py-0.5 rounded-lg ${keyFormat === 'pkcs1' ? 'bg-[#00ffaa]/20 text-[#00ffaa] font-bold' : 'text-text-sub'}`}
                               >
                                 PKCS#1
                               </button>
                             </div>
                           )}
                           <button
+                            type="button"
                             onClick={() => {
                               navigator.clipboard.writeText(displayContent).then(() => showToast(`已複製 ${out.filename}`));
                             }}
-                            className="px-3 py-1 text-xs bg-white/[.05] border border-white/[.1] text-slate-200 rounded-lg hover:bg-white/[.1] cursor-pointer"
+                            className="px-3 py-1 text-xs bg-white/[.05] border border-white/[.1] text-text-main font-medium rounded-xl hover:bg-white/[.1] cursor-pointer"
                           >
                             複製文字
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               const blob = new Blob([displayContent], { type: 'text/plain' });
                               triggerDownload(blob, out.filename);
                             }}
-                            className="px-3 py-1 text-xs bg-[#00ffaa]/20 border border-[#00ffaa]/40 text-[#00ffaa] font-medium rounded-lg hover:bg-[#00ffaa] hover:text-[#030305] cursor-pointer"
+                            className="px-3 py-1 text-xs bg-[#00ffaa]/20 border border-[#00ffaa]/40 text-[#00ffaa] font-semibold rounded-xl hover:bg-[#00ffaa] hover:text-[#030305] cursor-pointer"
                           >
                             下載 {out.filename}
                           </button>

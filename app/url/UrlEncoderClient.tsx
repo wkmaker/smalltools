@@ -241,7 +241,10 @@ export default function UrlEncoderClient() {
             {/* 原始文字 */}
             <div className={`${styles.panelContainer} ${encodedError ? styles.errorState : ''}`}>
               <div className={styles.panelHeader}>
-                <div className={styles.panelTitle}>原始網址 / 文字 (Plain Text)</div>
+                <div className="text-sm font-semibold text-text-main flex items-center gap-2">
+                  <span className="w-1.5 h-4 bg-[#0077ff] rounded-full shadow-[0_0_8px_#0077ff] inline-block" />
+                  原始網址 / 文字 (Plain Text)
+                </div>
               </div>
               <div className={styles.textAreaWrapper}>
                 <textarea
@@ -253,16 +256,16 @@ export default function UrlEncoderClient() {
               </div>
               <div className={styles.panelFooter}>
                 <div className={styles.controlGroup}>
-                  <label>編碼模式：</label>
+                  <label className="text-sm font-medium text-text-sub">編碼模式：</label>
                   <select className={styles.selectStyle} value={mode} onChange={e => setMode(e.target.value as UrlMode)}>
                     <option value="component">EncodeURIComponent (編碼所有參數)</option>
                     <option value="uri">EncodeURI (保留網址基本結構)</option>
                   </select>
                 </div>
                 <div className={styles.btnGroup}>
-                  <button onClick={loadExample} className={styles.techBtn}>範例</button>
-                  <button onClick={() => clearPanel('plain')} className={styles.techBtn}>清除</button>
-                  <button onClick={() => copyValue(plainText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>複製</button>
+                  <button type="button" onClick={loadExample} className={styles.techBtn}>範例</button>
+                  <button type="button" onClick={() => clearPanel('plain')} className={styles.techBtn}>清除</button>
+                  <button type="button" onClick={() => copyValue(plainText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>複製</button>
                 </div>
               </div>
             </div>
@@ -270,7 +273,10 @@ export default function UrlEncoderClient() {
             {/* URL 編碼文字 */}
             <div className={`${styles.panelContainer} ${encodedError ? styles.errorState : ''}`}>
               <div className={styles.panelHeader}>
-                <div className={styles.panelTitle}>URL 編碼文字 (Percent-Encoded)</div>
+                <div className="text-sm font-semibold text-text-main flex items-center gap-2">
+                  <span className="w-1.5 h-4 bg-[#0077ff] rounded-full shadow-[0_0_8px_#0077ff] inline-block" />
+                  URL 編碼文字 (Percent-Encoded)
+                </div>
                 {encodedError && (
                   <div className={styles.errorMsg}>
                     <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
@@ -297,8 +303,8 @@ export default function UrlEncoderClient() {
                   </label>
                 </div>
                 <div className={styles.btnGroup}>
-                  <button onClick={() => clearPanel('encoded')} className={styles.techBtn}>清除</button>
-                  <button onClick={() => copyValue(encodedText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>複製</button>
+                  <button type="button" onClick={() => clearPanel('encoded')} className={styles.techBtn}>清除</button>
+                  <button type="button" onClick={() => copyValue(encodedText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>複製</button>
                 </div>
               </div>
             </div>
@@ -307,7 +313,10 @@ export default function UrlEncoderClient() {
           {/* URL 解析面板 */}
           {showParser && urlMeta && (
             <div className={styles.urlParserSection}>
-              <div className={styles.panelTitle}>網址結構與 Query 參數解析 (連動編輯)</div>
+              <div className="text-sm font-semibold text-text-main flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-[#0077ff] rounded-full shadow-[0_0_8px_#0077ff] inline-block" />
+                網址結構與 Query 參數解析 (連動編輯)
+              </div>
 
               <div className={styles.urlMetaGrid}>
                 {[
@@ -316,10 +325,10 @@ export default function UrlEncoderClient() {
                   { label: '路徑 (Pathname)', value: urlMeta.pathname },
                 ].map(item => (
                   <div key={item.label} className={styles.metaItem}>
-                    <span className={styles.metaLabel}>{item.label}</span>
+                    <span className="text-xs text-text-sub uppercase tracking-[0.5px] font-medium">{item.label}</span>
                     <div className={styles.metaValueWrapper}>
                       <span className={styles.metaValue}>{item.value}</span>
-                      <button onClick={() => copyValue(item.value === '-' || item.value === '(無)' ? '' : item.value)}
+                      <button type="button" onClick={() => copyValue(item.value === '-' || item.value === '(無)' ? '' : item.value)}
                         className={styles.metaCopyBtn}>
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
@@ -334,9 +343,9 @@ export default function UrlEncoderClient() {
                 <table className={styles.paramsTable}>
                   <thead>
                     <tr>
-                      <th style={{ width: '35%' }}>參數名稱 (Query Key)</th>
-                      <th style={{ width: '45%' }}>參數內容 (Value)</th>
-                      <th style={{ width: '20%', textAlign: 'center' }}>操作</th>
+                      <th style={{ width: '35%' }} className="text-sm font-semibold text-text-sub p-3">參數名稱 (Query Key)</th>
+                      <th style={{ width: '45%' }} className="text-sm font-semibold text-text-sub p-3">參數內容 (Value)</th>
+                      <th style={{ width: '20%', textAlign: 'center' }} className="text-sm font-semibold text-text-sub p-3">操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -345,10 +354,10 @@ export default function UrlEncoderClient() {
                         <td><input type="text" className={styles.tableInput} value={p.key} onChange={e => onParamChange(p.id, 'key', e.target.value)} /></td>
                         <td><input type="text" className={styles.tableInput} value={p.value} onChange={e => onParamChange(p.id, 'value', e.target.value)} /></td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          <button className={styles.techBtn} onClick={() => copyValue(p.value)} title="複製參數內容" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem' }}>
+                          <button type="button" className={styles.techBtn} onClick={() => copyValue(p.value)} title="複製參數內容" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem' }}>
                             <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" /></svg>
                           </button>
-                          <button className={styles.techBtn} onClick={() => deleteParam(p.id)} title="刪除此參數" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem', marginLeft: '6px' }}>
+                          <button type="button" className={styles.techBtn} onClick={() => deleteParam(p.id)} title="刪除此參數" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem', marginLeft: '6px' }}>
                             <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
                           </button>
                         </td>
@@ -357,8 +366,8 @@ export default function UrlEncoderClient() {
                   </tbody>
                 </table>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1rem', background: 'rgba(0, 0, 0, 0.1)', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>共 {params.filter(p => p.key.trim()).length} 個參數</span>
-                  <button onClick={addParam} className={`${styles.techBtn} ${styles.techBtnPrimary}`} style={{ padding: '0.4rem 0.8rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: 'var(--text-sub)' }} className="font-medium">共 {params.filter(p => p.key.trim()).length} 個參數</span>
+                  <button type="button" onClick={addParam} className={`${styles.techBtn} ${styles.techBtnPrimary}`} style={{ padding: '0.4rem 0.8rem' }}>
                     <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" style={{ marginRight: '2px' }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
                     新增參數行
                   </button>

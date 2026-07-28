@@ -218,11 +218,11 @@
 .selectStyle {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-    color: var(--text-primary, #ffffff);
+    color: var(--text-main, #ffffff);
     padding: 0.4rem 0.8rem;
-    border-radius: 6px;
+    border-radius: 12px;
     outline: none;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.3s;
 }
@@ -234,7 +234,7 @@
 
 .selectStyle option {
     background-color: var(--select-bg, #121218);
-    color: #ffffff;
+    color: var(--text-main, #ffffff);
 }
 
 .checkboxContainer {
@@ -245,7 +245,7 @@
     user-select: none;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-sub, #94a3b8);
 }
 
 .checkboxContainer input {
@@ -288,11 +288,11 @@
 .techBtn {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-    color: var(--text-primary, #ffffff);
+    color: var(--text-main, #ffffff);
     padding: 0.5rem 1rem;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     display: flex;
     align-items: center;
     gap: 0.4rem;

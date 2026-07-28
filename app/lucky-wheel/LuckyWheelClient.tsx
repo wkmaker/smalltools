@@ -707,8 +707,8 @@ export default function LuckyWheelClient() {
 
   const showToast = (msg: string) => {
     const toastEl = document.createElement('div');
-    toastEl.className = 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-[#f59e0b] rounded-xl shadow-2xl z-[30000] animate-bounce';
-    toastEl.textContent = msg;
+    toastEl.className = 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-[#f59e0b] rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2';
+    toastEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>${msg}</span>`;
     document.body.appendChild(toastEl);
     setTimeout(() => {
       if (document.body.contains(toastEl)) document.body.removeChild(toastEl);
@@ -773,9 +773,9 @@ export default function LuckyWheelClient() {
         setPrizes(newPrizes);
         saveState(newPrizes);
         if (singleColumnLines / newPrizes.length >= 0.7) {
-          showToast(`🎉 成功匯入 ${newPrizes.length} 位人員名單！`);
+          showToast(`成功匯入 ${newPrizes.length} 位人員名單！`);
         } else {
-          showToast(`🎉 成功匯入 ${newPrizes.length} 個獎項！`);
+          showToast(`成功匯入 ${newPrizes.length} 個獎項！`);
         }
       } else {
         showToast('未找到有效名單，請檢查檔案格式');
@@ -840,10 +840,13 @@ export default function LuckyWheelClient() {
             <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide">
               最新中獎
             </span>
-            <span className="text-sm font-medium">
+            <span className="text-sm font-medium flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-amber-300">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+              </svg>
               {history.length > 0
-                ? `🎉 剛抽出：${history[0].prizeTitle}`
-                : '🎉 歡迎使用幸運轉盤抽獎小工具！自訂獎項即刻體驗！'}
+                ? `剛抽出：${history[0].prizeTitle}`
+                : '歡迎使用幸運轉盤抽獎小工具！自訂獎項即刻體驗！'}
             </span>
           </div>
 
@@ -851,23 +854,43 @@ export default function LuckyWheelClient() {
             <button
               type="button"
               onClick={() => setShowHistoryModal(true)}
-              className="px-3.5 py-1.5 text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main"
+              className="px-3.5 py-1.5 text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main flex items-center gap-1.5"
             >
-              📜 歷史紀錄 ({history.length})
+              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+              </svg>
+              歷史紀錄 ({history.length})
             </button>
             <button
               type="button"
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="px-3.5 py-1.5 text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main"
+              className="px-3.5 py-1.5 text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main flex items-center gap-1.5"
             >
-              {soundEnabled ? '🔊 音效: 開' : '🔇 音效: 關'}
+              {soundEnabled ? (
+                <>
+                  <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                  </svg>
+                  音效: 開
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                  </svg>
+                  音效: 關
+                </>
+              )}
             </button>
             <button
               type="button"
               onClick={() => setIsFullscreen(true)}
-              className="px-3.5 py-1.5 text-sm font-semibold bg-white text-indigo-900 rounded-xl hover:bg-slate-100 shadow-md transition-all cursor-pointer"
+              className="px-3.5 py-1.5 text-sm font-semibold bg-white text-indigo-900 rounded-xl hover:bg-slate-100 shadow-md transition-all cursor-pointer flex items-center gap-1.5"
             >
-              ⛶ 全螢幕抽獎
+              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+              </svg>
+              全螢幕抽獎
             </button>
           </div>
         </div>
@@ -878,24 +901,30 @@ export default function LuckyWheelClient() {
             <button
               type="button"
               onClick={() => setDisplayMode('wheel')}
-              className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
+              className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center gap-1.5 ${
                 displayMode === 'wheel'
                   ? 'bg-[#f59e0b] text-black font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
                   : 'text-text-sub hover:text-text-main'
               }`}
             >
-              🎡 幸運轉盤
+              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+              </svg>
+              幸運轉盤
             </button>
             <button
               type="button"
               onClick={() => setDisplayMode('slot')}
-              className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
+              className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center gap-1.5 ${
                 displayMode === 'slot'
                   ? 'bg-[#f59e0b] text-black font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
                   : 'text-text-sub hover:text-text-main'
               }`}
             >
-              🎰 擬真拉霸機
+              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+              </svg>
+              擬真拉霸機
             </button>
           </div>
 
@@ -960,13 +989,16 @@ export default function LuckyWheelClient() {
               disabled={isSpinning || unfinishedPrizes.length === 0}
               className="w-full max-w-[360px] h-[54px] bg-[#f59e0b]/20 border border-[#f59e0b]/50 text-[#f59e0b] font-bold text-lg rounded-xl cursor-pointer hover:bg-[#f59e0b] hover:text-[#030305] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
+                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
+              </svg>
               {isSpinning
                 ? '旋轉中...'
                 : unfinishedPrizes.length === 0
                 ? '全部抽完'
                 : displayMode === 'wheel'
-                ? '🎡 開始幸運抽獎'
-                : '🎰 開始拉霸抽獎'}
+                ? '開始幸運抽獎'
+                : '開始拉霸抽獎'}
             </button>
           </div>
 
@@ -974,7 +1006,10 @@ export default function LuckyWheelClient() {
           <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
             <div className="flex justify-between items-center flex-wrap gap-3 border-b border-white/[.06] pb-4">
               <h3 className="text-sm font-semibold text-text-main flex items-center gap-2">
-                ⚙️ 獎項與人員設定 ({prizes.length})
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#f59e0b]">
+                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                </svg>
+                獎項與人員設定 ({prizes.length})
               </h3>
 
               <div className="flex items-center gap-2 flex-wrap">
@@ -990,26 +1025,32 @@ export default function LuckyWheelClient() {
                   <option value="" disabled>
                     快速範例模板...
                   </option>
-                  <option value="annual">🎉 公司年會尾牙</option>
-                  <option value="lucky">✨ 幸運大轉盤 (6項)</option>
-                  <option value="punish">🔥 歡樂懲罰遊戲</option>
-                  <option value="dinner">🍱 晚餐吃什麼？</option>
-                  <option value="empty">🗑️ 清空全新自訂</option>
+                  <option value="annual">公司年會尾牙</option>
+                  <option value="lucky">幸運大轉盤 (6項)</option>
+                  <option value="punish">歡樂懲罰遊戲</option>
+                  <option value="dinner">晚餐吃什麼？</option>
+                  <option value="empty">清空全新自訂</option>
                 </select>
 
                 <button
                   type="button"
                   onClick={exportTxt}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1"
                 >
-                  📤 匯出 TXT
+                  <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                    <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" />
+                  </svg>
+                  匯出 TXT
                 </button>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1"
                 >
-                  📥 匯入 TXT/名單
+                  <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                  </svg>
+                  匯入 TXT/名單
                 </button>
                 <input
                   type="file"
@@ -1021,9 +1062,12 @@ export default function LuckyWheelClient() {
                 <button
                   type="button"
                   onClick={resetDrawnCounts}
-                  className="px-3 py-1.5 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl hover:bg-amber-500/20 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl hover:bg-amber-500/20 transition-all cursor-pointer flex items-center gap-1"
                 >
-                  🔄 重置次數
+                  <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                    <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                  </svg>
+                  重置次數
                 </button>
                 <button
                   type="button"
@@ -1185,29 +1229,38 @@ export default function LuckyWheelClient() {
                   type="button"
                   onClick={startSlotSpin}
                   disabled={isSpinning || unfinishedPrizes.length === 0}
-                  className="mt-6 px-16 py-4 text-[min(4vh,28px)] font-extrabold text-white bg-gradient-to-r from-pink-600 to-amber-500 border-4 border-white rounded-full shadow-[0_0_45px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40"
+                  className="mt-6 px-16 py-4 text-[min(4vh,28px)] font-extrabold text-white bg-gradient-to-r from-pink-600 to-amber-500 border-4 border-white rounded-full shadow-[0_0_45px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
                 >
-                  🎰 抽獎
+                  <svg viewBox="0 0 24 24" width={28} height={28} fill="currentColor">
+                    <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+                  </svg>
+                  抽獎
                 </button>
               </div>
             )}
 
             {/* 全螢幕資訊側板 */}
-            <div className="w-[min(26vw,380px)] min-w-[280px] max-w-[92vw] h-[min(86vh,720px)] bg-black/40 border border-white/10 rounded-2xl p-6 flex flex-col gap-5 text-left backdrop-blur-md shadow-2xl">
-              <h4 className="text-xs uppercase tracking-widest text-[#00f0ff] font-bold border-b border-white/10 pb-2">
-                可抽項目 ({unfinishedPrizes.length})
+            <div className="w-[min(32vw,440px)] min-w-[300px] max-w-[92vw] h-[min(86vh,760px)] bg-black/45 border border-white/15 rounded-3xl p-6 sm:p-8 flex flex-col gap-6 text-left backdrop-blur-md shadow-2xl">
+              <h4 className="text-base sm:text-lg uppercase tracking-widest text-[#00f0ff] font-bold border-b border-white/15 pb-3 flex items-center justify-between">
+                <span>可抽項目 ({unfinishedPrizes.length})</span>
+                <span className="text-xs font-mono font-normal text-text-sub">LIVE LIST</span>
               </h4>
 
-              <div className="flex flex-col gap-2.5 max-h-[420px] overflow-y-auto pr-1 text-xs">
+              <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1">
                 {unfinishedPrizes.length === 0 ? (
-                  <span className="text-slate-400 italic">✅ 所有項目已抽完</span>
+                  <span className="text-slate-400 italic flex items-center justify-center gap-2 py-8 text-base font-medium">
+                    <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className="text-emerald-400">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    所有項目已抽完！
+                  </span>
                 ) : (
                   unfinishedPrizes.map((p) => (
-                    <div key={p.id} className="flex items-center gap-2.5 bg-black/30 p-2.5 rounded-lg border border-white/5">
-                      <div className="w-3 h-3 rounded-full shrink-0" style={{ background: p.color }} />
-                      <span className="text-white font-medium text-sm truncate flex-1">{p.title}</span>
+                    <div key={p.id} className="flex items-center gap-3 bg-black/40 p-3.5 rounded-xl border border-white/10 shadow-sm">
+                      <div className="w-4 h-4 rounded-full shrink-0 shadow-[0_0_8px_currentColor]" style={{ background: p.color, color: p.color }} />
+                      <span className="text-white font-semibold text-base truncate flex-1">{p.title}</span>
                       {enableQuantityLimit && (
-                        <span className="text-xs font-mono text-slate-400">
+                        <span className="text-xs sm:text-sm font-mono font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-lg">
                           剩 {Math.max(0, p.quantity - p.drawnCount)}
                         </span>
                       )}
@@ -1217,11 +1270,14 @@ export default function LuckyWheelClient() {
               </div>
 
               {/* 上一位得獎者小卡 */}
-              <div className="p-3 rounded-xl bg-black/30 border border-white/5 flex flex-col gap-1">
-                <span className="text-xs uppercase tracking-wider text-text-sub font-semibold">
-                  上一位得獎者 🏆
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 flex flex-col gap-2 shadow-lg">
+                <span className="text-xs sm:text-sm uppercase tracking-wider text-text-sub font-bold flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-amber-400">
+                    <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+                  </svg>
+                  上一位得獎者
                 </span>
-                <span className="text-base font-bold text-amber-400">
+                <span className="text-xl sm:text-2xl font-extrabold text-amber-400 font-mono tracking-wide drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]">
                   {history.length > 0 ? history[0].prizeTitle : '尚無紀錄'}
                 </span>
               </div>
@@ -1235,7 +1291,12 @@ export default function LuckyWheelClient() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[20000] flex items-center justify-center p-4">
           <div className="bg-select-bg border border-border-glass rounded-2xl w-full max-w-md p-6 flex flex-col gap-4 text-left shadow-2xl">
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
-              <h3 className="text-base font-bold text-white">📜 歷史中獎紀錄</h3>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="text-[#f59e0b]">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                </svg>
+                歷史中獎紀錄
+              </h3>
               <button
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
@@ -1254,7 +1315,12 @@ export default function LuckyWheelClient() {
                     key={rec.id}
                     className="flex justify-between items-center bg-black/40 px-3.5 py-2.5 rounded-xl border border-white/5"
                   >
-                    <span className="font-sans text-white font-semibold">🎉 {rec.prizeTitle}</span>
+                    <span className="font-sans text-white font-semibold flex items-center gap-1.5">
+                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="text-amber-400">
+                        <path d="M12 2L1 21h22L12 2zm0 3.8L18.4 17H5.6L12 5.8z" />
+                      </svg>
+                      {rec.prizeTitle}
+                    </span>
                     <span className="text-text-sub text-xs">
                       {new Date(rec.timestamp).toLocaleTimeString('zh-TW', { hour12: false })}
                     </span>
@@ -1291,8 +1357,10 @@ export default function LuckyWheelClient() {
       {winnerModalData && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[25000] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-[#181824] border-2 border-[#f59e0b] rounded-3xl w-full max-w-lg p-8 flex flex-col items-center gap-6 text-center shadow-[0_0_80px_rgba(245,158,11,0.5)]">
-            <div className="w-20 h-20 rounded-full bg-[#f59e0b]/20 border border-[#f59e0b]/40 text-[#f59e0b] flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(245,158,11,0.4)]">
-              🏆
+            <div className="w-20 h-20 rounded-full bg-[#f59e0b]/20 border border-[#f59e0b]/40 text-[#f59e0b] flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.4)]">
+              <svg viewBox="0 0 24 24" width={40} height={40} fill="currentColor">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+              </svg>
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-xs uppercase tracking-widest text-amber-400 font-bold">CONGRATULATIONS!</span>
@@ -1307,7 +1375,7 @@ export default function LuckyWheelClient() {
               onClick={() => setWinnerModalData(null)}
               className="w-full py-3 bg-[#f59e0b] text-black font-extrabold text-base rounded-xl hover:bg-amber-400 transition-all cursor-pointer shadow-lg"
             >
-              太棒了！繼續抽獎 🚀
+              太棒了！繼續抽獎
             </button>
           </div>
         </div>
