@@ -56,11 +56,13 @@ jobs:
       # ── 7. 更新 CloudFormation 基礎架構（僅在 template.yml 變動時執行） ──
       - name: Deploy CloudFormation Stack
         if: steps.filter.outputs.cf_template == 'true'
-        uses: aws-actions/aws-cloudformation-deploy@v1
-        with:
-          name: web-tool-cjkuo-stack
-          template: template.yml
-          no-fail-on-empty-changeset: "1"
+        run: |
+          aws cloudformation deploy \
+            --stack-name web-tool-cjkuo-stack \
+            --template-file template.yml \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset
+
 
       # ── 8. 同步 out/ 至 S3 ───────────────────────────────────
       - name: Sync to S3
