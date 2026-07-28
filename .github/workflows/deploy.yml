@@ -18,7 +18,7 @@ jobs:
     steps:
       # ── 1. 拉取代碼 ──────────────────────────────────────────
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # ── 2. 檢測 template.yml 是否有修改 ─────────────────────
       - name: Check CloudFormation Template Changes
