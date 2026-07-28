@@ -351,7 +351,7 @@ export default function TimeClient() {
               <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                 顯示時間單位 (Display Units)
               </span>
-              <div className="grid grid-cols-6 gap-2 max-sm:grid-cols-3">
+              <div className="flex flex-wrap gap-2">
                 {ALL_UNITS.map(unit => {
                   const isChecked = selectedUnits.includes(unit);
                   return (
@@ -359,16 +359,14 @@ export default function TimeClient() {
                       key={unit}
                       type="button"
                       onClick={() => toggleUnit(unit)}
-                      className={`py-2 px-3 text-sm font-semibold rounded-xl cursor-pointer transition-all border ${
+                      className={`flex-1 min-w-[calc(33%-0.5rem)] sm:min-w-[calc(16.66%-0.5rem)] py-2 px-3 text-sm font-semibold rounded-xl cursor-pointer transition-all border whitespace-nowrap ${
                         isChecked
                           ? 'bg-[#00f0ff]/20 border-[#00f0ff]/40 text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.2)]'
                           : 'border-white/[.08] bg-black/40 text-text-sub hover:text-white'
                       }`}
                     >
-                      <span className="whitespace-nowrap">
-                        {UNIT_LABELS[unit].zh}
-                        <span className="max-sm:hidden"> ({UNIT_LABELS[unit].en})</span>
-                      </span>
+                      {UNIT_LABELS[unit].zh}
+                      <span className="max-sm:hidden"> ({UNIT_LABELS[unit].en})</span>
                     </button>
                   );
                 })}
