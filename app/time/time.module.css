@@ -3,7 +3,7 @@
 .timerDisplay {
   display: flex;
   flex-wrap: wrap;
-  gap: 2rem 2.5rem;
+  gap: 2.5rem 3.5rem;
   justify-content: center;
   align-items: center;
   margin: 0 auto;
@@ -15,10 +15,7 @@
   flex-direction: column;
   align-items: center;
   flex: 0 1 auto;
-  /* min-width: 0 防止 flex-item 撐開容器 */
-  min-width: 0;
-  /* 确保每個區塊有足夠空間 */
-  width: clamp(70px, 10vw, 110px);
+  min-width: 80px;
 }
 
 .numberWrapper {
@@ -28,16 +25,12 @@
   align-items: center;
   margin-bottom: 0.8rem;
   perspective: 500px;
-  /* 拓寬到所屬 timeBlock 內容創寬 */
-  width: 100%;
-  overflow: visible;
 }
 
 .number {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-variant-numeric: tabular-nums;
-  /* 更符合實際營幕寬度的自適應字體大小：手機不凍出 */
-  font-size: clamp(2.4rem, 6vw, 5rem);
+  font-size: clamp(3.2rem, 8vw, 5.5rem);
   font-weight: 700;
   line-height: 1;
   color: var(--text-primary, #ffffff);
