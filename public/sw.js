@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smalltools-v1';
+const CACHE_NAME = 'smalltools-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/support.svg',
@@ -14,7 +14,9 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. 激活階段：清理舊版本快取的資源，並立即接管控制權
+// 2. 激活階段：清理舊版本快取
+// 注意：移除 clients.claim()，讓舊分頁繼續由舊 SW 控制直到使用者主動重新整理。
+// 這樣可以避免新 SW 接管後，舊分頁因引用舊 hash 的 JS/CSS 而 404 卡住。
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -23,7 +25,10 @@ self.addEventListener('activate', (event) => {
           .filter((name) => name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
-    }).then(() => self.clients.claim())
+    })
+    // ❌ 移除 clients.claim()
+    // 若加上 clients.claim()，新 SW 會立即接管所有舊分頁，
+    // 但舊分頁的 HTML 仍引用舊 hash 的 JS/CSS（已從 CDN 刪除），導致 404。
   );
 });
 
@@ -34,15 +39,41 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// 3. Fetch 攔截：採用 Stale-While-Revalidate (優先從快取回傳秒開，背景同步更新)
+// 3. Fetch 攔截策略
 self.addEventListener('fetch', (event) => {
   // 只處理 GET 請求與 http/https 協議
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith('http')) return;
 
+  const url = new URL(event.request.url);
+
+  // ✅ Next.js 靜態資產（/_next/static/）永遠走 Network-First
+  // 這些檔案每次 build 都有新的 content hash，不應從快取取舊版
+  // 只有在完全離線時才 fallback 到快取
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // 完全離線時才使用快取版本（可能是舊版，但總比空白好）
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // ✅ 其他資源（HTML 頁面、圖片、字型等）採用 Stale-While-Revalidate
+  // 優先從快取回傳秒開，並在背景更新快取
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // 在背景向伺服器發送網路請求進行更新
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           if (
@@ -62,7 +93,7 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse;
         });
 
-      // 如果本地有快取就優先回傳（離線秒開），否則等待網絡回傳
+      // 有快取就優先回傳（離線秒開），否則等待網路回傳
       return cachedResponse || fetchPromise;
     })
   );
