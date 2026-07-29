@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'IP計算器,子網計算器,IP Subnet Calculator,CIDR計算,子網遮罩,網路位址,廣播位址,可用IP範圍,IPv4',
   alternates: {
     canonical: 'https://tools.cjkuo.net/ip-calculator/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/ip-calculator/',
+      en: 'https://tools.cjkuo.net/ip-calculator/en/',
+    },
   },
   openGraph: {
     title: 'IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 計算工具',
@@ -37,7 +41,7 @@ export default function IpCalculatorPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <IpCalculatorClient />
+      <IpCalculatorClient lang="zh-TW" />
     </>
   );
 }

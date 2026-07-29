@@ -9,8 +9,122 @@ interface Props {
   lang?: 'zh-TW' | 'en';
 }
 
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: 'DNS HTTPS 紀錄 (Type 65) 設定產生器',
+    subtitle: 'RFC 9460 TYPE 65 GENERATOR',
+    description:
+      '免費線上 DNS HTTPS (Type 65) 紀錄產生器與設定教學。支援 RFC 9460 規範之服務模式 (Service Mode) 與別名模式 (Alias Mode)，透過視覺化勾選與填空即時生成 ALPN、ipv4hint、ipv6hint、port 等參數，並提供 Cloudflare、AWS Route53 等代管商對照填寫指南。',
+    configTitle: '設定參數 (勾選與填空)',
+    presetTitle: '常用預設情境 (點擊快速帶入)：',
+    presetStandard: 'HTTP/2 + HTTP/3 (推薦)',
+    presetAlias: 'Apex 域名別名 (Priority 0)',
+    presetPort: '自訂 Port (8443) + IP Hint',
+    presetReset: '重置預設',
+    modeLabel: '運作模式 (Mode)',
+    serviceMode: 'Service Mode (優先權 > 0)',
+    aliasMode: 'Alias Mode (優先權 = 0)',
+    hostLabel: '名稱 (Host / Subdomain)',
+    ttlLabel: 'TTL 時間 (秒)',
+    priorityLabel: '優先權 (Priority)',
+    targetLabel: '目標主機 (TargetName)',
+    paramsSection: 'SvcParams 服務參數配置',
+    alpnLabel: 'ALPN 支援應用協定 (可多選)：',
+    portLabel: '埠號 (Port)',
+    echLabel: 'Encrypted Client Hello (ech) Base64',
+    copyShareBtn: '複製帶參數之分享連結',
+    fullRecordTitle: '完整 BIND / RFC 9460 格式紀錄',
+    copyRecordBtn: '一鍵複製',
+    coreFieldsTitle: 'DNS 管理介面【4大核心欄位】對照表',
+    nameField: '1. 名稱 (Name / Host)',
+    nameDesc: '子網域或 `@` (根網域)。',
+    prioField: '2. 優先權 (Priority)',
+    prioDesc: '`0` 代表別名模式；`1` 以上代表服務模式。',
+    targetField: '3. 目標 (TargetName)',
+    targetDesc: '填寫 `.` 代表本網域本身。',
+    valueField: '4. 內容 / 值 (Value / SvcParams)',
+    valueDesc: '包含 alpn, port, ip 等服務參數。',
+    guideTitle: '各大 DNS 代管商填寫指南',
+    copyBtn: '複製',
+    presetLoadedStandard: '已載入標準 HTTP/2 + HTTP/3 預設情境',
+    presetLoadedAlias: '已載入 Apex 域名別名 (Priority 0) 預設情境',
+    presetLoadedPort: '已載入自訂 Port (8443) + IP Hint 預設情境',
+    presetCleared: '已重置設定欄位',
+    copiedText: '已複製',
+    copiedShare: '已複製帶參數之分享連結！',
+    emptyVal: '(空)',
+    cfTitle: 'Cloudflare DNS 設定說明：',
+    select: '選擇',
+    enter: '輸入',
+    leaveEmpty: '(留空)',
+    r53Title: 'AWS Route53 設定說明：',
+    enterFullLine: '輸入完整單行',
+    gcdnsTitle: 'Google Cloud DNS 設定說明：',
+    subdomainOrEmpty: '輸入子網域或留空',
+    pasteFullValue: '貼上完整紀錄值',
+    bindTitle: 'BIND 9 Zone File 設定說明：',
+    bindDesc: '將以下這行直接加入 Zone 檔中：',
+  },
+  en: {
+    title: 'DNS HTTPS Record (Type 65) Generator',
+    subtitle: 'RFC 9460 TYPE 65 GENERATOR',
+    description:
+      'Free online DNS HTTPS (Type 65) record generator based on RFC 9460. Visually generate Service Mode and Alias Mode records with ALPN, IP hints, port, and step-by-step DNS provider tutorials.',
+    configTitle: 'Configuration & Presets',
+    presetTitle: 'Quick Presets (Click to load):',
+    presetStandard: 'HTTP/2 + HTTP/3 (Recommended)',
+    presetAlias: 'Apex Domain Alias (Priority 0)',
+    presetPort: 'Custom Port (8443) + IP Hint',
+    presetReset: 'Reset',
+    modeLabel: 'Mode',
+    serviceMode: 'Service Mode (Priority > 0)',
+    aliasMode: 'Alias Mode (Priority = 0)',
+    hostLabel: 'Host / Name',
+    ttlLabel: 'TTL (Sec)',
+    priorityLabel: 'Priority',
+    targetLabel: 'TargetName',
+    paramsSection: 'SvcParams Parameters',
+    alpnLabel: 'ALPN Protocols:',
+    portLabel: 'Port',
+    echLabel: 'Encrypted Client Hello (ech)',
+    copyShareBtn: 'Copy Shareable Link with Parameters',
+    fullRecordTitle: 'Full BIND / RFC 9460 Record',
+    copyRecordBtn: 'Copy Full Record',
+    coreFieldsTitle: 'DNS Admin Panel [4 Core Fields] Breakdown',
+    nameField: '1. Name / Host',
+    nameDesc: 'Subdomain or `@` (root domain).',
+    prioField: '2. Priority (SvcPriority)',
+    prioDesc: '0 = Alias Mode; >=1 = Service Mode.',
+    targetField: '3. Target (TargetName)',
+    targetDesc: '`.` means self domain.',
+    valueField: '4. Value / Content (SvcParams)',
+    valueDesc: 'SvcParams options (alpn, port, ip).',
+    guideTitle: 'DNS Provider Tutorials & Guides',
+    copyBtn: 'Copy',
+    presetLoadedStandard: 'Loaded standard HTTP/2 + HTTP/3 preset',
+    presetLoadedAlias: 'Loaded Apex Domain Alias preset',
+    presetLoadedPort: 'Loaded Custom Port (8443) preset',
+    presetCleared: 'Reset all fields',
+    copiedText: 'Copied',
+    copiedShare: 'Copied share URL!',
+    emptyVal: '(empty)',
+    cfTitle: 'Cloudflare DNS Instructions:',
+    select: 'Select',
+    enter: 'Enter',
+    leaveEmpty: '(leave empty)',
+    r53Title: 'AWS Route53 Instructions:',
+    enterFullLine: 'Enter full single line',
+    gcdnsTitle: 'Google Cloud DNS Instructions:',
+    subdomainOrEmpty: 'Enter subdomain or leave empty',
+    pasteFullValue: 'Paste full record value',
+    bindTitle: 'BIND 9 Zone File Instructions:',
+    bindDesc: 'Add the following line directly into your Zone file:',
+  },
+};
+
 export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
-  const [currentLang, setCurrentLang] = useState<'zh-TW' | 'en'>(lang);
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
+
   const [mode, setMode] = useState<'service' | 'alias'>('service');
   const [host, setHost] = useState<string>('@');
   const [ttl, setTtl] = useState<number>(300);
@@ -42,14 +156,11 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 240, 255, 0.6)');
   }, []);
 
-  const isEn = currentLang === 'en';
-
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
   };
 
-  // 預設情境按鈕帶入
   const applyPreset = (type: 'standard' | 'alias' | 'custom-port' | 'clear') => {
     if (type === 'standard') {
       setMode('service');
@@ -64,13 +175,13 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
       setPort('');
       setNoDefaultAlpn(false);
       setEch('');
-      showToast(isEn ? 'Loaded standard HTTP/2 + HTTP/3 preset' : '已載入標準 HTTP/2 + HTTP/3 預設情境');
+      showToast(t.presetLoadedStandard);
     } else if (type === 'alias') {
       setMode('alias');
       setHost('@');
       setPriority(0);
       setTarget('target.example.com');
-      showToast(isEn ? 'Loaded Apex Domain Alias preset' : '已載入 Apex 域名別名 (Priority 0) 預設情境');
+      showToast(t.presetLoadedAlias);
     } else if (type === 'custom-port') {
       setMode('service');
       setHost('app');
@@ -80,7 +191,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
       setAlpnH2(true);
       setIpv4hint('198.51.100.1');
       setPort('8443');
-      showToast(isEn ? 'Loaded Custom Port (8443) preset' : '已載入自訂 Port (8443) + IP Hint 預設情境');
+      showToast(t.presetLoadedPort);
     } else if (type === 'clear') {
       setMode('service');
       setHost('@');
@@ -95,17 +206,16 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
       setPort('');
       setNoDefaultAlpn(false);
       setEch('');
-      showToast(isEn ? 'Reset all fields' : '已重置設定欄位');
+      showToast(t.presetCleared);
     }
   };
 
-  // 生成完整 SvcParams 及 BIND 紀錄
   const generateParams = useCallback(() => {
     if (mode === 'alias') return '';
 
     const params: string[] = [];
-
     const alpnList: string[] = [];
+
     if (alpnH3) alpnList.push('h3');
     if (alpnH2) alpnList.push('h2');
     if (alpnH1) alpnList.push('http/1.1');
@@ -143,9 +253,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
   } ${svcParamsValue}`.trim();
 
   const copyText = (textVal: string, label: string) => {
-    navigator.clipboard.writeText(textVal).then(() =>
-      showToast(isEn ? `Copied ${label}` : `已複製 ${label}`)
-    );
+    navigator.clipboard.writeText(textVal).then(() => showToast(`${t.copiedText} ${label}`));
   };
 
   const copyShareUrl = () => {
@@ -160,124 +268,89 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
     if (ipv6hint) params.set('v6', ipv6hint);
     if (port) params.set('port', port);
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(shareUrl).then(() =>
-      showToast(isEn ? 'Copied share URL!' : '已複製帶參數之分享連結！')
-    );
+    navigator.clipboard.writeText(shareUrl).then(() => showToast(t.copiedShare));
   };
 
   return (
     <ToolLayout
-      title={isEn ? 'DNS HTTPS Record (Type 65) Generator' : 'DNS HTTPS 紀錄 (Type 65) 設定產生器'}
-      subtitle="RFC 9460 TYPE 65 GENERATOR"
-      description={
-        isEn
-          ? 'Free online DNS HTTPS (Type 65) record generator based on RFC 9460. Visually generate Service Mode and Alias Mode records with ALPN, IP hints, port, and step-by-step DNS provider tutorials.'
-          : '免費線上 DNS HTTPS (Type 65) 紀錄產生器與設定教學。支援 RFC 9460 規範之服務模式 (Service Mode) 與別名模式 (Alias Mode)，透過視覺化勾選與填空即時生成 ALPN、ipv4hint、ipv6hint、port 等參數，並提供 Cloudflare、AWS Route53 等代管商對照填寫指南。'
-      }
+      title={t.title}
+      subtitle={t.subtitle}
+      description={t.description}
       accentColor="#00f0ff"
       accentGlow="rgba(0, 240, 255, 0.6)"
     >
+      {/* 雙語切換按鈕 */}
       <div className="flex justify-end mb-6">
-        <div className="flex bg-black/40 border border-white/[.08] p-1 rounded-xl gap-1">
-          <Link
-            href="/https-dns-generator/"
-            onClick={() => setCurrentLang('zh-TW')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg cursor-pointer transition-all ${
-              !isEn ? 'bg-[#00f0ff]/20 text-[#00f0ff] font-semibold' : 'text-text-sub hover:text-white'
-            }`}
-          >
-            繁體中文
-          </Link>
-          <Link
-            href="/https-dns-generator/en/"
-            onClick={() => setCurrentLang('en')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg cursor-pointer transition-all ${
-              isEn ? 'bg-[#00f0ff]/20 text-[#00f0ff] font-semibold' : 'text-text-sub hover:text-white'
-            }`}
-          >
-            English
-          </Link>
-        </div>
+        <Link
+          href={lang === 'en' ? '/https-dns-generator/' : '/https-dns-generator/en/'}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-all flex items-center gap-1.5"
+        >
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+          </svg>
+          {lang === 'en' ? '繁體中文' : 'English'}
+        </Link>
       </div>
 
       <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
         {/* 左欄：設定參數 (勾選與填空) */}
-        <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#00f0ff] uppercase tracking-[1px]">
-            ⚡ {isEn ? 'Configuration & Presets' : '設定參數 (勾選與填空)'}
+        <div className={styles.cardPanel}>
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#00f0ff] dark:text-[#00f0ff] uppercase tracking-[1px]">
+            <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+              <path d="M7 2v11h3v9l7-12h-4l4-8z" />
+            </svg>
+            <span className={styles.accentText}>{t.configTitle}</span>
           </div>
 
           {/* 常用預設情境 Chips */}
-          <div className="flex flex-col gap-2 bg-black/40 p-4 rounded-xl border border-white/[.06]">
-            <span className="text-xs text-text-sub font-semibold">
-              {isEn ? 'Quick Presets (Click to load):' : '常用預設情境 (點擊快速帶入)：'}
-            </span>
+          <div className={styles.innerPanel}>
+            <span className="text-xs text-text-sub font-semibold">{t.presetTitle}</span>
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => applyPreset('standard')}
-                className="px-3 py-1 text-sm bg-white/[.04] border border-white/[.08] text-text-sub rounded-lg hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer font-medium"
-              >
-                ⚡ {isEn ? 'HTTP/2 + HTTP/3 (Recommended)' : 'HTTP/2 + HTTP/3 (推薦)'}
+              <button type="button" onClick={() => applyPreset('standard')} className={styles.presetBtn}>
+                {t.presetStandard}
               </button>
-              <button
-                type="button"
-                onClick={() => applyPreset('alias')}
-                className="px-3 py-1 text-sm bg-white/[.04] border border-white/[.08] text-text-sub rounded-lg hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer font-medium"
-              >
-                🔗 {isEn ? 'Apex Domain Alias (Priority 0)' : 'Apex 域名別名 (Priority 0)'}
+              <button type="button" onClick={() => applyPreset('alias')} className={styles.presetBtn}>
+                {t.presetAlias}
               </button>
-              <button
-                type="button"
-                onClick={() => applyPreset('custom-port')}
-                className="px-3 py-1 text-sm bg-white/[.04] border border-white/[.08] text-text-sub rounded-lg hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer font-medium"
-              >
-                🔌 {isEn ? 'Custom Port (8443) + IP Hint' : '自訂 Port (8443) + IP Hint'}
+              <button type="button" onClick={() => applyPreset('custom-port')} className={styles.presetBtn}>
+                {t.presetPort}
               </button>
-              <button
-                type="button"
-                onClick={() => applyPreset('clear')}
-                className="px-3 py-1 text-sm bg-white/[.04] border border-white/[.08] text-text-sub rounded-lg hover:text-white transition-all cursor-pointer font-medium"
-              >
-                🧹 {isEn ? 'Reset' : '重置預設'}
+              <button type="button" onClick={() => applyPreset('clear')} className={styles.presetBtn}>
+                {t.presetReset}
               </button>
             </div>
           </div>
 
           {/* 模式切換 */}
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
-              {isEn ? 'Mode' : '運作模式 (Mode)'}
-            </span>
-            <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
+            <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">{t.modeLabel}</span>
+            <div className="grid grid-cols-2 gap-2 bg-select-bg p-1.5 rounded-xl border border-border-glass">
               <button
+                type="button"
                 onClick={() => setMode('service')}
-                className={`py-2 px-3 text-sm rounded-lg cursor-pointer transition-all border ${
-                  mode === 'service'
-                    ? 'bg-[#00f0ff]/15 border-[#00f0ff]/40 text-[#00f0ff] font-semibold'
-                    : 'border-transparent text-text-sub hover:text-white font-medium'
+                className={`py-2 px-3 text-sm rounded-lg cursor-pointer transition-all ${
+                  mode === 'service' ? styles.toggleBtnActive : styles.toggleBtnInactive
                 }`}
               >
-                Service Mode ({isEn ? 'Priority' : '優先權'} &gt; 0)
+                {t.serviceMode}
               </button>
               <button
+                type="button"
                 onClick={() => setMode('alias')}
-                className={`py-2 px-3 text-sm rounded-lg cursor-pointer transition-all border ${
-                  mode === 'alias'
-                    ? 'bg-[#00f0ff]/15 border-[#00f0ff]/40 text-[#00f0ff] font-semibold'
-                    : 'border-transparent text-text-sub hover:text-white font-medium'
+                className={`py-2 px-3 text-sm rounded-lg cursor-pointer transition-all ${
+                  mode === 'alias' ? styles.toggleBtnActive : styles.toggleBtnInactive
                 }`}
               >
-                Alias Mode ({isEn ? 'Priority' : '優先權'} = 0)
+                {t.aliasMode}
               </button>
             </div>
           </div>
 
           {/* 基礎欄位：Host, TTL */}
-          <div className="grid grid-cols-2 gap-4 border-t border-white/[.05] pt-4">
+          <div className="grid grid-cols-2 gap-4 border-t border-border-glass pt-4">
             <div className="flex flex-col gap-2">
               <label htmlFor={hostInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
-                {isEn ? 'Host / Name' : '名稱 (Host / Subdomain)'}
+                {t.hostLabel}
               </label>
               <input
                 id={hostInputId}
@@ -285,20 +358,20 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
                 value={host}
                 onChange={e => setHost(e.target.value)}
                 placeholder="@"
-                className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-sm outline-none focus:border-[#00f0ff] font-mono"
+                className={styles.inputBox}
               />
             </div>
 
             <div className="flex flex-col gap-2">
               <label htmlFor={ttlInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
-                {isEn ? 'TTL (Sec)' : 'TTL 時間 (秒)'}
+                {t.ttlLabel}
               </label>
               <input
                 id={ttlInputId}
                 type="number"
                 value={ttl}
                 onChange={e => setTtl(parseInt(e.target.value) || 300)}
-                className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-sm outline-none focus:border-[#00f0ff] font-mono"
+                className={styles.inputBox}
               />
             </div>
           </div>
@@ -307,7 +380,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label htmlFor={priorityInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
-                {isEn ? 'Priority' : '優先權 (Priority)'}
+                {t.priorityLabel}
               </label>
               <input
                 id={priorityInputId}
@@ -315,13 +388,13 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
                 disabled={mode === 'alias'}
                 value={mode === 'alias' ? 0 : priority}
                 onChange={e => setPriority(parseInt(e.target.value) || 1)}
-                className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-sm outline-none focus:border-[#00f0ff] font-mono disabled:opacity-50"
+                className={`${styles.inputBox} disabled:opacity-50`}
               />
             </div>
 
             <div className="flex flex-col gap-2">
               <label htmlFor={targetInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
-                {isEn ? 'TargetName' : '目標主機 (TargetName)'}
+                {t.targetLabel}
               </label>
               <input
                 id={targetInputId}
@@ -329,23 +402,21 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
                 value={target}
                 onChange={e => setTarget(e.target.value)}
                 placeholder="."
-                className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-sm outline-none focus:border-[#00f0ff] font-mono"
+                className={styles.inputBox}
               />
             </div>
           </div>
 
           {/* SvcParams (Service Mode 專屬參數) */}
           {mode === 'service' && (
-            <div className="flex flex-col gap-5 border-t border-white/[.05] pt-4">
-              <span className="text-sm font-semibold text-[#00f0ff]">SvcParams {isEn ? 'Parameters' : '服務參數配置'}</span>
+            <div className="flex flex-col gap-5 border-t border-border-glass pt-4">
+              <span className={`text-sm font-semibold ${styles.accentText}`}>{t.paramsSection}</span>
 
               {/* ALPN 協定 */}
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-text-sub">
-                  {isEn ? 'ALPN Protocols:' : 'ALPN 支援應用協定 (可多選)：'}
-                </span>
+                <span className="text-sm font-medium text-text-sub">{t.alpnLabel}</span>
                 <div className="flex gap-4">
-                  <label className="flex items-center gap-2 text-xs text-white cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-text-main cursor-pointer">
                     <input
                       type="checkbox"
                       checked={alpnH3}
@@ -354,7 +425,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
                     />
                     HTTP/3 (h3)
                   </label>
-                  <label className="flex items-center gap-2 text-xs text-white cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-text-main cursor-pointer">
                     <input
                       type="checkbox"
                       checked={alpnH2}
@@ -363,7 +434,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
                     />
                     HTTP/2 (h2)
                   </label>
-                  <label className="flex items-center gap-2 text-xs text-white cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-text-main cursor-pointer">
                     <input
                       type="checkbox"
                       checked={alpnH1}
@@ -378,25 +449,29 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
               {/* IP Hints */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={ipv4InputId} className="text-sm font-medium text-text-sub">ipv4hint</label>
+                  <label htmlFor={ipv4InputId} className="text-sm font-medium text-text-sub">
+                    ipv4hint
+                  </label>
                   <input
                     id={ipv4InputId}
                     type="text"
                     value={ipv4hint}
                     onChange={e => setIpv4hint(e.target.value)}
                     placeholder="198.51.100.1, 198.51.100.2"
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-xl text-xs outline-none focus:border-[#00f0ff] font-mono"
+                    className={styles.inputBox}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={ipv6InputId} className="text-sm font-medium text-text-sub">ipv6hint</label>
+                  <label htmlFor={ipv6InputId} className="text-sm font-medium text-text-sub">
+                    ipv6hint
+                  </label>
                   <input
                     id={ipv6InputId}
                     type="text"
                     value={ipv6hint}
                     onChange={e => setIpv6hint(e.target.value)}
                     placeholder="2001:db8::1"
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-xl text-xs outline-none focus:border-[#00f0ff] font-mono"
+                    className={styles.inputBox}
                   />
                 </div>
               </div>
@@ -405,7 +480,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <label htmlFor={portInputId} className="text-sm font-medium text-text-sub">
-                    {isEn ? 'Port' : '埠號 (Port)'}
+                    {t.portLabel}
                   </label>
                   <input
                     id={portInputId}
@@ -413,7 +488,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
                     value={port}
                     onChange={e => setPort(e.target.value)}
                     placeholder="443"
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-xl text-xs outline-none focus:border-[#00f0ff] font-mono"
+                    className={styles.inputBox}
                   />
                 </div>
                 <div className="flex flex-col justify-end">
@@ -432,7 +507,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
               {/* Encrypted Client Hello (ech) */}
               <div className="flex flex-col gap-2">
                 <label htmlFor={echInputId} className="text-sm font-medium text-text-sub">
-                  {isEn ? 'Encrypted Client Hello (ech)' : 'Encrypted Client Hello (ech) Base64'}
+                  {t.echLabel}
                 </label>
                 <input
                   id={echInputId}
@@ -440,7 +515,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
                   value={ech}
                   onChange={e => setEch(e.target.value)}
                   placeholder="e.g. AEn+CiB..."
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-xl text-xs outline-none focus:border-[#00f0ff] font-mono"
+                  className={styles.inputBox}
                 />
               </div>
             </div>
@@ -452,115 +527,113 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
             onClick={copyShareUrl}
             className="w-full py-2.5 bg-[#00f0ff]/10 border border-[#00f0ff]/30 text-[#00f0ff] font-semibold text-sm rounded-xl cursor-pointer hover:bg-[#00f0ff] hover:text-[#030305] transition-all flex items-center justify-center gap-2"
           >
-            🔗 {isEn ? 'Copy Shareable Link with Parameters' : '複製帶參數之分享連結'}
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+            </svg>
+            <span>{t.copyShareBtn}</span>
           </button>
         </div>
 
         {/* 右欄：產出紀錄與 DNS 代管商填寫對照表 */}
         <div className="flex flex-col gap-6">
           {/* 完整 BIND / RFC 9460 紀錄 */}
-          <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
-            <div className="flex justify-between items-center border-b border-white/[.06] pb-3">
-              <span className="text-sm text-[#00f0ff] font-semibold uppercase tracking-[1px]">
-                {isEn ? 'Full BIND / RFC 9460 Record' : '完整 BIND / RFC 9460 格式紀錄'}
+          <div className={styles.cardPanel}>
+            <div className="flex justify-between items-center border-b border-border-glass pb-3">
+              <span className={`text-sm ${styles.accentText} font-semibold uppercase tracking-[1px]`}>
+                {t.fullRecordTitle}
               </span>
               <button
-                onClick={() => copyText(fullBindRecord, isEn ? 'full record' : '完整紀錄')}
+                type="button"
+                onClick={() => copyText(fullBindRecord, t.fullRecordTitle)}
                 className="px-3 py-1 text-sm bg-[#00f0ff]/20 border border-[#00f0ff]/40 text-[#00f0ff] font-semibold rounded-lg hover:bg-[#00f0ff] hover:text-[#030305] transition-all cursor-pointer"
               >
-                {isEn ? 'Copy Full Record' : '一鍵複製'}
+                {t.copyRecordBtn}
               </button>
             </div>
-            <div className="bg-black/50 border border-white/[.06] rounded-xl p-4 font-mono text-xs text-[#00f0ff] break-all">
-              {fullBindRecord}
-            </div>
+            <div className={styles.outputCode}>{fullBindRecord}</div>
           </div>
 
           {/* 4 大核心欄位對照表 */}
-          <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
-            <h3 className="text-sm text-[#00f0ff] font-semibold uppercase tracking-[1px] border-b border-white/[.06] pb-3">
-              {isEn ? 'DNS Admin Panel [4 Core Fields] Breakdown' : 'DNS 管理介面【4大核心欄位】對照表'}
+          <div className={styles.cardPanel}>
+            <h3 className={`text-sm ${styles.accentText} font-semibold uppercase tracking-[1px] border-b border-border-glass pb-3`}>
+              {t.coreFieldsTitle}
             </h3>
 
             <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
               {/* 1. 名稱 */}
-              <div className="bg-black/40 border border-white/[.04] p-3.5 rounded-xl flex flex-col gap-1.5">
+              <div className={styles.coreCard}>
                 <div className="flex justify-between items-center text-sm font-medium text-text-sub">
-                  <span>1. {isEn ? 'Name / Host' : '名稱 (Name / Host)'}</span>
+                  <span>{t.nameField}</span>
                   <button
-                    onClick={() => copyText(host || '@', isEn ? 'Name' : '名稱')}
-                    className="text-xs text-[#00f0ff] hover:underline cursor-pointer"
+                    type="button"
+                    onClick={() => copyText(host || '@', t.nameField)}
+                    className={`text-xs ${styles.accentText} hover:underline cursor-pointer flex items-center gap-1`}
                   >
-                    📋 {isEn ? 'Copy' : '複製'}
+                    <span>{t.copyBtn}</span>
                   </button>
                 </div>
-                <div className="text-sm font-bold text-white font-mono">{host || '@'}</div>
-                <span className="text-xs text-text-sub">
-                  {isEn ? 'Subdomain or `@` (root domain).' : '子網域或 `@` (根網域)。'}
-                </span>
+                <div className="text-sm font-bold text-text-main font-mono">{host || '@'}</div>
+                <span className="text-xs text-text-sub">{t.nameDesc}</span>
               </div>
 
               {/* 2. 優先權 */}
-              <div className="bg-black/40 border border-white/[.04] p-3.5 rounded-xl flex flex-col gap-1.5">
+              <div className={styles.coreCard}>
                 <div className="flex justify-between items-center text-sm font-medium text-text-sub">
-                  <span>2. {isEn ? 'Priority (SvcPriority)' : '優先權 (Priority)'}</span>
+                  <span>{t.prioField}</span>
                   <button
-                    onClick={() => copyText((mode === 'alias' ? 0 : priority).toString(), isEn ? 'Priority' : '優先權')}
-                    className="text-xs text-[#00f0ff] hover:underline cursor-pointer"
+                    type="button"
+                    onClick={() => copyText((mode === 'alias' ? 0 : priority).toString(), t.prioField)}
+                    className={`text-xs ${styles.accentText} hover:underline cursor-pointer flex items-center gap-1`}
                   >
-                    📋 {isEn ? 'Copy' : '複製'}
+                    <span>{t.copyBtn}</span>
                   </button>
                 </div>
-                <div className="text-sm font-bold text-[#00f0ff] font-mono">{mode === 'alias' ? 0 : priority}</div>
-                <span className="text-xs text-text-sub">
-                  {isEn ? '0 = Alias Mode; >=1 = Service Mode.' : '`0` 代表別名模式；`1` 以上代表服務模式。'}
-                </span>
+                <div className={`text-sm font-bold ${styles.accentText} font-mono`}>{mode === 'alias' ? 0 : priority}</div>
+                <span className="text-xs text-text-sub">{t.prioDesc}</span>
               </div>
 
               {/* 3. 目標 */}
-              <div className="bg-black/40 border border-white/[.04] p-3.5 rounded-xl flex flex-col gap-1.5">
+              <div className={styles.coreCard}>
                 <div className="flex justify-between items-center text-sm font-medium text-text-sub">
-                  <span>3. {isEn ? 'Target (TargetName)' : '目標 (TargetName)'}</span>
+                  <span>{t.targetField}</span>
                   <button
-                    onClick={() => copyText(target.trim() || '.', isEn ? 'Target' : '目標')}
-                    className="text-xs text-[#00f0ff] hover:underline cursor-pointer"
+                    type="button"
+                    onClick={() => copyText(target.trim() || '.', t.targetField)}
+                    className={`text-xs ${styles.accentText} hover:underline cursor-pointer flex items-center gap-1`}
                   >
-                    📋 {isEn ? 'Copy' : '複製'}
+                    <span>{t.copyBtn}</span>
                   </button>
                 </div>
-                <div className="text-sm font-bold text-white font-mono">{target.trim() || '.'}</div>
-                <span className="text-xs text-text-sub">
-                  {isEn ? '`.` means self domain.' : '填寫 `.` 代表本網域本身。'}
-                </span>
+                <div className="text-sm font-bold text-text-main font-mono">{target.trim() || '.'}</div>
+                <span className="text-xs text-text-sub">{t.targetDesc}</span>
               </div>
 
               {/* 4. 內容/值 */}
-              <div className="bg-black/40 border border-white/[.04] p-3.5 rounded-xl flex flex-col gap-1.5">
+              <div className={styles.coreCard}>
                 <div className="flex justify-between items-center text-sm font-medium text-text-sub">
-                  <span>4. {isEn ? 'Value / Content (SvcParams)' : '內容 / 值 (Value / SvcParams)'}</span>
+                  <span>{t.valueField}</span>
                   <button
-                    onClick={() => copyText(svcParamsValue || '(空)', isEn ? 'Value' : '內容值')}
-                    className="text-xs text-[#00f0ff] hover:underline cursor-pointer"
+                    type="button"
+                    onClick={() => copyText(svcParamsValue || t.emptyVal, t.valueField)}
+                    className={`text-xs ${styles.accentText} hover:underline cursor-pointer flex items-center gap-1`}
                   >
-                    📋 {isEn ? 'Copy' : '複製'}
+                    <span>{t.copyBtn}</span>
                   </button>
                 </div>
-                <div className="text-xs font-bold text-[#00f0ff] font-mono break-all">{svcParamsValue || '(空)'}</div>
-                <span className="text-xs text-text-sub">
-                  {isEn ? 'SvcParams options (alpn, port, ip).' : '包含 alpn, port, ip 等服務參數。'}
-                </span>
+                <div className={`text-xs font-bold ${styles.accentText} font-mono break-all`}>
+                  {svcParamsValue || t.emptyVal}
+                </div>
+                <span className="text-xs text-text-sub">{t.valueDesc}</span>
               </div>
             </div>
           </div>
 
           {/* 各大 DNS 代管商填寫指南 Tabs */}
-          <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
-            <h3 className="text-sm text-[#00f0ff] font-semibold uppercase tracking-[1px]">
-              {isEn ? 'DNS Provider Tutorials & Guides' : '各大 DNS 代管商填寫指南'}
-            </h3>
+          <div className={styles.cardPanel}>
+            <h3 className={`text-sm ${styles.accentText} font-semibold uppercase tracking-[1px]`}>{t.guideTitle}</h3>
 
             {/* Provider Tabs */}
-            <div className="grid grid-cols-4 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08] text-sm">
+            <div className="grid grid-cols-4 gap-2 bg-select-bg p-1.5 rounded-xl border border-border-glass text-sm">
               {(
                 [
                   { id: 'cf', name: 'Cloudflare' },
@@ -571,11 +644,10 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
               ).map(p => (
                 <button
                   key={p.id}
+                  type="button"
                   onClick={() => setActiveProvider(p.id)}
                   className={`py-1.5 rounded-lg cursor-pointer transition-all ${
-                    activeProvider === p.id
-                      ? 'bg-[#00f0ff]/20 text-[#00f0ff] font-bold'
-                      : 'text-text-sub hover:text-white font-medium'
+                    activeProvider === p.id ? styles.toggleBtnActive : styles.toggleBtnInactive
                   }`}
                 >
                   {p.name}
@@ -584,48 +656,71 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
             </div>
 
             {/* Guide Content Panel */}
-            <div className="bg-black/50 border border-white/[.06] p-4 rounded-xl text-xs text-text-sub flex flex-col gap-2 leading-relaxed">
+            <div className={styles.innerPanel}>
               {activeProvider === 'cf' && (
                 <>
-                  <strong className="text-white font-semibold">Cloudflare DNS 設定說明：</strong>
-                  <ul className="list-disc pl-5 flex flex-col gap-1">
-                    <li><strong>Type</strong>：選擇 <code className="text-[#00f0ff]">HTTPS</code></li>
-                    <li><strong>Name</strong>：輸入 <code className="text-[#00f0ff]">{host || '@'}</code></li>
-                    <li><strong>Priority</strong>：輸入 <code className="text-[#00f0ff]">{mode === 'alias' ? 0 : priority}</code></li>
-                    <li><strong>Target</strong>：輸入 <code className="text-[#00f0ff]">{target.trim() || '.'}</code></li>
-                    <li><strong>Value</strong>：輸入 <code className="text-[#00f0ff]">{svcParamsValue || '(留空)'}</code></li>
+                  <strong className="text-text-main font-semibold">{t.cfTitle}</strong>
+                  <ul className="list-disc pl-5 flex flex-col gap-1 text-xs">
+                    <li>
+                      <strong>Type</strong>：{t.select} <code className={styles.accentText}>HTTPS</code>
+                    </li>
+                    <li>
+                      <strong>Name</strong>：{t.enter} <code className={styles.accentText}>{host || '@'}</code>
+                    </li>
+                    <li>
+                      <strong>Priority</strong>：{t.enter}{' '}
+                      <code className={styles.accentText}>{mode === 'alias' ? 0 : priority}</code>
+                    </li>
+                    <li>
+                      <strong>Target</strong>：{t.enter} <code className={styles.accentText}>{target.trim() || '.'}</code>
+                    </li>
+                    <li>
+                      <strong>Value</strong>：{t.enter} <code className={styles.accentText}>{svcParamsValue || t.leaveEmpty}</code>
+                    </li>
                   </ul>
                 </>
               )}
 
               {activeProvider === 'r53' && (
                 <>
-                  <strong className="text-white font-semibold">AWS Route53 設定說明：</strong>
-                  <ul className="list-disc pl-5 flex flex-col gap-1">
-                    <li><strong>Record type</strong>：選擇 <code className="text-[#00f0ff]">HTTPS - Type 65</code></li>
-                    <li><strong>Record name</strong>：輸入 <code className="text-[#00f0ff]">{host === '@' ? '' : host}</code></li>
-                    <li><strong>Value</strong>：輸入完整單行 <code className="text-[#00f0ff]">{fullBindRecord}</code></li>
+                  <strong className="text-text-main font-semibold">{t.r53Title}</strong>
+                  <ul className="list-disc pl-5 flex flex-col gap-1 text-xs">
+                    <li>
+                      <strong>Record type</strong>：{t.select} <code className={styles.accentText}>HTTPS - Type 65</code>
+                    </li>
+                    <li>
+                      <strong>Record name</strong>：{t.enter} <code className={styles.accentText}>{host === '@' ? '' : host}</code>
+                    </li>
+                    <li>
+                      <strong>Value</strong>：{t.enterFullLine} <code className={styles.accentText}>{fullBindRecord}</code>
+                    </li>
                   </ul>
                 </>
               )}
 
               {activeProvider === 'gcdns' && (
                 <>
-                  <strong className="text-white font-semibold">Google Cloud DNS 設定說明：</strong>
-                  <ul className="list-disc pl-5 flex flex-col gap-1">
-                    <li><strong>Resource Record Type</strong>：選擇 <code className="text-[#00f0ff]">HTTPS</code></li>
-                    <li><strong>DNS Name</strong>：輸入子網域或留空</li>
-                    <li><strong>Canonical Data</strong>：貼上完整紀錄值 <code className="text-[#00f0ff]">{fullBindRecord}</code></li>
+                  <strong className="text-text-main font-semibold">{t.gcdnsTitle}</strong>
+                  <ul className="list-disc pl-5 flex flex-col gap-1 text-xs">
+                    <li>
+                      <strong>Resource Record Type</strong>：{t.select} <code className={styles.accentText}>HTTPS</code>
+                    </li>
+                    <li>
+                      <strong>DNS Name</strong>：{t.subdomainOrEmpty}
+                    </li>
+                    <li>
+                      <strong>Canonical Data</strong>：{t.pasteFullValue} <code className={styles.accentText}>{fullBindRecord}</code>
+                    </li>
                   </ul>
                 </>
               )}
 
               {activeProvider === 'bind' && (
                 <>
-                  <strong className="text-white font-semibold">BIND 9 Zone File 設定說明：</strong>
-                  <ul className="list-disc pl-5 flex flex-col gap-1">
-                    <li>將以下這行直接加入 Zone 檔中：</li>
-                    <code className="text-[#00f0ff] bg-black/60 p-2 rounded block mt-1 font-mono">{fullBindRecord}</code>
+                  <strong className="text-text-main font-semibold">{t.bindTitle}</strong>
+                  <ul className="list-disc pl-5 flex flex-col gap-1 text-xs">
+                    <li>{t.bindDesc}</li>
+                    <code className={`${styles.outputCode} block mt-1 font-mono`}>{fullBindRecord}</code>
                   </ul>
                 </>
               )}
@@ -635,7 +730,7 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
       </div>
 
       {toast && (
-        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm rounded-lg bg-[#00f0ff]/20 border border-[#00f0ff]/40 text-[#00f0ff] backdrop-blur-md">
+        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm rounded-lg bg-[#00f0ff]/20 border border-[#00f0ff]/40 text-[#00f0ff] backdrop-blur-md shadow-lg z-[100]">
           {toast}
         </div>
       )}

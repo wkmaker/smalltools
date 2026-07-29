@@ -29,9 +29,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/pledge-calculator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/futures-calculator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/dns-dig/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/dns-dig/en/', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/text-utility/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/qr-generator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/ip-detector/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/ip-detector/en/', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/ssl-converter/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/ssl-converter/en/', lastModified: '2026-07-29', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/diff-checker/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
@@ -44,6 +46,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/https-dns-generator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/https-dns-generator/en/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/ip-calculator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/ip-calculator/en/', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   return pages.map((page) => ({

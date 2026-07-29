@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'DNS HTTPS record generator, Type 65, RFC 9460, SVCB, Cloudflare HTTPS record, Route53 HTTPS record, ALPN, ipv4hint, ipv6hint',
   alternates: {
     canonical: 'https://tools.cjkuo.net/https-dns-generator/en/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/https-dns-generator/',
+      en: 'https://tools.cjkuo.net/https-dns-generator/en/',
+    },
   },
   openGraph: {
     title: 'DNS HTTPS Record (Type 65) Generator & Tutorial',
