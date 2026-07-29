@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import ParticleCanvas from '@/components/ParticleCanvas';
@@ -19,6 +19,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const BASE_URL = 'https://tools.cjkuo.net';
+
+export const viewport: Viewport = {
+  themeColor: '#0f172a',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -53,7 +59,15 @@ export const metadata: Metadata = {
     images: ['/img/StockSnap_00F7DB5857.webp'],
   },
   icons: {
-    icon: '/support.svg',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/support.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
 };
 

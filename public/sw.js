@@ -1,6 +1,11 @@
-const CACHE_NAME = 'smalltools-v3';
+const CACHE_NAME = 'smalltools-v5';
 const PRECACHE_ASSETS = [
   '/support.svg',
+  '/favicon.ico',
+  '/apple-touch-icon.png',
+  '/android-chrome-192x192.png',
+  '/android-chrome-512x512.png',
+  '/offline.html',
 ];
 
 // 1. 安裝階段：預快取靜態資源（不快取 HTML 頁面）
@@ -59,8 +64,10 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // 完全離線時才使用快取的舊版 HTML
-          return caches.match(event.request);
+          // 完全離線時：優先使用該頁面的快取，若無則降級回退至專屬離線頁面或首頁
+          return caches.match(event.request).then((cachedResp) => {
+            return cachedResp || caches.match('/offline.html') || caches.match('/');
+          });
         })
     );
     return;
