@@ -40,7 +40,7 @@ jobs:
       # ── 1.5. 智慧檢查程式碼與基礎架構是否變動 ─────────────
       - name: Check Code & Infra Changes
         id: changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             build_and_deploy:
