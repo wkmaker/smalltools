@@ -32,6 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/diff-checker/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/image-processor/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/my-salary-calculator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/my-salary-calculator/en/', lastModified: '2026-07-29', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/lucky-wheel/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/pdf-processor/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/pdf-compressor/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },

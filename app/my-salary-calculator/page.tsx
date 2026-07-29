@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: '薪資計算機,勞健保試算,實領薪水,算薪水,勞保費計算,健保費計算,勞退自提,雇主負擔成本',
   alternates: {
     canonical: 'https://tools.cjkuo.net/my-salary-calculator/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/my-salary-calculator/',
+      en: 'https://tools.cjkuo.net/my-salary-calculator/en/',
+    },
   },
   openGraph: {
     title: '薪資勞健保計算機 - 免費線上實領薪水、勞退自提與雇主成本算薪水工具',
@@ -37,7 +41,7 @@ export default function MySalaryCalculatorPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <MySalaryCalculatorClient />
+      <MySalaryCalculatorClient lang="zh-TW" />
     </>
   );
 }

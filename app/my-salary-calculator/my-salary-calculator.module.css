@@ -1,11 +1,216 @@
 /* app/my-salary-calculator/my-salary-calculator.module.css */
 
-.statCard {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* 面板卡片基礎與雙主題 */
+.panelCard {
   border-radius: 1rem;
-  padding: 1.25rem;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+:global([data-theme='dark']) .panelCard {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+:global([data-theme='light']) .panelCard {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+/* 標題與分界線 */
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 0.75rem;
+  border-bottom-width: 1px;
+}
+
+:global([data-theme='dark']) .sectionTitle {
+  color: #00f5a0;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+:global([data-theme='light']) .sectionTitle {
+  color: #059669;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* 主主題文字（數據與亮點文字）在亮暗模式下的高對比色階轉換 (WCAG AA) */
+.accentText {
+  font-weight: 700;
+}
+
+:global([data-theme='dark']) .accentText {
+  color: #00f5a0;
+  filter: drop-shadow(0 0 8px rgba(0, 245, 160, 0.3));
+}
+
+:global([data-theme='light']) .accentText {
+  color: #059669;
+}
+
+/* 實領薪資強調卡片 */
+.takeHomeCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+:global([data-theme='dark']) .takeHomeCard {
+  background: rgba(0, 245, 160, 0.12);
+  border: 1px solid rgba(0, 245, 160, 0.35);
+}
+
+:global([data-theme='light']) .takeHomeCard {
+  background: rgba(5, 150, 105, 0.1);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+/* 子數據微型卡片 */
+.subStatCard {
+  padding: 0.875rem;
+  border-radius: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+:global([data-theme='dark']) .subStatCard {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='light']) .subStatCard {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 輸入框特化雙主題適配 */
+.inputField {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  outline: none;
+  font-family: var(--font-mono, monospace);
+  transition: all 0.2s ease;
+}
+
+:global([data-theme='dark']) .inputField {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+:global([data-theme='dark']) .inputField:focus {
+  border-color: #00f5a0;
+  box-shadow: 0 0 10px rgba(0, 245, 160, 0.3);
+}
+
+:global([data-theme='light']) .inputField {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+}
+
+:global([data-theme='light']) .inputField:focus {
+  background: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 0 10px rgba(5, 150, 105, 0.2);
+}
+
+/* 分享按鈕 */
+.shareBtn {
+  margin-top: 0.5rem;
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+:global([data-theme='dark']) .shareBtn {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.4);
+  color: #00f5a0;
+}
+
+:global([data-theme='dark']) .shareBtn:hover {
+  background: #00f5a0;
+  color: #030305;
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.4);
+}
+
+:global([data-theme='light']) .shareBtn {
+  background: rgba(5, 150, 105, 0.12);
+  border: 1px solid rgba(5, 150, 105, 0.35);
+  color: #059669;
+}
+
+:global([data-theme='light']) .shareBtn:hover {
+  background: #059669;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+/* Toast 提示條特化 */
+.toastBar {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  z-index: 100;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global([data-theme='dark']) .toastBar {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.3);
+  color: #00f5a0;
+}
+
+:global([data-theme='light']) .toastBar {
+  background: rgba(5, 150, 105, 0.9);
+  border: 1px solid rgba(5, 150, 105, 1);
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(5, 150, 105, 0.3);
+}
+
+.toastShow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toastHide {
+  opacity: 0;
+  transform: translateY(100px);
 }

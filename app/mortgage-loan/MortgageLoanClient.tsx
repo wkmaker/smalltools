@@ -204,11 +204,12 @@ export default function MortgageLoanClient() {
   const [singleRate1, setSingleRate1] = useState<number | ''>(1.775);
   const [stages1, setStages1] = useState<Stage[]>([
     { durationValue: 3, durationUnit: 'year', rate: 1.775 },
-    { durationValue: null, durationUnit: null, rate: 2.275 },
+    { durationValue: 2, durationUnit: 'year', rate: 2.15 },
+    { durationValue: null, durationUnit: null, rate: 2.15 },
   ]);
   const [fee1, setFee1] = useState<number | ''>(3000);
 
-  const [loanName2, setLoanName2] = useState<string>('一般房貸');
+  const [loanName2, setLoanName2] = useState<string>('一般商業房貸');
   const [loanAmount2, setLoanAmount2] = useState<number | ''>(200); // 萬元
   const [periodVal2, setPeriodVal2] = useState<number | ''>(30);
   const [periodUnit2, setPeriodUnit2] = useState<'year' | 'month'>('year');
@@ -218,23 +219,24 @@ export default function MortgageLoanClient() {
   const [rateType2, setRateType2] = useState<'single' | 'multi'>('single');
   const [singleRate2, setSingleRate2] = useState<number | ''>(2.185);
   const [stages2, setStages2] = useState<Stage[]>([
-    { durationValue: 3, durationUnit: 'year', rate: 2.185 },
-    { durationValue: null, durationUnit: null, rate: 2.275 },
+    { durationValue: 2, durationUnit: 'year', rate: 2.185 },
+    { durationValue: 1, durationUnit: 'year', rate: 2.25 },
+    { durationValue: null, durationUnit: null, rate: 2.25 },
   ]);
   const [fee2, setFee2] = useState<number | ''>(3000);
 
-  // 試算結果狀態
+  // 運算結果狀態
   const [totalLoan, setTotalLoan] = useState<number>(1200); // 萬元
   const [firstPayment, setFirstPayment] = useState<number>(0);
-  const [aprRate, setAprRate] = useState<number>(0);
   const [totalInterest, setTotalInterest] = useState<number>(0);
   const [totalRepay, setTotalRepay] = useState<number>(0);
+  const [aprRate, setAprRate] = useState<number>(0);
   const [schedule, setSchedule] = useState<CombinedDetailRow[]>([]);
   const [showAllRows, setShowAllRows] = useState<boolean>(false);
-  const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const priceInputId = useId();
   const percentInputId = useId();
@@ -250,36 +252,36 @@ export default function MortgageLoanClient() {
     toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   }, []);
 
-  // 設定全頁背景粒子色
+  // 全頁背景 Theme 設定
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#00f5a0');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 245, 160, 0.6)');
   }, []);
 
-  // 雙向連動：房屋總價 / 自備款成數 / 自備款金額
+  // 房屋總價變更處理
   const handlePriceChange = (valStr: string) => {
     if (valStr === '') {
       setHousePrice('');
-      setDownPaymentAmount('');
-      setTotalLoan(0);
       return;
     }
     const hp = parseFloat(valStr) || 0;
     setHousePrice(hp);
-    const pct = downPaymentPercent === '' ? 0 : downPaymentPercent;
-    const dp = Math.round((hp * pct) / 100);
-    setDownPaymentAmount(dp);
-    const loan = Math.max(0, hp - dp);
-    setTotalLoan(loan);
 
-    // 同步分拆組合貸款金額
+    const pct = downPaymentPercent === '' ? 0 : downPaymentPercent;
+    const newDownAmt = Math.round((hp * pct) / 100);
+    setDownPaymentAmount(newDownAmt);
+
+    const newLoan = Math.max(0, hp - newDownAmt);
+    setTotalLoan(newLoan);
+
     if (loanMode === 'combined') {
-      const loanA = Math.min(loan, 1000);
+      const loanA = Math.min(newLoan, 1000);
       setLoanAmount1(loanA);
-      setLoanAmount2(Math.max(0, loan - loanA));
+      setLoanAmount2(Math.max(0, newLoan - loanA));
     }
   };
 
+  // 自備款成數變更處理
   const handlePercentChange = (valStr: string) => {
     if (valStr === '') {
       setDownPaymentPercent('');
@@ -287,99 +289,156 @@ export default function MortgageLoanClient() {
     }
     const pct = parseFloat(valStr) || 0;
     setDownPaymentPercent(pct);
+
     const hp = housePrice === '' ? 0 : housePrice;
-    const dp = Math.round((hp * pct) / 100);
-    setDownPaymentAmount(dp);
-    const loan = Math.max(0, hp - dp);
-    setTotalLoan(loan);
+    const newDownAmt = Math.round((hp * pct) / 100);
+    setDownPaymentAmount(newDownAmt);
+
+    const newLoan = Math.max(0, hp - newDownAmt);
+    setTotalLoan(newLoan);
 
     if (loanMode === 'combined') {
-      const loanA = Math.min(loan, 1000);
+      const loanA = Math.min(newLoan, 1000);
       setLoanAmount1(loanA);
-      setLoanAmount2(Math.max(0, loan - loanA));
+      setLoanAmount2(Math.max(0, newLoan - loanA));
     }
   };
 
+  // 自備款金額變更處理
   const handleDownAmountChange = (valStr: string) => {
     if (valStr === '') {
       setDownPaymentAmount('');
       return;
     }
-    const dp = parseFloat(valStr) || 0;
-    setDownPaymentAmount(dp);
+    const downAmt = parseFloat(valStr) || 0;
+    setDownPaymentAmount(downAmt);
+
     const hp = housePrice === '' ? 0 : housePrice;
-    const pct = hp > 0 ? parseFloat(((dp / hp) * 100).toFixed(2)) : 0;
-    setDownPaymentPercent(pct);
-    const loan = Math.max(0, hp - dp);
-    setTotalLoan(loan);
+    const newPct = hp > 0 ? parseFloat(((downAmt / hp) * 100).toFixed(2)) : 0;
+    setDownPaymentPercent(newPct);
+
+    const newLoan = Math.max(0, hp - downAmt);
+    setTotalLoan(newLoan);
 
     if (loanMode === 'combined') {
-      const loanA = Math.min(loan, 1000);
+      const loanA = Math.min(newLoan, 1000);
       setLoanAmount1(loanA);
-      setLoanAmount2(Math.max(0, loan - loanA));
+      setLoanAmount2(Math.max(0, newLoan - loanA));
     }
   };
 
-  // 分配貸款 A 的快速按鈕
-  const setLoanAQuickValue = (presetWan: number | null) => {
-    const currentLoanWan = totalLoan;
-    const targetA = presetWan !== null ? Math.min(presetWan, currentLoanWan) : currentLoanWan;
-    const targetB = Math.max(0, currentLoanWan - targetA);
-    setLoanAmount1(targetA);
-    setLoanAmount2(targetB);
+  // 快捷設置貸款 A 金額
+  const setLoanAQuickValue = (val: number | null) => {
+    if (val === null) {
+      setLoanAmount1(totalLoan);
+      setLoanAmount2(0);
+    } else {
+      const amtA = Math.min(val, totalLoan);
+      setLoanAmount1(amtA);
+      setLoanAmount2(Math.max(0, totalLoan - amtA));
+    }
   };
 
-  // 動態多段利率新增/移除邏輯
+  // 階梯利率新增與刪除
   const addStageSingle = () => {
     if (singleStages.length >= 6) return;
-    const lastStage = singleStages[singleStages.length - 1];
-    const newStage: Stage = { durationValue: 1, durationUnit: 'year', rate: lastStage.rate };
-    const nextStages = [...singleStages];
-    nextStages.splice(nextStages.length - 1, 0, newStage);
-    setSingleStages(nextStages);
+    const next = [...singleStages];
+    next.splice(next.length - 1, 0, { durationValue: 1, durationUnit: 'year', rate: 2.1 });
+    setSingleStages(next);
   };
 
   const removeStageSingle = (idx: number) => {
     if (singleStages.length <= 2) return;
-    const nextStages = singleStages.filter((_, i) => i !== idx);
-    setSingleStages(nextStages);
+    const next = singleStages.filter((_, i) => i !== idx);
+    setSingleStages(next);
   };
 
-  const addStageCombo = (loanIndex: 1 | 2) => {
-    const stageList = loanIndex === 1 ? stages1 : stages2;
-    if (stageList.length >= 6) return;
-    const lastStage = stageList[stageList.length - 1];
-    const newStage: Stage = { durationValue: 1, durationUnit: 'year', rate: lastStage.rate };
-    const nextStages = [...stageList];
-    nextStages.splice(nextStages.length - 1, 0, newStage);
-    if (loanIndex === 1) setStages1(nextStages);
-    else setStages2(nextStages);
+  const addStage1 = () => {
+    if (stages1.length >= 6) return;
+    const next =
+      stages1.length < 2
+        ? [
+            { durationValue: 3, durationUnit: 'year' as const, rate: 1.775 },
+            { durationValue: null, durationUnit: null, rate: 2.15 },
+          ]
+        : [...stages1];
+    next.splice(next.length - 1, 0, { durationValue: 1, durationUnit: 'year', rate: 1.775 });
+    setStages1(next);
   };
 
-  const removeStageCombo = (loanIndex: 1 | 2, idx: number) => {
-    const stageList = loanIndex === 1 ? stages1 : stages2;
-    if (stageList.length <= 2) return;
-    const nextStages = stageList.filter((_, i) => i !== idx);
-    if (loanIndex === 1) setStages1(nextStages);
-    else setStages2(nextStages);
+  const removeStage1 = (idx: number) => {
+    if (stages1.length <= 2) return;
+    const next = stages1.filter((_, i) => i !== idx);
+    setStages1(next);
   };
 
-  // 房貸計算核心
+  const handleRateType1Change = (type: 'single' | 'multi') => {
+    setRateType1(type);
+    if (type === 'multi' && stages1.length < 2) {
+      setStages1([
+        { durationValue: 3, durationUnit: 'year', rate: typeof singleRate1 === 'number' ? singleRate1 : 1.775 },
+        { durationValue: 2, durationUnit: 'year', rate: 2.15 },
+        { durationValue: null, durationUnit: null, rate: 2.15 },
+      ]);
+    }
+  };
+
+  const addStage2 = () => {
+    if (stages2.length >= 6) return;
+    const next =
+      stages2.length < 2
+        ? [
+            { durationValue: 2, durationUnit: 'year' as const, rate: 2.185 },
+            { durationValue: null, durationUnit: null, rate: 2.25 },
+          ]
+        : [...stages2];
+    next.splice(next.length - 1, 0, { durationValue: 1, durationUnit: 'year', rate: 2.185 });
+    setStages2(next);
+  };
+
+  const removeStage2 = (idx: number) => {
+    if (stages2.length <= 2) return;
+    const next = stages2.filter((_, i) => i !== idx);
+    setStages2(next);
+  };
+
+  const handleRateType2Change = (type: 'single' | 'multi') => {
+    setRateType2(type);
+    if (type === 'multi' && stages2.length < 2) {
+      setStages2([
+        { durationValue: 2, durationUnit: 'year', rate: typeof singleRate2 === 'number' ? singleRate2 : 2.185 },
+        { durationValue: 1, durationUnit: 'year', rate: 2.25 },
+        { durationValue: null, durationUnit: null, rate: 2.25 },
+      ]);
+    }
+  };
+
+  // 房貸核心試算邏輯
   const calculateLoan = useCallback(() => {
-    const numTotalLoanWan = totalLoan;
-    const numTotalLoanYuan = numTotalLoanWan * 10000;
+    const hp = housePrice === '' ? 0 : housePrice;
+    const dpAmt = downPaymentAmount === '' ? 0 : downPaymentAmount;
+    const currentTotalLoanAmt = Math.max(0, (hp - dpAmt) * 10000);
+
+    if (currentTotalLoanAmt <= 0) {
+      setFirstPayment(0);
+      setTotalInterest(0);
+      setTotalRepay(0);
+      setAprRate(0);
+      setSchedule([]);
+      return;
+    }
 
     if (loanMode === 'single') {
-      const pVal = singlePeriodVal === '' ? 0 : singlePeriodVal;
-      const gVal = singleGraceVal === '' ? 0 : singleGraceVal;
+      const periodV = singlePeriodVal === '' ? 0 : singlePeriodVal;
+      const graceV = singleGraceVal === '' ? 0 : singleGraceVal;
       const sRate = singleRate === '' ? 0 : singleRate;
-      const numFee = singleFee === '' ? 0 : singleFee;
+      const sFee = singleFee === '' ? 0 : singleFee;
 
-      const detail = calculateSingleLoanDetail(
-        numTotalLoanYuan,
-        pVal,
+      const calcResult = calculateSingleLoanDetail(
+        currentTotalLoanAmt,
+        periodV,
         singlePeriodUnit,
-        gVal,
+        graceV,
         singleGraceUnit,
         singleRateType,
         sRate,
@@ -387,69 +446,59 @@ export default function MortgageLoanClient() {
         singleRepayType
       );
 
-      const firstPmt = detail.paymentArray[0] || 0;
-      const apr = numTotalLoanYuan > 0 ? calculateAPR(numTotalLoanYuan, numFee, detail.paymentArray) : 0;
+      const firstP = calcResult.resultData[1]?.totalPayment || 0;
+      setFirstPayment(firstP);
+      setTotalInterest(calcResult.totalInterest);
+      setTotalRepay(currentTotalLoanAmt + calcResult.totalInterest + sFee);
 
-      setFirstPayment(firstPmt);
+      const apr = calculateAPR(currentTotalLoanAmt, sFee, calcResult.paymentArray);
       setAprRate(parseFloat(apr.toFixed(2)));
-      setTotalInterest(detail.totalInterest);
-      setTotalRepay(numTotalLoanYuan + detail.totalInterest);
-      setSchedule(detail.resultData);
+
+      setSchedule(calcResult.resultData);
     } else {
-      const numAmt1 = (loanAmount1 === '' ? 0 : loanAmount1) * 10000;
+      const lAmt1 = (loanAmount1 === '' ? 0 : loanAmount1) * 10000;
+      const lAmt2 = (loanAmount2 === '' ? 0 : loanAmount2) * 10000;
+
       const pVal1 = periodVal1 === '' ? 0 : periodVal1;
       const gVal1 = graceVal1 === '' ? 0 : graceVal1;
-      const sRate1 = singleRate1 === '' ? 0 : singleRate1;
-      const numFee1 = fee1 === '' ? 0 : fee1;
+      const rRate1 = singleRate1 === '' ? 0 : singleRate1;
+      const f1 = fee1 === '' ? 0 : fee1;
 
-      const numAmt2 = (loanAmount2 === '' ? 0 : loanAmount2) * 10000;
       const pVal2 = periodVal2 === '' ? 0 : periodVal2;
       const gVal2 = graceVal2 === '' ? 0 : graceVal2;
-      const sRate2 = singleRate2 === '' ? 0 : singleRate2;
-      const numFee2 = fee2 === '' ? 0 : fee2;
+      const rRate2 = singleRate2 === '' ? 0 : singleRate2;
+      const f2 = fee2 === '' ? 0 : fee2;
 
-      const detail1 = calculateSingleLoanDetail(
-        numAmt1,
+      const calc1 = calculateSingleLoanDetail(
+        lAmt1,
         pVal1,
         periodUnit1,
         gVal1,
         graceUnit1,
         rateType1,
-        sRate1,
+        rRate1,
         stages1,
         repayType1
       );
 
-      const detail2 = calculateSingleLoanDetail(
-        numAmt2,
+      const calc2 = calculateSingleLoanDetail(
+        lAmt2,
         pVal2,
         periodUnit2,
         gVal2,
         graceUnit2,
         rateType2,
-        sRate2,
+        rRate2,
         stages2,
         repayType2
       );
 
-      const maxMonths = Math.max(detail1.totalMonths, detail2.totalMonths);
-      const combinedResultData: CombinedDetailRow[] = [];
-      const combinedPaymentArray: number[] = [];
-      let combinedTotalInterest = 0;
+      const maxMonths = Math.max(calc1.totalMonths, calc2.totalMonths);
+      const combinedRows: CombinedDetailRow[] = [];
+      const combinedPayments: number[] = [];
 
-      combinedResultData.push({
-        period: 0,
-        startBalance: 0,
-        principalPaid: 0,
-        interestPaid: 0,
-        totalPayment: 0,
-        endBalance: numAmt1 + numAmt2,
-        detail1: detail1.resultData[0],
-        detail2: detail2.resultData[0],
-      });
-
-      for (let m = 1; m <= maxMonths; m++) {
-        const item1 = detail1.resultData[m] || {
+      for (let m = 0; m <= maxMonths; m++) {
+        const d1 = calc1.resultData[m] || {
           period: m,
           startBalance: 0,
           principalPaid: 0,
@@ -457,7 +506,7 @@ export default function MortgageLoanClient() {
           totalPayment: 0,
           endBalance: 0,
         };
-        const item2 = detail2.resultData[m] || {
+        const d2 = calc2.resultData[m] || {
           period: m,
           startBalance: 0,
           principalPaid: 0,
@@ -466,37 +515,37 @@ export default function MortgageLoanClient() {
           endBalance: 0,
         };
 
-        const totalPmt = item1.totalPayment + item2.totalPayment;
-        const interestP = item1.interestPaid + item2.interestPaid;
+        const totalPmt = d1.totalPayment + d2.totalPayment;
+        if (m > 0) combinedPayments.push(totalPmt);
 
-        combinedTotalInterest += interestP;
-        combinedPaymentArray.push(totalPmt);
-
-        combinedResultData.push({
+        combinedRows.push({
           period: m,
-          startBalance: item1.startBalance + item2.startBalance,
-          principalPaid: item1.principalPaid + item2.principalPaid,
-          interestPaid: interestP,
+          startBalance: d1.startBalance + d2.startBalance,
+          principalPaid: d1.principalPaid + d2.principalPaid,
+          interestPaid: d1.interestPaid + d2.interestPaid,
           totalPayment: totalPmt,
-          endBalance: item1.endBalance + item2.endBalance,
-          detail1: item1,
-          detail2: item2,
+          endBalance: d1.endBalance + d2.endBalance,
+          detail1: d1,
+          detail2: d2,
         });
       }
 
-      const firstPmt = combinedPaymentArray[0] || 0;
-      const combinedLoanYuan = numAmt1 + numAmt2;
-      const combinedFee = numFee1 + numFee2;
-      const apr = combinedLoanYuan > 0 ? calculateAPR(combinedLoanYuan, combinedFee, combinedPaymentArray) : 0;
+      const firstP = combinedRows[1]?.totalPayment || 0;
+      const combinedTotalInterest = calc1.totalInterest + calc2.totalInterest;
+      const combinedFee = f1 + f2;
 
-      setFirstPayment(firstPmt);
-      setAprRate(parseFloat(apr.toFixed(2)));
+      setFirstPayment(firstP);
       setTotalInterest(combinedTotalInterest);
-      setTotalRepay(combinedLoanYuan + combinedTotalInterest);
-      setSchedule(combinedResultData);
+      setTotalRepay(currentTotalLoanAmt + combinedTotalInterest + combinedFee);
+
+      const apr = calculateAPR(currentTotalLoanAmt, combinedFee, combinedPayments);
+      setAprRate(parseFloat(apr.toFixed(2)));
+
+      setSchedule(combinedRows);
     }
   }, [
-    totalLoan,
+    housePrice,
+    downPaymentAmount,
     loanMode,
     singlePeriodVal,
     singlePeriodUnit,
@@ -533,12 +582,14 @@ export default function MortgageLoanClient() {
     calculateLoan();
   }, [calculateLoan]);
 
-  // 繪製 HTML5 Canvas 房貸餘額遞減趨勢圖
+  // 繪製 HTML5 Canvas 房貸餘額遞減趨勢圖 (Theme-Aware)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || schedule.length === 0) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -556,10 +607,15 @@ export default function MortgageLoanClient() {
       y: height - 30 - (row.endBalance / maxVal) * (height - 60),
     }));
 
-    // 薄荷綠背景漸層
+    // 漸層背景 (亮暗雙模式)
     const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, 'rgba(0, 245, 160, 0.3)');
-    grad.addColorStop(1, 'rgba(0, 245, 160, 0.02)');
+    if (isLight) {
+      grad.addColorStop(0, 'rgba(5, 150, 105, 0.18)');
+      grad.addColorStop(1, 'rgba(5, 150, 105, 0.02)');
+    } else {
+      grad.addColorStop(0, 'rgba(0, 245, 160, 0.3)');
+      grad.addColorStop(1, 'rgba(0, 245, 160, 0.02)');
+    }
 
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
@@ -578,19 +634,19 @@ export default function MortgageLoanClient() {
     for (let i = 1; i < points.length; i++) {
       ctx.lineTo(points[i].x, points[i].y);
     }
-    ctx.strokeStyle = '#00f5a0';
+    ctx.strokeStyle = isLight ? '#059669' : '#00f5a0';
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
     // X/Y 軸刻度
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(40, height - 30);
     ctx.lineTo(width - 20, height - 30);
     ctx.stroke();
 
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
     ctx.font = '11px sans-serif';
     ctx.fillText('初始', 35, height - 12);
     ctx.fillText(`第 ${schedule.length - 1} 期`, width - 50, height - 12);
@@ -623,7 +679,7 @@ export default function MortgageLoanClient() {
       >
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：表單設定區 */}
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
+          <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
             {/* 房屋總價 */}
             <div className="flex flex-col gap-2">
               <label htmlFor={priceInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">房屋總價 (萬元)</label>
@@ -632,7 +688,7 @@ export default function MortgageLoanClient() {
                 type="number"
                 value={housePrice}
                 onChange={e => handlePriceChange(e.target.value)}
-                className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
+                className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
               />
             </div>
 
@@ -646,7 +702,7 @@ export default function MortgageLoanClient() {
                   step="0.5"
                   value={downPaymentPercent}
                   onChange={e => handlePercentChange(e.target.value)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
+                  className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
 
@@ -657,27 +713,27 @@ export default function MortgageLoanClient() {
                   type="number"
                   value={downPaymentAmount}
                   onChange={e => handleDownAmountChange(e.target.value)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
+                  className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
             </div>
 
             {/* 貸款模式切換 */}
-            <div className="flex flex-col gap-2 border-t border-white/[.05] pt-4">
+            <div className={`flex flex-col gap-2 ${styles.divider} pt-4`}>
               <div className="flex justify-between items-center">
-                <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">貸款模式</label>
-                <span className="text-sm text-[#00f5a0] font-semibold font-mono">
+                <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">貸款模式</span>
+                <span className={`text-sm font-semibold font-mono ${styles.accentText}`}>
                   貸款總金額：{totalLoan.toLocaleString('zh-TW')} 萬元
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
+              <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
                 <button
                   type="button"
                   onClick={() => setLoanMode('single')}
                   className={`py-2 text-sm rounded-xl cursor-pointer transition-all border ${
                     loanMode === 'single'
-                      ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0] font-semibold'
-                      : 'border-transparent text-text-sub hover:text-white'
+                      ? styles.activeScheme
+                      : 'border-transparent text-text-sub hover:text-text-main'
                   }`}
                 >
                   單一貸款
@@ -692,8 +748,8 @@ export default function MortgageLoanClient() {
                   }}
                   className={`py-2 text-sm rounded-xl cursor-pointer transition-all border ${
                     loanMode === 'combined'
-                      ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0] font-semibold'
-                      : 'border-transparent text-text-sub hover:text-white'
+                      ? styles.activeScheme
+                      : 'border-transparent text-text-sub hover:text-text-main'
                   }`}
                 >
                   組合貸款 (雙貸款 A+B)
@@ -703,7 +759,7 @@ export default function MortgageLoanClient() {
 
             {/* ====== 單一貸款模式設定 ====== */}
             {loanMode === 'single' && (
-              <div className="flex flex-col gap-5 border-t border-white/[.05] pt-5">
+              <div className={`flex flex-col gap-5 ${styles.divider} pt-5`}>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
                     <label htmlFor={singlePeriodInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">貸款期間 (年)</label>
@@ -712,7 +768,7 @@ export default function MortgageLoanClient() {
                       type="number"
                       value={singlePeriodVal}
                       onChange={e => setSinglePeriodVal(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
+                      className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                     />
                   </div>
 
@@ -723,22 +779,22 @@ export default function MortgageLoanClient() {
                       type="number"
                       value={singleGraceVal}
                       onChange={e => setSingleGraceVal(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
+                      className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                     />
                   </div>
                 </div>
 
                 {/* 利率類型 */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">利率類型</label>
-                  <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
+                  <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">利率類型</span>
+                  <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
                     <button
                       type="button"
                       onClick={() => setSingleRateType('single')}
                       className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRateType === 'single'
-                          ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
-                          : 'border-transparent text-text-sub hover:text-white'
+                          ? styles.activeScheme
+                          : 'border-transparent text-text-sub hover:text-text-main'
                       }`}
                     >
                       單一利率
@@ -748,8 +804,8 @@ export default function MortgageLoanClient() {
                       onClick={() => setSingleRateType('multi')}
                       className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRateType === 'multi'
-                          ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
-                          : 'border-transparent text-text-sub hover:text-white'
+                          ? styles.activeScheme
+                          : 'border-transparent text-text-sub hover:text-text-main'
                       }`}
                     >
                       多段式階梯利率
@@ -766,16 +822,16 @@ export default function MortgageLoanClient() {
                       step="0.01"
                       value={singleRate}
                       onChange={e => setSingleRate(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
+                      className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-3 bg-black/30 p-4 rounded-xl border border-white/[.08]">
-                    <span className="text-xs text-[#00f5a0] font-medium">多段式階梯利率設定</span>
+                  <div className={`flex flex-col gap-3 ${styles.subCard} p-4 rounded-xl`}>
+                    <span className={`text-xs ${styles.accentText} font-medium`}>多段式階梯利率設定</span>
                     {singleStages.map((stg, sIdx) => {
                       const isLast = sIdx === singleStages.length - 1;
                       return (
-                        <div key={sIdx} className="flex flex-col gap-2 border-b border-white/[.04] pb-3">
+                        <div key={sIdx} className={`flex flex-col gap-2 ${styles.divider} pb-3`}>
                           <div className="flex justify-between items-center text-sm font-medium text-text-sub">
                             <span>{isLast ? `第 ${sIdx + 1} 段 (剩餘期數)` : `第 ${sIdx + 1} 段`}</span>
                             {!isLast && singleStages.length > 2 && (
@@ -790,7 +846,7 @@ export default function MortgageLoanClient() {
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             {!isLast ? (
-                              <div className="flex items-center bg-black/40 border border-white/[.08] rounded-lg px-2">
+                              <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                                 <input
                                   type="number"
                                   placeholder="期間"
@@ -800,14 +856,14 @@ export default function MortgageLoanClient() {
                                     next[sIdx].durationValue = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                                     setSingleStages(next);
                                   }}
-                                  className="w-full bg-transparent text-white text-xs py-2 outline-none font-mono"
+                                  className="w-full bg-transparent text-text-main text-xs py-2 outline-none font-mono"
                                 />
                                 <span className="text-sm text-text-sub ml-1">年</span>
                               </div>
                             ) : (
                               <div className="flex items-center text-sm text-text-sub px-2">直至期滿</div>
                             )}
-                            <div className="flex items-center bg-black/40 border border-white/[.08] rounded-lg px-2">
+                            <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                               <input
                                 type="number"
                                 step="0.01"
@@ -818,7 +874,7 @@ export default function MortgageLoanClient() {
                                   next[sIdx].rate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                                   setSingleStages(next);
                                 }}
-                                className="w-full bg-transparent text-white text-xs py-2 outline-none font-mono"
+                                className="w-full bg-transparent text-text-main text-xs py-2 outline-none font-mono"
                               />
                               <span className="text-sm text-text-sub ml-1">%</span>
                             </div>
@@ -830,7 +886,7 @@ export default function MortgageLoanClient() {
                       <button
                         type="button"
                         onClick={addStageSingle}
-                        className="text-xs text-[#00f5a0] bg-[#00f5a0]/10 border border-[#00f0ff]/30 py-2 rounded-lg hover:bg-[#00f5a0]/20 transition-all cursor-pointer"
+                        className={`text-xs ${styles.accentText} ${styles.activeScheme} py-2 rounded-lg transition-all cursor-pointer`}
                       >
                         ＋ 新增利率段落
                       </button>
@@ -840,15 +896,15 @@ export default function MortgageLoanClient() {
 
                 {/* 還款方式 */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm text-text-sub font-medium uppercase tracking-[1px]">還款方式</label>
-                  <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
+                  <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">還款方式</span>
+                  <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
                     <button
                       type="button"
                       onClick={() => setSingleRepayType('equal-total')}
                       className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRepayType === 'equal-total'
-                          ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
-                          : 'border-transparent text-text-sub hover:text-white'
+                          ? styles.activeScheme
+                          : 'border-transparent text-text-sub hover:text-text-main'
                       }`}
                     >
                       本息平均攤還
@@ -858,8 +914,8 @@ export default function MortgageLoanClient() {
                       onClick={() => setSingleRepayType('equal-principal')}
                       className={`py-2 text-sm font-semibold rounded-xl cursor-pointer border ${
                         singleRepayType === 'equal-principal'
-                          ? 'bg-[#00f5a0]/15 border-[#00f5a0]/40 text-[#00f5a0]'
-                          : 'border-transparent text-text-sub hover:text-white'
+                          ? styles.activeScheme
+                          : 'border-transparent text-text-sub hover:text-text-main'
                       }`}
                     >
                       本金平均攤還
@@ -875,7 +931,7 @@ export default function MortgageLoanClient() {
                     type="number"
                     value={singleFee}
                     onChange={e => setSingleFee(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#00f5a0] font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                 </div>
               </div>
@@ -883,7 +939,7 @@ export default function MortgageLoanClient() {
 
             {/* ====== 組合貸款模式設定 (貸款 A + 貸款 B) ====== */}
             {loanMode === 'combined' && (
-              <div className="flex flex-col gap-6 border-t border-white/[.05] pt-5">
+              <div className={`flex flex-col gap-6 ${styles.divider} pt-5`}>
                 {/* 貸款 A 卡片 */}
                 <div className={styles.subCard}>
                   <div className="flex justify-between items-center">
@@ -891,15 +947,15 @@ export default function MortgageLoanClient() {
                       type="text"
                       value={loanName1}
                       onChange={e => setLoanName1(e.target.value)}
-                      className="bg-transparent border-b border-dashed border-[#00f5a0]/40 text-[#00f5a0] text-sm font-semibold outline-none px-1 py-0.5"
+                      className={`bg-transparent border-b border-dashed border-[var(--theme-color)] ${styles.accentText} text-sm font-semibold outline-none px-1 py-0.5`}
                     />
-                    <span className="text-[0.7rem] bg-[#00f5a0]/15 border border-[#00f5a0]/30 text-[#00f5a0] px-2 py-0.5 rounded-md font-mono">
+                    <span className={`text-[0.7rem] ${styles.activeScheme} px-2 py-0.5 rounded-md font-mono`}>
                       第一筆貸款
                     </span>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-text-sub">貸款金額 (萬元)</label>
+                    <span className="text-sm font-medium text-text-sub">貸款金額 (萬元)</span>
                     <input
                       type="number"
                       value={loanAmount1}
@@ -909,20 +965,20 @@ export default function MortgageLoanClient() {
                         setLoanAmount1(val);
                         setLoanAmount2(Math.max(0, totalLoan - amtA));
                       }}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-sm outline-none font-mono"
+                      className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono`}
                     />
                     <div className="flex gap-2 mt-1">
                       <button
                         type="button"
                         onClick={() => setLoanAQuickValue(1000)}
-                        className="flex-1 py-1 text-[0.7rem] bg-[#00f5a0]/10 border border-[#00f5a0]/30 text-[#00f5a0] rounded-md cursor-pointer hover:bg-[#00f5a0]/20"
+                        className={`flex-1 py-1 text-[0.7rem] ${styles.activeScheme} rounded-md cursor-pointer`}
                       >
                         1,000 萬 (如新青安)
                       </button>
                       <button
                         type="button"
                         onClick={() => setLoanAQuickValue(null)}
-                        className="flex-1 py-1 text-[0.7rem] bg-white/[.05] border border-white/[.1] text-text-sub rounded-md cursor-pointer hover:bg-white/[.1]"
+                        className="flex-1 py-1 text-[0.7rem] bg-surface-glass border border-border-glass text-text-sub rounded-md cursor-pointer hover:text-text-main"
                       >
                         全部給 A
                       </button>
@@ -931,33 +987,171 @@ export default function MortgageLoanClient() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-text-sub">期間 (年)</label>
+                      <span className="text-sm font-medium text-text-sub">期間 (年)</span>
                       <input
                         type="number"
                         value={periodVal1}
                         onChange={e => setPeriodVal1(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                        className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-text-sub">寬限期 (年)</label>
+                      <span className="text-sm font-medium text-text-sub">寬限期 (年)</span>
                       <input
                         type="number"
                         value={graceVal1}
                         onChange={e => setGraceVal1(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                        className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
                       />
                     </div>
                   </div>
 
+                  {/* 利率類型切換 */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">利率類型</span>
+                    <div className={`grid grid-cols-2 gap-1.5 ${styles.segmentGroup} p-1 rounded-xl`}>
+                      <button
+                        type="button"
+                        onClick={() => handleRateType1Change('single')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          rateType1 === 'single'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        單一利率
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRateType1Change('multi')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          rateType1 === 'multi'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        多段式階梯利率
+                      </button>
+                    </div>
+                  </div>
+
+                  {rateType1 === 'single' ? (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-medium text-text-sub">年利率 (%)</span>
+                      <input
+                        type="number"
+                        step="0.001"
+                        value={singleRate1}
+                        onChange={e => setSingleRate1(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                        className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+                      />
+                    </div>
+                  ) : (
+                    <div className={`flex flex-col gap-2.5 ${styles.subCard} p-3 rounded-xl border border-border-glass`}>
+                      <span className={`text-xs ${styles.accentText} font-medium`}>多段式階梯利率設定</span>
+                      {stages1.map((stg, sIdx) => {
+                        const isLast = sIdx === stages1.length - 1;
+                        return (
+                          <div key={sIdx} className={`flex flex-col gap-1.5 ${styles.divider} pb-2`}>
+                            <div className="flex justify-between items-center text-xs font-medium text-text-sub">
+                              <span>{isLast ? `第 ${sIdx + 1} 段 (剩餘期數)` : `第 ${sIdx + 1} 段`}</span>
+                              {!isLast && stages1.length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeStage1(sIdx)}
+                                  className="text-[0.7rem] text-[#ef4444] hover:underline cursor-pointer"
+                                >
+                                  移除
+                                </button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {!isLast ? (
+                                <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
+                                  <input
+                                    type="number"
+                                    placeholder="期間"
+                                    value={stg.durationValue ?? ''}
+                                    onChange={e => {
+                                      const next = [...stages1];
+                                      next[sIdx].durationValue = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
+                                      setStages1(next);
+                                    }}
+                                    className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                                  />
+                                  <span className="text-xs text-text-sub ml-1">年</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-xs text-text-sub px-2">直至期滿</div>
+                              )}
+                              <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="利率"
+                                  value={stg.rate}
+                                  onChange={e => {
+                                    const next = [...stages1];
+                                    next[sIdx].rate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
+                                    setStages1(next);
+                                  }}
+                                  className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                                />
+                                <span className="text-xs text-text-sub ml-1">%</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {stages1.length < 6 && (
+                        <button
+                          type="button"
+                          onClick={addStage1}
+                          className={`text-xs ${styles.accentText} ${styles.activeScheme} py-1.5 rounded-lg transition-all cursor-pointer`}
+                        >
+                          ＋ 新增利率段落
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 還款方式 */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">還款方式</span>
+                    <div className={`grid grid-cols-2 gap-1.5 ${styles.segmentGroup} p-1 rounded-xl`}>
+                      <button
+                        type="button"
+                        onClick={() => setRepayType1('equal-total')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          repayType1 === 'equal-total'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        本息平均攤還
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRepayType1('equal-principal')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          repayType1 === 'equal-principal'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        本金平均攤還
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 開辦手續費 */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-text-sub">年利率 (%)</label>
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">開辦手續費 (元)</span>
                     <input
                       type="number"
-                      step="0.001"
-                      value={singleRate1}
-                      onChange={e => setSingleRate1(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                      value={fee1}
+                      onChange={e => setFee1(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                      className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
                     />
                   </div>
                 </div>
@@ -969,15 +1163,15 @@ export default function MortgageLoanClient() {
                       type="text"
                       value={loanName2}
                       onChange={e => setLoanName2(e.target.value)}
-                      className="bg-transparent border-b border-dashed border-[#ffb800]/40 text-[#ffb800] text-sm font-semibold outline-none px-1 py-0.5"
+                      className={`bg-transparent border-b border-dashed border-amber-500/40 ${styles.interestText} text-sm font-semibold outline-none px-1 py-0.5`}
                     />
-                    <span className="text-[0.7rem] bg-[#ffb800]/15 border border-[#ffb800]/30 text-[#ffb800] px-2 py-0.5 rounded-md font-mono">
+                    <span className={`text-[0.7rem] bg-amber-500/15 border border-amber-500/30 ${styles.interestText} px-2 py-0.5 rounded-md font-mono`}>
                       第二筆貸款
                     </span>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-text-sub">貸款金額 (萬元)</label>
+                    <span className="text-sm font-medium text-text-sub">貸款金額 (萬元)</span>
                     <input
                       type="number"
                       value={loanAmount2}
@@ -987,39 +1181,177 @@ export default function MortgageLoanClient() {
                         setLoanAmount2(val);
                         setLoanAmount1(Math.max(0, totalLoan - amtB));
                       }}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-sm outline-none font-mono"
+                      className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono`}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-text-sub">期間 (年)</label>
+                      <span className="text-sm font-medium text-text-sub">期間 (年)</span>
                       <input
                         type="number"
                         value={periodVal2}
                         onChange={e => setPeriodVal2(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                        className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-text-sub">寬限期 (年)</label>
+                      <span className="text-sm font-medium text-text-sub">寬限期 (年)</span>
                       <input
                         type="number"
                         value={graceVal2}
                         onChange={e => setGraceVal2(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                        className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
                       />
                     </div>
                   </div>
 
+                  {/* 利率類型切換 */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">利率類型</span>
+                    <div className={`grid grid-cols-2 gap-1.5 ${styles.segmentGroup} p-1 rounded-xl`}>
+                      <button
+                        type="button"
+                        onClick={() => handleRateType2Change('single')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          rateType2 === 'single'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        單一利率
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRateType2Change('multi')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          rateType2 === 'multi'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        多段式階梯利率
+                      </button>
+                    </div>
+                  </div>
+
+                  {rateType2 === 'single' ? (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-medium text-text-sub">年利率 (%)</span>
+                      <input
+                        type="number"
+                        step="0.001"
+                        value={singleRate2}
+                        onChange={e => setSingleRate2(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                        className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+                      />
+                    </div>
+                  ) : (
+                    <div className={`flex flex-col gap-2.5 ${styles.subCard} p-3 rounded-xl border border-border-glass`}>
+                      <span className={`text-xs ${styles.accentText} font-medium`}>多段式階梯利率設定</span>
+                      {stages2.map((stg, sIdx) => {
+                        const isLast = sIdx === stages2.length - 1;
+                        return (
+                          <div key={sIdx} className={`flex flex-col gap-1.5 ${styles.divider} pb-2`}>
+                            <div className="flex justify-between items-center text-xs font-medium text-text-sub">
+                              <span>{isLast ? `第 ${sIdx + 1} 段 (剩餘期數)` : `第 ${sIdx + 1} 段`}</span>
+                              {!isLast && stages2.length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeStage2(sIdx)}
+                                  className="text-[0.7rem] text-[#ef4444] hover:underline cursor-pointer"
+                                >
+                                  移除
+                                </button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {!isLast ? (
+                                <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
+                                  <input
+                                    type="number"
+                                    placeholder="期間"
+                                    value={stg.durationValue ?? ''}
+                                    onChange={e => {
+                                      const next = [...stages2];
+                                      next[sIdx].durationValue = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
+                                      setStages2(next);
+                                    }}
+                                    className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                                  />
+                                  <span className="text-xs text-text-sub ml-1">年</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-xs text-text-sub px-2">直至期滿</div>
+                              )}
+                              <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="利率"
+                                  value={stg.rate}
+                                  onChange={e => {
+                                    const next = [...stages2];
+                                    next[sIdx].rate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
+                                    setStages2(next);
+                                  }}
+                                  className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                                />
+                                <span className="text-xs text-text-sub ml-1">%</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {stages2.length < 6 && (
+                        <button
+                          type="button"
+                          onClick={addStage2}
+                          className={`text-xs ${styles.accentText} ${styles.activeScheme} py-1.5 rounded-lg transition-all cursor-pointer`}
+                        >
+                          ＋ 新增利率段落
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 還款方式 */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">還款方式</span>
+                    <div className={`grid grid-cols-2 gap-1.5 ${styles.segmentGroup} p-1 rounded-xl`}>
+                      <button
+                        type="button"
+                        onClick={() => setRepayType2('equal-total')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          repayType2 === 'equal-total'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        本息平均攤還
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRepayType2('equal-principal')}
+                        className={`py-1.5 text-xs font-semibold rounded-lg cursor-pointer border ${
+                          repayType2 === 'equal-principal'
+                            ? styles.activeScheme
+                            : 'border-transparent text-text-sub hover:text-text-main'
+                        }`}
+                      >
+                        本金平均攤還
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 開辦手續費 */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-text-sub">年利率 (%)</label>
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">開辦手續費 (元)</span>
                     <input
                       type="number"
-                      step="0.001"
-                      value={singleRate2}
-                      onChange={e => setSingleRate2(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                      value={fee2}
+                      onChange={e => setFee2(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                      className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
                     />
                   </div>
                 </div>
@@ -1030,10 +1362,8 @@ export default function MortgageLoanClient() {
             <button
               type="button"
               onClick={copyShareLink}
-              className="mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
-                bg-[#00f5a0]/15 border border-[#00f5a0]/40 text-[#00f5a0] rounded-xl
-                transition-all duration-300 hover:bg-[#00f5a0] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(0,245,160,0.4)]
-                cursor-pointer"
+              className={`mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
+                ${styles.activeScheme} rounded-xl transition-all duration-300 cursor-pointer`}
             >
               複製試算分享連結
             </button>
@@ -1045,39 +1375,42 @@ export default function MortgageLoanClient() {
             <div className="grid grid-cols-4 gap-3 max-md:grid-cols-2 max-sm:grid-cols-1">
               <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub">首期每月還款額</span>
-                <span className="text-lg font-bold text-[#00f5a0] font-mono">
+                <span className={`text-lg font-bold font-mono ${styles.accentText}`}>
                   ${Math.round(firstPayment).toLocaleString('zh-TW')}
                 </span>
               </div>
 
               <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub">APR 總費用年率</span>
-                <span className="text-lg font-bold text-[#4ade80] font-mono">
+                <span className={`text-lg font-bold font-mono ${styles.aprText}`}>
                   {aprRate}%
                 </span>
               </div>
 
               <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub">總利息支出</span>
-                <span className="text-lg font-bold text-[#fbbf24] font-mono">
+                <span className={`text-lg font-bold font-mono ${styles.interestText}`}>
                   ${Math.round(totalInterest).toLocaleString('zh-TW')}
                 </span>
               </div>
 
               <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub">總還款金額</span>
-                <span className="text-lg font-bold text-white font-mono">
+                <span className="text-lg font-bold text-text-main font-mono">
                   ${Math.round(totalRepay).toLocaleString('zh-TW')}
                 </span>
               </div>
             </div>
 
             {/* Canvas 房貸餘額遞減趨勢圖 */}
-            <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col gap-3 shadow-lg">
+            <div className={`${styles.glassCard} p-5 flex flex-col gap-3 shadow-lg`}>
               <div className="flex justify-between items-center text-sm text-text-sub font-semibold uppercase tracking-[1px]">
                 <span>房貸賸餘本金遞減趨勢圖</span>
                 <div className="flex gap-4">
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#00f5a0]" />賸餘本金餘額</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className={`w-2.5 h-2.5 rounded-full ${styles.dotBg}`} />
+                    賸餘本金餘額
+                  </span>
                 </div>
               </div>
               <div className="relative w-full h-[220px]">
@@ -1086,16 +1419,16 @@ export default function MortgageLoanClient() {
             </div>
 
             {/* 還款明細表 (支援展開全期與 Mobile Sticky Column) */}
-            <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
+            <div className={`${styles.glassCard} p-6 flex flex-col gap-4 shadow-lg`}>
               <div className="flex justify-between items-center">
-                <h3 className="text-sm text-[#00f5a0] uppercase tracking-[1px] font-semibold">
+                <h3 className={`text-sm ${styles.accentText} uppercase tracking-[1px] font-semibold`}>
                   房貸還款期數明細表 ({showAllRows ? `共 ${schedule.length - 1} 期` : '前 120 期預覽'})
                 </h3>
                 {schedule.length > 121 && (
                   <button
                     type="button"
                     onClick={() => setShowAllRows(!showAllRows)}
-                    className="text-sm font-medium bg-white/[.05] border border-white/[.1] text-[#00f5a0] px-3.5 py-1.5 rounded-xl hover:bg-[#00f5a0]/15 transition-all cursor-pointer"
+                    className={`text-sm font-medium ${styles.activeScheme} px-3.5 py-1.5 rounded-xl transition-all cursor-pointer`}
                   >
                     {showAllRows ? '收合為前 120 期' : `展開全期明細 (${schedule.length - 1} 期)`}
                   </button>
@@ -1105,7 +1438,7 @@ export default function MortgageLoanClient() {
               <div className={styles.tableWrapper}>
                 <table className="w-full text-right text-sm font-mono">
                   <thead>
-                    <tr className="border-b border-white/[.1] text-text-sub text-sm font-semibold">
+                    <tr className="border-b border-border-glass text-text-sub text-sm font-semibold">
                       <th className={`text-left p-3 ${styles.stickyPeriod}`}>期數</th>
                       <th className="p-3">期初本金</th>
                       <th className="p-3">當期本金</th>
@@ -1114,17 +1447,17 @@ export default function MortgageLoanClient() {
                       <th className="p-3">期末本金</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[.04]">
+                  <tbody className="divide-y divide-border-glass">
                     {visibleSchedule.map(row => (
-                      <tr key={row.period} className="hover:bg-white/[.02] text-white/80 transition-colors">
-                        <td className={`text-left p-3 font-mono text-white ${styles.stickyPeriod}`}>
+                      <tr key={row.period} className="hover:bg-white/[.04] text-text-main transition-colors">
+                        <td className={`text-left p-3 font-mono ${styles.stickyPeriod}`}>
                           {row.period === 0 ? '初始' : `第 ${row.period} 期`}
                         </td>
                         <td className="p-3 font-mono">{row.period === 0 ? '-' : `$${Math.round(row.startBalance).toLocaleString('zh-TW')}`}</td>
-                        <td className="p-3 font-mono text-white">{row.period === 0 ? '-' : `$${Math.round(row.principalPaid).toLocaleString('zh-TW')}`}</td>
-                        <td className="p-3 font-mono text-[#fbbf24]">{row.period === 0 ? '-' : `$${Math.round(row.interestPaid).toLocaleString('zh-TW')}`}</td>
-                        <td className="p-3 font-mono text-[#00f5a0] font-semibold">{row.period === 0 ? '-' : `$${Math.round(row.totalPayment).toLocaleString('zh-TW')}`}</td>
-                        <td className="p-3 font-mono text-slate-300">${Math.round(row.endBalance).toLocaleString('zh-TW')}</td>
+                        <td className="p-3 font-mono text-text-main">{row.period === 0 ? '-' : `$${Math.round(row.principalPaid).toLocaleString('zh-TW')}`}</td>
+                        <td className={`p-3 font-mono ${styles.interestText}`}>{row.period === 0 ? '-' : `$${Math.round(row.interestPaid).toLocaleString('zh-TW')}`}</td>
+                        <td className={`p-3 font-mono font-semibold ${styles.accentText}`}>{row.period === 0 ? '-' : `$${Math.round(row.totalPayment).toLocaleString('zh-TW')}`}</td>
+                        <td className="p-3 font-mono text-text-sub">${Math.round(row.endBalance).toLocaleString('zh-TW')}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1136,9 +1469,8 @@ export default function MortgageLoanClient() {
       </ToolLayout>
 
       {/* Toast 提示條 */}
-      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-lg z-[100] pointer-events-none
-        bg-[rgba(0,245,160,0.15)] border border-[rgba(0,245,160,0.3)] backdrop-blur-[10px] text-[#00f5a0]
-        transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
+      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-xl z-[100] pointer-events-none
+        ${styles.activeScheme} backdrop-blur-[10px] shadow-2xl transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
         <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
         </svg>

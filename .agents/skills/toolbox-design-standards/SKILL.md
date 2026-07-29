@@ -148,8 +148,27 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
      - **暗色模式**：採用極黑霓虹發光與半透明藍灰/黃金漸層。
      - **亮色模式**：自動切換為清亮水晶色彩（如水藍色 `#0284c7` 投入本金區與虛線、琥珀耀金 `#d97706` 收益頂線），網格刻度線使用輕盈 Slate 灰 `rgba(203, 213, 225, 0.8)` 與軸文字 `#475569`，避免在淺色背景下線條隱形或色彩沉重。
 
-   ### ⑤ 原生 UI 適配
+   ### ⑤ 原生 UI 與表單元件適配
    * 原生選擇器（如 `input[type='date']`）必須宣告 `color-scheme: var(--color-scheme, dark)`，確保彈出的 Date Picker 自動連動深/淺模式。
+
+   ### ⑥ 亮色模式高對比度文字與數據色階降階規範 (WCAG AA Accent Contrast Rule)
+   * 亮色模式下，**嚴禁將暗色高彩度/高亮度的霓虹主題色（如薄荷綠 `#00f5a0`、赤紅 `#ff3b30`、財富金黃 `#ffb800`）直接作為文字或數據數字標籤顏色**，否則會因對比度不足（< 2:1）違反 WCAG 2.1 AA 規範並引發嚴重視覺閱讀障礙。
+   * 必須於對應 CSS Module (`*.module.css`) 在 `:global([data-theme='light'])` 下降階切換為同色系之 **高對比深色階 (600/700 色階)**：
+     - 薄荷綠/翡翠綠 (`#00f5a0`) ➔ 亮色模式文字降階為 **深翡翠綠 `#059669` (Emerald 600)**
+     - 赤紅/霓虹紅粉 (`#ff3b30` / `#ff0055`) ➔ 亮色模式文字降階為 **深紅 `#dc2626` (Red 600)**
+     - 財富金黃 (`#ffb800`) ➔ 亮色模式文字降階為 **深琥珀金 `#d97706` (Amber 600)**
+     - 綠色數據標籤 (`#4ade80`) ➔ 亮色模式文字降階為 **森林鮮綠 `#16a34a` (Green 600)**
+
+   ### ⑦ SVG 儀表盤 (Gauge Meter) 與 Range Slider 的雙主題適配規範
+   * **SVG 風險儀表盤**：背景灰弧線在暗色模式為 `rgba(255, 255, 255, 0.06)`，亮色模式必須切換為 `rgba(148, 163, 184, 0.2)` (Slate-400)；指針與中心圓點必須動態連動高對比主題色 (`currentColor` / `styles.accentText`) 與適應背景。
+   * **Range Slider (`input[type="range"]`)**：滑塊軌道在亮色模式下切換為 `rgba(0, 0, 0, 0.1)` 淺灰背景，`::-webkit-slider-thumb` 滑塊顏色在亮色模式連動高對比深色階，並保有亮白邊框。
+
+   ### ⑧ 分段控制器與按鈕組 (Segmented Controls & Toggle Buttons) 狀態規範
+   * 分段選單按鈕未選中時，Hover 狀態必須使用 `hover:text-text-main`（嚴禁寫死 `hover:text-white`，防範亮色模式下 Hover 導致文字變白隱形）。
+   * 選中狀態按鈕 (Active) 於亮色模式下須套用 12% 透明度深色背景與 40% 邊框（例如：`bg-emerald-600/12 border-emerald-600/40 text-emerald-700`）。
+
+   ### ⑨ 試算分享連結 (Share Link Button) 與 Toast 反饋介面規範
+   * 金融與試算類工具於輸入面板上方或底部應統一提供「複製試算分享連結」按鈕，並於點擊複製後觸發淡入 Toast 彈出視窗（`animate-fade-in` 搭配雙主題半透明底與主題光點），提示使用者連結已複製。
 
 ---
 

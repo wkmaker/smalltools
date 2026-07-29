@@ -90,7 +90,7 @@ export default function CarLoanClient() {
     toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   }, []);
 
-  // 設定全頁背景粒子色
+  // 設定全頁背景主題色
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#ff0055');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 85, 0.6)');
@@ -212,47 +212,54 @@ export default function CarLoanClient() {
       }
     } else if (loanScheme === 'grace') {
       const validGrace = Math.min(gracePeriod, totalMonths - 1);
-      const amortizeMonths = totalMonths - validGrace;
-      const interestOnly = loanAmount * monthlyRate;
+      const remMonths = totalMonths - validGrace;
 
-      let amortPmt = 0;
-      if (amortizeMonths > 0) {
+      for (let m = 1; m <= validGrace; m++) {
+        const start = remBalance;
+        const interest = start * monthlyRate;
+        interestSum += interest;
+        paymentArray.push(interest);
+        rows.push({
+          period: m,
+          startBalance: start,
+          principalPaid: 0,
+          interestPaid: interest,
+          totalPayment: interest,
+          endBalance: remBalance,
+          statusTag: '寬限期',
+        });
+      }
+
+      firstPay = validGrace > 0 ? remBalance * monthlyRate : 0;
+
+      let postPmt = 0;
+      if (remMonths > 0) {
         if (repayType === 'equal-total') {
           if (monthlyRate === 0) {
-            amortPmt = loanAmount / amortizeMonths;
+            postPmt = remBalance / remMonths;
           } else {
-            amortPmt = (loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, amortizeMonths))) / (Math.pow(1 + monthlyRate, amortizeMonths) - 1);
+            postPmt = (remBalance * (monthlyRate * Math.pow(1 + monthlyRate, remMonths))) / (Math.pow(1 + monthlyRate, remMonths) - 1);
           }
         }
       }
+      afterPay = postPmt;
 
-      firstPay = validGrace > 0 ? interestOnly : amortPmt;
-      afterPay = amortPmt;
+      const postPrincipalPerMonth = repayType === 'equal-principal' && remMonths > 0 ? remBalance / remMonths : 0;
 
-      const principalPerMonth = repayType === 'equal-principal' && amortizeMonths > 0 ? loanAmount / amortizeMonths : 0;
-
-      for (let m = 1; m <= totalMonths; m++) {
+      for (let m = validGrace + 1; m <= totalMonths; m++) {
         const start = remBalance;
         const interest = start * monthlyRate;
         let pmt = 0;
         let principal = 0;
-        let tag = '';
 
-        if (m <= validGrace) {
-          pmt = interestOnly;
-          principal = 0;
-          tag = '寬限期';
+        if (repayType === 'equal-total') {
+          pmt = postPmt;
+          principal = pmt - interest;
         } else {
-          if (repayType === 'equal-total') {
-            pmt = amortPmt;
-            principal = pmt - interest;
-          } else {
-            principal = principalPerMonth;
-            pmt = principal + interest;
-          }
-          remBalance -= principal;
-          tag = '攤還期';
+          principal = postPrincipalPerMonth;
+          pmt = principal + interest;
         }
+        remBalance -= principal;
         if (m === totalMonths) remBalance = 0;
 
         interestSum += interest;
@@ -264,21 +271,19 @@ export default function CarLoanClient() {
           interestPaid: interest,
           totalPayment: pmt,
           endBalance: Math.max(0, remBalance),
-          statusTag: tag,
+          statusTag: '攤還期',
         });
       }
     } else if (loanScheme === 'stepped') {
       const validStepMonths = Math.min(stepPeriods, totalMonths - 1);
       const remMonths = totalMonths - validStepMonths;
 
-      let stepPaidPrincipalSum = 0;
       for (let m = 1; m <= validStepMonths; m++) {
         const start = remBalance;
         const interest = start * monthlyRate;
         const pmt = stepPayment;
-        const principal = pmt - interest; // 若低於利息會產生負攤還
+        const principal = pmt - interest;
         remBalance -= principal;
-        stepPaidPrincipalSum += principal;
         interestSum += interest;
         paymentArray.push(pmt);
         rows.push({
@@ -293,21 +298,20 @@ export default function CarLoanClient() {
       }
 
       firstPay = validStepMonths > 0 ? stepPayment : 0;
-      const startRemBalance = remBalance;
 
       let postPmt = 0;
       if (remMonths > 0) {
         if (repayType === 'equal-total') {
           if (monthlyRate === 0) {
-            postPmt = startRemBalance / remMonths;
+            postPmt = remBalance / remMonths;
           } else {
-            postPmt = (startRemBalance * (monthlyRate * Math.pow(1 + monthlyRate, remMonths))) / (Math.pow(1 + monthlyRate, remMonths) - 1);
+            postPmt = (remBalance * (monthlyRate * Math.pow(1 + monthlyRate, remMonths))) / (Math.pow(1 + monthlyRate, remMonths) - 1);
           }
         }
       }
       afterPay = postPmt;
 
-      const postPrincipalPerMonth = repayType === 'equal-principal' && remMonths > 0 ? startRemBalance / remMonths : 0;
+      const postPrincipalPerMonth = repayType === 'equal-principal' && remMonths > 0 ? remBalance / remMonths : 0;
 
       for (let m = validStepMonths + 1; m <= totalMonths; m++) {
         const start = remBalance;
@@ -349,44 +353,42 @@ export default function CarLoanClient() {
           pmt = (amortizePrincipal * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths))) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
         }
       }
-      firstPay = pmt;
 
-      const principalPerMonth = amortizePrincipal / totalMonths;
+      const principalPerMonth = repayType === 'equal-principal' ? amortizePrincipal / totalMonths : 0;
 
       for (let m = 1; m <= totalMonths; m++) {
         const start = remBalance;
         const interest = start * monthlyRate;
-        let currentPmt = 0;
+        let curPmt = 0;
         let principal = 0;
-        let tag = '';
 
         if (repayType === 'equal-total') {
-          principal = pmt - (amortizePrincipal * monthlyRate); // 簡單月付攤還
-          currentPmt = pmt + (validBalloon * monthlyRate); // 尾款利息
+          principal = pmt - (amortizePrincipal * monthlyRate);
+          curPmt = pmt + (validBalloon * monthlyRate);
         } else {
           principal = principalPerMonth;
-          currentPmt = principal + interest;
+          curPmt = principal + interest;
         }
 
         if (m === totalMonths) {
-          currentPmt += validBalloon;
           principal += validBalloon;
-          remBalance = 0;
-          tag = '含尾款付清';
-        } else {
-          remBalance -= principal;
+          curPmt += validBalloon;
         }
 
+        remBalance -= principal;
+        if (m === totalMonths) remBalance = 0;
+
+        if (m === 1) firstPay = curPmt;
         interestSum += interest;
-        paymentArray.push(currentPmt);
+        paymentArray.push(curPmt);
         rows.push({
           period: m,
           startBalance: start,
           principalPaid: principal,
           interestPaid: interest,
-          totalPayment: currentPmt,
+          totalPayment: curPmt,
           endBalance: Math.max(0, remBalance),
-          statusTag: tag,
+          statusTag: m === totalMonths ? '含尾款' : '',
         });
       }
     }
@@ -395,20 +397,24 @@ export default function CarLoanClient() {
     setAfterSpecialPayment(afterPay);
     setTotalInterest(interestSum);
     setTotalPayment(loanAmount + interestSum + fee);
-    setApr(calculateAPR(loanAmount, fee, paymentArray));
     setSchedule(rows);
+
+    const calculatedApr = calculateAPR(loanAmount, fee, paymentArray);
+    setApr(calculatedApr);
   }, [carPrice, loanAmount, interestRate, periodVal, periodUnit, repayType, loanScheme, fee, gracePeriod, stepPayment, stepPeriods, balloonAmount]);
 
   useEffect(() => {
     runCalculation();
   }, [runCalculation]);
 
-  // 繪製 Canvas 趨勢圖表
+  // 繪製 Canvas 趨勢圖表 (Theme-Aware)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || schedule.length <= 1) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -426,10 +432,15 @@ export default function CarLoanClient() {
       y: height - 30 - (row.endBalance / maxBal) * (height - 60),
     }));
 
-    // 漸層背景
+    // 漸層背景 (亮暗模式色調)
     const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, 'rgba(255, 0, 85, 0.35)');
-    grad.addColorStop(1, 'rgba(255, 0, 85, 0.0)');
+    if (isLight) {
+      grad.addColorStop(0, 'rgba(220, 38, 38, 0.18)');
+      grad.addColorStop(1, 'rgba(220, 38, 38, 0.02)');
+    } else {
+      grad.addColorStop(0, 'rgba(255, 0, 85, 0.35)');
+      grad.addColorStop(1, 'rgba(255, 0, 85, 0.0)');
+    }
 
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
@@ -448,19 +459,19 @@ export default function CarLoanClient() {
     for (let i = 1; i < points.length; i++) {
       ctx.lineTo(points[i].x, points[i].y);
     }
-    ctx.strokeStyle = '#ff0055';
+    ctx.strokeStyle = isLight ? '#dc2626' : '#ff0055';
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
     // 網格座標
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(40, height - 30);
     ctx.lineTo(width - 20, height - 30);
     ctx.stroke();
 
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
     ctx.font = '11px sans-serif';
     ctx.fillText('0期', 35, height - 12);
     ctx.fillText(`${schedule.length - 1}期`, width - 45, height - 12);
@@ -490,11 +501,11 @@ export default function CarLoanClient() {
       >
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：表單設定區 */}
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
+          <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
             {/* 還款方案切換 */}
             <div className="flex flex-col gap-2">
-              <label htmlFor="loan-scheme-select" className="text-sm font-medium text-text-sub uppercase tracking-[1px]">還款方案模式</label>
-              <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
+              <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">還款方案模式</span>
+              <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
                 {([
                   { id: 'standard', label: '一般攤還' },
                   { id: 'grace',    label: '寬限期方案' },
@@ -506,8 +517,8 @@ export default function CarLoanClient() {
                     onClick={() => setLoanScheme(s.id)}
                     className={`py-2.5 px-3 text-sm font-medium rounded-lg transition-all cursor-pointer border ${
                       loanScheme === s.id
-                        ? 'bg-[rgba(255,0,85,0.15)] border-[rgba(255,0,85,0.4)] text-[#ff0055] shadow-[0_0_10px_rgba(255,0,85,0.2)]'
-                        : 'bg-transparent border-transparent text-text-sub hover:text-white'
+                        ? styles.activeScheme
+                        : 'bg-transparent border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
                     {s.label}
@@ -517,7 +528,7 @@ export default function CarLoanClient() {
             </div>
 
             {/* 車價與自備款 */}
-            <div className="flex flex-col gap-5 border-t border-white/[.05] pt-5">
+            <div className={`flex flex-col gap-5 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
                 <label htmlFor={carPriceInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">新車/中古車 車價 (元)</label>
                 <div className="relative flex items-center">
@@ -526,9 +537,9 @@ export default function CarLoanClient() {
                     type="number"
                     value={carPrice}
                     onChange={e => handleCarPriceChange(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ff0055] focus:shadow-[0_0_15px_rgba(255,0,85,0.2)] transition-all font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none transition-all font-mono`}
                   />
-                  <span className="absolute right-4 text-xs text-[#94a3b8]">元</span>
+                  <span className="absolute right-4 text-xs text-text-sub">元</span>
                 </div>
               </div>
 
@@ -542,9 +553,9 @@ export default function CarLoanClient() {
                       type="number"
                       value={downPaymentPercent}
                       onChange={e => handleDownPercentChange(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-10 rounded-xl text-base outline-none focus:border-[#ff0055] transition-all font-mono"
+                      className={`w-full ${styles.inputField} px-4 py-3 pr-10 rounded-xl text-base outline-none transition-all font-mono`}
                     />
-                    <span className="absolute right-4 text-xs text-[#94a3b8]">%</span>
+                    <span className="absolute right-4 text-xs text-text-sub">%</span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -555,9 +566,9 @@ export default function CarLoanClient() {
                       type="number"
                       value={downPaymentAmount}
                       onChange={e => handleDownAmountChange(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-10 rounded-xl text-base outline-none focus:border-[#ff0055] transition-all font-mono"
+                      className={`w-full ${styles.inputField} px-4 py-3 pr-10 rounded-xl text-base outline-none transition-all font-mono`}
                     />
-                    <span className="absolute right-4 text-xs text-[#94a3b8]">元</span>
+                    <span className="absolute right-4 text-xs text-text-sub">元</span>
                   </div>
                 </div>
               </div>
@@ -571,15 +582,15 @@ export default function CarLoanClient() {
                     type="number"
                     value={loanAmount}
                     onChange={e => handleLoanAmountChange(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-[#ff0055]/40 text-[#ff0055] font-bold px-4 py-3 pr-12 rounded-xl text-lg outline-none focus:border-[#ff0055] transition-all font-mono"
+                    className={`w-full ${styles.inputField} ${styles.accentText} font-bold px-4 py-3 pr-12 rounded-xl text-lg outline-none transition-all font-mono`}
                   />
-                  <span className="absolute right-4 text-xs text-[#ff0055]">元</span>
+                  <span className={`absolute right-4 text-xs ${styles.accentText}`}>元</span>
                 </div>
               </div>
             </div>
 
             {/* 利率與年期 */}
-            <div className="grid grid-cols-2 gap-4 border-t border-white/[.05] pt-5">
+            <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
                 <label htmlFor={interestRateInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">年利率 (%)</label>
                 <div className="relative flex items-center">
@@ -589,9 +600,9 @@ export default function CarLoanClient() {
                     step="0.1"
                     value={interestRate}
                     onChange={e => setInterestRate(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-10 rounded-xl text-base outline-none focus:border-[#ff0055] transition-all font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 pr-10 rounded-xl text-base outline-none transition-all font-mono`}
                   />
-                  <span className="absolute right-4 text-xs text-[#94a3b8]">%</span>
+                  <span className="absolute right-4 text-xs text-text-sub">%</span>
                 </div>
               </div>
 
@@ -603,18 +614,18 @@ export default function CarLoanClient() {
                     type="number"
                     value={periodVal}
                     onChange={e => setPeriodVal(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-16 rounded-xl text-base outline-none focus:border-[#ff0055] transition-all font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 pr-16 rounded-xl text-base outline-none transition-all font-mono`}
                   />
-                  <div className="absolute right-1 top-1 bottom-1 flex bg-white/[.05] rounded-lg overflow-hidden border border-white/[.05]">
+                  <div className="absolute right-1 top-1 bottom-1 flex rounded-lg overflow-hidden border border-border-glass bg-surface-glass">
                     <button
                       onClick={() => setPeriodUnit('year')}
-                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'year' ? 'bg-[#ff0055]/20 text-[#ff0055]' : 'text-[#94a3b8]'}`}
+                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'year' ? styles.accentText + ' font-semibold' : 'text-text-sub'}`}
                     >
                       年
                     </button>
                     <button
                       onClick={() => setPeriodUnit('month')}
-                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'month' ? 'bg-[#ff0055]/20 text-[#ff0055]' : 'text-[#94a3b8]'}`}
+                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'month' ? styles.accentText + ' font-semibold' : 'text-text-sub'}`}
                     >
                       月
                     </button>
@@ -624,14 +635,14 @@ export default function CarLoanClient() {
             </div>
 
             {/* 本息/本金攤還模式與開辦費 */}
-            <div className="grid grid-cols-2 gap-4 border-t border-white/[.05] pt-5">
+            <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor="repay-type-select" className="text-sm font-medium text-text-sub uppercase tracking-[1px]">攤還方式</label>
-                <div className="grid grid-cols-2 gap-1 bg-black/40 p-1 rounded-xl border border-white/[.08]">
+                <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">攤還方式</span>
+                <div className={`grid grid-cols-2 gap-1 ${styles.segmentGroup} p-1 rounded-xl`}>
                   <button
                     onClick={() => setRepayType('equal-total')}
                     className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
-                      repayType === 'equal-total' ? 'bg-[#ff0055]/15 border-[#ff0055]/40 text-[#ff0055]' : 'border-transparent text-text-sub hover:text-white'
+                      repayType === 'equal-total' ? styles.activeScheme : 'border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
                     本息均攤
@@ -639,7 +650,7 @@ export default function CarLoanClient() {
                   <button
                     onClick={() => setRepayType('equal-principal')}
                     className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
-                      repayType === 'equal-principal' ? 'bg-[#ff0055]/15 border-[#ff0055]/40 text-[#ff0055]' : 'border-transparent text-text-sub hover:text-white'
+                      repayType === 'equal-principal' ? styles.activeScheme : 'border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
                     本金均攤
@@ -655,73 +666,71 @@ export default function CarLoanClient() {
                     type="number"
                     value={fee}
                     onChange={e => setFee(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ff0055] transition-all font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none transition-all font-mono`}
                   />
-                  <span className="absolute right-4 text-xs text-[#94a3b8]">元</span>
+                  <span className="absolute right-4 text-xs text-text-sub">元</span>
                 </div>
               </div>
             </div>
 
             {/* 條件式方案延伸欄位 */}
             {loanScheme === 'grace' && (
-              <div className="border-l-2 border-[#ff0055] pl-4 flex flex-col gap-2 py-1">
-                <label htmlFor={gracePeriodInputId} className="text-sm font-medium text-[#ff0055] uppercase tracking-[1px]">寬限期月數 (前息後本)</label>
+              <div className="border-l-2 border-[var(--theme-color)] pl-4 flex flex-col gap-2 py-1">
+                <label htmlFor={gracePeriodInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>寬限期月數 (前息後本)</label>
                 <input
                   id={gracePeriodInputId}
                   type="number"
                   value={gracePeriod}
                   onChange={e => setGracePeriod(parseInt(e.target.value) || 0)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-base outline-none focus:border-[#ff0055]"
+                  className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                 />
               </div>
             )}
 
             {loanScheme === 'stepped' && (
-              <div className="border-l-2 border-[#ff0055] pl-4 flex flex-col gap-3 py-1">
+              <div className="border-l-2 border-[var(--theme-color)] pl-4 flex flex-col gap-3 py-1">
                 <div className="flex flex-col gap-1">
-                  <label htmlFor={stepPaymentInputId} className="text-sm font-medium text-[#ff0055] uppercase tracking-[1px]">前期超低月付金額 (元)</label>
+                  <label htmlFor={stepPaymentInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>前期超低月付金額 (元)</label>
                   <input
                     id={stepPaymentInputId}
                     type="number"
                     value={stepPayment}
                     onChange={e => setStepPayment(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-base outline-none focus:border-[#ff0055]"
+                    className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label htmlFor={stepPeriodsInputId} className="text-sm font-medium text-[#ff0055] uppercase tracking-[1px]">低月付期數 (月)</label>
+                  <label htmlFor={stepPeriodsInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>低月付期數 (月)</label>
                   <input
                     id={stepPeriodsInputId}
                     type="number"
                     value={stepPeriods}
                     onChange={e => setStepPeriods(parseInt(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-base outline-none focus:border-[#ff0055]"
+                    className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                   />
                 </div>
               </div>
             )}
 
             {loanScheme === 'balloon' && (
-              <div className="border-l-2 border-[#ff0055] pl-4 flex flex-col gap-2 py-1">
-                <label htmlFor={balloonAmountInputId} className="text-sm font-medium text-[#ff0055] uppercase tracking-[1px]">
-                  氣球貸尾款保留金額 (元) <span className="text-[0.75rem] text-[#94a3b8]">({((balloonAmount / (loanAmount || 1)) * 100).toFixed(1)}%)</span>
+              <div className="border-l-2 border-[var(--theme-color)] pl-4 flex flex-col gap-2 py-1">
+                <label htmlFor={balloonAmountInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>
+                  氣球貸尾款保留金額 (元) <span className="text-[0.75rem] text-text-sub">({((balloonAmount / (loanAmount || 1)) * 100).toFixed(1)}%)</span>
                 </label>
                 <input
                   id={balloonAmountInputId}
                   type="number"
                   value={balloonAmount}
                   onChange={e => setBalloonAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-2.5 rounded-xl text-base outline-none focus:border-[#ff0055]"
+                  className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                 />
               </div>
             )}
 
             <button
               onClick={copyShareLink}
-              className="mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
-                bg-[#ff0055]/15 border border-[#ff0055]/40 text-[#ff0055] rounded-xl
-                transition-all duration-300 hover:bg-[#ff0055] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(255,0,85,0.4)]
-                cursor-pointer"
+              className={`mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
+                ${styles.activeScheme} rounded-xl transition-all duration-300 cursor-pointer`}
             >
               複製試算分享連結
             </button>
@@ -731,9 +740,9 @@ export default function CarLoanClient() {
           <div className="flex flex-col gap-6">
             {/* 四大指標看板 */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">首期月付額</span>
-                <span className="font-mono text-2xl font-bold text-[#ff0055] drop-shadow-[0_0_10px_rgba(255,0,85,0.3)]">
+                <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
                   ${formatNumber(monthlyPayment)}
                 </span>
                 {loanScheme === 'grace' && (
@@ -741,23 +750,23 @@ export default function CarLoanClient() {
                 )}
               </div>
 
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">實質年利率 (APR)</span>
-                <span className="font-mono text-2xl font-bold text-[#ff0055] drop-shadow-[0_0_10px_rgba(255,0,85,0.3)]">
+                <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
                   {apr.toFixed(2)} %
                 </span>
                 <span className="text-xs text-text-sub mt-1">含手續費攤提真實年利率</span>
               </div>
 
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">總利息支出</span>
-                <span className="font-mono text-xl font-bold text-text-main">
+                <span className={`font-mono text-xl font-bold ${styles.interestText}`}>
                   ${formatNumber(totalInterest)}
                 </span>
                 <span className="text-xs text-text-sub mt-1">車貸期間利息總和</span>
               </div>
 
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">總還款金額</span>
                 <span className="font-mono text-xl font-bold text-text-main">
                   ${formatNumber(totalPayment)}
@@ -767,7 +776,7 @@ export default function CarLoanClient() {
             </div>
 
             {/* 本金剩餘趨勢圖表 (Canvas) */}
-            <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col gap-3">
+            <div className={`${styles.glassCard} p-5 flex flex-col gap-3`}>
               <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px]">車貸本金剩餘趨勢</span>
               <div className="relative w-full h-[220px]">
                 <canvas ref={canvasRef} className="w-full h-full block" />
@@ -779,7 +788,7 @@ export default function CarLoanClient() {
               <h3 className="text-sm font-semibold text-text-main uppercase tracking-[1px] mb-4">車貸還款明細表</h3>
               <table className="w-full text-right text-sm">
                 <thead>
-                  <tr className="border-b border-white/[.08] text-text-sub text-sm font-semibold">
+                  <tr className="border-b border-border-glass text-text-sub text-sm font-semibold">
                     <th className={`text-left p-2.5 ${styles.stickyPeriod}`}>期數</th>
                     <th className="p-2.5">期初餘額</th>
                     <th className="p-2.5">當期本金</th>
@@ -788,22 +797,22 @@ export default function CarLoanClient() {
                     <th className="p-2.5">期末餘額</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border-glass">
                   {schedule.slice(0, 120).map(row => (
-                    <tr key={row.period} className="border-b border-white/[.03] hover:bg-white/[.02] text-text-main transition-colors">
-                      <td className={`text-left p-2.5 font-mono text-text-main ${styles.stickyPeriod}`}>
+                    <tr key={row.period} className="hover:bg-white/[.03] text-text-main transition-colors">
+                      <td className={`text-left p-2.5 font-mono ${styles.stickyPeriod}`}>
                         {row.period === 0 ? '初始' : `第 ${row.period} 期`}
                         {row.statusTag && (
-                          <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded bg-[#ff0055]/20 text-[#ff0055] font-sans font-medium">
+                          <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded ${styles.activeScheme} font-sans font-medium`}>
                             {row.statusTag}
                           </span>
                         )}
                       </td>
                       <td className="p-2.5 font-mono">${formatNumber(row.startBalance)}</td>
                       <td className="p-2.5 font-mono">${formatNumber(row.principalPaid)}</td>
-                      <td className="p-2.5 font-mono">${formatNumber(row.interestPaid)}</td>
-                      <td className="p-2.5 font-mono text-[#ff0055] font-semibold">${formatNumber(row.totalPayment)}</td>
-                      <td className="p-2.5 font-mono">${formatNumber(row.endBalance)}</td>
+                      <td className={`p-2.5 font-mono ${styles.interestText}`}>${formatNumber(row.interestPaid)}</td>
+                      <td className={`p-2.5 font-mono font-semibold ${styles.accentText}`}>${formatNumber(row.totalPayment)}</td>
+                      <td className="p-2.5 font-mono text-text-sub">${formatNumber(row.endBalance)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -816,9 +825,8 @@ export default function CarLoanClient() {
         </div>
       </ToolLayout>
 
-      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-lg z-[100] pointer-events-none
-        bg-[rgba(255,0,85,0.15)] border border-[rgba(255,0,85,0.3)] backdrop-blur-[10px] text-[#ff0055]
-        transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
+      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-xl z-[100] pointer-events-none
+        ${styles.activeScheme} backdrop-blur-[10px] shadow-2xl transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
         <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
         </svg>
