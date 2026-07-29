@@ -14,6 +14,10 @@
   transition: transform 0.3s ease;
 }
 
+:global([data-theme='light']) .qrPreview {
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.12);
+}
+
 .qrPreview:hover {
   transform: translateY(-4px);
 }
@@ -21,10 +25,10 @@
 /* 灰白棋盤格紋背景 (透明預覽) */
 .checkerboardBg {
   background-color: #ffffff !important;
-  background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%), 
-                    linear-gradient(-45deg, #e0e0e0 25%, transparent 25%), 
-                    linear-gradient(45deg, transparent 75%, #e0e0e0 75%), 
-                    linear-gradient(-45deg, transparent 75%, #e0e0e0 75%) !important;
+  background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
+    linear-gradient(-45deg, transparent 75%, #e0e0e0 75%) !important;
   background-size: 16px 16px !important;
   background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
 }
@@ -35,7 +39,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 0.6rem 0.4rem;
-  color: var(--text-sub, #94a3b8);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -48,9 +52,21 @@
 }
 
 .styleOptionBtn:hover {
-  color: var(--text-main, #ffffff);
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.15);
+}
+
+:global([data-theme='light']) .styleOptionBtn {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--text-secondary);
+}
+
+:global([data-theme='light']) .styleOptionBtn:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .styleOptionBtnActive {
@@ -59,6 +75,14 @@
   border-color: rgba(0, 255, 102, 0.3) !important;
   box-shadow: 0 0 12px rgba(0, 255, 102, 0.15), inset 0 0 8px rgba(0, 255, 102, 0.05) !important;
   text-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
+}
+
+:global([data-theme='light']) .styleOptionBtnActive {
+  color: #059669 !important;
+  background: rgba(5, 150, 105, 0.08) !important;
+  border-color: rgba(5, 150, 105, 0.35) !important;
+  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.1) !important;
+  text-shadow: none;
 }
 
 .styleOptionBtn:active {
@@ -82,12 +106,276 @@
   width: 100%;
 }
 
-.dropzoneContainer:hover, .dropzoneContainerDragover {
+:global([data-theme='light']) .dropzoneContainer {
+  border: 2px dashed rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.dropzoneContainer:hover,
+.dropzoneContainerDragover {
   border-color: #00ff66;
   background: rgba(0, 255, 102, 0.02);
   box-shadow: inset 0 0 15px rgba(0, 255, 102, 0.05);
 }
 
+:global([data-theme='light']) .dropzoneContainer:hover,
+:global([data-theme='light']) .dropzoneContainerDragover {
+  border-color: #059669;
+  background: rgba(5, 150, 105, 0.04);
+  box-shadow: inset 0 0 15px rgba(5, 150, 105, 0.05);
+}
+
 .dropzoneContainerDragover {
   transform: scale(1.02);
+}
+
+/* 面板卡片 */
+.panelCard {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+:global([data-theme='light']) .panelCard {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+/* 內容類型 Segmented Control */
+.segmentedContainer {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 50px;
+  padding: 0.375rem;
+  width: fit-content;
+}
+
+:global([data-theme='light']) .segmentedContainer {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.tabBtnActive {
+  border: none;
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: rgba(0, 255, 102, 0.1);
+  color: #00ff66;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme='light']) .tabBtnActive {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+}
+
+.tabBtnInactive {
+  border: none;
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabBtnInactive:hover {
+  color: var(--text-primary);
+}
+
+/* 輸入框 */
+.inputContainer {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.inputContainer:focus-within {
+  border-color: #00ff66;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.2);
+}
+
+:global([data-theme='light']) .inputContainer {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+:global([data-theme='light']) .inputContainer:focus-within {
+  background: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 0 12px rgba(5, 150, 105, 0.15);
+}
+
+.inputField {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.inputField::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* 下載按鈕 */
+.downloadBtn {
+  width: 100%;
+  height: 3rem;
+  background: rgba(0, 255, 102, 0.2);
+  border: 1px solid rgba(0, 255, 102, 0.4);
+  color: #00ff66;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 10px rgba(0, 255, 102, 0.15);
+}
+
+.downloadBtn:hover {
+  background: #00ff66;
+  color: #030305;
+  box-shadow: 0 0 20px rgba(0, 255, 102, 0.5);
+}
+
+:global([data-theme='light']) .downloadBtn {
+  background: rgba(5, 150, 105, 0.12);
+  border: 1px solid rgba(5, 150, 105, 0.4);
+  color: #059669;
+}
+
+:global([data-theme='light']) .downloadBtn:hover {
+  background: #059669;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(5, 150, 105, 0.3);
+}
+
+/* 分享連結按鈕 */
+.shareBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shareBtn:hover {
+  background: rgba(0, 255, 102, 0.1);
+  color: #00ff66;
+  border-color: #00ff66;
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+}
+
+:global([data-theme='light']) .shareBtn {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .shareBtn:hover {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+  border-color: #059669;
+  box-shadow: 0 0 15px rgba(5, 150, 105, 0.2);
+}
+
+/* 安全防禦 Banner Alert */
+.alertBox {
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(0, 255, 102, 0.05);
+  border: 1px solid rgba(0, 255, 102, 0.15);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: #00ff66;
+  line-height: 1.6;
+}
+
+:global([data-theme='light']) .alertBox {
+  background: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.25);
+  color: #047857;
+}
+
+/* 綠色強調數值文字 */
+.greenText {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #00ff66;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .greenText {
+  color: #059669;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  background: rgba(0, 255, 102, 0.2);
+  border: 1px solid rgba(0, 255, 102, 0.4);
+  color: #00ff66;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  animation: fadeIn 0.25s ease-out;
+}
+
+:global([data-theme='light']) .toast {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(5, 150, 105, 0.35);
+  color: #059669;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

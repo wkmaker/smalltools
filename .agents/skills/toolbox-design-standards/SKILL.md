@@ -151,9 +151,11 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
    ### ⑤ 原生 UI 與表單元件適配
    * 原生選擇器（如 `input[type='date']`）必須宣告 `color-scheme: var(--color-scheme, dark)`，確保彈出的 Date Picker 自動連動深/淺模式。
 
-   ### ⑥ 亮色模式高對比度文字與數據色階降階規範 (WCAG AA Accent Contrast Rule)
-   * 亮色模式下，**嚴禁將暗色高彩度/高亮度的霓虹主題色（如薄荷綠 `#00f5a0`、赤紅 `#ff3b30`、財富金黃 `#ffb800`）直接作為文字或數據數字標籤顏色**，否則會因對比度不足（< 2:1）違反 WCAG 2.1 AA 規範並引發嚴重視覺閱讀障礙。
+   ### ⑥ 亮色模式高對比度文字、按鈕與數據色階降階規範 (WCAG AA Accent & Button Contrast Rule)
+   * 亮色模式下，**嚴禁將暗色高彩度/高亮度的霓虹主題色（如薄荷綠 `#00f5a0`、赤紅 `#ff3b30`、財富金黃 `#ffb800`、科技冰藍 `#00f0ff`）直接作為文字、數據數字標籤或按鈕文字顏色**，否則會因對比度不足（< 2:1）違反 WCAG 2.1 AA 規範並引發嚴重視覺閱讀障礙。
+   * **預設情境按鈕與主題發光按鈕 (`.accentBtn` / `.exampleBtn`) 亮色適配**：在暗色模式下使用霓虹發光之按鈕，於 CSS Module 必須顯式宣告 `:global([data-theme='light'])` 切換為同色系 **高對比深色階 (600/700 色階)**，配合 8%~12% 輕度透明背景與 35% 柔和邊框。
    * 必須於對應 CSS Module (`*.module.css`) 在 `:global([data-theme='light'])` 下降階切換為同色系之 **高對比深色階 (600/700 色階)**：
+     - **科技冰藍/賽博藍 (`#00f0ff` / `#0077ff`)** ➔ 亮色模式文字/按鈕降階為 **深海天藍 `#0284c7` (Sky 600) / `#0369a1` (Sky 700)**
      - **霓虹粉桃/桃粉 (`#ff00aa` / `#ff007f`)** ➔ 亮色模式文字降階為 **深洋紅/紫紅 `#c026d3` (Fuchsia 600) / `#be185d` (Pink 700)**
      - **亮翠綠/薄荷綠 (`#00ffaa` / `#00f5a0`)** ➔ 亮色模式文字降階為 **深藍綠/翡翠綠 `#0d9488` (Teal 600) / `#059669` (Emerald 600)**
      - **賽博極光綠 (`#00ff66`)** ➔ 亮色模式文字降階為 **深翠綠 `#059669` (Emerald 600)**
@@ -168,7 +170,8 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    ### ⑧ 分段控制器與按鈕組 (Segmented Controls & Toggle Buttons) 狀態規範
    * 分段選單按鈕未選中時，Hover 狀態必須使用 `hover:text-text-main`（嚴禁寫死 `hover:text-white`，防範亮色模式下 Hover 導致文字變白隱形）。
-   * 選中狀態按鈕 (Active) 於亮色模式下須套用 12% 透明度深色背景與 40% 邊框（例如：`bg-emerald-600/12 border-emerald-600/40 text-emerald-700`）。
+   * 選中狀態按鈕 (Active) 於亮色模式下須套用 12% 透明度深色背景與 40% 邊框（例如：`bg-[#0284c7]/12 border-[#0284c7]/40 text-[#0284c7]`，不可寫死淺色霓虹文字）。
+   * 建議抽離專屬 `.toggleBtnActive` 與 `.toggleBtnInactive` 至 CSS Module 中中控，統一管理雙主題切換。
 
    ### ⑨ 試算分享連結 (Share Link Button) 與 Toast 反饋介面規範
    * 金融與試算類工具於輸入面板上方或底部應統一提供「複製試算分享連結」按鈕，並於點擊複製後觸發淡入 Toast 彈出視窗（`animate-fade-in` 搭配雙主題半透明底與主題光點），提示使用者連結已複製。
@@ -281,6 +284,13 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    * **介面無縫切換鈕**：在 Client 試算面板右上方放置雙語切換開關，以 Next.js `<Link>` 連結至對應網址，樣式套用語意類別 `bg-select-bg border-border-glass text-text-sub hover:text-text-main`。
 
+   * **`ToolLayout` 全域共用組件頁尾與返回鈕 i18n 自動感應規範**：
+     全站共用 `ToolLayout` 必須自動讀取 `usePathname()`。當路徑包含 `/en/`（英文語系路由）時，頁面外圍 UI 必須無感自動轉換：
+     - 返回首頁按鈕 ➔ **`Back to Home`**
+     - 頁尾贊助疑問句 ➔ **`Enjoying this tool?`**
+     - 頁尾贊助按鈕 ➔ **`Sponsor the Author ☕`**
+     繁體中文版面則自動維持 `返回首頁`、`喜歡這個小工具嗎？` 及 `贊助支持作者 ☕`。
+
 
 
 9. **Next.js App Router 靜態 Sitemap 生成與 AWS 部署避坑規範 (Sitemap & AWS Deployment)**
@@ -317,11 +327,13 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
 
 
-12. **高負載運算之「UI 線程非阻塞 (Non-Blocking Yielding)」與「漸進式串流呈現 (Progressive Streaming)」大原則**
+12. **高負載運算之「UI 線程非阻塞 (Non-Blocking Yielding)」、「漸進式串流呈現 (Progressive Streaming)」與「大數據 CSV/TXT 匯出」大原則**
 
     * 凡涉及多檔案、高解析度圖像或大數據處理的密集運算，**嚴禁連續霸佔 JavaScript 主執行緒 (Main Thread)** 引發 UI 畫面凍結或懸停動畫卡頓 (Frame Drop)。
 
-    * **時間片釋放 (Yielding)**：在密集處理迴圈中非同步釋放 CPU 時間片，確保瀏覽器能隨時維持 60fps 滑順響應與動態進度反饋。
+    * **時間片釋放 (Yielding Chunk Export)**：當處理或匯出大數據（如 IP 計算器產生 >10,000 筆可用 IP）時，必須採用非同步分塊處理（如每 20,000 筆透過 `setTimeout(processChunk, 0)` 釋放 Main Thread 時間片），維持 60fps 滑順響應與動態進度提示。
+
+    * **Excel 相容性 (UTF-8 BOM)**：CSV 匯出檔首行必須顯式寫入 `\uFEFF` (UTF-8 BOM) 標頭，確保 Microsoft Excel 在 Windows 環境下開啟時無亂碼。
 
     * **漸進式即時呈現 (Incremental Rendering)**：採用「單項處理完成即時連動畫面」的串流體驗，無須死等整體批次完成，大幅降低使用者感知等待時間。
 
@@ -402,6 +414,17 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
      ```
 
      確保橫向滑動時右側數據不會與凍結欄文字重疊。
+
+   * **表格標頭與凍結欄亮色模式置頂色規範 (Sticky Header & Frozen Column Rule)**：
+     `th` 置頂標頭 (`position: sticky; top: 0;`) 與首欄凍結欄 (`position: sticky; left: 0;`) 在暗色模式下採用 `#0b0b0e` / `var(--card-bg-solid)`。**於亮色模式下必須顯式宣告 `:global([data-theme='light'])` 切換背景**：
+     ```css
+     :global([data-theme='light']) .ipTable th {
+       background-color: #f1f5f9 !important; /* Slate 100 置頂背景 */
+       color: #334155 !important;
+       border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+     }
+     ```
+     嚴禁寫死暗色背景，否則橫向/縱向捲動表格時會出現深黑色影子區塊切斷亮色版面。
 
    * **表格標頭與數據字級**：還款明細表、數據統計表之標頭 (`<thead> <th>`) 與列數據 (`<tbody> <td>`) 一律採用 14px (`text-sm`) 標註，確保數據可讀性。
 

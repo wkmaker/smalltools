@@ -1,10 +1,141 @@
 'use client';
 
 import { useState, useEffect, useRef, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './qr-generator.module.css';
 
-export default function QrGeneratorClient() {
+interface QrGeneratorClientProps {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: 'QR Code 產生器',
+    subtitle: 'DESIGNER QR CODE GENERATOR',
+    description:
+      '專業免費的線上藝術 QR Code 產生器！支援自訂點體樣式、雙色漸層、中央 Logo 拖曳內嵌、自動 30% 高容錯率及 PNG/SVG/WEBP 向量圖檔下載。',
+    copyShareLink: '複製分享設計連結',
+    shareLinkCopied: '✓ 已複製設計網址！',
+    shareLinkPrompt: '複製以下網址以進行分享：',
+    contentType: '內容類型',
+    textOrUrl: '文字 / 網址',
+    wifiNetwork: 'WiFi 網路',
+    qrContentLabel: 'QR Code 內容',
+    textPlaceholder: '請輸入網址或文字 (e.g. https://...)',
+    wifiSsid: 'WiFi SSID (網路名稱)',
+    wifiSsidPlaceholder: '例如：MyHomeWiFi',
+    wifiPass: 'WiFi 密碼',
+    wifiPassPlaceholder: '請輸入 WiFi 密碼',
+    securityType: '安全性類型',
+    nopass: '無密碼 (nopass)',
+    hiddenSsid: '隱藏 SSID 網路',
+    dotsStyle: '碼體樣式',
+    square: '方形',
+    dots: '圓點',
+    rounded: '圓角',
+    classy: '葉狀',
+    classyRounded: '斜葉',
+    extraRounded: '極圓',
+    cornersSquareStyle: '定位點外框形狀',
+    shieldRounded: '盾牌圓角',
+    ring: '圓環',
+    cornersDotStyle: '定位點內核形狀',
+    bgSettings: '背景設定',
+    transparentBg: '背景透明',
+    errorCorrection: '容錯等級 (Error Correction)',
+    errorCorrectionL: 'L (7% 容錯)',
+    errorCorrectionM: 'M (15% 容錯)',
+    errorCorrectionQ: 'Q (25% 容錯)',
+    errorCorrectionH: 'H (30% 容錯 - 置中Logo推薦)',
+    enableGradient: '啟用雙色漸層碼體',
+    gradientType: '漸層類型',
+    linearGradient: '線性漸層 (Linear)',
+    radialGradient: '放射漸層 (Radial)',
+    colorPair: '配色設定 (Color 1 / Color 2)',
+    gradientAngle: '漸層旋轉角度',
+    singleColor: '碼體單色設定',
+    centerLogo: '置中 Logo / 頭像',
+    dropzoneText: '將圖片拖曳至此處，或點選此處上傳',
+    removeLogo: '移除 Logo',
+    logoSize: 'Logo 尺寸大小',
+    autoSafetyTitle: '自動安全防禦啟動：',
+    autoSafetyDesc: '已偵測到中央 Logo，程式已自動將 QR Code 容錯率調升至最高等級 H (30%)，並暫時停用手動設定以防止因遮擋失效。',
+    downloadFormat: '下載格式',
+    downloadSize: '下載尺寸',
+    printSize: '1200 (印刷)',
+    hdSize: '2000 (高清)',
+    downloadBtn: '下載設計好的 QR Code',
+    downloadToast: '已觸發 QR Code 下載',
+    langSwitchLabel: 'English',
+    langSwitchHref: '/qr-generator/en/',
+  },
+  en: {
+    title: 'Designer QR Code Generator',
+    subtitle: 'DESIGNER QR CODE GENERATOR',
+    description:
+      'Free professional online Designer QR Code Generator! Custom dot styles, dual gradients, center logo drag & drop, 30% error correction, and vector SVG download.',
+    copyShareLink: 'Copy Shareable Design Link',
+    shareLinkCopied: '✓ Design link copied!',
+    shareLinkPrompt: 'Copy the following URL to share:',
+    contentType: 'Content Type',
+    textOrUrl: 'Text / URL',
+    wifiNetwork: 'WiFi Network',
+    qrContentLabel: 'QR Code Content',
+    textPlaceholder: 'Enter URL or text (e.g. https://...)',
+    wifiSsid: 'WiFi SSID (Network Name)',
+    wifiSsidPlaceholder: 'e.g. MyHomeWiFi',
+    wifiPass: 'WiFi Password',
+    wifiPassPlaceholder: 'Enter WiFi password',
+    securityType: 'Security Type',
+    nopass: 'No Password (nopass)',
+    hiddenSsid: 'Hidden Network SSID',
+    dotsStyle: 'Dot Style',
+    square: 'Square',
+    dots: 'Dots',
+    rounded: 'Rounded',
+    classy: 'Classy',
+    classyRounded: 'Classy Rounded',
+    extraRounded: 'Extra Rounded',
+    cornersSquareStyle: 'Corner Frame Shape',
+    shieldRounded: 'Shield Rounded',
+    ring: 'Ring',
+    cornersDotStyle: 'Corner Dot Shape',
+    bgSettings: 'Background Settings',
+    transparentBg: 'Transparent Background',
+    errorCorrection: 'Error Correction Level',
+    errorCorrectionL: 'L (7% Error Correction)',
+    errorCorrectionM: 'M (15% Error Correction)',
+    errorCorrectionQ: 'Q (25% Error Correction)',
+    errorCorrectionH: 'H (30% High Error Correction)',
+    enableGradient: 'Enable Dual Color Gradient',
+    gradientType: 'Gradient Type',
+    linearGradient: 'Linear Gradient',
+    radialGradient: 'Radial Gradient',
+    colorPair: 'Color Scheme (Color 1 / Color 2)',
+    gradientAngle: 'Gradient Angle',
+    singleColor: 'Single Color Settings',
+    centerLogo: 'Center Logo / Avatar',
+    dropzoneText: 'Drag & drop logo image here, or click to upload',
+    removeLogo: 'Remove Logo',
+    logoSize: 'Logo Size Ratio',
+    autoSafetyTitle: 'Auto Safety Defense Active:',
+    autoSafetyDesc:
+      'Center logo detected. Error correction level is automatically set to High H (30%) to prevent scanning failure due to logo overlay.',
+    downloadFormat: 'Format',
+    downloadSize: 'Size',
+    printSize: '1200 (Print)',
+    hdSize: '2000 (HD)',
+    downloadBtn: 'Download Designed QR Code',
+    downloadToast: 'Triggered QR Code download',
+    langSwitchLabel: '繁體中文',
+    langSwitchHref: '/qr-generator/',
+  },
+};
+
+export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientProps) {
+  const t = TRANSLATIONS[lang];
+
   // --- 狀態宣告 ---
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [QRCodeStyling, setQRCodeStyling] = useState<any>(null);
@@ -80,7 +211,6 @@ export default function QrGeneratorClient() {
       .replace(/,/g, '\\,');
   };
 
-  // 取得 WiFi 或一般文字組裝後的最終 QR Code 內容
   const getComputedData = (): string => {
     if (contentType === 'text') {
       return text.trim() || 'https://tools.cjkuo.net';
@@ -113,20 +243,19 @@ export default function QrGeneratorClient() {
     setTimeout(() => setToast(''), 2500);
   };
 
-  // --- 載入核心設計標準變數與 qr-code-styling 套件 ---
+  // --- 載入核心主題顏色 ---
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#00ff66');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 255, 102, 0.6)');
 
-    // 在客戶端動態導入
     import('qr-code-styling').then((module) => {
       setQRCodeStyling(() => module.default);
     });
   }, []);
 
-  // --- 反向解析 URL 參數 (僅在 Mounted 時執行一次，防 Hydration 崩潰) ---
+  // --- 反向解析 URL 參數 ---
   useEffect(() => {
-    if (!QRCodeStyling) return; // 確保載入後再做解析與初始化
+    if (!QRCodeStyling) return;
 
     setIsMounted(true);
 
@@ -147,8 +276,8 @@ export default function QrGeneratorClient() {
       if (wh) setWifiHidden(wh === '1');
     } else {
       setContentType('text');
-      const t = params.get('t');
-      if (t) setText(t);
+      const tParam = params.get('t');
+      if (tParam) setText(tParam);
     }
 
     const dt = params.get('dt');
@@ -257,7 +386,6 @@ export default function QrGeneratorClient() {
   useEffect(() => {
     if (!QRCodeStyling || !containerRef.current) return;
 
-    // 清空舊預覽
     containerRef.current.innerHTML = '';
 
     const qr = new QRCodeStyling({
@@ -303,66 +431,8 @@ export default function QrGeneratorClient() {
 
     qrCodeRef.current = qr;
     qr.append(containerRef.current);
-  }, [QRCodeStyling]);
-
-  // --- 監聽選項變化並動態 update (與預覽雙向即時連動) ---
-  useEffect(() => {
-    if (!qrCodeRef.current) return;
-
-    const dataVal = getComputedData();
-    const ecLevel = logoBase64 ? 'H' : errorCorrection;
-    const finalBgColor = bgTransparent ? 'transparent' : bgColor;
-
-    const dotsColorOpts: any = {
-      type: dotsType,
-    };
-    const cornersSquareOpts: any = {
-      type: cornersSquare,
-    };
-    const cornersDotOpts: any = {
-      type: cornersDot,
-    };
-
-    if (useGradient) {
-      const gradientObj: any = {
-        type: gradientType,
-        colorStops: [
-          { offset: 0, color: color1 },
-          { offset: 1, color: color2 },
-        ],
-      };
-      if (gradientType === 'linear') {
-        gradientObj.rotation = (gradientRotation * Math.PI) / 180;
-      }
-      dotsColorOpts.gradient = gradientObj;
-      dotsColorOpts.color = undefined; // 移除純色
-      cornersSquareOpts.color = color1;
-      cornersDotOpts.color = color2;
-    } else {
-      dotsColorOpts.color = singleColor;
-      dotsColorOpts.gradient = null; // 清除 gradient 殘留以防 deepMerge Bug
-      cornersSquareOpts.color = singleColor;
-      cornersDotOpts.color = singleColor;
-    }
-
-    qrCodeRef.current.update({
-      data: dataVal,
-      image: logoBase64 || '',
-      backgroundOptions: {
-        color: finalBgColor,
-      },
-      dotsOptions: dotsColorOpts,
-      cornersSquareOptions: cornersSquareOpts,
-      cornersDotOptions: cornersDotOpts,
-      imageOptions: {
-        imageSize: logoSize / 100,
-        margin: 4,
-      },
-      qrOptions: {
-        errorCorrectionLevel: ecLevel,
-      },
-    });
   }, [
+    QRCodeStyling,
     contentType,
     text,
     wifiSsid,
@@ -380,23 +450,24 @@ export default function QrGeneratorClient() {
     color2,
     gradientRotation,
     singleColor,
-    errorCorrection,
     logoBase64,
     logoSize,
+    errorCorrection,
   ]);
 
-  // --- Logo 檔案讀取處理 ---
+  // --- 處理 Logo 上傳 ---
   const handleLogoFile = (file: File) => {
-    if (!file || !file.type.startsWith('image/')) {
-      alert('請上傳有效的圖片檔案。');
+    if (!file.type.startsWith('image/')) {
+      showToast('請上傳有效的圖片檔案 (PNG, JPG, SVG, etc.)');
       return;
     }
 
+    setLogoName(file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
         setLogoBase64(e.target.result as string);
-        setLogoName(file.name);
+        setErrorCorrection('H');
       }
     };
     reader.readAsDataURL(file);
@@ -410,7 +481,7 @@ export default function QrGeneratorClient() {
     }
   };
 
-  // --- 下載處理 (採用獨立實例避免閃爍) ---
+  // --- 下載處理 ---
   const downloadQr = async () => {
     if (!QRCodeStyling || !qrCodeRef.current) return;
 
@@ -424,7 +495,6 @@ export default function QrGeneratorClient() {
     })();
     const filename = `designer-qrcode_${timestamp}`;
 
-    // 使用當前的設定項建立一個專門用於下載的獨立實例，避免預覽閃爍
     const downloadInstance = new QRCodeStyling({
       ...qrCodeRef.current._options,
       width: downloadSize,
@@ -436,7 +506,7 @@ export default function QrGeneratorClient() {
       extension: downloadFormat,
     });
 
-    showToast('已觸發 QR Code 下載');
+    showToast(t.downloadToast);
   };
 
   // --- 複製分享連結 ---
@@ -444,62 +514,61 @@ export default function QrGeneratorClient() {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
-      showToast('✓ 已複製設計網址！');
+      showToast(t.shareLinkCopied);
     } catch (err) {
-      window.prompt('複製以下網址以進行分享：', url);
+      window.prompt(t.shareLinkPrompt, url);
     }
   };
 
   return (
     <ToolLayout
-      title="QR Code 產生器"
-      subtitle="DESIGNER QR CODE GENERATOR"
-      description="專業免費的線上藝術 QR Code 產生器！支援自訂點體樣式、雙色漸層、中央 Logo 拖曳內嵌、自動 30% 高容錯率及 PNG/SVG/WEBP 向量圖檔下載。"
+      title={t.title}
+      subtitle={t.subtitle}
+      description={t.description}
       accentColor="#00ff66"
       accentGlow="rgba(0, 255, 102, 0.6)"
     >
-      {/* 頂部功能條：包含複製設計網址 */}
-      <div className="flex justify-end mb-6 w-full px-4 max-sm:px-0">
-        <button
-          type="button"
-          onClick={copyShareLink}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-sub bg-white/[0.03] border border-white/[0.08] rounded-xl hover:bg-[#00ff66]/10 hover:text-[#00ff66] hover:border-[#00ff66] hover:shadow-[0_0_15px_rgba(0,255,102,0.25)] transition-all cursor-pointer"
+      {/* 頂部功能條：包含複製設計網址與語言切換 */}
+      <div className="flex justify-between items-center mb-6 w-full px-4 max-sm:px-0">
+        <Link
+          href={t.langSwitchHref}
+          className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors flex items-center gap-1.5"
         >
+          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20" />
+          </svg>
+          {t.langSwitchLabel}
+        </Link>
+
+        <button type="button" onClick={copyShareLink} className={styles.shareBtn}>
           <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
             <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z" />
           </svg>
-          複製分享設計連結
+          {t.copyShareLink}
         </button>
       </div>
 
       <div className="grid grid-cols-[1.2fr_0.8fr] gap-8 items-start text-left max-[1024px]:grid-cols-1 w-full px-4 max-sm:px-0">
         {/* 左欄：設定面板 */}
-        <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
+        <div className={styles.panelCard}>
           {/* 內容類型切換 */}
           <div className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-text-sub">內容類型</label>
-            <div className="flex gap-2 bg-white/[0.015] border border-white/[0.05] rounded-[50px] p-1.5 w-fit">
+            <span className="text-sm font-medium text-text-sub">{t.contentType}</span>
+            <div className={styles.segmentedContainer}>
               <button
                 type="button"
                 onClick={() => setContentType('text')}
-                className={`border-none rounded-[50px] px-5 py-2 text-sm font-medium transition-all cursor-pointer ${
-                  contentType === 'text'
-                    ? 'bg-[#00ff66]/8 text-[#00ff66]'
-                    : 'bg-transparent text-text-sub hover:text-white'
-                }`}
+                className={contentType === 'text' ? styles.tabBtnActive : styles.tabBtnInactive}
               >
-                文字 / 網址
+                {t.textOrUrl}
               </button>
               <button
                 type="button"
                 onClick={() => setContentType('wifi')}
-                className={`border-none rounded-[50px] px-5 py-2 text-sm font-medium transition-all cursor-pointer ${
-                  contentType === 'wifi'
-                    ? 'bg-[#00ff66]/8 text-[#00ff66]'
-                    : 'bg-transparent text-text-sub hover:text-white'
-                }`}
+                className={contentType === 'wifi' ? styles.tabBtnActive : styles.tabBtnInactive}
               >
-                WiFi 網路
+                {t.wifiNetwork}
               </button>
             </div>
           </div>
@@ -508,17 +577,17 @@ export default function QrGeneratorClient() {
           {contentType === 'text' && (
             <div className="flex flex-col gap-3">
               <label htmlFor={textInputId} className="text-sm font-medium text-text-sub">
-                QR Code 內容
+                {t.qrContentLabel}
               </label>
-              <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff66]/40 transition-colors">
+              <div className={styles.inputContainer}>
                 <input
                   id={textInputId}
                   type="text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="請輸入網址或文字 (e.g. https://...)"
+                  placeholder={t.textPlaceholder}
                   autoComplete="off"
-                  className="w-full bg-transparent border-none outline-none text-white text-base font-medium placeholder-white/30"
+                  className={styles.inputField}
                 />
               </div>
             </div>
@@ -530,34 +599,34 @@ export default function QrGeneratorClient() {
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div className="flex flex-col gap-3">
                   <label htmlFor={wifiSsidId} className="text-sm font-medium text-text-sub">
-                    WiFi SSID (網路名稱)
+                    {t.wifiSsid}
                   </label>
-                  <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff66]/40 transition-colors">
+                  <div className={styles.inputContainer}>
                     <input
                       id={wifiSsidId}
                       type="text"
                       value={wifiSsid}
                       onChange={(e) => setWifiSsid(e.target.value)}
-                      placeholder="例如：MyHomeWiFi"
+                      placeholder={t.wifiSsidPlaceholder}
                       autoComplete="off"
-                      className="w-full bg-transparent border-none outline-none text-white text-base font-medium placeholder-white/30"
+                      className={styles.inputField}
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <label htmlFor={wifiPassId} className="text-sm font-medium text-text-sub">
-                    WiFi 密碼
+                    {t.wifiPass}
                   </label>
-                  <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00ff66]/40 transition-colors">
+                  <div className={styles.inputContainer}>
                     <input
                       id={wifiPassId}
                       type="text"
                       value={wifiPass}
                       onChange={(e) => setWifiPass(e.target.value)}
-                      placeholder="請輸入 WiFi 密碼"
+                      placeholder={t.wifiPassPlaceholder}
                       autoComplete="off"
-                      className="w-full bg-transparent border-none outline-none text-white text-base font-medium placeholder-white/30"
+                      className={styles.inputField}
                     />
                   </div>
                 </div>
@@ -566,7 +635,7 @@ export default function QrGeneratorClient() {
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div className="flex flex-col gap-3">
                   <label htmlFor={wifiEncryptionId} className="text-sm font-medium text-text-sub">
-                    安全性類型
+                    {t.securityType}
                   </label>
                   <select
                     id={wifiEncryptionId}
@@ -576,7 +645,7 @@ export default function QrGeneratorClient() {
                   >
                     <option value="WPA">WPA/WPA2</option>
                     <option value="WEP">WEP</option>
-                    <option value="nopass">無密碼 (nopass)</option>
+                    <option value="nopass">{t.nopass}</option>
                   </select>
                 </div>
 
@@ -588,7 +657,7 @@ export default function QrGeneratorClient() {
                       onChange={(e) => setWifiHidden(e.target.checked)}
                       className="accent-[#00ff66] w-4.5 h-4.5 rounded"
                     />
-                    隱藏 SSID 網路
+                    {t.hiddenSsid}
                   </label>
                 </div>
               </div>
@@ -597,12 +666,12 @@ export default function QrGeneratorClient() {
 
           {/* 碼體樣式 (網格) */}
           <div className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-text-sub">碼體樣式</label>
+            <span className="text-sm font-medium text-text-sub">{t.dotsStyle}</span>
             <div className="grid grid-cols-6 gap-2.5 max-md:grid-cols-3 max-sm:grid-cols-2">
               {[
                 {
                   id: 'square',
-                  name: '方形',
+                  name: t.square,
                   icon: (
                     <svg viewBox="0 0 24 24" className="w-5 h-5">
                       <rect x="4" y="4" width="16" height="16" fill="currentColor" />
@@ -611,7 +680,7 @@ export default function QrGeneratorClient() {
                 },
                 {
                   id: 'dots',
-                  name: '圓點',
+                  name: t.dots,
                   icon: (
                     <svg viewBox="0 0 24 24" className="w-5 h-5">
                       <circle cx="12" cy="12" r="8" fill="currentColor" />
@@ -620,7 +689,7 @@ export default function QrGeneratorClient() {
                 },
                 {
                   id: 'rounded',
-                  name: '圓角',
+                  name: t.rounded,
                   icon: (
                     <svg viewBox="0 0 24 24" className="w-5 h-5">
                       <rect x="4" y="4" width="16" height="16" rx="5" fill="currentColor" />
@@ -629,31 +698,25 @@ export default function QrGeneratorClient() {
                 },
                 {
                   id: 'classy',
-                  name: '葉狀',
+                  name: t.classy,
                   icon: (
                     <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <path
-                        d="M4 12C4 7.58 7.58 4 12 4H20V12C20 16.42 16.42 20 12 20H4V12Z"
-                        fill="currentColor"
-                      />
+                      <path d="M4 12C4 7.58 7.58 4 12 4H20V12C20 16.42 16.42 20 12 20H4V12Z" fill="currentColor" />
                     </svg>
                   ),
                 },
                 {
                   id: 'classy-rounded',
-                  name: '斜葉',
+                  name: t.classyRounded,
                   icon: (
                     <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <path
-                        d="M4 12C4 7.58 7.58 4 12 4H20L20 12C20 16.42 16.42 20 12 20L4 12Z"
-                        fill="currentColor"
-                      />
+                      <path d="M4 12C4 7.58 7.58 4 12 4H20L20 12C20 16.42 16.42 20 12 20L4 12Z" fill="currentColor" />
                     </svg>
                   ),
                 },
                 {
                   id: 'extra-rounded',
-                  name: '極圓',
+                  name: t.extraRounded,
                   icon: (
                     <svg viewBox="0 0 24 24" className="w-5 h-5">
                       <rect x="4" y="4" width="16" height="16" rx="8" fill="currentColor" />
@@ -665,9 +728,7 @@ export default function QrGeneratorClient() {
                   key={opt.id}
                   type="button"
                   onClick={() => setDotsType(opt.id)}
-                  className={`${styles.styleOptionBtn} ${
-                    dotsType === opt.id ? styles.styleOptionBtnActive : ''
-                  }`}
+                  className={`${styles.styleOptionBtn} ${dotsType === opt.id ? styles.styleOptionBtnActive : ''}`}
                 >
                   {opt.icon}
                   <span className="text-xs font-medium">{opt.name}</span>
@@ -677,44 +738,35 @@ export default function QrGeneratorClient() {
           </div>
 
           <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
-            {/* 定位點外框 (網格) */}
+            {/* 定位點外框 */}
             <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-text-sub">定位點外框形狀</label>
+              <span className="text-sm font-medium text-text-sub">{t.cornersSquareStyle}</span>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   {
                     id: 'extra-rounded',
-                    name: '盾牌圓角',
+                    name: t.shieldRounded,
                     icon: (
                       <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <rect
-                          x="3" y="3" width="18" height="18" rx="5"
-                          fill="none" stroke="currentColor" strokeWidth="3"
-                        />
+                        <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="3" />
                       </svg>
                     ),
                   },
                   {
                     id: 'square',
-                    name: '方形',
+                    name: t.square,
                     icon: (
                       <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <rect
-                          x="3" y="3" width="18" height="18"
-                          fill="none" stroke="currentColor" strokeWidth="3"
-                        />
+                        <rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" />
                       </svg>
                     ),
                   },
                   {
                     id: 'dot',
-                    name: '圓環',
+                    name: t.ring,
                     icon: (
                       <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <circle
-                          cx="12" cy="12" r="9"
-                          fill="none" stroke="currentColor" strokeWidth="3"
-                        />
+                        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="3" />
                       </svg>
                     ),
                   },
@@ -734,14 +786,14 @@ export default function QrGeneratorClient() {
               </div>
             </div>
 
-            {/* 定位點內核 (網格) */}
+            {/* 定位點內核 */}
             <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-text-sub">定位點內核形狀</label>
+              <span className="text-sm font-medium text-text-sub">{t.cornersDotStyle}</span>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   {
                     id: 'dot',
-                    name: '圓點',
+                    name: t.dots,
                     icon: (
                       <svg viewBox="0 0 24 24" className="w-5 h-5">
                         <circle cx="12" cy="12" r="6" fill="currentColor" />
@@ -750,7 +802,7 @@ export default function QrGeneratorClient() {
                   },
                   {
                     id: 'square',
-                    name: '方形',
+                    name: t.square,
                     icon: (
                       <svg viewBox="0 0 24 24" className="w-5 h-5">
                         <rect x="6" y="6" width="12" height="12" fill="currentColor" />
@@ -759,7 +811,7 @@ export default function QrGeneratorClient() {
                   },
                   {
                     id: 'rounded',
-                    name: '圓角',
+                    name: t.rounded,
                     icon: (
                       <svg viewBox="0 0 24 24" className="w-5 h-5">
                         <rect x="6" y="6" width="12" height="12" rx="3" fill="currentColor" />
@@ -771,9 +823,7 @@ export default function QrGeneratorClient() {
                     key={opt.id}
                     type="button"
                     onClick={() => setCornersDot(opt.id)}
-                    className={`${styles.styleOptionBtn} ${
-                      cornersDot === opt.id ? styles.styleOptionBtnActive : ''
-                    }`}
+                    className={`${styles.styleOptionBtn} ${cornersDot === opt.id ? styles.styleOptionBtnActive : ''}`}
                   >
                     {opt.icon}
                     <span className="text-xs font-medium">{opt.name}</span>
@@ -786,9 +836,11 @@ export default function QrGeneratorClient() {
           <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
             {/* 背景色與透明設定 */}
             <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-text-sub">背景設定</label>
+              <label htmlFor={bgColorId} className="text-sm font-medium text-text-sub">
+                {t.bgSettings}
+              </label>
               <div className="flex gap-4 items-center">
-                <div className="flex items-center gap-2.5 bg-white/[0.02] border border-white/[0.1] px-3 py-2 rounded-xl">
+                <div className="flex items-center gap-2.5 bg-select-bg border border-border-glass px-3 py-2 rounded-xl">
                   <input
                     id={bgColorId}
                     type="color"
@@ -808,7 +860,7 @@ export default function QrGeneratorClient() {
                     onChange={(e) => setBgTransparent(e.target.checked)}
                     className="accent-[#00ff66] w-4.5 h-4.5 rounded"
                   />
-                  背景透明
+                  {t.transparentBg}
                 </label>
               </div>
             </div>
@@ -816,7 +868,7 @@ export default function QrGeneratorClient() {
             {/* 容錯率設定 */}
             <div className="flex flex-col gap-3">
               <label htmlFor={errorCorrectionId} className="text-sm font-medium text-text-sub">
-                容錯等級 (Error Correction)
+                {t.errorCorrection}
               </label>
               <select
                 id={errorCorrectionId}
@@ -825,16 +877,16 @@ export default function QrGeneratorClient() {
                 disabled={!!logoBase64}
                 className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-base font-medium cursor-pointer disabled:opacity-50"
               >
-                <option value="L">L (7% 容錯)</option>
-                <option value="M">M (15% 容錯)</option>
-                <option value="Q">Q (25% 容錯)</option>
-                <option value="H">H (30% 容錯 - 置中Logo推薦)</option>
+                <option value="L">{t.errorCorrectionL}</option>
+                <option value="M">{t.errorCorrectionM}</option>
+                <option value="Q">{t.errorCorrectionQ}</option>
+                <option value="H">{t.errorCorrectionH}</option>
               </select>
             </div>
           </div>
 
           {/* 啟用漸層與配色 */}
-          <div className="flex flex-col gap-4 border-t border-white/[.08] pt-6">
+          <div className="flex flex-col gap-4 border-t border-border-glass pt-6">
             <div className="flex items-center">
               <label className="flex items-center gap-3 cursor-pointer select-none text-text-sub text-base font-medium">
                 <input
@@ -843,7 +895,7 @@ export default function QrGeneratorClient() {
                   onChange={(e) => setUseGradient(e.target.checked)}
                   className="accent-[#00ff66] w-5 h-5 rounded"
                 />
-                啟用雙色漸層碼體
+                {t.enableGradient}
               </label>
             </div>
 
@@ -852,7 +904,7 @@ export default function QrGeneratorClient() {
                 <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                   <div className="flex flex-col gap-3">
                     <label htmlFor={gradientTypeId} className="text-sm font-medium text-text-sub">
-                      漸層類型
+                      {t.gradientType}
                     </label>
                     <select
                       id={gradientTypeId}
@@ -860,17 +912,15 @@ export default function QrGeneratorClient() {
                       onChange={(e) => setGradientType(e.target.value as any)}
                       className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-base font-medium cursor-pointer"
                     >
-                      <option value="linear">線性漸層 (Linear)</option>
-                      <option value="radial">放射漸層 (Radial)</option>
+                      <option value="linear">{t.linearGradient}</option>
+                      <option value="radial">{t.radialGradient}</option>
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-3">
-                    <label className="text-sm font-medium text-text-sub">
-                      配色設定 (Color 1 / Color 2)
-                    </label>
+                    <span className="text-sm font-medium text-text-sub">{t.colorPair}</span>
                     <div className="flex gap-3">
-                      <div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.1] px-3 py-2 rounded-xl flex-1">
+                      <div className="flex items-center gap-2 bg-select-bg border border-border-glass px-3 py-2 rounded-xl flex-1">
                         <input
                           type="color"
                           value={color1}
@@ -879,7 +929,7 @@ export default function QrGeneratorClient() {
                         />
                         <span className="font-mono text-xs text-text-main font-medium">{color1.toUpperCase()}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.1] px-3 py-2 rounded-xl flex-1">
+                      <div className="flex items-center gap-2 bg-select-bg border border-border-glass px-3 py-2 rounded-xl flex-1">
                         <input
                           type="color"
                           value={color2}
@@ -895,8 +945,8 @@ export default function QrGeneratorClient() {
                 {gradientType === 'linear' && (
                   <div className="flex flex-col gap-3">
                     <div className="flex justify-between text-sm text-text-sub font-medium">
-                      <span>漸層旋轉角度</span>
-                      <span className="font-mono text-[#00ff66]">{gradientRotation}°</span>
+                      <span>{t.gradientAngle}</span>
+                      <span className={styles.greenText}>{gradientRotation}°</span>
                     </div>
                     <input
                       type="range"
@@ -911,8 +961,8 @@ export default function QrGeneratorClient() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <label className="text-sm font-medium text-text-sub">碼體單色設定</label>
-                <div className="flex items-center gap-2.5 bg-white/[0.02] border border-white/[0.1] px-3 py-2 rounded-xl w-fit">
+                <span className="text-sm font-medium text-text-sub">{t.singleColor}</span>
+                <div className="flex items-center gap-2.5 bg-select-bg border border-border-glass px-3 py-2 rounded-xl w-fit">
                   <input
                     type="color"
                     value={singleColor}
@@ -926,8 +976,8 @@ export default function QrGeneratorClient() {
           </div>
 
           {/* 置中 Logo */}
-          <div className="flex flex-col gap-3 border-t border-white/[.08] pt-6">
-            <label className="text-sm font-medium text-text-sub">置中 Logo / 頭像</label>
+          <div className="flex flex-col gap-3 border-t border-border-glass pt-6">
+            <span className="text-sm font-medium text-text-sub">{t.centerLogo}</span>
 
             {!logoBase64 ? (
               <div
@@ -944,16 +994,12 @@ export default function QrGeneratorClient() {
                   }
                 }}
                 onClick={() => fileInputRef.current?.click()}
-                className={`${styles.dropzoneContainer} ${
-                  isDragOver ? styles.dropzoneContainerDragover : ''
-                }`}
+                className={`${styles.dropzoneContainer} ${isDragOver ? styles.dropzoneContainerDragover : ''}`}
               >
-                <svg viewBox="0 0 24 24" className="w-8 h-8 fill-text-sub group-hover:fill-[#00ff66] transition-colors">
+                <svg viewBox="0 0 24 24" className="w-8 h-8 fill-text-sub transition-colors">
                   <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
                 </svg>
-                <div className="text-xs text-text-sub font-medium leading-normal">
-                  將圖片拖曳至此處，或點選此處上傳
-                </div>
+                <div className="text-xs text-text-sub font-medium leading-normal">{t.dropzoneText}</div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -968,21 +1014,19 @@ export default function QrGeneratorClient() {
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.1] rounded-xl px-4 py-3 w-full">
+                <div className="flex items-center justify-between bg-select-bg border border-border-glass rounded-xl px-4 py-3 w-full">
                   <div className="flex items-center gap-3">
                     <img
                       src={logoBase64}
                       alt="Logo Preview"
                       className="w-8 h-8 object-contain bg-white rounded border border-black/10"
                     />
-                    <span className="text-sm font-medium text-text-main max-w-[200px] truncate">
-                      {logoName}
-                    </span>
+                    <span className="text-sm font-medium text-text-main max-w-[200px] truncate">{logoName}</span>
                   </div>
                   <button
                     type="button"
                     onClick={removeLogo}
-                    title="移除 Logo"
+                    title={t.removeLogo}
                     className="bg-transparent border-none text-text-sub hover:text-red-500 hover:scale-115 transition-all cursor-pointer p-1"
                   >
                     <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -994,8 +1038,8 @@ export default function QrGeneratorClient() {
                 {/* 調整 Logo 大小 */}
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between text-sm text-text-sub font-medium">
-                    <span>Logo 尺寸大小</span>
-                    <span className="font-mono text-[#00ff66]">{logoSize}%</span>
+                    <span>{t.logoSize}</span>
+                    <span className={styles.greenText}>{logoSize}%</span>
                   </div>
                   <input
                     id={logoSizeId}
@@ -1009,13 +1053,13 @@ export default function QrGeneratorClient() {
                 </div>
 
                 {/* 安全防禦提示 */}
-                <div className="flex gap-3 bg-[#00ff66]/5 border border-[#00ff66]/15 rounded-xl p-4 text-sm text-[#00ff66] leading-relaxed">
+                <div className={styles.alertBox}>
                   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current shrink-0 mt-0.5">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                   </svg>
                   <div>
-                    <strong>自動安全防禦啟動：</strong>
-                    已偵測到中央 Logo，程式已自動將 QR Code 容錯率調升至最高等級 H (30%)，並暫時停用手動設定以防止因遮擋失效。
+                    <strong>{t.autoSafetyTitle}</strong>
+                    {t.autoSafetyDesc}
                   </div>
                 </div>
               </div>
@@ -1024,7 +1068,7 @@ export default function QrGeneratorClient() {
         </div>
 
         {/* 右欄：預覽與下載 */}
-        <div className="bg-black/30 border border-white/[.08] rounded-2xl p-8 flex flex-col items-center gap-6 shadow-lg backdrop-blur-md sticky top-6">
+        <div className={`${styles.panelCard} sticky top-6 items-center`}>
           <div
             className={`${styles.qrPreview} ${bgTransparent ? styles.checkerboardBg : ''}`}
             style={{ backgroundColor: bgTransparent ? undefined : bgColor }}
@@ -1038,7 +1082,7 @@ export default function QrGeneratorClient() {
             <div className="grid grid-cols-2 gap-3.5">
               <div className="flex flex-col gap-2">
                 <label htmlFor={downloadFormatId} className="text-sm font-medium text-text-sub">
-                  下載格式
+                  {t.downloadFormat}
                 </label>
                 <select
                   id={downloadFormatId}
@@ -1046,16 +1090,16 @@ export default function QrGeneratorClient() {
                   onChange={(e) => setDownloadFormat(e.target.value as any)}
                   className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-3 py-2.5 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
                 >
-                  <option value="png">PNG (點陣)</option>
-                  <option value="svg">SVG (向量)</option>
-                  <option value="jpeg">JPEG (照片)</option>
-                  <option value="webp">WEBP (壓縮)</option>
+                  <option value="png">PNG</option>
+                  <option value="svg">SVG</option>
+                  <option value="jpeg">JPEG</option>
+                  <option value="webp">WEBP</option>
                 </select>
               </div>
 
               <div className="flex flex-col gap-2">
                 <label htmlFor={downloadSizeId} className="text-sm font-medium text-text-sub">
-                  下載尺寸
+                  {t.downloadSize}
                 </label>
                 <select
                   id={downloadSizeId}
@@ -1065,31 +1109,23 @@ export default function QrGeneratorClient() {
                 >
                   <option value="300">300 x 300</option>
                   <option value="600">600 x 600</option>
-                  <option value="1200">1200 (印刷)</option>
-                  <option value="2000">2000 (高清)</option>
+                  <option value="1200">{t.printSize}</option>
+                  <option value="2000">{t.hdSize}</option>
                 </select>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={downloadQr}
-              className="w-full h-12 bg-[#00ff66]/20 border border-[#00ff66]/40 text-[#00ff66] font-bold text-sm rounded-xl cursor-pointer hover:bg-[#00ff66] hover:text-[#030305] hover:shadow-[0_0_20px_rgba(0,255,102,0.5)] transition-all flex items-center justify-center gap-2 mt-2"
-            >
+            <button type="button" onClick={downloadQr} className={styles.downloadBtn}>
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
                 <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
               </svg>
-              下載設計好的 QR Code
+              {t.downloadBtn}
             </button>
           </div>
         </div>
       </div>
 
-      {toast && (
-        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm font-medium rounded-xl bg-[#00ff66]/20 border border-[#00ff66]/40 text-[#00ff66] backdrop-blur-md shadow-lg z-50 animate-bounce">
-          {toast}
-        </div>
-      )}
+      {toast && <div className={styles.toast}>{toast}</div>}
     </ToolLayout>
   );
 }

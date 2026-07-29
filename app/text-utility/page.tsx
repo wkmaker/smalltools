@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: '字數統計,文字處理,大小寫轉換,文字排版,去除空白,去除重複行,線上文字工具,正則替換',
   alternates: {
     canonical: 'https://tools.cjkuo.net/text-utility/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/text-utility/',
+      en: 'https://tools.cjkuo.net/text-utility/en/',
+    },
   },
   openGraph: {
     title: '文字處理助手 - 免費線上字數統計、大小寫轉換與文字排版工具',
