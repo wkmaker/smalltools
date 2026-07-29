@@ -1,0 +1,83 @@
+name: 錯誤回報 (Bug Report)
+description: 建立一個錯誤回報來協助我們改善 Small Tools
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感謝您花時間回報這個問題！請盡可能提供詳細資訊以協助我們快速定位與修復問題。
+
+  - type: dropdown
+    id: affected-tool
+    attributes:
+      label: 相關工具 / 頁面
+      description: 請選擇發生問題的工具或頁面。
+      options:
+        - 首頁 / 導覽列 (Homepage / Nav)
+        - JSON 工具 (JSON Processor)
+        - PDF 壓縮 / 處理器 (PDF Compressor / Processor)
+        - SSL 證書鏈 / 轉換器 (SSL Converter)
+        - Epoch 時間戳轉換 (Epoch Timestamp)
+        - 時間 / 時鐘工具 (Time Clock)
+        - Base64 編解碼 (Base64)
+        - Diff 文字比對 (Diff Checker)
+        - DNS Dig / HTTPS DNS 查詢 (DNS Dig / Generator)
+        - IP 網段計算與檢測 (IP Calculator & Detector)
+        - 文字處理工具 (Text Utility)
+        - 密碼產生器 (Password Generator)
+        - QR Code 產生器 (QR Generator)
+        - 圖片處理工具 (Image Processor)
+        - 幸運轉盤 (Lucky Wheel)
+        - 財務 / 貸款計算機 (Loan & Investment Calculators)
+        - 其他 / 全站通用問題 (Other / General)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 錯誤描述
+      description: 請清楚簡潔地描述您遇到的問題。
+      placeholder: 例如：點擊「壓縮 PDF」按鈕後，頁面沒有反應且沒有下載檔案...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 預期結果
+      description: 請描述您預期應該發生的正確結果。
+      placeholder: 例如：應該要跳出下載視窗或提示壓縮完成...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 重現步驟
+      description: 請提供可以重現此問題的詳細步驟。
+      value: |
+        1. 前往 '...'
+        2. 點擊 '...'
+        3. 觀察到錯誤發生
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 環境資訊
+      description: 請提供您的裝置、作業系統與瀏覽器版本。
+      placeholder: 例如：Windows 11 / Chrome 124 (Desktop) 或 iOS 17 / Safari (Mobile)
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截圖或 Console 錯誤訊息 (選填)
+      description: 如果可以，請貼上截圖或 Console Log，這對除錯非常有幫助。
+      placeholder: 拖曳圖片至此處，或貼上 Console 中的 Error Message/Log
+    validations:
+      required: false

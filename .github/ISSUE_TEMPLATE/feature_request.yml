@@ -1,0 +1,57 @@
+name: 功能建議 (Feature Request)
+description: 為 Small Tools 提出新功能或現有工具改善的建議
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感謝您提出想法！我們非常樂意聽取新的小工具建議或現有工具的改善想法。
+
+  - type: dropdown
+    id: feature-category
+    attributes:
+      label: 建議類別
+      description: 請選擇此建議屬於哪一種種類。
+      options:
+        - 新增線上小工具 (New Tool Idea)
+        - 現有工具功能擴充 (Existing Tool Enhancement)
+        - UI / UX 與視覺美化 (UI/UX Improvement)
+        - 效能與 PWA / 離線支援 (Performance & PWA)
+        - 其他建議 (Other)
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: 建議說明
+      description: 請清楚地描述您希望新增的功能或目前遇到的困擾。
+      placeholder: 例如：希望能新增一個能即時解析 JWT Token 的線上小工具...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: 建議的解決方案 / 運作方式
+      description: 請描述您期待這個功能如何運作或介面呈現方式。
+      placeholder: 例如：希望使用者輸入 JWT 字串後，右側能自動解碼出 Header 與 Payload 資訊...
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 考量過的替代方案 (選填)
+      description: 請簡述是否有考慮過其他替代做法或現有工具。
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他補充資訊 (選填)
+      description: 可提供參考連結、Mockup 截圖或其他有助於說明的資訊。
+    validations:
+      required: false
