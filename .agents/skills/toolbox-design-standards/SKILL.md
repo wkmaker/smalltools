@@ -175,6 +175,9 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    ### ⑨ 試算分享連結 (Share Link Button) 與 Toast 反饋介面規範
    * 金融與試算類工具於輸入面板上方或底部應統一提供「複製試算分享連結」按鈕，並於點擊複製後觸發淡入 Toast 彈出視窗（`animate-fade-in` 搭配雙主題半透明底與主題光點），提示使用者連結已複製。
+   * **Toast 雙主題高對比度降階規範**：
+     - 暗色模式：`bg-[themeColor]/20 border border-[themeColor]/40 text-[#ffffff] backdrop-blur-md`
+     - 亮色模式：`bg-white/95 border border-[darkThemeColor]/40 text-[darkThemeColor]` (例如黃色主題切換為 Amber 600 `#d97706`，極客綠切換為 Emerald 600 `#059669`，紅色主題切換為 Red 600 `#dc2626`)，確保彈窗在淺色背景上文字對比度高於 4.5:1。
 
    ### ⑩ 全子頁籤/內層組件雙主題適配防盲區規範 (Deep Sub-Tab & Inner Component Rule)
    * 具備多子頁籤 (Sub-Tabs)、多步驟彈窗 (Wizard Modal) 或複雜子表單 (如 SSL 憑證轉換器、PDF 頁面處理器) 的工具組件，**絕不能僅改寫最外層 ToolLayout 與頁頭樣式**。
@@ -282,7 +285,7 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
      ```
 
-   * **介面無縫切換鈕**：在 Client 試算面板右上方放置雙語切換開關，以 Next.js `<Link>` 連結至對應網址，樣式套用語意類別 `bg-select-bg border-border-glass text-text-sub hover:text-text-main`。
+   * **介面無縫切換鈕**：在 Client 試算面板右上方放置雙語切換開關，以 Next.js `<Link>` 連結至對應網址，字體統一採用 **14px (`text-sm font-medium rounded-xl`)**，樣式套用語意類別 `bg-select-bg border-border-glass text-text-sub hover:text-text-main transition-colors`，擴大行動端觸碰熱區。
 
    * **`ToolLayout` 全域共用組件頁尾與返回鈕 i18n 自動感應規範**：
      全站共用 `ToolLayout` 必須自動讀取 `usePathname()`。當路徑包含 `/en/`（英文語系路由）時，頁面外圍 UI 必須無感自動轉換：
@@ -297,7 +300,7 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    * **`app/sitemap.ts` 原生動態生成**：全站統一採用 App Router 原生 `app/sitemap.ts` 定義 `MetadataRoute.Sitemap`。當執行 `next build` 進行靜態導出 (`output: 'export'`) 時，Next.js 會自動於 `out/sitemap.xml` 產出對應的 XML。
 
-   * **多語言獨立路由 Sitemap 清單同步**：新增工具之多語言獨立路由（如 `/my-salary-calculator/en/`）時，除了宣告 Metadata，**必須同步將英文路由網址更新至 `app/sitemap.ts` 的 `pages` 清單陣列**，確保產出的 XML 100% 覆蓋所有語系頁面。
+    * **多語言獨立路由 Sitemap 清單同步**：新增工具之多語言獨立路由（如 `/my-salary-calculator/en/`、`/pdf-compressor/en/`）時，除了宣告 Metadata，**必須同步將英文路由網址更新至 `app/sitemap.ts` 的 `pages` 清單陣列**，並設定 `lastModified` 為當前日期，確保靜態導出產出的 `out/sitemap.xml` 100% 覆蓋所有語系頁面。
 
    * **必須顯式宣告靜態導出 (`export const dynamic = 'force-static'`)**：在 `app/sitemap.ts` 檔案頂層**必須顯式加入 `export const dynamic = 'force-static';`**。若未宣告，Next.js 在 `output: export` 靜態導出模式下執行 `next build` 會拋出 `/sitemap.xml` 路由未設置靜態導出而中斷編譯的錯誤。
 
@@ -373,7 +376,7 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    * 所有表單控制項之 `<label>` 必須設置 `htmlFor={inputId}`，且對應的 `<input>` 必須宣告 `id={inputId}`。
 
-   * 為防範 SSR 與 React Client Hydration 時產生 ID 不一致警告，必須統一使用 React 的 `useId()` 鉤子生成唯一元素 ID：
+   * 為防範 SSR與 React Client Hydration 時產生 ID 不一致警告，必須統一使用 React 的 `useId()` 鉤子生成唯一元素 ID：
 
      ```typescript
 
@@ -381,7 +384,9 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
      ```
 
-   * **`<label>` 語意嚴格性防錯**：`<label>` 必須且只能搭配具備對應 `id` 的輸入控制項（如 `<input>`、`<select>`、`<textarea>`）。若區域僅為標籤標題、按鈕組（如多選模式切換、預設 Preset 按鈕、Checkbox 列表），**嚴禁使用 `<label>` 包裹無 `id` 的區塊**，否則會破壞 DOM accessibility 樹。應統一改用 `<span>` 或 `<legend>`，並配置適當字色 `text-text-sub`。
+    * **`<label>` 語意嚴格性防錯**：`<label>` 必須且只能搭配具備對應 `id` 的輸入控制項（如 `<input>`、`<select>`、`<textarea>`）。若區域僅為標籤標題、按鈕組（如多選模式切換、預設 Preset 按鈕、Checkbox 列表），**嚴禁使用 `<label>` 包裹無 `id` 的區塊**，否則會破壞 DOM accessibility 樹。應統一改用 `<span>` 或 `<legend>`，並配置適當字色 `text-text-sub`。
+
+    * **無障礙隱藏標籤規範 (`sr-only` Label Pattern)**：若卡片或工具列為保持極簡 UI 未顯示文字標籤（如表格列內動態下拉選單、縮放控制鈕），必須透過 `useId()` 生成唯一的 `inputId`，並搭配 `<label htmlFor={inputId} className="sr-only">說明文字</label>`（螢幕閱讀器專用隱藏標籤），兼顧視覺設計質感與 W3C Accessibility 規範。
 
 
 
@@ -468,7 +473,9 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    * **模式切換與功能按鈕 (Toggle Buttons & Tabs)**：模式切換鈕、語系切換鈕及快捷操作按鈕，一律統一升級為 **14px (`text-sm font-semibold` / `font-medium`)**，以提升行動端點擊觸碰範圍與視覺識別度。
 
-   * **描述文案與次要備註**：頁面描述文案採用 **16px (`text-base text-text-sub`)** 最佳閱讀字級；次要備註與對應級距小字說明至少保持 **12px (`text-xs text-text-sub`)**，避免使用 10~11px 過小微縮字體。
+    * **描述文案與次要備註**：頁面描述文案採用 **16px (`text-base text-text-sub`)** 最佳閱讀字級；次要備註與對應級距小字說明至少保持 **12px (`text-xs text-text-sub`)**，避免使用 10~11px 過小微縮字體。
+
+    * **時鐘與 Monospace 動態數據防爆框規範 (Live Clock & Monospace Overflow Safeguard)**：高頻更新看板、UNIX 時間戳或 Monospace 等寬數據（如 `/epoch`），在行動端視埠 (320px~375px) 容易產生擠壓斷行或強行撐開卡片。父層容器必須顯式宣告 `min-width: 0`；數據文字本身必須包裹 `truncate` (`white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`)，配合醒目化 14px/16px 階層，防止橫向爆框。
 
 
 

@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: '轉盤抽獎,線上抽獎工具,幸運大轉盤,機率抽獎,全螢幕抽獎,尾牙抽獎,會議抽獎,免費轉盤',
   alternates: {
     canonical: 'https://tools.cjkuo.net/lucky-wheel/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/lucky-wheel/',
+      en: 'https://tools.cjkuo.net/lucky-wheel/en/',
+    },
   },
   openGraph: {
     title: '幸運轉盤抽獎小工具 - 免費線上自訂轉盤與機率抽獎',
@@ -37,7 +41,7 @@ export default function LuckyWheelPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <LuckyWheelClient />
+      <LuckyWheelClient lang="zh-TW" />
     </>
   );
 }

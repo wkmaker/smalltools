@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: '圖片處理,圖片裁切,圖片壓縮,圖片轉檔,WebP轉換,圖片縮放,批次壓縮圖片,線上圖片編輯',
   alternates: {
     canonical: 'https://tools.cjkuo.net/image-processor/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/image-processor/',
+      en: 'https://tools.cjkuo.net/image-processor/en/',
+    },
   },
   openGraph: {
     title: '萬能圖片處理大師 - 免費線上圖片裁切、壓縮、尺寸縮放與 WebP 批次轉檔工具',
@@ -37,7 +41,7 @@ export default function ImageProcessorPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <ImageProcessorClient />
+      <ImageProcessorClient lang="zh-TW" />
     </>
   );
 }

@@ -1,5 +1,34 @@
 /* app/pdf-processor/pdf-processor.module.css */
 
+.cardContainer {
+  background-color: var(--glass-bg, rgba(15, 15, 20, 0.6));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--glass-shadow);
+}
+
+@media (min-width: 640px) {
+  .cardContainer {
+    padding: 2rem;
+  }
+}
+
+.innerBlock {
+  background-color: var(--select-bg, rgba(0, 0, 0, 0.4));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.05));
+  padding: 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme='light']) .innerBlock {
+  background-color: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
 .dropzone {
   border: 2px dashed rgba(239, 68, 68, 0.4);
   background: rgba(0, 0, 0, 0.2);
@@ -12,9 +41,40 @@
   box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.05);
 }
 
+:global([data-theme='light']) .dropzone {
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+:global([data-theme='light']) .dropzone:hover {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  box-shadow: inset 0 0 20px rgba(220, 38, 38, 0.05);
+}
+
+.accentTag {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+:global([data-theme='light']) .accentTag {
+  background-color: rgba(220, 38, 38, 0.12);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+.accentText {
+  color: #ef4444;
+}
+
+:global([data-theme='light']) .accentText {
+  color: #dc2626;
+}
+
 .pageCard {
   background: rgba(18, 18, 24, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
   border-radius: 1rem;
   padding: 0.75rem;
   display: flex;
@@ -25,10 +85,20 @@
   user-select: none;
 }
 
+:global([data-theme='light']) .pageCard {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
 .pageCard:hover {
   border-color: #ef4444;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(239, 68, 68, 0.2);
   transform: translateY(-2px);
+}
+
+:global([data-theme='light']) .pageCard:hover {
+  border-color: #dc2626;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 15px rgba(220, 38, 38, 0.2);
 }
 
 .thumbWrapper {
@@ -44,12 +114,109 @@
   position: relative;
 }
 
+:global([data-theme='light']) .thumbWrapper {
+  background: #f1f5f9;
+}
+
 .thumbImg {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
+}
+
+.selectInput {
+  background-color: var(--select-bg, rgba(15, 15, 20, 0.95));
+  color: var(--text-primary, #ffffff);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  outline: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+:global([data-theme='light']) .selectInput {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.secondaryBtn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  color: var(--text-primary, #ffffff);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme='light']) .secondaryBtn {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #475569;
+}
+
+:global([data-theme='light']) .secondaryBtn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  background-color: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+:global([data-theme='light']) .toast {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #dc2626;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.modalCard {
+  background-color: #09090d;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:global([data-theme='light']) .modalCard {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modalViewer {
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme='light']) .modalViewer {
+  background-color: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.1);
 }

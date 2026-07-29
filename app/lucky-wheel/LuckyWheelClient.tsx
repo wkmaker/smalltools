@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './lucky-wheel.module.css';
 
@@ -37,44 +38,211 @@ export interface HistoryRecord {
   timestamp: number;
 }
 
-// 快速模板預設資料
-const PRIZE_TEMPLATES: Record<string, Omit<PrizeItem, 'id'>[]> = {
-  annual: [
-    { title: '特等獎 - Mac Mini', weight: 1, quantity: 1, drawnCount: 0, color: '#ff0055' },
-    { title: '頭獎 - iPhone 16', weight: 2, quantity: 2, drawnCount: 0, color: '#ff7700' },
-    { title: '二獎 - iPad Air', weight: 3, quantity: 3, drawnCount: 0, color: '#ffb800' },
-    { title: '三獎 - AirPods Pro', weight: 5, quantity: 5, drawnCount: 0, color: '#00f0ff' },
-    { title: '普獎 - 7-11 禮券 500元', weight: 10, quantity: 10, drawnCount: 0, color: '#00f5a0' },
-    { title: '銘謝惠顧', weight: 15, quantity: 99, drawnCount: 0, color: '#7000ff' },
-  ],
-  lucky: [
-    { title: '幸運數字 1', weight: 10, quantity: 1, drawnCount: 0, color: '#ff0055' },
-    { title: '幸運數字 2', weight: 10, quantity: 1, drawnCount: 0, color: '#ff7700' },
-    { title: '幸運數字 3', weight: 10, quantity: 1, drawnCount: 0, color: '#ffb800' },
-    { title: '幸運數字 4', weight: 10, quantity: 1, drawnCount: 0, color: '#00f0ff' },
-    { title: '幸運數字 5', weight: 10, quantity: 1, drawnCount: 0, color: '#00f5a0' },
-    { title: '幸運數字 6', weight: 10, quantity: 1, drawnCount: 0, color: '#7000ff' },
-  ],
-  punish: [
-    { title: '鬼臉三連拍', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
-    { title: '喝苦瓜汁一杯', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
-    { title: '現場大唱一首歌', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
-    { title: '伏地挺身 10 下', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
-    { title: '對隔壁深情告白', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
-    { title: '安全過關 免受懲罰', weight: 2, quantity: 99, drawnCount: 0, color: '#7000ff' },
-  ],
-  dinner: [
-    { title: '日式拉麵', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
-    { title: '韓式燒肉', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
-    { title: '義大利麵', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
-    { title: '台式便當', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
-    { title: '麥當勞速食', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
-    { title: '健康沙拉餐', weight: 1, quantity: 99, drawnCount: 0, color: '#7000ff' },
-  ],
+// 快速模板預設資料 (雙語)
+const PRIZE_TEMPLATES: Record<string, { 'zh-TW': Omit<PrizeItem, 'id'>[]; en: Omit<PrizeItem, 'id'>[] }> = {
+  annual: {
+    'zh-TW': [
+      { title: '特等獎 - Mac Mini', weight: 1, quantity: 1, drawnCount: 0, color: '#ff0055' },
+      { title: '頭獎 - iPhone 16', weight: 2, quantity: 2, drawnCount: 0, color: '#ff7700' },
+      { title: '二獎 - iPad Air', weight: 3, quantity: 3, drawnCount: 0, color: '#ffb800' },
+      { title: '三獎 - AirPods Pro', weight: 5, quantity: 5, drawnCount: 0, color: '#00f0ff' },
+      { title: '普獎 - 7-11 禮券 500元', weight: 10, quantity: 10, drawnCount: 0, color: '#00f5a0' },
+      { title: '銘謝惠顧', weight: 15, quantity: 99, drawnCount: 0, color: '#7000ff' },
+    ],
+    en: [
+      { title: 'Grand Prize - Mac Mini', weight: 1, quantity: 1, drawnCount: 0, color: '#ff0055' },
+      { title: '1st Prize - iPhone 16', weight: 2, quantity: 2, drawnCount: 0, color: '#ff7700' },
+      { title: '2nd Prize - iPad Air', weight: 3, quantity: 3, drawnCount: 0, color: '#ffb800' },
+      { title: '3rd Prize - AirPods Pro', weight: 5, quantity: 5, drawnCount: 0, color: '#00f0ff' },
+      { title: 'Consolation - $20 Gift Card', weight: 10, quantity: 10, drawnCount: 0, color: '#00f5a0' },
+      { title: 'Better Luck Next Time', weight: 15, quantity: 99, drawnCount: 0, color: '#7000ff' },
+    ],
+  },
+  lucky: {
+    'zh-TW': [
+      { title: '幸運數字 1', weight: 10, quantity: 1, drawnCount: 0, color: '#ff0055' },
+      { title: '幸運數字 2', weight: 10, quantity: 1, drawnCount: 0, color: '#ff7700' },
+      { title: '幸運數字 3', weight: 10, quantity: 1, drawnCount: 0, color: '#ffb800' },
+      { title: '幸運數字 4', weight: 10, quantity: 1, drawnCount: 0, color: '#00f0ff' },
+      { title: '幸運數字 5', weight: 10, quantity: 1, drawnCount: 0, color: '#00f5a0' },
+      { title: '幸運數字 6', weight: 10, quantity: 1, drawnCount: 0, color: '#7000ff' },
+    ],
+    en: [
+      { title: 'Lucky Number 1', weight: 10, quantity: 1, drawnCount: 0, color: '#ff0055' },
+      { title: 'Lucky Number 2', weight: 10, quantity: 1, drawnCount: 0, color: '#ff7700' },
+      { title: 'Lucky Number 3', weight: 10, quantity: 1, drawnCount: 0, color: '#ffb800' },
+      { title: 'Lucky Number 4', weight: 10, quantity: 1, drawnCount: 0, color: '#00f0ff' },
+      { title: 'Lucky Number 5', weight: 10, quantity: 1, drawnCount: 0, color: '#00f5a0' },
+      { title: 'Lucky Number 6', weight: 10, quantity: 1, drawnCount: 0, color: '#7000ff' },
+    ],
+  },
+  punish: {
+    'zh-TW': [
+      { title: '鬼臉三連拍', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
+      { title: '喝苦瓜汁一杯', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
+      { title: '現場大唱一首歌', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
+      { title: '伏地挺身 10 下', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
+      { title: '對隔壁深情告白', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
+      { title: '安全過關 免受懲罰', weight: 2, quantity: 99, drawnCount: 0, color: '#7000ff' },
+    ],
+    en: [
+      { title: 'Take 3 Funny Photos', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
+      { title: 'Drink a Sour Shot', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
+      { title: 'Sing a Song Solo', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
+      { title: 'Do 10 Push-ups', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
+      { title: 'Tell a Funny Joke', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
+      { title: 'Safe! No Penalty', weight: 2, quantity: 99, drawnCount: 0, color: '#7000ff' },
+    ],
+  },
+  dinner: {
+    'zh-TW': [
+      { title: '日式拉麵', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
+      { title: '韓式燒肉', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
+      { title: '義大利麵', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
+      { title: '台式便當', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
+      { title: '麥當勞速食', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
+      { title: '健康沙拉餐', weight: 1, quantity: 99, drawnCount: 0, color: '#7000ff' },
+    ],
+    en: [
+      { title: 'Japanese Ramen', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
+      { title: 'Korean BBQ', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
+      { title: 'Italian Pasta', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
+      { title: 'Local Bento', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
+      { title: 'Burger Fast Food', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
+      { title: 'Fresh Healthy Salad', weight: 1, quantity: 99, drawnCount: 0, color: '#7000ff' },
+    ],
+  },
+};
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '幸運轉盤與拉霸抽獎小工具',
+    subtitle: 'LUCKY WHEEL & SLOT SPINNER',
+    description:
+      '免費線上幸運轉盤與擬真拉霸機抽獎小工具！支援雙視覺模式切換、預設年會與遊戲模板、數量限制與展場無限抽獎、TXT 名單一鍵匯入匯出、全螢幕抽獎舞台與彩帶音效。',
+    latestWinnerTag: '最新中獎',
+    justWon: '剛抽出：',
+    welcomeMsg: '歡迎使用幸運轉盤抽獎小工具！自訂獎項即刻體驗！',
+    historyBtn: '紀錄',
+    soundOn: '音效: 開',
+    soundOff: '音效: 關',
+    fullscreenBtn: '全螢幕',
+    wheelMode: '幸運轉盤',
+    slotMode: '擬真拉霸機',
+    enableQtyLimit: '啟用數量限制 (關閉為展場無限抽)',
+    spinReadySlot: '準備就緒，點擊抽獎！',
+    spinWheelBtn: '開始幸運抽獎',
+    spinSlotBtn: '開始拉霸抽獎',
+    spinning: '旋轉中...',
+    allDrawn: '全部抽完',
+    prizesSettingsTitle: '獎項與人員設定',
+    presetSelectDefault: '快速範例模板...',
+    presetAnnual: '公司年會尾牙',
+    presetLucky: '幸運大轉盤 (6項)',
+    presetPunish: '歡樂懲罰遊戲',
+    presetDinner: '晚餐吃什麼？',
+    presetEmpty: '清空全新自訂',
+    exportTxt: '匯出 TXT',
+    importTxt: '匯入 TXT/名單',
+    resetCount: '重置次數',
+    addPrize: '＋ 新增項目',
+    newPrizeDefault: '新獎項',
+    prizeTitlePlaceholder: '獎項或人員姓名',
+    weightLabel: '權重:',
+    qtyLabel: '數量:',
+    remainLabel: '剩',
+    drawnDoneLabel: '已抽完',
+    unlimitedLabel: '展場不限數量模式',
+    isFinishedLabel: '抽完',
+    deleteLabel: '刪除',
+    stageTitleWheel: '幸運轉盤抽獎舞台',
+    stageTitleSlot: '擬真拉霸機抽獎舞台',
+    exitFullscreen: '✕ 退出全螢幕 (Esc)',
+    stageSpin: '抽獎',
+    availableItems: '可抽項目',
+    liveList: 'LIVE LIST',
+    allFinishedMsg: '所有項目已抽完！',
+    lastWinner: '上一位得獎者',
+    noRecord: '尚無紀錄',
+    historyModalTitle: '歷史中獎紀錄',
+    noHistory: '尚無抽獎紀錄',
+    clearHistory: '清空紀錄',
+    close: '關閉',
+    congrats: 'CONGRATULATIONS!',
+    continueSpin: '太棒了！繼續抽獎',
+    toastLoadedTemplate: '已成功載入範例模板！',
+    toastResetCount: '已重置所有項目抽中次數！',
+    toastImportPeople: '成功匯入 {n} 位人員名單！',
+    toastImportPrizes: '成功匯入 {n} 個獎項！',
+    toastInvalidFile: '未找到有效名單，請檢查檔案格式',
+    toastClearedHistory: '已清空歷史紀錄',
+  },
+  en: {
+    title: 'Lucky Wheel & Slot Spinner',
+    subtitle: 'LUCKY WHEEL & SLOT SPINNER',
+    description:
+      'Free online Lucky Wheel and realistic Slot Machine prize drawer! Customize prize titles, weights, quantities, and colors. Features fullscreen stage, physics spin animation, sound effects, and TXT import/export.',
+    latestWinnerTag: 'LATEST WINNER',
+    justWon: 'Just drawn: ',
+    welcomeMsg: 'Welcome to Lucky Wheel! Customize your prizes and spin to win!',
+    historyBtn: 'History',
+    soundOn: 'Sound: ON',
+    soundOff: 'Sound: OFF',
+    fullscreenBtn: 'Fullscreen',
+    wheelMode: 'Lucky Wheel',
+    slotMode: 'Slot Machine',
+    enableQtyLimit: 'Enable quantity limit (Disable for unlimited draws)',
+    spinReadySlot: 'Ready! Click to spin!',
+    spinWheelBtn: 'Spin Lucky Wheel',
+    spinSlotBtn: 'Spin Slot Machine',
+    spinning: 'Spinning...',
+    allDrawn: 'All Prizes Drawn',
+    prizesSettingsTitle: 'Prizes & Participants',
+    presetSelectDefault: 'Preset Templates...',
+    presetAnnual: 'Annual Party Raffle',
+    presetLucky: 'Lucky Wheel (6 items)',
+    presetPunish: 'Party Game Penalties',
+    presetDinner: 'What to Eat for Dinner?',
+    presetEmpty: 'Clear & Start Custom',
+    exportTxt: 'Export TXT',
+    importTxt: 'Import TXT/List',
+    resetCount: 'Reset Counts',
+    addPrize: '＋ Add Item',
+    newPrizeDefault: 'New Prize',
+    prizeTitlePlaceholder: 'Prize name or participant',
+    weightLabel: 'Weight:',
+    qtyLabel: 'Qty:',
+    remainLabel: 'Left',
+    drawnDoneLabel: 'Finished',
+    unlimitedLabel: 'Unlimited Mode',
+    isFinishedLabel: 'Done',
+    deleteLabel: 'Delete',
+    stageTitleWheel: 'Lucky Wheel Stage',
+    stageTitleSlot: 'Slot Machine Stage',
+    exitFullscreen: '✕ Exit Fullscreen (Esc)',
+    stageSpin: 'SPIN',
+    availableItems: 'Available Items',
+    liveList: 'LIVE LIST',
+    allFinishedMsg: 'All items have been drawn!',
+    lastWinner: 'LAST WINNER',
+    noRecord: 'No Record',
+    historyModalTitle: 'Draw History',
+    noHistory: 'No history records',
+    clearHistory: 'Clear History',
+    close: 'Close',
+    congrats: 'CONGRATULATIONS!',
+    continueSpin: 'Awesome! Keep Spinning',
+    toastLoadedTemplate: 'Successfully loaded template!',
+    toastResetCount: 'Reset drawn counts for all items!',
+    toastImportPeople: 'Successfully imported {n} participants!',
+    toastImportPrizes: 'Successfully imported {n} prizes!',
+    toastInvalidFile: 'No valid items found. Please check file format.',
+    toastClearedHistory: 'History cleared',
+  },
 };
 
 function generateId(): string {
-  return 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+  return 'p_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 }
 
 function getContrastYIQ(hexcolor: string): string {
@@ -86,7 +254,12 @@ function getContrastYIQ(hexcolor: string): string {
   return yiq >= 138 ? '#0f172a' : '#ffffff';
 }
 
-export default function LuckyWheelClient() {
+interface LuckyWheelClientProps {
+  lang?: 'zh-TW' | 'en';
+}
+
+export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientProps) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [displayMode, setDisplayMode] = useState<'wheel' | 'slot'>('wheel');
   const [enableQuantityLimit, setEnableQuantityLimit] = useState<boolean>(true);
@@ -126,7 +299,8 @@ export default function LuckyWheelClient() {
     if (!soundEnabled) return;
     try {
       if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        audioCtxRef.current = new (window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       }
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') ctx.resume();
@@ -153,7 +327,8 @@ export default function LuckyWheelClient() {
     if (!soundEnabled) return;
     try {
       if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        audioCtxRef.current = new (window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       }
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') ctx.resume();
@@ -198,15 +373,17 @@ export default function LuckyWheelClient() {
       if (savedPrizes) {
         setPrizes(JSON.parse(savedPrizes));
       } else {
-        setPrizes(PRIZE_TEMPLATES.annual.map((p) => ({ ...p, id: generateId() })));
+        const tList = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
+        setPrizes(tList.map((p) => ({ ...p, id: generateId() })));
       }
 
       const savedHistory = localStorage.getItem('lw_history');
       if (savedHistory) setHistory(JSON.parse(savedHistory));
     } catch {
-      setPrizes(PRIZE_TEMPLATES.annual.map((p) => ({ ...p, id: generateId() })));
+      const tList = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
+      setPrizes(tList.map((p) => ({ ...p, id: generateId() })));
     }
-  }, []);
+  }, [lang]);
 
   // 寫入 LocalStorage 數據
   const saveState = useCallback(
@@ -302,7 +479,7 @@ export default function LuckyWheelClient() {
     ctx.restore();
   };
 
-  // 繪製轉盤 Canvas
+  // 繪製轉盤 Canvas（動態感應亮/暗主題背景與文字色彩）
   const drawWheelOnCanvas = useCallback(
     (canvas: HTMLCanvasElement | null) => {
       if (!canvas) return;
@@ -317,25 +494,39 @@ export default function LuckyWheelClient() {
       ctx.clearRect(0, 0, size, size);
 
       const { sectors, totalWeight } = calculateSectors();
+      const isLight = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
 
       if (sectors.length === 0 || totalWeight === 0) {
         ctx.save();
         const emptyGrad = ctx.createRadialGradient(centerX, centerY - radius * 0.3, 0, centerX, centerY, radius);
-        emptyGrad.addColorStop(0, '#2a2a3d');
-        emptyGrad.addColorStop(1, '#161623');
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.fillStyle = emptyGrad;
-        ctx.fill();
-        ctx.strokeStyle = '#3a3a5c';
-        ctx.lineWidth = 8;
-        ctx.stroke();
+        if (isLight) {
+          emptyGrad.addColorStop(0, '#ffffff');
+          emptyGrad.addColorStop(1, '#e2e8f0');
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.fillStyle = emptyGrad;
+          ctx.fill();
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 8;
+          ctx.stroke();
+          ctx.fillStyle = '#475569';
+        } else {
+          emptyGrad.addColorStop(0, '#2a2a3d');
+          emptyGrad.addColorStop(1, '#161623');
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.fillStyle = emptyGrad;
+          ctx.fill();
+          ctx.strokeStyle = '#3a3a5c';
+          ctx.lineWidth = 8;
+          ctx.stroke();
+          ctx.fillStyle = '#94a3b8';
+        }
 
-        ctx.fillStyle = '#94a3b8';
         ctx.font = 'bold 28px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('所有獎項已抽完', centerX, centerY);
+        ctx.fillText(t.allDrawn, centerX, centerY);
         ctx.restore();
         drawPointer(ctx, centerX, centerY, radius);
         return;
@@ -390,7 +581,7 @@ export default function LuckyWheelClient() {
       ctx.stroke();
 
       // 外圈金屬環
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+      ctx.shadowColor = isLight ? 'rgba(15, 23, 42, 0.15)' : 'rgba(0, 0, 0, 0.55)';
       ctx.shadowBlur = 28;
       ctx.shadowOffsetY = 6;
 
@@ -450,7 +641,7 @@ export default function LuckyWheelClient() {
       ctx.restore();
       drawPointer(ctx, centerX, centerY, radius);
     },
-    [calculateSectors, currentRotationAngle]
+    [calculateSectors, currentRotationAngle, t.allDrawn]
   );
 
   useEffect(() => {
@@ -512,7 +703,7 @@ export default function LuckyWheelClient() {
       saveState(updatedPrizes, updatedHistory);
       setWinnerModalData({ prize: winningPrize, timestamp: Date.now() });
 
-      // 觸發彩色禮花砲
+      // 觸發彩帶禮花砲
       triggerConfetti();
     },
     [prizes, history, enableQuantityLimit, saveState]
@@ -538,7 +729,7 @@ export default function LuckyWheelClient() {
     }
 
     const midAngle = (selectedSector.startAngle + selectedSector.endAngle) / 2;
-    let targetRotation = 360 - midAngle;
+    const targetRotation = 360 - midAngle;
     const extraRounds = (5 + Math.floor(Math.random() * 4)) * 360;
     const finalAngle = currentRotationAngle + extraRounds + (targetRotation - (currentRotationAngle % 360));
 
@@ -699,17 +890,24 @@ export default function LuckyWheelClient() {
   // 模板載入
   const loadTemplate = (templateKey: string) => {
     if (PRIZE_TEMPLATES[templateKey]) {
-      const newItems = PRIZE_TEMPLATES[templateKey].map((p) => ({ ...p, id: generateId() }));
+      const templateData = PRIZE_TEMPLATES[templateKey][lang] || PRIZE_TEMPLATES[templateKey]['zh-TW'];
+      const newItems = templateData.map((p) => ({ ...p, id: generateId() }));
       setPrizes(newItems);
       saveState(newItems);
-      showToast(`已成功載入範例模板！`);
+      showToast(t.toastLoadedTemplate);
+    } else if (templateKey === 'empty') {
+      setPrizes([]);
+      saveState([]);
     }
   };
 
   const showToast = (msg: string) => {
+    const isLight = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
     const toastEl = document.createElement('div');
-    toastEl.className = 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-[#f59e0b] rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2';
-    toastEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>${msg}</span>`;
+    toastEl.className = isLight
+      ? 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-[#d97706] bg-white/95 border border-[#d97706]/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md'
+      : 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-amber-500/20 border border-amber-500/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md';
+    toastEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>${msg}</span>`;
     document.body.appendChild(toastEl);
     setTimeout(() => {
       if (document.body.contains(toastEl)) document.body.removeChild(toastEl);
@@ -774,12 +972,12 @@ export default function LuckyWheelClient() {
         setPrizes(newPrizes);
         saveState(newPrizes);
         if (singleColumnLines / newPrizes.length >= 0.7) {
-          showToast(`成功匯入 ${newPrizes.length} 位人員名單！`);
+          showToast(t.toastImportPeople.replace('{n}', newPrizes.length.toString()));
         } else {
-          showToast(`成功匯入 ${newPrizes.length} 個獎項！`);
+          showToast(t.toastImportPrizes.replace('{n}', newPrizes.length.toString()));
         }
       } else {
-        showToast('未找到有效名單，請檢查檔案格式');
+        showToast(t.toastInvalidFile);
       }
     };
     reader.readAsText(file, 'UTF-8');
@@ -805,7 +1003,7 @@ export default function LuckyWheelClient() {
   const addPrizeItem = () => {
     const newItem: PrizeItem = {
       id: generateId(),
-      title: `新獎項 ${prizes.length + 1}`,
+      title: `${t.newPrizeDefault} ${prizes.length + 1}`,
       weight: 1,
       quantity: 1,
       drawnCount: 0,
@@ -821,67 +1019,76 @@ export default function LuckyWheelClient() {
     const updated = prizes.map((p) => ({ ...p, drawnCount: 0, isFinished: false }));
     setPrizes(updated);
     saveState(updated);
-    showToast('已重置所有項目抽中次數！');
+    showToast(t.toastResetCount);
   };
 
   if (!isMounted) return null;
 
   return (
     <ToolLayout
-      title="幸運轉盤與拉霸抽獎小工具"
-      subtitle="LUCKY WHEEL & SLOT SPINNER"
-      description="免費線上幸運轉盤與擬真拉霸機抽獎小工具！支援雙視覺模式切換、預設年會與遊戲模板、數量限制與展場無限抽獎、TXT 名單一鍵匯入匯出、全螢幕抽獎舞台與彩帶音效。"
+      title={t.title}
+      subtitle={t.subtitle}
+      description={t.description}
       accentColor="#f59e0b"
       accentGlow="rgba(245, 158, 11, 0.6)"
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
-        {/* 頂部頂級公告與工具列 */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-3.5 sm:px-6 sm:py-3 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 shadow-lg min-w-0">
+        {/* 頂部雙語切換與最新中獎動態公告列 */}
+        <div className="bg-gradient-to-r from-amber-600 via-purple-600 to-indigo-600 rounded-2xl p-3.5 sm:px-6 sm:py-3 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 shadow-lg min-w-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-full overflow-hidden">
             <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide shrink-0">
-              最新中獎
+              {t.latestWinnerTag}
             </span>
             <span className="text-xs sm:text-sm font-medium flex items-center gap-1.5 min-w-0 truncate">
               <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-amber-300 shrink-0">
                 <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
               </svg>
               <span className="truncate">
-                {history.length > 0
-                  ? `剛抽出：${history[0].prizeTitle}`
-                  : '歡迎使用幸運轉盤抽獎小工具！自訂獎項即刻體驗！'}
+                {history.length > 0 ? `${t.justWon}${history[0].prizeTitle}` : t.welcomeMsg}
               </span>
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3 min-w-0">
+          <div className="grid grid-cols-4 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3 min-w-0">
+            {/* 雙語切換鈕 */}
+            <Link
+              href={lang === 'en' ? '/lucky-wheel/' : '/lucky-wheel/en/'}
+              className="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium bg-select-bg border border-border-glass text-text-sub hover:text-text-main rounded-xl transition-colors flex items-center justify-center shrink-0 min-w-0 shadow-sm"
+              title={lang === 'en' ? '切換至繁體中文' : 'Switch to English'}
+            >
+              {lang === 'en' ? '繁體中文' : 'English'}
+            </Link>
+
             <button
               type="button"
               onClick={() => setShowHistoryModal(true)}
-              className="px-2 sm:px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap min-w-0"
+              className="px-2 sm:px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap min-w-0"
             >
               <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
               </svg>
-              <span className="truncate">紀錄 ({history.length})</span>
+              <span className="truncate">
+                {t.historyBtn} ({history.length})
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="px-2 sm:px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-text-main flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap min-w-0"
+              className="px-2 sm:px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap min-w-0"
             >
               {soundEnabled ? (
                 <>
                   <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                     <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
                   </svg>
-                  <span className="truncate">音效: 開</span>
+                  <span className="truncate">{t.soundOn}</span>
                 </>
               ) : (
                 <>
                   <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                     <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
                   </svg>
-                  <span className="truncate">音效: 關</span>
+                  <span className="truncate">{t.soundOff}</span>
                 </>
               )}
             </button>
@@ -893,41 +1100,41 @@ export default function LuckyWheelClient() {
               <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
               </svg>
-              <span className="truncate font-bold">全螢幕</span>
+              <span className="truncate font-bold">{t.fullscreenBtn}</span>
             </button>
           </div>
         </div>
 
         {/* 模式切換與控制列 */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 bg-black/20 border border-white/[.08] rounded-2xl p-3.5 sm:p-4">
-          <div className="flex bg-black/40 p-1 rounded-xl border border-white/[.08] w-full sm:w-auto grid grid-cols-2 sm:flex">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 bg-surface-glass border border-border-glass rounded-2xl p-3.5 sm:p-4 shadow-sm">
+          <div className="flex bg-select-bg p-1 rounded-xl border border-border-glass w-full sm:w-auto grid grid-cols-2 sm:flex">
             <button
               type="button"
               onClick={() => setDisplayMode('wheel')}
               className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
                 displayMode === 'wheel'
-                  ? 'bg-[#f59e0b] text-black font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
                   : 'text-text-sub hover:text-text-main'
               }`}
             >
               <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
               </svg>
-              幸運轉盤
+              {t.wheelMode}
             </button>
             <button
               type="button"
               onClick={() => setDisplayMode('slot')}
               className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
                 displayMode === 'slot'
-                  ? 'bg-[#f59e0b] text-black font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
                   : 'text-text-sub hover:text-text-main'
               }`}
             >
               <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                 <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
               </svg>
-              擬真拉霸機
+              {t.slotMode}
             </button>
           </div>
 
@@ -938,9 +1145,9 @@ export default function LuckyWheelClient() {
                 type="checkbox"
                 checked={enableQuantityLimit}
                 onChange={(e) => setEnableQuantityLimit(e.target.checked)}
-                className="w-4 h-4 rounded cursor-pointer accent-[#f59e0b] shrink-0"
+                className="w-4 h-4 rounded cursor-pointer accent-amber-500 shrink-0"
               />
-              啟用數量限制 (關閉為展場無限抽)
+              {t.enableQtyLimit}
             </label>
           </div>
         </div>
@@ -948,7 +1155,7 @@ export default function LuckyWheelClient() {
         {/* 主 Layout (兩欄式) */}
         <div className="grid grid-cols-2 gap-8 max-lg:grid-cols-1 items-start">
           {/* 左欄：轉盤 / 拉霸機 渲染區 */}
-          <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-6 shadow-lg backdrop-blur-md">
+          <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-6 shadow-lg backdrop-blur-md">
             {displayMode === 'wheel' ? (
               /* 🎡 轉盤 */
               <div className={styles.wheelContainer}>
@@ -969,7 +1176,7 @@ export default function LuckyWheelClient() {
                     <div className={styles.slotStrip} style={{ transform: `translateY(${slotTranslateY}px)` }}>
                       {slotStripItems.length === 0 ? (
                         <div className={styles.slotCard}>
-                          <span>準備就緒，點擊抽獎！</span>
+                          <span>{t.spinReadySlot}</span>
                         </div>
                       ) : (
                         slotStripItems.map((item, idx) => (
@@ -990,71 +1197,71 @@ export default function LuckyWheelClient() {
               type="button"
               onClick={displayMode === 'wheel' ? startWheelSpin : startSlotSpin}
               disabled={isSpinning || unfinishedPrizes.length === 0}
-              className="w-full max-w-[360px] h-[54px] bg-[#f59e0b]/20 border border-[#f59e0b]/50 text-[#f59e0b] font-bold text-lg rounded-xl cursor-pointer hover:bg-[#f59e0b] hover:text-[#030305] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              className={`w-full max-w-[360px] h-[54px] font-bold text-lg rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${styles.spinBtn}`}
             >
               <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
                 <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
               </svg>
               {isSpinning
-                ? '旋轉中...'
+                ? t.spinning
                 : unfinishedPrizes.length === 0
-                ? '全部抽完'
+                ? t.allDrawn
                 : displayMode === 'wheel'
-                ? '開始幸運抽獎'
-                : '開始拉霸抽獎'}
+                ? t.spinWheelBtn
+                : t.spinSlotBtn}
             </button>
           </div>
 
           {/* 右欄：獎項編輯與設定 */}
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
-            <div className="flex justify-between items-center flex-wrap gap-3 border-b border-white/[.06] pb-4">
+          <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
+            <div className="flex justify-between items-center flex-wrap gap-3 border-b border-border-glass pb-4">
               <h3 className="text-sm font-semibold text-text-main flex items-center gap-2">
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#f59e0b]">
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className={styles.accentText}>
                   <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
                 </svg>
-                獎項與人員設定 ({prizes.length})
+                {t.prizesSettingsTitle} ({prizes.length})
               </h3>
 
               <div className="flex items-center gap-2 flex-wrap">
                 <select
                   id={templateSelectId}
-                  aria-label="快速範例模板"
+                  aria-label={t.presetSelectDefault}
                   defaultValue=""
                   onChange={(e) => {
                     loadTemplate(e.target.value);
                     e.target.selectedIndex = 0;
                   }}
-                  className="bg-select-bg text-text-main border border-border-glass rounded-xl px-2.5 py-1.5 text-sm font-mono font-medium outline-none cursor-pointer"
+                  className={`rounded-xl px-2.5 py-1.5 text-sm font-medium outline-none cursor-pointer ${styles.selectInput}`}
                 >
                   <option value="" disabled>
-                    快速範例模板...
+                    {t.presetSelectDefault}
                   </option>
-                  <option value="annual">公司年會尾牙</option>
-                  <option value="lucky">幸運大轉盤 (6項)</option>
-                  <option value="punish">歡樂懲罰遊戲</option>
-                  <option value="dinner">晚餐吃什麼？</option>
-                  <option value="empty">清空全新自訂</option>
+                  <option value="annual">{t.presetAnnual}</option>
+                  <option value="lucky">{t.presetLucky}</option>
+                  <option value="punish">{t.presetPunish}</option>
+                  <option value="dinner">{t.presetDinner}</option>
+                  <option value="empty">{t.presetEmpty}</option>
                 </select>
 
                 <button
                   type="button"
                   onClick={exportTxt}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                 >
                   <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                     <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" />
                   </svg>
-                  匯出 TXT
+                  {t.exportTxt}
                 </button>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.04] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                 >
                   <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
                   </svg>
-                  匯入 TXT/名單
+                  {t.importTxt}
                 </button>
                 <input
                   type="file"
@@ -1066,19 +1273,19 @@ export default function LuckyWheelClient() {
                 <button
                   type="button"
                   onClick={resetDrawnCounts}
-                  className="px-3 py-1.5 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl hover:bg-amber-500/20 transition-all cursor-pointer flex items-center gap-1"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-xl transition-all cursor-pointer flex items-center gap-1 ${styles.spinBtn}`}
                 >
                   <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                     <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
                   </svg>
-                  重置次數
+                  {t.resetCount}
                 </button>
                 <button
                   type="button"
                   onClick={addPrizeItem}
-                  className="px-3 py-1.5 text-sm font-bold text-black bg-[#f59e0b] rounded-xl hover:bg-[#f59e0b]/80 transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-bold text-slate-950 bg-amber-500 rounded-xl hover:bg-amber-400 transition-all cursor-pointer shadow-sm"
                 >
-                  ＋ 新增項目
+                  {t.addPrize}
                 </button>
               </div>
             </div>
@@ -1092,15 +1299,25 @@ export default function LuckyWheelClient() {
                 const remain = Math.max(0, p.quantity - p.drawnCount);
                 const isZero = remain === 0;
 
+                const colorInputId = `p_color_${p.id}`;
+                const titleInputId = `p_title_${p.id}`;
+                const weightInputId = `p_weight_${p.id}`;
+                const qtyInputId = `p_qty_${p.id}`;
+                const finishCheckId = `p_finish_${p.id}`;
+
                 return (
                   <div
                     key={p.id}
-                    className={`flex items-center gap-3 bg-black/40 p-3 rounded-xl border border-white/[.05] flex-wrap ${
+                    className={`flex items-center gap-3 bg-select-bg p-3 rounded-xl border border-border-glass flex-wrap shadow-sm ${
                       p.isFinished ? styles.prizeFinished : ''
                     }`}
                   >
                     {/* 顏色選擇 */}
+                    <label htmlFor={colorInputId} className="sr-only">
+                      {t.prizesSettingsTitle} Color
+                    </label>
                     <input
+                      id={colorInputId}
                       type="color"
                       value={p.color}
                       onChange={(e) => updatePrizeItem(p.id, 'color', e.target.value)}
@@ -1108,25 +1325,32 @@ export default function LuckyWheelClient() {
                     />
 
                     {/* 獎項名稱 */}
+                    <label htmlFor={titleInputId} className="sr-only">
+                      {t.prizeTitlePlaceholder}
+                    </label>
                     <input
+                      id={titleInputId}
                       type="text"
                       value={p.title}
                       onChange={(e) => updatePrizeItem(p.id, 'title', e.target.value)}
-                      placeholder="獎項或人員姓名"
-                      className="flex-1 min-w-[140px] bg-black/50 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs outline-none focus:border-[#f59e0b]"
+                      placeholder={t.prizeTitlePlaceholder}
+                      className={`flex-1 min-w-[140px] px-3 py-1.5 rounded-lg text-xs outline-none ${styles.prizeInput}`}
                     />
 
                     {/* 權重與機率 */}
                     <div className="flex items-center gap-1.5 text-sm font-medium text-text-sub">
-                      <span>權重:</span>
+                      <label htmlFor={weightInputId} className="text-xs">
+                        {t.weightLabel}
+                      </label>
                       <input
+                        id={weightInputId}
                         type="number"
                         min="0"
-                        value={p.weight}
-                        onChange={(e) => updatePrizeItem(p.id, 'weight', parseInt(e.target.value, 10) || 0)}
-                        className="w-14 bg-black/50 border border-white/10 text-white px-2 py-1 rounded-lg text-xs outline-none font-mono text-center"
+                        value={p.weight === 0 ? '' : p.weight}
+                        onChange={(e) => updatePrizeItem(p.id, 'weight', e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                        className={`w-14 px-2 py-1 rounded-lg text-xs outline-none font-mono text-center ${styles.prizeInput}`}
                       />
-                      <span className="text-[#00f0ff] font-mono text-xs bg-[#00f0ff]/10 px-1.5 py-0.5 rounded border border-[#00f0ff]/20 font-bold">
+                      <span className={`font-mono text-xs px-1.5 py-0.5 rounded font-bold ${styles.skyTag}`}>
                         {ratioStr}
                       </span>
                     </div>
@@ -1134,44 +1358,47 @@ export default function LuckyWheelClient() {
                     {/* 數量上限 */}
                     {enableQuantityLimit ? (
                       <div className="flex items-center gap-1.5 text-sm font-medium text-text-sub">
-                        <span>數量:</span>
+                        <label htmlFor={qtyInputId} className="text-xs">
+                          {t.qtyLabel}
+                        </label>
                         <input
+                          id={qtyInputId}
                           type="number"
                           min="1"
-                          value={p.quantity}
-                          onChange={(e) => updatePrizeItem(p.id, 'quantity', parseInt(e.target.value, 10) || 1)}
-                          className="w-14 bg-black/50 border border-white/10 text-white px-2 py-1 rounded-lg text-xs outline-none font-mono text-center"
+                          value={p.quantity === 0 ? '' : p.quantity}
+                          onChange={(e) => updatePrizeItem(p.id, 'quantity', e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value, 10) || 1))}
+                          className={`w-14 px-2 py-1 rounded-lg text-xs outline-none font-mono text-center ${styles.prizeInput}`}
                         />
                         <span
                           className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded border ${
-                            isZero
-                              ? 'bg-red-500/10 text-red-400 border-red-500/30'
-                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            isZero ? styles.redTag : styles.emeraldTag
                           }`}
                         >
-                          {remain > 0 ? `剩 ${remain}` : '已抽完'}
+                          {remain > 0 ? `${t.remainLabel} ${remain}` : t.drawnDoneLabel}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs font-bold text-[#00f0ff] px-2" title="展場不限數量模式">
+                      <span className={`text-xs font-bold px-2 ${styles.skyTag}`} title={t.unlimitedLabel}>
                         ∞
                       </span>
                     )}
 
                     <div className="flex items-center gap-2 ml-auto">
-                      <label className="flex items-center gap-1 text-sm font-medium text-text-sub cursor-pointer">
+                      <label htmlFor={finishCheckId} className="flex items-center gap-1 text-sm font-medium text-text-sub cursor-pointer">
                         <input
+                          id={finishCheckId}
                           type="checkbox"
                           checked={p.isFinished}
                           onChange={(e) => updatePrizeItem(p.id, 'isFinished', e.target.checked)}
-                          className="w-3.5 h-3.5 rounded cursor-pointer"
+                          className="w-3.5 h-3.5 rounded cursor-pointer accent-amber-500"
                         />
-                        抽完
+                        {t.isFinishedLabel}
                       </label>
                       <button
                         type="button"
                         onClick={() => removePrizeItem(p.id)}
-                        className="text-red-400 text-xs px-1.5 py-0.5 hover:text-red-300 transition-colors cursor-pointer"
+                        className={`text-xs px-1.5 py-0.5 transition-colors cursor-pointer ${styles.redTag}`}
+                        title={t.deleteLabel}
                       >
                         ✕
                       </button>
@@ -1185,135 +1412,139 @@ export default function LuckyWheelClient() {
       </div>
 
       {/* 全螢幕抽獎舞台 Fullscreen Stage (Portal 至 document.body 脫離外層 ToolLayout 外框) */}
-      {isFullscreen && typeof document !== 'undefined' && createPortal(
-        <div className={styles.fullscreenStage}>
-          {/* 獨立頂部列：100% 寬度不使用 100vw，確保按鈕在任何螢幕寬度下絕不超出右側邊界 */}
-          <div className="w-full flex items-center justify-between px-4 sm:px-8 py-3 border-b border-white/10 bg-black/60 backdrop-blur-md shrink-0 z-[10000] box-border">
-            <div className="flex items-center gap-2 text-white/90 font-bold text-xs sm:text-sm tracking-wider uppercase">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff] animate-pulse" />
-              <span>{displayMode === 'wheel' ? '幸運轉盤抽獎舞台' : '擬真拉霸機抽獎舞台'}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(false)}
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white bg-red-600/90 border border-white/30 rounded-xl hover:bg-red-600 hover:scale-105 transition-all cursor-pointer shadow-lg backdrop-blur-md shrink-0"
-            >
-              ✕ 退出全螢幕 (Esc)
-            </button>
-          </div>
-
-          {/* 舞台主要區域：768px+ 自動橫向並排，768px- 垂直堆疊並適度控制高度 */}
-          <div className="flex-1 flex items-center justify-start md:justify-center gap-5 sm:gap-8 lg:gap-14 p-3 sm:p-6 w-full max-w-full overflow-y-auto max-md:flex-col box-border">
-            {displayMode === 'wheel' ? (
-              <div className={`${styles.fullscreenWheelWrapper} md:my-auto`}>
-                <canvas ref={fullscreenCanvasRef} width={1600} height={1600} className="w-full h-full" />
-                <button
-                  type="button"
-                  onClick={startWheelSpin}
-                  disabled={isSpinning || unfinishedPrizes.length === 0}
-                  className="absolute w-[min(18vh,165px)] h-[min(18vh,165px)] rounded-full bg-gradient-to-r from-pink-600 to-amber-500 text-white font-extrabold text-[min(4.2vh,34px)] border-4 border-white shadow-[0_0_60px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40 disabled:scale-100 min-w-[70px] min-h-[70px]"
-                >
-                  抽獎
-                </button>
+      {isFullscreen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className={styles.fullscreenStage}>
+            {/* 獨立頂部列 */}
+            <div className={styles.fullscreenHeader}>
+              <div className="flex items-center gap-2 font-bold text-xs sm:text-sm tracking-wider uppercase">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse" />
+                <span>{displayMode === 'wheel' ? t.stageTitleWheel : t.stageTitleSlot}</span>
               </div>
-            ) : (
-              <div className={`${styles.slotWrapper} ${styles.fullscreenSlotWrapper} md:my-auto`}>
-                <div className={styles.slotFrame} style={{ padding: 'min(2.8vh, 1.75rem)', width: '100%' }}>
-                  <div className={styles.slotLights}>
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className={`${styles.slotWindow} ${styles.fullscreenSlotWindow}`}>
-                    <div className={styles.slotPayline} style={{ height: 'min(16vh, 125px)' }} />
-                    <div className={styles.slotStrip} style={{ transform: `translateY(${slotTranslateY}px)` }}>
-                      {slotStripItems.map((item, idx) => (
-                        <div key={idx} className={styles.slotCard} style={{ height: 'min(14vh, 110px)', fontSize: 'min(3.8vh, 2rem)' }}>
-                          <div className={styles.slotCardDot} style={{ background: item.color, width: 'min(2.8vh, 20px)', height: 'min(2.8vh, 20px)' }} />
-                          <span className="truncate">{item.title}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(false)}
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white bg-red-600 border border-red-500 rounded-xl hover:bg-red-700 hover:scale-105 transition-all cursor-pointer shadow-md shrink-0"
+              >
+                {t.exitFullscreen}
+              </button>
+            </div>
+
+            {/* 舞台主要區域：768px+ 自動橫向並排，768px- 垂直堆疊並適度控制高度 */}
+            <div className="flex-1 flex items-center justify-start md:justify-center gap-5 sm:gap-8 lg:gap-14 p-3 sm:p-6 w-full max-w-full overflow-y-auto max-md:flex-col box-border">
+              {displayMode === 'wheel' ? (
+                <div className={`${styles.fullscreenWheelWrapper} md:my-auto`}>
+                  <canvas ref={fullscreenCanvasRef} width={1600} height={1600} className="w-full h-full" />
+                  <button
+                    type="button"
+                    onClick={startWheelSpin}
+                    disabled={isSpinning || unfinishedPrizes.length === 0}
+                    className="absolute w-[min(18vh,165px)] h-[min(18vh,165px)] rounded-full bg-gradient-to-r from-pink-600 to-amber-500 text-white font-extrabold text-[min(4.2vh,34px)] border-4 border-white shadow-[0_0_60px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40 disabled:scale-100 min-w-[70px] min-h-[70px]"
+                  >
+                    {t.stageSpin}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={startSlotSpin}
-                  disabled={isSpinning || unfinishedPrizes.length === 0}
-                  className="mt-4 sm:mt-6 px-12 sm:px-18 py-3.5 sm:py-4.5 text-[min(3.8vh,28px)] font-extrabold text-white bg-gradient-to-r from-pink-600 to-amber-500 border-4 border-white rounded-full shadow-[0_0_45px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
-                >
-                  <svg viewBox="0 0 24 24" width={26} height={26} fill="currentColor">
-                    <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-                  </svg>
-                  抽獎
-                </button>
-              </div>
-            )}
-
-            {/* 全螢幕資訊側板：768px 以下寬度與轉盤/拉霸機完全齊平 (max-md:w-[min(48vh,88vw)])，768px 以上維持側欄 */}
-            <div className="w-[min(30vw,440px)] max-md:w-[min(48vh,88vw)] min-w-[260px] max-w-[88vw] h-fit max-h-[min(86vh,800px)] shrink-0 bg-black/45 border border-white/15 rounded-3xl p-4 sm:p-7 flex flex-col gap-4 sm:gap-5 text-left backdrop-blur-md shadow-2xl md:my-auto overflow-y-auto box-border">
-              <h4 className="text-base sm:text-lg uppercase tracking-widest text-[#00f0ff] font-bold border-b border-white/15 pb-3 flex items-center justify-between shrink-0">
-                <span>可抽項目 ({unfinishedPrizes.length})</span>
-                <span className="text-xs font-mono font-normal text-text-sub">LIVE LIST</span>
-              </h4>
-
-              <div className="flex flex-col gap-2.5 w-full">
-                {unfinishedPrizes.length === 0 ? (
-                  <span className="text-slate-400 italic flex items-center justify-center gap-2 py-8 text-base font-medium">
-                    <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className="text-emerald-400">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                    </svg>
-                    所有項目已抽完！
-                  </span>
-                ) : (
-                  unfinishedPrizes.map((p) => (
-                    <div key={p.id} className="flex items-center gap-2.5 bg-black/40 p-3 rounded-xl border border-white/10 shadow-sm shrink-0">
-                      <div className="w-3.5 h-3.5 rounded-full shrink-0 shadow-[0_0_8px_currentColor]" style={{ background: p.color, color: p.color }} />
-                      <span className="text-white font-semibold text-sm sm:text-base truncate flex-1">{p.title}</span>
-                      {enableQuantityLimit && (
-                        <span className="text-xs sm:text-sm font-mono font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg shrink-0">
-                          剩 {Math.max(0, p.quantity - p.drawnCount)}
-                        </span>
-                      )}
+              ) : (
+                <div className={`${styles.slotWrapper} ${styles.fullscreenSlotWrapper} md:my-auto`}>
+                  <div className={styles.slotFrame} style={{ padding: 'min(2.8vh, 1.75rem)', width: '100%' }}>
+                    <div className={styles.slotLights}>
+                      <span />
+                      <span />
+                      <span />
+                      <span />
                     </div>
-                  ))
-                )}
-              </div>
+                    <div className={`${styles.slotWindow} ${styles.fullscreenSlotWindow}`}>
+                      <div className={styles.slotPayline} style={{ height: 'min(16vh, 125px)' }} />
+                      <div className={styles.slotStrip} style={{ transform: `translateY(${slotTranslateY}px)` }}>
+                        {slotStripItems.map((item, idx) => (
+                          <div key={idx} className={styles.slotCard} style={{ height: 'min(14vh, 110px)', fontSize: 'min(3.8vh, 2rem)' }}>
+                            <div className={styles.slotCardDot} style={{ background: item.color, width: 'min(2.8vh, 20px)', height: 'min(2.8vh, 20px)' }} />
+                            <span className="truncate">{item.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={startSlotSpin}
+                    disabled={isSpinning || unfinishedPrizes.length === 0}
+                    className="mt-4 sm:mt-6 px-12 sm:px-18 py-3.5 sm:py-4.5 text-[min(3.8vh,28px)] font-extrabold text-white bg-gradient-to-r from-pink-600 to-amber-500 border-4 border-white rounded-full shadow-[0_0_45px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
+                  >
+                    <svg viewBox="0 0 24 24" width={26} height={26} fill="currentColor">
+                      <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+                    </svg>
+                    {t.stageSpin}
+                  </button>
+                </div>
+              )}
 
-              {/* 上一位得獎者小卡 */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 flex flex-col gap-1.5 shadow-lg shrink-0">
-                <span className="text-xs sm:text-sm uppercase tracking-wider text-text-sub font-bold flex items-center gap-1.5">
-                  <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="text-amber-400">
-                    <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-                  </svg>
-                  上一位得獎者
-                </span>
-                <span className="text-lg sm:text-xl font-extrabold text-amber-400 font-mono tracking-wide drop-shadow-[0_0_12px_rgba(245,158,11,0.5)] truncate">
-                  {history.length > 0 ? history[0].prizeTitle : '尚無紀錄'}
-                </span>
+              {/* 全螢幕資訊側板 */}
+              <div className={`${styles.fullscreenSidePanel} md:my-auto`}>
+                <h4 className="text-base sm:text-lg uppercase tracking-widest font-bold border-b pb-3 flex items-center justify-between shrink-0 border-slate-200/20">
+                  <span className={styles.accentText}>
+                    {t.availableItems} ({unfinishedPrizes.length})
+                  </span>
+                  <span className="text-xs font-mono font-normal opacity-70">{t.liveList}</span>
+                </h4>
+
+                <div className="flex flex-col gap-2.5 w-full">
+                  {unfinishedPrizes.length === 0 ? (
+                    <span className="opacity-70 italic flex items-center justify-center gap-2 py-8 text-base font-medium">
+                      <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.emeraldTag}>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                      </svg>
+                      {t.allFinishedMsg}
+                    </span>
+                  ) : (
+                    unfinishedPrizes.map((p) => (
+                      <div key={p.id} className={styles.fullscreenSideItem}>
+                        <div className="w-3.5 h-3.5 rounded-full shrink-0 shadow-[0_0_8px_currentColor]" style={{ background: p.color, color: p.color }} />
+                        <span className="font-semibold text-sm sm:text-base truncate flex-1">{p.title}</span>
+                        {enableQuantityLimit && (
+                          <span className={`text-xs sm:text-sm font-mono font-bold px-2 py-0.5 rounded-lg shrink-0 ${styles.spinBtn}`}>
+                            {t.remainLabel} {Math.max(0, p.quantity - p.drawnCount)}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* 上一位得獎者小卡 */}
+                <div className={styles.fullscreenWinnerCard}>
+                  <span className="text-xs sm:text-sm uppercase tracking-wider font-bold flex items-center gap-1.5 opacity-80">
+                    <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className={styles.accentText}>
+                      <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+                    </svg>
+                    {t.lastWinner}
+                  </span>
+                  <span className={`text-lg sm:text-xl font-extrabold font-mono tracking-wide truncate ${styles.accentText}`}>
+                    {history.length > 0 ? history[0].prizeTitle : t.noRecord}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* 歷史紀錄 Modal */}
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[20000] flex items-center justify-center p-4">
           <div className="bg-select-bg border border-border-glass rounded-2xl w-full max-w-md p-6 flex flex-col gap-4 text-left shadow-2xl">
-            <div className="flex justify-between items-center border-b border-white/10 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="text-[#f59e0b]">
+            <div className="flex justify-between items-center border-b border-border-glass pb-3">
+              <h3 className="text-base font-bold text-text-main flex items-center gap-2">
+                <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className={styles.accentText}>
                   <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
                 </svg>
-                歷史中獎紀錄
+                {t.historyModalTitle}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
-                className="text-slate-400 text-lg hover:text-white transition-colors cursor-pointer"
+                className="text-text-sub text-lg hover:text-text-main transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -1321,21 +1552,21 @@ export default function LuckyWheelClient() {
 
             <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto font-mono text-xs">
               {history.length === 0 ? (
-                <span className="text-slate-500 text-center py-6">尚無抽獎紀錄</span>
+                <span className="text-text-sub text-center py-6">{t.noHistory}</span>
               ) : (
                 history.map((rec) => (
                   <div
                     key={rec.id}
-                    className="flex justify-between items-center bg-black/40 px-3.5 py-2.5 rounded-xl border border-white/5"
+                    className="flex justify-between items-center bg-surface-glass px-3.5 py-2.5 rounded-xl border border-border-glass"
                   >
-                    <span className="font-sans text-white font-semibold flex items-center gap-1.5">
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="text-amber-400">
+                    <span className="font-sans text-text-main font-semibold flex items-center gap-1.5">
+                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className={styles.accentText}>
                         <path d="M12 2L1 21h22L12 2zm0 3.8L18.4 17H5.6L12 5.8z" />
                       </svg>
                       {rec.prizeTitle}
                     </span>
                     <span className="text-text-sub text-xs">
-                      {new Date(rec.timestamp).toLocaleTimeString('zh-TW', { hour12: false })}
+                      {new Date(rec.timestamp).toLocaleTimeString(lang === 'en' ? 'en-US' : 'zh-TW', { hour12: false })}
                     </span>
                   </div>
                 ))
@@ -1348,18 +1579,18 @@ export default function LuckyWheelClient() {
                 onClick={() => {
                   setHistory([]);
                   saveState(undefined, []);
-                  showToast('已清空歷史紀錄');
+                  showToast(t.toastClearedHistory);
                 }}
-                className="px-3 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl hover:bg-red-500/20 transition-all cursor-pointer"
+                className={`px-3 py-1.5 text-xs font-medium rounded-xl transition-all cursor-pointer ${styles.redTag}`}
               >
-                清空紀錄
+                {t.clearHistory}
               </button>
               <button
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
-                className="px-4 py-1.5 text-xs font-medium text-slate-200 bg-white/10 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+                className="px-4 py-1.5 text-xs font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:bg-surface-glass transition-all cursor-pointer shadow-sm"
               >
-                關閉
+                {t.close}
               </button>
             </div>
           </div>
@@ -1369,26 +1600,26 @@ export default function LuckyWheelClient() {
       {/* 中獎歡呼 Modal */}
       {winnerModalData && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[25000] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-[#181824] border-2 border-[#f59e0b] rounded-3xl w-full max-w-lg p-8 flex flex-col items-center gap-6 text-center shadow-[0_0_80px_rgba(245,158,11,0.5)]">
-            <div className="w-20 h-20 rounded-full bg-[#f59e0b]/20 border border-[#f59e0b]/40 text-[#f59e0b] flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.4)]">
+          <div className="bg-select-bg border-2 border-amber-500 rounded-3xl w-full max-w-lg p-8 flex flex-col items-center gap-6 text-center shadow-[0_0_80px_rgba(245,158,11,0.5)]">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.4)] ${styles.spinBtn}`}>
               <svg viewBox="0 0 24 24" width={40} height={40} fill="currentColor">
                 <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
               </svg>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-xs uppercase tracking-widest text-amber-400 font-bold">CONGRATULATIONS!</span>
-              <h2 className="text-3xl font-extrabold text-white">{winnerModalData.prize.title}</h2>
-              <span className="text-xs text-slate-400 font-mono">
-                {new Date(winnerModalData.timestamp).toLocaleString('zh-TW')}
+              <span className={`text-xs uppercase tracking-widest font-bold ${styles.accentText}`}>{t.congrats}</span>
+              <h2 className="text-3xl font-extrabold text-text-main">{winnerModalData.prize.title}</h2>
+              <span className="text-xs text-text-sub font-mono">
+                {new Date(winnerModalData.timestamp).toLocaleString(lang === 'en' ? 'en-US' : 'zh-TW')}
               </span>
             </div>
 
             <button
               type="button"
               onClick={() => setWinnerModalData(null)}
-              className="w-full py-3 bg-[#f59e0b] text-black font-extrabold text-base rounded-xl hover:bg-amber-400 transition-all cursor-pointer shadow-lg"
+              className="w-full py-3 bg-amber-500 text-slate-950 font-extrabold text-base rounded-xl hover:bg-amber-400 transition-all cursor-pointer shadow-lg"
             >
-              太棒了！繼續抽獎
+              {t.continueSpin}
             </button>
           </div>
         </div>

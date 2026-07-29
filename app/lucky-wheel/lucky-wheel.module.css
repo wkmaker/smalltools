@@ -203,7 +203,7 @@
   color: #64748b !important;
 }
 
-/* 全螢幕舞台 Fullscreen Stage */
+/* 🎪 全螢幕舞台 Fullscreen Stage */
 .fullscreenStage {
   position: fixed;
   top: 0;
@@ -222,7 +222,67 @@
   box-sizing: border-box;
 }
 
+.fullscreenHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  z-index: 10000;
+  box-sizing: border-box;
+  color: rgba(255, 255, 255, 0.9);
+}
 
+.fullscreenSidePanel {
+  width: min(30vw, 440px);
+  min-width: 260px;
+  max-width: 88vw;
+  height: fit-content;
+  max-height: min(86vh, 800px);
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  text-align: left;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  box-sizing: border-box;
+  color: #ffffff;
+}
+
+.fullscreenSideItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.fullscreenWinnerCard {
+  padding: 0.875rem;
+  border-radius: 1rem;
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.1), rgba(168, 85, 247, 0.1), rgba(99, 102, 241, 0.1));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
 
 .confettiCanvas {
   position: fixed;
@@ -232,4 +292,183 @@
   height: 100vh;
   pointer-events: none;
   z-index: 20005;
+}
+
+/* ── 專屬雙主題 (Light / Dark) 特化類別 ── */
+
+/* 主題發光文字 (亮色: Amber-600 #d97706, 暗色: #f59e0b) */
+.accentText {
+  color: #f59e0b;
+}
+
+/* 主題發光按鈕 (開始抽獎) */
+.spinBtn {
+  background-color: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #f59e0b;
+}
+
+.spinBtn:hover:not(:disabled) {
+  background-color: #f59e0b;
+  color: #030305;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.5);
+}
+
+/* 表單輸入框 (亮色模式: 65% 半透明白 + Slate 200 邊框) */
+.prizeInput {
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.prizeInput:focus {
+  border-color: #f59e0b;
+}
+
+/* 選單下拉選單 */
+.selectInput {
+  background-color: var(--select-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+}
+
+.selectInput option {
+  background-color: var(--card-bg-solid, #121218);
+  color: var(--text-primary);
+}
+
+/* 標籤 Tag 配色 */
+.skyTag {
+  color: #00f0ff;
+  background-color: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.emeraldTag {
+  color: #00f5a0;
+  background-color: rgba(0, 245, 160, 0.1);
+  border: 1px solid rgba(0, 245, 160, 0.25);
+}
+
+.redTag {
+  color: #ff3b30;
+  background-color: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.25);
+}
+
+/* ☀️ 亮色模式 (Light Theme) 特化適配 */
+:global([data-theme='light']) .accentText {
+  color: #d97706 !important;
+}
+
+:global([data-theme='light']) .spinBtn {
+  background-color: rgba(217, 119, 6, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.4);
+  color: #d97706;
+}
+
+:global([data-theme='light']) .spinBtn:hover:not(:disabled) {
+  background-color: #d97706;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.4);
+}
+
+:global([data-theme='light']) .prizeInput {
+  background-color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+}
+
+:global([data-theme='light']) .prizeInput:focus {
+  background-color: #ffffff;
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+}
+
+:global([data-theme='light']) .selectInput option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+:global([data-theme='light']) .skyTag {
+  color: #0284c7;
+  background-color: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+:global([data-theme='light']) .emeraldTag {
+  color: #059669;
+  background-color: rgba(5, 150, 105, 0.1);
+  border-color: rgba(5, 150, 105, 0.25);
+}
+
+:global([data-theme='light']) .redTag {
+  color: #dc2626;
+  background-color: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+:global([data-theme='light']) .slotFrame {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(241, 245, 249, 0.95));
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.8), 0 15px 35px rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .slotWindow {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 15px 25px rgba(0, 0, 0, 0.04), inset 0 -15px 25px rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme='light']) .slotCard {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme='light']) .prizeFinished {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.02),
+    rgba(0, 0, 0, 0.02) 10px,
+    rgba(0, 0, 0, 0.06) 10px,
+    rgba(0, 0, 0, 0.06) 20px
+  ) !important;
+  opacity: 0.75;
+}
+
+:global([data-theme='light']) .prizeFinished input[type='text'],
+:global([data-theme='light']) .prizeFinished input[type='number'] {
+  color: #94a3b8 !important;
+}
+
+/* ☀️ 亮色模式 (Light Theme) 全螢幕舞台特化 */
+:global([data-theme='light']) .fullscreenStage {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+}
+
+:global([data-theme='light']) .fullscreenHeader {
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
+:global([data-theme='light']) .fullscreenSidePanel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+}
+
+:global([data-theme='light']) .fullscreenSideItem {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme='light']) .fullscreenWinnerCard {
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.15), rgba(168, 85, 247, 0.08), rgba(99, 102, 241, 0.08));
+  border-color: rgba(217, 119, 6, 0.3);
 }

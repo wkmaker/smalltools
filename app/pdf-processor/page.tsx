@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'PDF頁面組合器,PDF合併,PDF分割,PDF旋轉,PDF刪除頁面,PDF轉檔,圖片轉PDF,PNG轉PDF,JPG轉PDF',
   alternates: {
     canonical: 'https://tools.cjkuo.net/pdf-processor/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/pdf-processor/',
+      en: 'https://tools.cjkuo.net/pdf-processor/en/',
+    },
   },
   openGraph: {
     title: 'PDF 頁面組合器 - 免費線上多檔合併、頁面排序、刪除與旋轉',
