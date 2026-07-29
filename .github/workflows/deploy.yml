@@ -121,6 +121,19 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # ── 7.5. 若 Stack 處於 ROLLBACK_COMPLETE 狀態則自動清理 ──────────
+      - name: Cleanup Failed Rollback Stack
+        run: |
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
+          if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "⚠️ Stack $STACK_NAME is in ROLLBACK_COMPLETE state. Deleting failed stack before redeploying..."
+            aws cloudformation delete-stack --stack-name "$STACK_NAME"
+            aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+            echo "✅ Failed stack deleted successfully."
+          else
+            echo "Stack status is '${STACK_STATUS}', proceeding with deployment."
+          fi
+
       # ── 8. 更新/建立 CloudFormation 基礎架構 ─────────────────
       - name: Deploy CloudFormation Stack
         run: |
