@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import styles from './url.module.css';
 
@@ -90,6 +90,11 @@ function parseUrlStructure(rawText: string): {
 let _nextParamId = 100;
 
 export default function UrlEncoderClient() {
+  const plainTextId = useId();
+  const encodedTextId = useId();
+  const modeSelectId = useId();
+  const spacePlusId = useId();
+
   const [plainText, setPlainText] = useState('');
   const [encodedText, setEncodedText] = useState('');
   const [mode, setMode] = useState<UrlMode>('component');
@@ -104,6 +109,11 @@ export default function UrlEncoderClient() {
   const activeUrlObjRef = useRef<URL | null>(null);
   const isFullUrlRef = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--theme-color', '#ff7300');
+    document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 115, 0, 0.6)');
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -233,21 +243,22 @@ export default function UrlEncoderClient() {
         title="URL 線上編碼與解碼器"
         subtitle="URL ENCODER & DECODER"
         description="專業免費的線上 URL 編碼與解碼工具，支援 Percent-encoding 與 Unicode 即時雙向轉換，提供網址結構拆解與 Query 參數表格雙向連動編輯。"
-        accentColor="#0077ff"
-        accentGlow="rgba(0,119,255,0.5)"
+        accentColor="#ff7300"
+        accentGlow="rgba(255,115,0,0.6)"
       >
         <div className={styles.mainLayout}>
           <div className={styles.panelsGrid}>
             {/* 原始文字 */}
             <div className={`${styles.panelContainer} ${encodedError ? styles.errorState : ''}`}>
               <div className={styles.panelHeader}>
-                <div className="text-sm font-semibold text-text-main flex items-center gap-2">
-                  <span className="w-1.5 h-4 bg-[#0077ff] rounded-full shadow-[0_0_8px_#0077ff] inline-block" />
+                <label htmlFor={plainTextId} className="text-sm font-semibold text-text-main flex items-center gap-2 cursor-pointer">
+                  <span className="w-1.5 h-4 bg-[var(--theme-color,#ff7300)] rounded-full shadow-[0_0_8px_var(--theme-color,#ff7300)] inline-block flex-shrink-0" />
                   原始網址 / 文字 (Plain Text)
-                </div>
+                </label>
               </div>
               <div className={styles.textAreaWrapper}>
                 <textarea
+                  id={plainTextId}
                   className={styles.customTextarea}
                   placeholder="在此輸入要編碼的網址或文字..."
                   value={plainText}
@@ -256,8 +267,8 @@ export default function UrlEncoderClient() {
               </div>
               <div className={styles.panelFooter}>
                 <div className={styles.controlGroup}>
-                  <label className="text-sm font-medium text-text-sub">編碼模式：</label>
-                  <select className={styles.selectStyle} value={mode} onChange={e => setMode(e.target.value as UrlMode)}>
+                  <label htmlFor={modeSelectId} className="text-sm font-medium text-text-sub flex-shrink-0">編碼模式：</label>
+                  <select id={modeSelectId} className={styles.selectStyle} value={mode} onChange={e => setMode(e.target.value as UrlMode)}>
                     <option value="component">EncodeURIComponent (編碼所有參數)</option>
                     <option value="uri">EncodeURI (保留網址基本結構)</option>
                   </select>
@@ -273,10 +284,10 @@ export default function UrlEncoderClient() {
             {/* URL 編碼文字 */}
             <div className={`${styles.panelContainer} ${encodedError ? styles.errorState : ''}`}>
               <div className={styles.panelHeader}>
-                <div className="text-sm font-semibold text-text-main flex items-center gap-2">
-                  <span className="w-1.5 h-4 bg-[#0077ff] rounded-full shadow-[0_0_8px_#0077ff] inline-block" />
+                <label htmlFor={encodedTextId} className="text-sm font-semibold text-text-main flex items-center gap-2 cursor-pointer">
+                  <span className="w-1.5 h-4 bg-[var(--theme-color,#ff7300)] rounded-full shadow-[0_0_8px_var(--theme-color,#ff7300)] inline-block flex-shrink-0" />
                   URL 編碼文字 (Percent-Encoded)
-                </div>
+                </label>
                 {encodedError && (
                   <div className={styles.errorMsg}>
                     <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
@@ -288,6 +299,7 @@ export default function UrlEncoderClient() {
               </div>
               <div className={styles.textAreaWrapper}>
                 <textarea
+                  id={encodedTextId}
                   className={styles.customTextarea}
                   placeholder="在此貼上已編碼的文字進行解碼..."
                   value={encodedText}
@@ -296,8 +308,8 @@ export default function UrlEncoderClient() {
               </div>
               <div className={styles.panelFooter}>
                 <div className={styles.controlGroup}>
-                  <label className={styles.checkboxContainer}>
-                    <input type="checkbox" checked={spacePlus} onChange={e => setSpacePlus(e.target.checked)} />
+                  <label htmlFor={spacePlusId} className={styles.checkboxContainer}>
+                    <input id={spacePlusId} type="checkbox" checked={spacePlus} onChange={e => setSpacePlus(e.target.checked)} />
                     <span className={styles.checkmark} />
                     空格轉 + (application/x-www-form-urlencoded)
                   </label>
@@ -314,7 +326,7 @@ export default function UrlEncoderClient() {
           {showParser && urlMeta && (
             <div className={styles.urlParserSection}>
               <div className="text-sm font-semibold text-text-main flex items-center gap-2">
-                <span className="w-1.5 h-4 bg-[#0077ff] rounded-full shadow-[0_0_8px_#0077ff] inline-block" />
+                <span className="w-1.5 h-4 bg-[var(--theme-color,#ff7300)] rounded-full shadow-[0_0_8px_var(--theme-color,#ff7300)] inline-block flex-shrink-0" />
                 網址結構與 Query 參數解析 (連動編輯)
               </div>
 
@@ -329,7 +341,7 @@ export default function UrlEncoderClient() {
                     <div className={styles.metaValueWrapper}>
                       <span className={styles.metaValue}>{item.value}</span>
                       <button type="button" onClick={() => copyValue(item.value === '-' || item.value === '(無)' ? '' : item.value)}
-                        className={styles.metaCopyBtn}>
+                        className={styles.metaCopyBtn} title="複製內容">
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                         </svg>
@@ -351,8 +363,8 @@ export default function UrlEncoderClient() {
                   <tbody>
                     {params.map(p => (
                       <tr key={p.id}>
-                        <td><input type="text" className={styles.tableInput} value={p.key} onChange={e => onParamChange(p.id, 'key', e.target.value)} /></td>
-                        <td><input type="text" className={styles.tableInput} value={p.value} onChange={e => onParamChange(p.id, 'value', e.target.value)} /></td>
+                        <td><input type="text" className={styles.tableInput} value={p.key} onChange={e => onParamChange(p.id, 'key', e.target.value)} aria-label="Query Key" /></td>
+                        <td><input type="text" className={styles.tableInput} value={p.value} onChange={e => onParamChange(p.id, 'value', e.target.value)} aria-label="Query Value" /></td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                           <button type="button" className={styles.techBtn} onClick={() => copyValue(p.value)} title="複製參數內容" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem' }}>
                             <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" /></svg>
@@ -365,7 +377,7 @@ export default function UrlEncoderClient() {
                     ))}
                   </tbody>
                 </table>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1rem', background: 'rgba(0, 0, 0, 0.1)', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1rem', background: 'rgba(0, 0, 0, 0.1)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <span style={{ fontSize: '0.875rem', color: 'var(--text-sub)' }} className="font-medium">共 {params.filter(p => p.key.trim()).length} 個參數</span>
                   <button type="button" onClick={addParam} className={`${styles.techBtn} ${styles.techBtnPrimary}`} style={{ padding: '0.4rem 0.8rem' }}>
                     <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" style={{ marginRight: '2px' }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
@@ -378,8 +390,8 @@ export default function UrlEncoderClient() {
         </div>
       </ToolLayout>
 
-      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-lg z-[100] pointer-events-none
-        bg-[rgba(0,119,255,0.15)] border border-[rgba(0,119,255,0.3)] backdrop-blur-[10px] text-[#0077ff]
+      <div className={`fixed bottom-4 right-4 left-4 sm:left-auto sm:right-8 sm:bottom-8 flex items-center justify-center gap-2 px-6 py-3 text-sm rounded-lg z-[100] pointer-events-none
+        bg-[rgba(255,115,0,0.15)] border border-[rgba(255,115,0,0.3)] backdrop-blur-[10px] text-[var(--theme-color,#ff7300)]
         transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
         <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />

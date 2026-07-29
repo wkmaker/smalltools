@@ -1,15 +1,101 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import ToolLayout from './components/ToolLayout';
+import { ALL_TOOLS, Category, Tool } from './config/tools';
+
+// 預設熱門工具（6 個常駐，用於 SSR 與初始渲染）
+const DEFAULT_POPULAR_TOOLS: Tool[] = ALL_TOOLS.slice(0, 6);
+
+// 陣列隨機打亂函數 (Fisher-Yates)
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// 根據請求路徑判定分類
+function detectCategoryFromPath(pathname: string): Category | null {
+  if (!pathname) return null;
+  const cleanPath = pathname.toLowerCase();
+
+  // 1. 比對是否包含或匹配特定工具路徑 slug
+  for (const tool of ALL_TOOLS) {
+    const slug = tool.href.replace(/^\/|\/$/g, '');
+    if (slug && cleanPath.includes(slug)) {
+      return tool.category;
+    }
+  }
+
+  // 2. 關鍵字比對
+  if (/(loan|mortgage|salary|interest|pledge|futures|stock|money|pay|tax|bank|finance|rate|car|compound)/.test(cleanPath)) {
+    return 'finance';
+  }
+  if (/(json|base64|url|password|ssl|dev|code|encode|decode|convert|cert)/.test(cleanPath)) {
+    return 'developer';
+  }
+  if (/(ip|dig|dns|net|http|subnet|ping|trace|network)/.test(cleanPath)) {
+    return 'network';
+  }
+  if (/(qr|text|diff|doc|string|font|word)/.test(cleanPath)) {
+    return 'text';
+  }
+  if (/(pdf|time|clock|epoch|wheel|image|img|photo|crop|timer|compress|lucky)/.test(cleanPath)) {
+    return 'utility';
+  }
+
+  return null;
+}
+
+// 取得推薦工具清單（優先挑選同類型，不足 6 個再隨機補滿）
+function getRecommendedTools(pathname: string): Tool[] {
+  const targetCategory = detectCategoryFromPath(pathname);
+  const cleanPath = pathname.toLowerCase().replace(/\/+$/, '');
+
+  // 排除當前完全相符的工具路徑
+  const availableTools = ALL_TOOLS.filter(t => t.href.replace(/\/+$/, '') !== cleanPath);
+
+  let selected: Tool[] = [];
+
+  if (targetCategory) {
+    // 先選同類型的工具
+    const sameCategoryTools = availableTools.filter(t => t.category === targetCategory);
+    const shuffledSameCategory = shuffleArray(sameCategoryTools);
+
+    selected = shuffledSameCategory.slice(0, 6);
+
+    // 如果同類型工具不足 6 個，再隨機補滿至 6 個
+    if (selected.length < 6) {
+      const selectedPaths = new Set(selected.map(t => t.href));
+      const otherTools = availableTools.filter(t => !selectedPaths.has(t.href));
+      const shuffledOthers = shuffleArray(otherTools);
+
+      const needed = 6 - selected.length;
+      selected = [...selected, ...shuffledOthers.slice(0, needed)];
+    }
+  } else {
+    // 無法識別分類時，隨機選取 6 個
+    selected = shuffleArray(availableTools).slice(0, 6);
+  }
+
+  return selected;
+}
 
 export default function NotFound() {
-  const popularTools = [
-    { name: '房屋貸款試算器', path: '/mortgage-loan/', color: '#00f5a0', icon: '🏠' },
-    { name: '薪資勞健保計算機', path: '/my-salary-calculator/', color: '#00f5a0', icon: '💰' },
-    { name: 'IP 檢測助手', path: '/ip-detector/', color: '#00f0ff', icon: '🌐' },
-    { name: 'JSON 格式化驗證', path: '/json/', color: '#ff00aa', icon: '⚡' },
-    { name: 'QR Code 產生器', path: '/qr-generator/', color: '#00ff66', icon: '📱' },
-    { name: 'PDF 頁面組合器', path: '/pdf-processor/', color: '#ef4444', icon: '📑' },
-  ];
+  const pathname = usePathname();
+  const [recommendedTools, setRecommendedTools] = useState<Tool[]>(DEFAULT_POPULAR_TOOLS);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const currentPath = pathname || window.location.pathname;
+      setRecommendedTools(getRecommendedTools(currentPath));
+    }
+  }, [pathname]);
 
   return (
     <ToolLayout
@@ -22,19 +108,19 @@ export default function NotFound() {
       <div className="flex flex-col items-center gap-10 py-6 text-center">
         {/* 霓虹發光 404 大字區塊 */}
         <div className="relative flex items-center justify-center">
-          <div className="text-8xl font-extrabold font-mono text-[#ff0055] tracking-wider drop-shadow-[0_0_35px_rgba(255,0,85,0.6)]">
+          <div className="text-[#ff0055] font-mono text-8xl font-extrabold tracking-wider drop-shadow-[0_0_35px_rgba(255,0,85,0.6)]">
             404
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 max-w-[500px]">
-          <h2 className="text-xl font-bold text-white flex items-center justify-center gap-2">
+        <div className="flex max-w-[500px] flex-col gap-2">
+          <h2 className="flex items-center justify-center gap-2 text-xl font-bold text-white">
             您尋找的網頁似乎飛走了
             <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff0055]">
               <path d="M12 2.5s4.5 3.5 4.5 8.5c0 2.5-1 4.5-2.5 6l2.5 4.5-3.5-1.5-3.5 1.5 2.5-4.5c-1.5-1.5-2.5-3.5-2.5-6 0-5 4.5-8.5 4.5-8.5z" />
             </svg>
           </h2>
-          <p className="text-sm text-text-sub leading-relaxed">
+          <p className="text-text-sub text-sm leading-relaxed">
             別擔心！SmallTools 工具庫的所有工具均運作正常。您可以透過以下按鈕返回首頁或探索熱門工具：
           </p>
         </div>
@@ -42,87 +128,32 @@ export default function NotFound() {
         {/* 主行動按鈕 */}
         <Link
           href="/"
-          className="px-8 py-3.5 bg-[#ff0055] text-white font-bold text-sm rounded-xl hover:shadow-[0_0_25px_rgba(255,0,85,0.6)] transition-all cursor-pointer border border-[#ff0055]"
+          className="bg-[#ff0055] rounded-xl border border-[#ff0055] px-8 py-3.5 text-sm font-bold text-white transition-all cursor-pointer hover:shadow-[0_0_25px_rgba(255,0,85,0.6)]"
         >
           返回工具庫首頁
         </Link>
 
         {/* 推薦熱門工具快速捷徑 */}
-        <div className="w-full max-w-[800px] border-t border-white/[.08] pt-8 flex flex-col gap-4">
-          <span className="text-sm text-[#ff0055] font-semibold uppercase tracking-[1px]">
+        <div className="flex w-full max-w-[800px] flex-col gap-4 border-t border-white/[.08] pt-8">
+          <span className="text-[#ff0055] text-sm font-semibold uppercase tracking-[1px]">
             熱門線上工具推薦
           </span>
 
           <div className="grid grid-cols-3 gap-4 max-md:grid-cols-2 max-sm:grid-cols-1">
-            {[
-              {
-                name: '房屋貸款試算器',
-                path: '/mortgage-loan/',
-                svg: (
-                  <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-                  </svg>
-                ),
-              },
-              {
-                name: '薪資勞健保計算機',
-                path: '/my-salary-calculator/',
-                svg: (
-                  <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
-                    <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
-                  </svg>
-                ),
-              },
-              {
-                name: 'IP 檢測助手',
-                path: '/ip-detector/',
-                svg: (
-                  <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f0ff]">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                  </svg>
-                ),
-              },
-              {
-                name: 'JSON 格式化驗證',
-                path: '/json/',
-                svg: (
-                  <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff00aa]">
-                    <path d="M7 2v11h3v9l7-12h-4l4-8z" />
-                  </svg>
-                ),
-              },
-              {
-                name: 'QR Code 產生器',
-                path: '/qr-generator/',
-                svg: (
-                  <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00ff66]">
-                    <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v2h2v-2zm1 2h2v2h-2v-2zm-3 2h2v2h-2v-2zm3 2h2v2h-2v-2z" />
-                  </svg>
-                ),
-              },
-              {
-                name: 'PDF 頁面組合器',
-                path: '/pdf-processor/',
-                svg: (
-                  <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ef4444]">
-                    <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z" />
-                  </svg>
-                ),
-              },
-            ].map(t => (
+            {recommendedTools.map(t => (
               <Link
-                key={t.path}
-                href={t.path}
-                className="bg-black/30 border border-white/[.08] hover:border-white/[.2] p-4 rounded-xl flex items-center gap-3 transition-all group hover:scale-[1.02]"
+                key={t.href}
+                href={t.href}
+                className="group flex items-center gap-3 rounded-xl border border-white/[.08] bg-black/30 p-4 transition-all hover:scale-[1.02] hover:border-white/[.2]"
               >
-                <div className="group-hover:scale-110 transition-transform shrink-0">
+                <div className="shrink-0 transition-transform group-hover:scale-110">
                   {t.svg}
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-semibold text-white group-hover:text-[#ff0055] transition-colors">
+                <div className="flex flex-col overflow-hidden text-left">
+                  <span className="text-text-main group-hover:text-[#ff0055] text-sm font-semibold transition-colors truncate">
                     {t.name}
                   </span>
-                  <span className="text-xs font-mono text-text-sub">{t.path}</span>
+                  <span className="text-text-sub text-xs font-mono truncate">{t.href}</span>
                 </div>
               </Link>
             ))}

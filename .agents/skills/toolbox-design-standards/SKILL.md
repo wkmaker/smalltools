@@ -108,6 +108,12 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
    * **清理 `public/` 重複檔案**：啟用 `app/sitemap.ts` 後，需確認 `public/sitemap.xml` 及根目錄 `sitemap.xml` 已刪除，避免編譯時靜態資源覆蓋 Next.js 自動生成之 `sitemap.xml`。
    * **AWS 託管與相容性**：部署至 AWS S3 (開啟 Index document: `index.html`) 或搭配 CloudFront Rewrite 時，無檔名目錄路徑（`/time/`）即可自動對應至 `time/index.html`，無需於 Sitemap 標註副檔名。
 
+10. **全站中央工具清單設定檔與 404 動態推薦規範 (Central Tool Registry & 404 Recommendation)**
+    * **中央單一資料源 (`app/config/tools.tsx`)**：全站所有小工具清單、分類 (`category`)、主題向量 SVG 圖示 (`svg`)、簡介與關鍵字統一收錄於 `app/config/tools.tsx`，嚴禁在多個頁面中重複硬編碼全站工具清單。未來新增工具時僅需編輯此檔。
+    * **首頁與 404 自動同步連動**：
+      - 首頁 (`app/page.tsx`) 直接導入 `CATEGORIES` 進行選單與卡片渲染。
+      - 404 頁面 (`app/not-found.tsx`) 導入 `ALL_TOOLS`，並根據 404 URL 請求路徑關鍵字自動判斷分類，優先推薦同類型工具，若少於 6 個則隨機打亂補充其餘工具填滿至 6 個。
+
 ---
 
 ## 三、 Tailwind v4 樣式與編碼細節規範 (Tailwind v4 & Code Details)
