@@ -108,4 +108,16 @@ npm run lint
 
 ## 📄 授權條款 (License)
 
-本專案採用 Private / Proprietary 授權，版權所有 © 2026 Smalltools (CJKuo)。
+本專案採用 **GNU General Public License v3.0 (GPL-3.0)** 條款開源，版權所有 © 2026 CJ Kuo (Plume Intel LLC)。
+
+你可以自由使用、修改與分發本專案，惟任何基於本專案之衍生作品或公開部署服務，皆必須以同等的 GPL-3.0 條款完整公開原始碼，並保留原始作者之版權宣告與出處。
+
+完整授權內容請參閱專案根目錄之 [LICENSE](./LICENSE) 檔案或 [GNU 官方網站](https://www.gnu.org/licenses/gpl-3.0.html)。
+
+---
+
+## ⚠️ 免責聲明 (Disclaimer)
+
+本專案提供之各項工具（包含但不限於財務、薪資、房貸、網路與檔案處理工具）及其數據結果僅供技術交流與個人參考，不構成任何專業財務、法律或工程建議。
+
+使用者於實際決策前應自行核對權威機構數據，原作者與 Plume Intel LLC 不對任何因使用本服務所生之直接或間接損失承擔法律責任。
