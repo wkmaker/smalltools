@@ -277,7 +277,9 @@ export default function TimeClient() {
       document.documentElement.requestFullscreen().catch(() => {});
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen();
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
       setIsFullscreen(false);
     }
   };
@@ -297,6 +299,9 @@ export default function TimeClient() {
     return () => {
       document.removeEventListener('fullscreenchange', handleFsChange);
       document.body.classList.remove('is-fullscreen');
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
     };
   }, []);
 

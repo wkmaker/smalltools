@@ -74,6 +74,9 @@ export default function ToolLayout({
           if (typeof window !== 'undefined' && pathname) {
             sessionStorage.setItem('lastVisitedTool', pathname);
           }
+          if (typeof document !== 'undefined' && document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
         }}
         className="
           tool-back-btn
