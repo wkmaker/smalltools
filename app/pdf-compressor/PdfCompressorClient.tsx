@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
+import {
+  inspectPdfStructure,
+  compressPdfInPlace,
+  InspectResult,
+} from '../utils/pdfHelper';
 import styles from './pdf-compressor.module.css';
 
 interface QueueItem {
@@ -10,11 +15,14 @@ interface QueueItem {
   name: string;
   size: number;
   buffer: ArrayBuffer | null;
+  inspectData: InspectResult | null;
   status: 'inspecting' | 'ready' | 'compressing' | 'done' | 'error';
+  progressMsg?: string;
+  progressPct?: number;
   compressedBlob: Blob | null;
   compressedSize: number;
-  progress: number;
-  estSavingRatio: number;
+  errorMsg?: string;
+  showDetails?: boolean;
 }
 
 function formatBytes(bytes: number): string {
@@ -78,7 +86,6 @@ function createSimpleZip(files: { name: string; data: Uint8Array }[]): Blob {
     cdView.setUint32(24, f.data.length, true);
     cdView.setUint16(28, nameBytes.length, true);
     cdView.setUint16(30, 0, true);
-    cdView.setUint16(32, 0, true);
     cdView.setUint16(34, 0, true);
     cdView.setUint16(36, 0, true);
     cdView.setUint32(38, 0, true);
@@ -113,7 +120,6 @@ function createSimpleZip(files: { name: string; data: Uint8Array }[]): Blob {
 }
 
 export default function PdfCompressorClient() {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
   const [fileQueue, setFileQueue] = useState<QueueItem[]>([]);
 
   // 壓縮模式與高級設定
@@ -123,13 +129,12 @@ export default function PdfCompressorClient() {
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const [toast, setToast] = useState<string>('');
 
   const fileInputId = useId();
 
-  // 初始化主題與 URL 參數讀取
   useEffect(() => {
-    setIsMounted(true);
     document.documentElement.style.setProperty('--theme-color', '#eab308');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(234, 179, 8, 0.6)');
 
@@ -144,10 +149,32 @@ export default function PdfCompressorClient() {
 
   const showToast = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
+    setTimeout(() => setToast(''), 3000);
   };
 
-  // URL 參數寫入
+  // 全域拖曳事件處理
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFilesSelect(e.dataTransfer.files);
+    }
+  };
+
   const syncToURL = useCallback(
     (currentMode: 'low' | 'medium' | 'high', qVal: number, dpiVal: number) => {
       if (typeof window === 'undefined') return;
@@ -165,22 +192,22 @@ export default function PdfCompressorClient() {
     let q = 0.65;
     let dpi = 144;
     if (m === 'low') {
-      q = 0.85;
-      dpi = 200;
+      q = 0.45;
+      dpi = 96;
     } else if (m === 'medium') {
       q = 0.65;
       dpi = 144;
     } else if (m === 'high') {
-      q = 0.45;
-      dpi = 96;
+      q = 0.85;
+      dpi = 200;
     }
     setQuality(q);
     setMaxDpi(dpi);
     syncToURL(m, q, dpi);
   };
 
-  // 上傳 PDF 檔案
-  const handleFilesSelect = (files: FileList | File[]) => {
+  // 上傳 PDF 檔案並自動非同步預檢
+  const handleFilesSelect = async (files: FileList | File[]) => {
     const pdfFiles = Array.from(files).filter(
       (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
     );
@@ -190,24 +217,48 @@ export default function PdfCompressorClient() {
       return;
     }
 
-    const newItems: QueueItem[] = pdfFiles.map((file, idx) => {
-      const estRatio = modePreset === 'high' ? 80 : modePreset === 'medium' ? 60 : 30;
-      return {
-        id: `q_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 5)}`,
-        file,
-        name: file.name,
-        size: file.size,
-        buffer: null,
-        status: 'ready',
-        compressedBlob: null,
-        compressedSize: 0,
-        progress: 0,
-        estSavingRatio: estRatio,
-      };
-    });
+    const newItems: QueueItem[] = pdfFiles.map((file, idx) => ({
+      id: `q_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
+      file,
+      name: file.name,
+      size: file.size,
+      buffer: null,
+      inspectData: null,
+      status: 'inspecting',
+      compressedBlob: null,
+      compressedSize: 0,
+      showDetails: false,
+    }));
 
     setFileQueue((prev) => [...prev, ...newItems]);
-    showToast(`已成功新增 ${pdfFiles.length} 個 PDF 檔案！`);
+    showToast(`成功新增 ${pdfFiles.length} 個 PDF 檔案，正在執行結構預檢...`);
+
+    // 非同步預檢各檔案結構
+    for (let i = 0; i < newItems.length; i++) {
+      const item = newItems[i];
+      try {
+        const buffer = await item.file.arrayBuffer();
+        const inspectRes = await inspectPdfStructure(buffer);
+
+        setFileQueue((prev) =>
+          prev.map((it) =>
+            it.id === item.id
+              ? {
+                  ...it,
+                  buffer,
+                  inspectData: inspectRes,
+                  status: 'ready',
+                }
+              : it
+          )
+        );
+      } catch (err) {
+        console.error('預檢失敗:', err);
+        setFileQueue((prev) =>
+          prev.map((it) => (it.id === item.id ? { ...it, status: 'ready' } : it))
+        );
+      }
+    }
   };
 
   const removeQueueItem = (id: string) => {
@@ -215,44 +266,10 @@ export default function PdfCompressorClient() {
     showToast('已移除指定檔案');
   };
 
-  // 核心圖片降採樣與純前端真實 PDF 結構重構
-  const compressSinglePdf = async (item: QueueItem): Promise<{ blob: Blob; size: number }> => {
-    // 透過畫布圖像渲染進行純前端 100% 安全 PDF 圖片降採樣瘦身
-    const canvas = document.createElement('canvas');
-    const targetScale = maxDpi <= 96 ? 0.5 : maxDpi <= 144 ? 0.65 : 0.8;
-
-    canvas.width = Math.max(300, Math.round(800 * targetScale));
-    canvas.height = Math.max(400, Math.round(1100 * targetScale));
-    const ctx = canvas.getContext('2d');
-
-    if (ctx) {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(item.name, canvas.width / 2, canvas.height / 2);
-    }
-
-    const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
-    const base64Data = jpegDataUrl.split(',')[1];
-    const binaryStr = atob(base64Data);
-
-    // 計算壓縮縮減率
-    const ratio = modePreset === 'high' ? 0.25 : modePreset === 'medium' ? 0.45 : 0.7;
-    const estCompressedBytes = Math.max(1024, Math.round(item.size * ratio));
-
-    const resultBuffer = new Uint8Array(estCompressedBytes);
-    for (let i = 0; i < Math.min(binaryStr.length, estCompressedBytes); i++) {
-      resultBuffer[i] = binaryStr.charCodeAt(i % binaryStr.length);
-    }
-
-    // 確保頭部標示 %PDF-1.4 符合 W3C 標準 PDF 檔案頭
-    const pdfHeader = new TextEncoder().encode('%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
-    resultBuffer.set(pdfHeader.subarray(0, Math.min(pdfHeader.length, resultBuffer.length)), 0);
-
-    const blob = new Blob([resultBuffer], { type: 'application/pdf' });
-    return { blob, size: blob.size };
+  const toggleDetails = (id: string) => {
+    setFileQueue((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, showDetails: !f.showDetails } : f))
+    );
   };
 
   // 執行批次壓縮處理
@@ -266,28 +283,53 @@ export default function PdfCompressorClient() {
       const item = fileQueue[i];
       if (item.status === 'done') continue;
 
-      setFileQueue((prev) =>
-        prev.map((it, idx) => (idx === i ? { ...it, status: 'compressing', progress: 30 } : it))
-      );
-
       try {
-        const { blob, size } = await compressSinglePdf(item);
+        let buffer = item.buffer;
+        if (!buffer) {
+          buffer = await item.file.arrayBuffer();
+        }
+
         setFileQueue((prev) =>
-          prev.map((it, idx) =>
-            idx === i
+          prev.map((it) =>
+            it.id === item.id
+              ? { ...it, status: 'compressing', progressMsg: '開始解析結構...', progressPct: 15 }
+              : it
+          )
+        );
+
+        const compressedBlob = await compressPdfInPlace(
+          buffer,
+          { quality, maxDpi },
+          (msg, pct) => {
+            setFileQueue((prev) =>
+              prev.map((it) =>
+                it.id === item.id ? { ...it, progressMsg: msg, progressPct: pct } : it
+              )
+            );
+          }
+        );
+
+        setFileQueue((prev) =>
+          prev.map((it) =>
+            it.id === item.id
               ? {
                   ...it,
                   status: 'done',
-                  progress: 100,
-                  compressedBlob: blob,
-                  compressedSize: size,
+                  progressPct: 100,
+                  compressedBlob,
+                  compressedSize: compressedBlob.size,
                 }
               : it
           )
         );
-      } catch {
+      } catch (err) {
+        console.error('壓縮失敗:', err);
         setFileQueue((prev) =>
-          prev.map((it, idx) => (idx === i ? { ...it, status: 'error', progress: 0 } : it))
+          prev.map((it) =>
+            it.id === item.id
+              ? { ...it, status: 'error', errorMsg: (err as Error).message || '壓縮處理失敗' }
+              : it
+          )
         );
       }
     }
@@ -318,7 +360,7 @@ export default function PdfCompressorClient() {
     const zipUrl = URL.createObjectURL(zipBlob);
     const a = document.createElement('a');
     a.href = zipUrl;
-    a.download = `PDF_Compressed_Batch_${Date.now()}.zip`;
+    a.download = `PDF_Compressed_Batch_${new Date().toISOString().slice(0, 10)}.zip`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -331,258 +373,390 @@ export default function PdfCompressorClient() {
   return (
     <ToolLayout
       title="PDF 壓縮大師"
-      subtitle="ONLINE PDF COMPRESSOR"
-      description="專業免費的線上 PDF 壓縮大師！專針對 PDF 內嵌點陣圖片進行深度壓縮瘦身，維持文字與向量 100% 無損清晰可複製。支援多檔批次壓縮與 ZIP 一鍵打包。"
+      subtitle="ONLINE PDF COMPRESSOR MASTER"
+      description="專業免費的線上 PDF 壓縮大師！專針對 PDF 內嵌點陣圖片進行深度降採樣與瘦身，維持文字與向量 100% 原生無損清晰可複製。支援多檔批次壓縮與 ZIP 一鍵打包。"
       accentColor="#eab308"
       accentGlow="rgba(234, 179, 8, 0.6)"
     >
-      <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
-        {/* 頂部頂級橫幅 */}
-        <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 rounded-2xl px-6 py-3 text-white flex justify-between items-center flex-wrap gap-4 shadow-lg">
-          <div className="flex items-center gap-3">
-            <span className="bg-black/30 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide border border-white/20">
-              100% 純前端
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className="relative flex flex-col gap-8 text-left w-full px-4 max-sm:px-0 min-h-[400px]"
+      >
+        {/* 全域拖曳浮層 Overlay */}
+        {isDragging && (
+          <div className="absolute inset-0 z-50 bg-[#eab308]/15 border-2 border-dashed border-[#eab308] rounded-3xl backdrop-blur-md flex flex-col items-center justify-center gap-3 text-white transition-all shadow-[0_0_50px_rgba(234,179,8,0.4)] pointer-events-none">
+            <div className="w-16 h-16 rounded-full bg-[#eab308] text-black flex items-center justify-center shadow-lg animate-bounce">
+              <svg viewBox="0 0 24 24" width={32} height={32} fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold text-white tracking-wide">
+              放開滑鼠以新增更多 PDF 檔案進行壓縮
             </span>
-            <span className="text-sm font-medium">
+          </div>
+        )}
+
+        {/* 頂部頂級功能列 */}
+        <div className="bg-black/20 border border-white/[.08] p-5 sm:p-6 rounded-2xl flex justify-between items-center flex-wrap gap-4 backdrop-blur-md shadow-lg">
+          <div className="flex items-center gap-3">
+            <span className="bg-[#eab308]/20 text-[#eab308] px-3 py-1 rounded-xl text-xs font-semibold border border-[#eab308]/30">
+              100% 瀏覽器本機端運算
+            </span>
+            <span className="text-sm text-text-sub font-medium">
               {fileQueue.length === 0
                 ? '請上傳 PDF 檔案開啟極速瘦身'
                 : `已載入 ${fileQueue.length} 個 PDF 檔案`}
             </span>
           </div>
 
-          {fileQueue.length > 0 && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              id={fileInputId}
+              type="file"
+              accept="application/pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => e.target.files && handleFilesSelect(e.target.files)}
+            />
+
             <button
               type="button"
-              onClick={() => setFileQueue([])}
-              className="px-3 py-1.5 text-xs font-bold bg-black/20 text-yellow-200 border border-yellow-300/30 rounded-xl hover:bg-black/30 transition-all cursor-pointer"
+              onClick={() => document.getElementById(fileInputId)?.click()}
+              disabled={isCompressing}
+              className="px-4 py-2 text-sm font-semibold text-[#eab308] bg-[#eab308]/10 border border-[#eab308]/30 rounded-xl hover:bg-[#eab308]/20 transition-all cursor-pointer disabled:opacity-30 flex items-center gap-1.5"
             >
-              清空佇列
+              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+              </svg>
+              新增 PDF 檔案
             </button>
+
+            {fileQueue.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setFileQueue([])}
+                  disabled={isCompressing}
+                  className="px-4 py-2 text-sm font-semibold text-text-sub bg-white/5 border border-white/10 rounded-xl hover:bg-white/15 hover:text-white transition-all cursor-pointer disabled:opacity-30"
+                >
+                  清空佇列
+                </button>
+                <button
+                  type="button"
+                  onClick={startBatchCompression}
+                  disabled={isCompressing}
+                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold text-sm rounded-xl cursor-pointer hover:shadow-[0_0_25px_rgba(234,179,8,0.6)] transition-all disabled:opacity-40 flex items-center gap-2"
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                  </svg>
+                  {isCompressing ? '壓縮處理中...' : '開始批次壓縮'}
+                </button>
+              </>
+            )}
+
+            {hasCompleted && fileQueue.length > 1 && (
+              <button
+                type="button"
+                onClick={downloadAllAsZip}
+                className="px-5 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold text-sm rounded-xl cursor-pointer hover:bg-emerald-500/30 transition-all flex items-center gap-2"
+              >
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                  <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                </svg>
+                打包 ZIP 下載
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 壓縮模式控制面板 */}
+        <div className="bg-black/30 border border-white/[.08] p-6 rounded-2xl flex flex-col gap-4 backdrop-blur-md">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-text-main">壓縮強度預設：</span>
+              <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 gap-1">
+                <button
+                  type="button"
+                  onClick={() => applyModePreset('high')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                    modePreset === 'high'
+                      ? 'bg-[#eab308] text-black font-bold shadow-[0_0_10px_rgba(234,179,8,0.4)]'
+                      : 'text-text-sub hover:text-white'
+                  }`}
+                >
+                  輕度 (微幅瘦身)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyModePreset('medium')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                    modePreset === 'medium'
+                      ? 'bg-[#eab308] text-black font-bold shadow-[0_0_10px_rgba(234,179,8,0.4)]'
+                      : 'text-text-sub hover:text-white'
+                  }`}
+                >
+                  平衡 (推薦 ~60%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyModePreset('low')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                    modePreset === 'low'
+                      ? 'bg-[#eab308] text-black font-bold shadow-[0_0_10px_rgba(234,179,8,0.4)]'
+                      : 'text-text-sub hover:text-white'
+                  }`}
+                >
+                  極致 (~80% 瘦身)
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-xs font-semibold text-[#eab308] hover:underline cursor-pointer flex items-center gap-1"
+            >
+              {showAdvanced ? '隱藏進階參數 ▲' : '進階微調設定 ▼'}
+            </button>
+          </div>
+
+          {showAdvanced && (
+            <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-6 pt-4 border-t border-white/[.08]">
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-text-sub">點陣圖片壓縮品質 (Quality)</span>
+                  <span className="text-[#eab308] font-mono font-bold">
+                    {Math.round(quality * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0.15}
+                  max={0.95}
+                  step={0.05}
+                  value={quality}
+                  onChange={(e) => {
+                    const q = parseFloat(e.target.value);
+                    setQuality(q);
+                    syncToURL(modePreset, q, maxDpi);
+                  }}
+                  className="accent-[#eab308] cursor-pointer"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-text-sub font-medium">最大網點解析度 (Max DPI)</span>
+                  <span className="text-[#eab308] font-mono font-bold">{maxDpi} DPI</span>
+                </div>
+                <select
+                  value={maxDpi}
+                  onChange={(e) => {
+                    const dpi = parseInt(e.target.value, 10);
+                    setMaxDpi(dpi);
+                    syncToURL(modePreset, quality, dpi);
+                  }}
+                  className="bg-select-bg text-text-main text-xs font-medium rounded-xl p-2 border border-white/10 outline-none"
+                >
+                  <option value={96}>96 DPI (螢幕簡報/極輕巧)</option>
+                  <option value={144}>144 DPI (推薦清晰標準)</option>
+                  <option value={200}>200 DPI (高清列印等級)</option>
+                </select>
+              </div>
+            </div>
           )}
         </div>
 
         {/* 上傳 Dropzone */}
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            if (e.dataTransfer.files.length > 0) handleFilesSelect(e.dataTransfer.files);
-          }}
-          onClick={() => document.getElementById(fileInputId)?.click()}
-          className={`p-12 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer text-center ${styles.dropzone}`}
-        >
-          <input
-            id={fileInputId}
-            type="file"
-            accept="application/pdf"
-            multiple
-            className="hidden"
-            onChange={(e) => e.target.files && handleFilesSelect(e.target.files)}
-          />
-          <div className="w-18 h-18 rounded-3xl bg-[#eab308]/15 text-[#eab308] flex items-center justify-center border border-[#eab308]/30 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
-            <svg viewBox="0 0 24 24" width={32} height={32} fill="currentColor">
-              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
-            </svg>
+        {fileQueue.length === 0 ? (
+          <div
+            onClick={() => document.getElementById(fileInputId)?.click()}
+            className={`p-12 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer text-center ${styles.dropzone}`}
+          >
+            <div className="w-18 h-18 rounded-3xl bg-[#eab308]/15 text-[#eab308] flex items-center justify-center border border-[#eab308]/30 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+              <svg viewBox="0 0 24 24" width={32} height={32} fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+              </svg>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-base font-bold text-text-main">
+                點擊或將一至多個 PDF 檔案拖曳至此處
+              </span>
+              <span className="text-xs text-text-sub">
+                支援多檔 PDF 批次處理，100% 瀏覽器本機端運算，零檔案上傳伺服器，隱私極致安全
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-base font-bold text-text-main">點擊或將一至多個 PDF 檔案拖曳至此處</span>
-            <span className="text-xs text-text-sub">
-              支援多檔 PDF 批次處理，100% 瀏覽器本機端運算，零檔案上傳伺服器，隱私極致安全
-            </span>
-          </div>
-        </div>
-
-        {/* 檔案佇列清單 */}
-        {fileQueue.length > 0 && (
-          <div className="flex flex-col gap-3">
+        ) : (
+          <div className="flex flex-col gap-4">
             {fileQueue.map((item) => {
               const savedBytes = item.size - item.compressedSize;
               const ratio =
                 item.size > 0 && item.compressedSize > 0
-                  ? Math.max(0, Math.round((savedBytes / item.size) * 100))
-                  : item.estSavingRatio;
+                  ? Math.max(0, (savedBytes / item.size) * 100).toFixed(1)
+                  : 0;
 
               return (
-                <div key={item.id} className={styles.queueCard}>
+                <div key={item.id} className="bg-black/30 border border-white/[.08] rounded-2xl p-5 backdrop-blur-md flex flex-col gap-3">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-[#eab308]/15 border border-[#eab308]/30 flex items-center justify-center text-[#eab308] shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#eab308]/10 text-[#eab308] border border-[#eab308]/30 flex items-center justify-center shrink-0">
                         <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
                           <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
                         </svg>
                       </div>
-                      <div className="flex flex-col text-left min-w-0">
-                        <span className="text-sm font-semibold text-text-main truncate">{item.name}</span>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="font-mono text-text-sub">{formatBytes(item.size)}</span>
-                          <span className="text-[#eab308] font-mono font-bold bg-[#eab308]/10 px-2 py-0.5 rounded border border-[#eab308]/20">
-                            {item.status === 'done' ? `瘦身容量 -${ratio}%` : `預估瘦身 ~${ratio}%`}
+
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-text-main truncate" title={item.name}>
+                          {item.name}
+                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono text-text-sub">
+                            {formatBytes(item.size)}
                           </span>
+                          {item.inspectData && (
+                            <span className="text-[11px] bg-[#eab308]/15 text-[#eab308] px-2 py-0.5 rounded-full border border-[#eab308]/30 font-medium">
+                              預檢: {item.inspectData.totalImages} 張圖片 (估減 ~{item.inspectData.estRatio}%)
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      {item.status === 'done' && item.compressedBlob && (
-                        <a
-                          href={URL.createObjectURL(item.compressedBlob)}
-                          download={`compressed_${item.name}`}
-                          className="px-4 py-1.5 text-xs font-bold text-black bg-emerald-400 rounded-xl hover:bg-emerald-300 transition-all shadow-md flex items-center gap-1.5"
+                    <div className="flex items-center gap-2 shrink-0">
+                      {item.inspectData && item.inspectData.images.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleDetails(item.id)}
+                          className="px-3 py-1.5 text-xs font-semibold text-text-sub bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all cursor-pointer flex items-center gap-1"
                         >
-                          <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                          <svg viewBox="0 0 24 24" width={13} height={13} fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                           </svg>
-                          下載 PDF ({formatBytes(item.compressedSize)})
-                        </a>
+                          明細 {item.showDetails ? '▲' : '▼'}
+                        </button>
                       )}
+
                       <button
                         type="button"
                         onClick={() => removeQueueItem(item.id)}
-                        className="text-text-sub text-sm hover:text-red-400 transition-colors cursor-pointer px-1"
+                        disabled={isCompressing}
+                        className="p-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all cursor-pointer disabled:opacity-30"
+                        title="移除檔案"
                       >
                         ✕
                       </button>
                     </div>
                   </div>
 
+                  {/* 進度條 */}
                   {item.status === 'compressing' && (
-                    <div className={styles.progressBarContainer}>
-                      <div className={styles.progressBarFill} style={{ width: `${item.progress}%` }} />
+                    <div className="flex flex-col gap-1.5 pt-2 border-t border-white/[.06]">
+                      <div className="flex justify-between text-xs text-text-sub">
+                        <span>{item.progressMsg || '處理中...'}</span>
+                        <span className="font-mono text-[#eab308]">{item.progressPct || 0}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/10">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-300"
+                          style={{ width: `${item.progressPct || 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 完成與下載列 */}
+                  {item.status === 'done' && item.compressedBlob && (
+                    <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs flex-wrap gap-2">
+                      <div className="flex items-center gap-2 text-emerald-400 font-medium">
+                        <span>原檔: {formatBytes(item.size)}</span>
+                        <span>➔</span>
+                        <strong className="font-mono text-white font-bold">
+                          壓縮檔: {formatBytes(item.compressedSize)}
+                        </strong>
+                        <span className="text-emerald-300 font-bold bg-emerald-500/20 px-2 py-0.5 rounded">
+                          (減小 {ratio}%)
+                        </span>
+                      </div>
+
+                      <a
+                        href={URL.createObjectURL(item.compressedBlob)}
+                        download={`${item.name.replace(/\.pdf$/i, '')}_compressed.pdf`}
+                        className="px-4 py-1.5 bg-emerald-500 text-black font-bold text-xs rounded-lg hover:bg-emerald-400 transition-all flex items-center gap-1.5"
+                      >
+                        <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                        </svg>
+                        下載壓縮檔 PDF
+                      </a>
+                    </div>
+                  )}
+
+                  {/* 錯誤資訊 */}
+                  {item.status === 'error' && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
+                      處理失敗：{item.errorMsg || '發生未知錯誤'}
+                    </div>
+                  )}
+
+                  {/* 明細 Drawer */}
+                  {item.showDetails && item.inspectData && item.inspectData.images.length > 0 && (
+                    <div className="mt-2 p-3 bg-black/40 rounded-xl border border-white/10 overflow-x-auto">
+                      <table className="w-full text-xs text-left">
+                        <thead>
+                          <tr className="border-b border-white/10 text-text-sub">
+                            <th className="p-1.5">#</th>
+                            <th className="p-1.5">維度 (WxH)</th>
+                            <th className="p-1.5">格式 / 色彩</th>
+                            <th className="p-1.5">預檢決策與保護理由</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {item.inspectData.images.map((img, idx) => (
+                            <tr key={idx} className="border-b border-white/[.04] text-text-main">
+                              <td className="p-1.5 font-mono">#{idx + 1}</td>
+                              <td className="p-1.5 font-mono">{img.width} × {img.height}</td>
+                              <td className="p-1.5">{img.filter || 'Raw'} ({img.colorSpace})</td>
+                              <td className="p-1.5">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+                                    img.status === 'compressible'
+                                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                      : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                                  }`}
+                                >
+                                  {img.statusReason}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </div>
               );
             })}
+
+            {/* 下方輕量新增卡片 Dropzone */}
+            <div
+              onClick={() => document.getElementById(fileInputId)?.click()}
+              className="p-6 rounded-2xl border border-dashed border-white/20 bg-black/20 hover:bg-[#eab308]/10 hover:border-[#eab308]/50 transition-all cursor-pointer flex items-center justify-center gap-3 text-text-sub hover:text-white"
+            >
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className="text-[#eab308]">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+              </svg>
+              <span className="text-sm font-semibold">拖曳或點擊此處新增更多 PDF 檔案進行壓縮</span>
+            </div>
           </div>
         )}
-
-        {/* 壓縮品質控制區 */}
-        <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-5 text-left backdrop-blur-md">
-          <h4 className="text-sm font-semibold text-text-main flex items-center gap-2">
-            <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#eab308]">
-              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-            </svg>
-            壓縮品質快選模式
-          </h4>
-
-          {/* 膠囊切換器 */}
-          <div className={styles.segmentedControl}>
-            <button
-              type="button"
-              onClick={() => applyModePreset('low')}
-              className={`${styles.segmentBtn} ${modePreset === 'low' ? styles.segmentBtnActive : ''}`}
-            >
-              <span className="text-sm font-semibold">輕度壓縮</span>
-              <span className="text-xs text-text-sub">品質 85% / 200 DPI (降約 30%)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyModePreset('medium')}
-              className={`${styles.segmentBtn} ${modePreset === 'medium' ? styles.segmentBtnActive : ''}`}
-            >
-              <span className="text-sm font-semibold">推薦壓縮</span>
-              <span className="text-xs text-text-sub">品質 65% / 144 DPI (降約 60%)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyModePreset('high')}
-              className={`${styles.segmentBtn} ${modePreset === 'high' ? styles.segmentBtnActive : ''}`}
-            >
-              <span className="text-sm font-semibold">極致壓縮</span>
-              <span className="text-xs text-text-sub">品質 45% / 96 DPI (降約 80%)</span>
-            </button>
-          </div>
-
-          {/* 高級設定 Accordion */}
-          <div className="border-t border-white/[.06] pt-3">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs font-semibold text-text-sub hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-              </svg>
-              自訂高級設定 (Quality & DPI) {showAdvanced ? '▲' : '▼'}
-            </button>
-
-            {showAdvanced && (
-              <div className="flex flex-col gap-4 mt-3 p-4 bg-black/40 rounded-xl border border-white/10">
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-text-sub font-medium">JPEG 圖片品質 (Quality)</span>
-                    <span className="text-[#eab308] font-mono font-bold">{Math.round(quality * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="0.9"
-                    step="0.05"
-                    value={quality}
-                    onChange={(e) => {
-                      const q = parseFloat(e.target.value);
-                      setQuality(q);
-                      syncToURL(modePreset, q, maxDpi);
-                    }}
-                    className="accent-[#eab308] cursor-pointer h-2 bg-black/50 rounded-lg"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-text-sub font-medium">解析度上限 (Max DPI)</span>
-                    <span className="text-[#eab308] font-mono font-bold">{maxDpi} DPI</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="72"
-                    max="300"
-                    step="24"
-                    value={maxDpi}
-                    onChange={(e) => {
-                      const dpi = parseInt(e.target.value, 10);
-                      setMaxDpi(dpi);
-                      syncToURL(modePreset, quality, dpi);
-                    }}
-                    className="accent-[#eab308] cursor-pointer h-2 bg-black/50 rounded-lg"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 主要動作與 ZIP 打包按鈕 */}
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={startBatchCompression}
-            disabled={fileQueue.length === 0 || isCompressing}
-            className="w-full h-[54px] bg-[#eab308]/20 border border-[#eab308]/50 text-[#eab308] font-bold text-lg rounded-xl cursor-pointer hover:bg-[#eab308] hover:text-[#030305] hover:shadow-[0_0_25px_rgba(234,179,8,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
-          >
-            <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
-              <path d="M7 2v11h3v9l7-12h-4l4-8z" />
-            </svg>
-            {isCompressing ? 'PDF 圖片深度壓縮中...' : '開始 PDF 圖片深度壓縮'}
-          </button>
-
-          {hasCompleted && fileQueue.length > 1 && (
-            <button
-              type="button"
-              onClick={downloadAllAsZip}
-              className="w-full h-[50px] bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-bold text-base rounded-xl cursor-pointer hover:bg-emerald-500 hover:text-black transition-all flex items-center justify-center gap-2 shadow-lg"
-            >
-              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
-                <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-1 8h-3v3h-2v-3h-3v-2h3v-3h2v3h3v2z" />
-              </svg>
-              打包下載所有壓縮 PDF (ZIP)
-            </button>
-          )}
-        </div>
       </div>
 
       {toast && (
-        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm font-medium rounded-xl bg-[#eab308]/20 border border-[#eab308]/40 text-[#eab308] backdrop-blur-md shadow-lg z-50">
+        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm font-medium rounded-xl bg-[#eab308]/20 border border-[#eab308]/40 text-yellow-200 backdrop-blur-md shadow-lg z-50">
           {toast}
         </div>
       )}

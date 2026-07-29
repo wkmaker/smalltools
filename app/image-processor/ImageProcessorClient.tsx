@@ -158,6 +158,7 @@ export default function ImageProcessorClient() {
   const formatSelectId = useId();
   const widthInputId = useId();
   const heightInputId = useId();
+  const keepAspectId = useId();
 
   // 初始化主題顏色與 URL 讀取
   useEffect(() => {
@@ -429,7 +430,7 @@ export default function ImageProcessorClient() {
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(zipUrl), 5000);
 
-      showToast('🎉 批次打包 ZIP 下載完成！');
+      showToast('批次打包 ZIP 下載完成！');
     } catch (err) {
       showToast('批次處理失敗：' + (err as Error).message);
     } finally {
@@ -453,12 +454,12 @@ export default function ImageProcessorClient() {
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 頂部控制與分享橫幅 */}
-        <div className="bg-gradient-to-r from-purple-900 via-fuchsia-800 to-pink-800 rounded-2xl px-6 py-3 text-white flex justify-between items-center flex-wrap gap-4 shadow-lg">
-          <div className="flex items-center gap-3">
-            <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide">
+        <div className="bg-gradient-to-r from-purple-900 via-fuchsia-800 to-pink-800 rounded-2xl p-3.5 sm:px-6 sm:py-3 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 shadow-lg min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 max-w-full overflow-hidden">
+            <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide shrink-0">
               萬能圖片編輯
             </span>
-            <span className="text-sm font-medium">
+            <span className="text-xs sm:text-sm font-medium min-w-0 truncate">
               {files.length === 0
                 ? '請上傳圖片開啟處理大師'
                 : isBatchMode
@@ -467,13 +468,16 @@ export default function ImageProcessorClient() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
             <button
               type="button"
               onClick={copyConfigLink}
-              className="px-3 py-1.5 text-xs font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer"
+              className="px-3 py-1.5 text-xs font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
             >
-              🔗 複製配置連結
+              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
+                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+              </svg>
+              複製配置連結
             </button>
             {files.length > 0 && (
               <button
@@ -483,9 +487,12 @@ export default function ImageProcessorClient() {
                   setSingleImgElement(null);
                   setBatchItems([]);
                 }}
-                className="px-3 py-1.5 text-xs font-bold bg-white/10 text-pink-200 border border-pink-300/30 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold bg-white/10 text-pink-200 border border-pink-300/30 rounded-xl hover:bg-white/20 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
               >
-                🗑️ 重新上傳
+                <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
+                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                </svg>
+                重新上傳
               </button>
             )}
           </div>
@@ -510,8 +517,10 @@ export default function ImageProcessorClient() {
               className="hidden"
               onChange={(e) => e.target.files && handleFilesLoad(e.target.files)}
             />
-            <div className="w-20 h-20 rounded-3xl bg-[#d946ef]/15 text-[#d946ef] flex items-center justify-center text-3xl font-bold border border-[#d946ef]/30 shadow-[0_0_30px_rgba(217,70,239,0.2)]">
-              📷
+            <div className="w-20 h-20 rounded-3xl bg-[#d946ef]/15 text-[#d946ef] flex items-center justify-center border border-[#d946ef]/30 shadow-[0_0_30px_rgba(217,70,239,0.2)]">
+              <svg viewBox="0 0 24 24" width={36} height={36} fill="currentColor" className="text-[#d946ef]">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+              </svg>
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-lg font-bold text-white">拖曳單個或多個圖片至此，或點擊選擇檔案</span>
@@ -526,7 +535,10 @@ export default function ImageProcessorClient() {
             {/* 左欄：設定與控制面板 */}
             <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
               <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/[.06] pb-3">
-                ⚙️ 圖片輸出與壓縮設定
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
+                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                </svg>
+                圖片輸出與壓縮設定
               </h3>
 
               {/* 輸出格式 */}
@@ -575,38 +587,50 @@ export default function ImageProcessorClient() {
                     <button
                       type="button"
                       onClick={() => setRotation((prev) => (prev + 270) % 360)}
-                      className="px-3 py-1.5 text-sm font-medium bg-white/5 border border-white/15 text-text-sub rounded-lg hover:bg-[#d946ef]/20 hover:border-[#d946ef]/40 hover:text-[#d946ef] transition-all cursor-pointer"
+                      className="px-3 py-1.5 text-sm font-medium bg-white/5 border border-white/15 text-text-sub rounded-lg hover:bg-[#d946ef]/20 hover:border-[#d946ef]/40 hover:text-[#d946ef] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      ↺ 左旋 90°
+                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
+                        <path d="M7.11 8.53L5.7 7.11C4.04 8.77 3 11.01 3 13.5 3 18.2 6.8 22 11.5 22S20 18.2 20 13.5C20 8.8 16.2 5 11.5 5c-2.49 0-4.73 1.04-6.39 2.71L3.7 6.3V11h4.7L7.11 8.53z" />
+                      </svg>
+                      左旋 90°
                     </button>
                     <button
                       type="button"
                       onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                      className="px-3 py-1.5 text-sm font-medium bg-white/5 border border-white/15 text-text-sub rounded-lg hover:bg-[#d946ef]/20 hover:border-[#d946ef]/40 hover:text-[#d946ef] transition-all cursor-pointer"
+                      className="px-3 py-1.5 text-sm font-medium bg-white/5 border border-white/15 text-text-sub rounded-lg hover:bg-[#d946ef]/20 hover:border-[#d946ef]/40 hover:text-[#d946ef] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      ↻ 右旋 90°
+                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
+                        <path d="M16.89 8.53L18.3 7.11C19.96 8.77 21 11.01 21 13.5 21 18.2 17.2 22 12.5 22S4 18.2 4 13.5C4 8.8 7.8 5 12.5 5c2.49 0 4.73 1.04 6.39 2.71L20.3 6.3V11h-4.7l1.29-2.47z" />
+                      </svg>
+                      右旋 90°
                     </button>
                     <button
                       type="button"
                       onClick={() => setFlipH(!flipH)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
                         flipH
                           ? 'bg-[#d946ef]/20 border-[#d946ef]/50 text-[#d946ef]'
                           : 'bg-white/5 border-white/15 text-text-sub hover:text-white'
                       }`}
                     >
-                      ⇄ 水平翻轉
+                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
+                        <path d="M15 21h2v-2h-2v2zm4-12h2V7h-2v2zM3 5v14c0 1.1.9 2 2 2h4v-2H5V5h4V3H5c-1.1 0-2 .9-2 2zm16-2v2h2c0-1.1-.9-2-2-2zm-4 18h2v-2h-2v2zm4-4h2v-2h-2v2zm0-4h2v-2h-2v2zm-4-8h2V3h-2v2z" />
+                      </svg>
+                      水平翻轉
                     </button>
                     <button
                       type="button"
                       onClick={() => setFlipV(!flipV)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
                         flipV
                           ? 'bg-[#d946ef]/20 border-[#d946ef]/50 text-[#d946ef]'
                           : 'bg-white/5 border-white/15 text-text-sub hover:text-white'
                       }`}
                     >
-                      ⇅ 垂直翻轉
+                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
+                        <path d="M5 15v2h14v-2H5zM3 5v4h2V5h14v4h2V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2zm16 14H5v-4H3v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h-2v4z" />
+                      </svg>
+                      垂直翻轉
                     </button>
                   </div>
                 </div>
@@ -616,8 +640,9 @@ export default function ImageProcessorClient() {
               <div className="flex flex-col gap-4 border-t border-white/[.06] pt-4 text-left">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-text-sub">目標解析度 (px)</span>
-                  <label className="flex items-center gap-2 text-xs font-medium text-text-sub cursor-pointer">
+                  <label htmlFor={keepAspectId} className="flex items-center gap-2 text-xs font-medium text-text-sub cursor-pointer">
                     <input
+                      id={keepAspectId}
                       type="checkbox"
                       checked={keepAspect}
                       onChange={(e) => setKeepAspect(e.target.checked)}
@@ -698,21 +723,21 @@ export default function ImageProcessorClient() {
               {!isBatchMode && files[0] && (
                 <div className="grid grid-cols-2 gap-3 bg-black/30 border border-white/10 rounded-xl p-4 text-xs">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-text-sub font-semibold">原始大小</span>
+                    <span className="text-sm font-semibold text-text-sub">原始大小</span>
                     <span className="font-mono font-bold text-white">{formatBytes(files[0].size)}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-text-sub font-semibold">處理後預估</span>
+                    <span className="text-sm font-semibold text-text-sub">處理後預估</span>
                     <span className="font-mono font-bold text-[#d946ef]">{formatBytes(processedSize)}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-text-sub font-semibold">解析度</span>
+                    <span className="text-sm font-semibold text-text-sub">解析度</span>
                     <span className="font-mono font-bold text-white">
                       {targetWidth} × {targetHeight} px
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-text-sub font-semibold">空間節省率</span>
+                    <span className="text-sm font-semibold text-text-sub">空間節省率</span>
                     <span className="font-mono font-bold text-emerald-400">
                       {savingRate > 0 ? `-${savingRate}%` : '0%'}
                     </span>
@@ -724,14 +749,20 @@ export default function ImageProcessorClient() {
               {!isBatchMode && isUpscaled && (
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-col gap-2 text-left">
                   <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
-                    ⚠️ 裁切/目標像素 ({targetWidth}×{targetHeight}) 大於原圖 ({origWidth}×{origHeight})，放大可能導致模糊。
+                    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="shrink-0">
+                      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                    </svg>
+                    裁切/目標像素 ({targetWidth}×{targetHeight}) 大於原圖 ({origWidth}×{origHeight})，放大可能導致模糊。
                   </div>
                   <button
                     type="button"
                     onClick={downloadOriginalSizeImage}
-                    className="w-full py-2 text-xs font-bold text-black bg-amber-400 rounded-lg hover:bg-amber-300 transition-all cursor-pointer"
+                    className="w-full py-2 text-xs font-bold text-black bg-amber-400 rounded-lg hover:bg-amber-300 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    ⬇️ 下載原始解析度圖 ({origWidth} × {origHeight} px)
+                    <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
+                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    下載原始解析度圖 ({origWidth} × {origHeight} px)
                   </button>
                 </div>
               )}
@@ -744,7 +775,21 @@ export default function ImageProcessorClient() {
                   disabled={isProcessing}
                   className="w-full h-[52px] bg-[#d946ef]/20 border border-[#d946ef]/50 text-[#d946ef] font-bold text-base rounded-xl cursor-pointer hover:bg-[#d946ef] hover:text-[#030305] hover:shadow-[0_0_20px_rgba(217,70,239,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                 >
-                  {isProcessing ? '⚡ 批次打包中...' : '📦 批次壓縮並一鍵下載 ZIP'}
+                  {isProcessing ? (
+                    <>
+                      <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="animate-spin shrink-0">
+                        <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8z" />
+                      </svg>
+                      批次打包中...
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
+                        <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                      </svg>
+                      批次壓縮並一鍵下載 ZIP
+                    </>
+                  )}
                 </button>
               ) : (
                 <button
@@ -752,7 +797,10 @@ export default function ImageProcessorClient() {
                   onClick={downloadSingleImage}
                   className="w-full h-[52px] bg-[#d946ef]/20 border border-[#d946ef]/50 text-[#d946ef] font-bold text-base rounded-xl cursor-pointer hover:bg-[#d946ef] hover:text-[#030305] hover:shadow-[0_0_20px_rgba(217,70,239,0.5)] transition-all flex items-center justify-center gap-2"
                 >
-                  ⬇️ 下載處理後的圖片
+                  <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                  </svg>
+                  下載處理後的圖片
                 </button>
               )}
             </div>
@@ -763,7 +811,12 @@ export default function ImageProcessorClient() {
                 /* 多圖批次清單 */
                 <div className="flex flex-col gap-4 text-left">
                   <div className="flex justify-between items-center border-b border-white/[.06] pb-3">
-                    <h4 className="text-sm font-bold text-white">📦 批次處理圖檔列表</h4>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
+                        <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                      </svg>
+                      批次處理圖檔列表
+                    </h4>
                     <span className="text-xs text-slate-400">共 {batchItems.length} 張圖片</span>
                   </div>
 
@@ -796,11 +849,23 @@ export default function ImageProcessorClient() {
                               : 'bg-white/5 text-text-sub border-white/10'
                           }`}
                         >
-                          {item.status === 'done'
-                            ? '✅ 完成'
-                            : item.status === 'processing'
-                            ? '⏳ 處理中'
-                            : '排隊中'}
+                          {item.status === 'done' ? (
+                            <span className="flex items-center gap-1">
+                              <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                              </svg>
+                              完成
+                            </span>
+                          ) : item.status === 'processing' ? (
+                            <span className="flex items-center gap-1">
+                              <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor" className="animate-spin">
+                                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8z" />
+                              </svg>
+                              處理中
+                            </span>
+                          ) : (
+                            '排隊中'
+                          )}
                         </span>
                       </div>
                     ))}
@@ -811,7 +876,10 @@ export default function ImageProcessorClient() {
                 <div className="flex flex-col gap-4 text-left">
                   <div className="flex justify-between items-center border-b border-white/[.06] pb-3">
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                      👁️ 壓縮品質即時比對 (拖曳中間拉條)
+                      <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
+                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                      </svg>
+                      壓縮品質即時比對 (拖曳中間拉條)
                     </h4>
                   </div>
 
@@ -833,7 +901,9 @@ export default function ImageProcessorClient() {
                     {/* 分割線與按鈕 */}
                     <div className={styles.compSeparator} style={{ left: `${compSliderPos}%` }} />
                     <div className={styles.compButton} style={{ left: `${compSliderPos}%` }}>
-                      ⟷
+                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                        <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
+                      </svg>
                     </div>
 
                     {/* 標籤 */}
@@ -858,10 +928,14 @@ export default function ImageProcessorClient() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm font-medium rounded-xl bg-[#d946ef]/20 border border-[#d946ef]/40 text-[#d946ef] backdrop-blur-md shadow-lg z-50">
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-8 sm:bottom-8 px-6 py-3 text-sm font-medium rounded-xl bg-[#d946ef]/20 border border-[#d946ef]/40 text-[#d946ef] backdrop-blur-md shadow-lg z-50 flex items-center justify-center gap-2">
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
           {toast}
         </div>
       )}
     </ToolLayout>
   );
 }
+
