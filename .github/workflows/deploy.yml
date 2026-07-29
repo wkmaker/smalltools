@@ -1,0 +1,275 @@
+name: Build & Deploy to AWS S3 + CloudFront
+
+on:
+  push:
+    branches:
+      - '**'
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.agents/**'
+
+# 事先宣告全域環境變數，解決 IDE/Linter 靜態檢查提示 Context access might be invalid 警告
+env:
+  ENV_NAME: ''
+  STACK_NAME: ''
+  S3_BUCKET: ''
+  ENABLE_BASIC_AUTH: ''
+  BASIC_AUTH_BASE64: ''
+  ENABLE_NOINDEX: ''
+  DOMAIN_NAME: ''
+  DISTRIBUTION_ID: ''
+  WEB_ACL_ARN: ''
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # OIDC 驗證所需的權限
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # ── 1. 拉取代碼 ──────────────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check Code & Infra Changes
+        id: changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            build_and_deploy:
+              - 'app/**'
+              - 'public/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'next.config.*'
+              - 'tsconfig.json'
+              - 'template.yml'
+              - '.github/workflows/deploy.yml'
+
+      # ── 2. 設定環境變數 (Production vs Dev/Staging) ──────────
+      - name: Configure Deployment Target
+        id: config
+        run: |
+          PROD_STACK="web-tool-cjkuo-stack"
+          PROD_BUCKET="web-tool-cjkuo"
+          PROD_DOMAIN="tools.cjkuo.net"
+
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "ENV_NAME=prod" >> $GITHUB_ENV
+            echo "STACK_NAME=${PROD_STACK}" >> $GITHUB_ENV
+            echo "S3_BUCKET=${PROD_BUCKET}" >> $GITHUB_ENV
+            echo "ENABLE_BASIC_AUTH=false" >> $GITHUB_ENV
+            echo "BASIC_AUTH_BASE64=" >> $GITHUB_ENV
+            echo "ENABLE_NOINDEX=false" >> $GITHUB_ENV
+            echo "DOMAIN_NAME=${PROD_DOMAIN}" >> $GITHUB_ENV
+            echo "WEB_ACL_ARN=arn:aws:wafv2:us-east-1:114571653217:global/webacl/CreatedByCloudFront-1368b7c6/b33d948b-c516-498c-afb7-cbb14fce7501" >> $GITHUB_ENV
+            echo "🚀 Setting up Production Deployment (main branch)"
+          else
+            echo "ENV_NAME=dev" >> $GITHUB_ENV
+            echo "STACK_NAME=dev-${PROD_STACK}" >> $GITHUB_ENV
+            echo "S3_BUCKET=dev-${PROD_BUCKET}" >> $GITHUB_ENV
+            echo "ENABLE_BASIC_AUTH=true" >> $GITHUB_ENV
+            
+            # 使用 Secret 或預設帳密生成 Base64 編碼
+            AUTH_USER="${{ secrets.STAGING_BASIC_AUTH_USER }}"
+            AUTH_PASS="${{ secrets.STAGING_BASIC_AUTH_PASS }}"
+            if [ -z "$AUTH_USER" ]; then AUTH_USER="admin"; fi
+            if [ -z "$AUTH_PASS" ]; then AUTH_PASS="devpass2026"; fi
+            
+            AUTH_BASE64=$(echo -n "${AUTH_USER}:${AUTH_PASS}" | base64)
+            echo "BASIC_AUTH_BASE64=${AUTH_BASE64}" >> $GITHUB_ENV
+            echo "ENABLE_NOINDEX=true" >> $GITHUB_ENV
+            echo "DOMAIN_NAME=" >> $GITHUB_ENV
+            echo "WEB_ACL_ARN=" >> $GITHUB_ENV
+            echo "🧪 Setting up Development Test Deployment (${{ github.ref_name }} branch)"
+          fi
+
+      # ── 2.5 未偵測到程式碼變動時的提示 ────────────────────────
+      - name: Skip Build & Deploy Notice
+        if: steps.changes.outputs.build_and_deploy == 'false'
+        run: |
+          echo "ℹ️ No changes detected in app/, public/, package.json, template.yml, etc."
+          echo "⚡ Skipping build, S3 sync, and CloudFront invalidation steps."
+
+      # ── 3. 測試環境 (Dev) 覆蓋 robots.txt 為 Disallow ────────
+      - name: Apply Dev robots.txt Disallow
+        if: steps.changes.outputs.build_and_deploy == 'true' && env.ENV_NAME == 'dev'
+        run: |
+          cat << 'EOF' > ./public/robots.txt
+          User-agent: *
+          Disallow: /
+          EOF
+          echo "Overwrote ./public/robots.txt with Disallow: / for Dev"
+
+      # ── 4. 設定 Node.js 環境（含 npm 快取） ──────────────────
+      - name: Setup Node.js 22
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # ── 4.5. 設定 Next.js Build 快取 ────────────────────────
+      - name: Next.js Build Cache
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+
+      # ── 5. 安裝依賴 ──────────────────────────────────────────
+      - name: Install Dependencies
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        run: npm ci
+
+      # ── 6. Next.js SSG 建置 → 產出 out/ 目錄 ────────────────
+      - name: Build Next.js SSG
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # ── 6.5. 注入動態版本號至 sw.js (確保每版 sw.js 必定有字位元差異) ────
+      - name: Inject Version Stamp to Service Worker
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        run: |
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          GIT_SHA=${{ github.sha }}
+          echo "// PWA Build Version: ${GIT_SHA} | Built at: ${BUILD_TIME} | Env: ${ENV_NAME}" | cat - ./out/sw.js > ./out/sw.js.tmp && mv ./out/sw.js.tmp ./out/sw.js
+          echo "Successfully injected version stamp to sw.js"
+
+      # ── 7. 設定 AWS 憑證 (使用 OIDC Role) ───────────────────
+      - name: Configure AWS Credentials (OIDC)
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # ── 7.5. 若 Stack 處於 ROLLBACK_COMPLETE 或有遺留的孤立 Dev 資源則自動清理 ──
+      - name: Cleanup Failed Rollback Stack & Orphan Resources
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        run: |
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
+          if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "⚠️ Stack $STACK_NAME is in ROLLBACK_COMPLETE state. Deleting failed stack..."
+            aws cloudformation delete-stack --stack-name "$STACK_NAME"
+            aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" 2>/dev/null || true
+            echo "✅ Failed stack deleted successfully."
+            STACK_STATUS="NOT_FOUND"
+          fi
+
+          # 測試環境專用：若 Stack 不存在，自動清理前次失敗遺留的孤立資源 (S3, CloudFront Function, ResponseHeadersPolicy)
+          if [ "$ENV_NAME" != "prod" ] && [ "$STACK_STATUS" = "NOT_FOUND" ]; then
+            echo "🧹 Checking and cleaning up orphan dev resources..."
+
+            # 1. 清理 S3 Bucket
+            aws s3 rb "s3://$S3_BUCKET" --force 2>/dev/null || true
+
+            # 2. 清理 CloudFront Function
+            FUNC_NAME="${STACK_NAME}-basic-auth"
+            ETAG=$(aws cloudfront describe-function --name "$FUNC_NAME" --query "ETag" --output text 2>/dev/null || echo "")
+            if [ -n "$ETAG" ] && [ "$ETAG" != "None" ]; then
+              echo "Deleting orphan CloudFront Function: $FUNC_NAME"
+              aws cloudfront delete-function --name "$FUNC_NAME" --if-match "$ETAG" 2>/dev/null || true
+            fi
+
+            # 3. 清理 CloudFront Response Headers Policy
+            POLICY_NAME="${STACK_NAME}-noindex-policy"
+            POLICY_ID=$(aws cloudfront list-response-headers-policies --query "ResponseHeadersPolicyList.Items[?ResponseHeadersPolicy.ResponseHeadersPolicyConfig.Name=='${POLICY_NAME}'].ResponseHeadersPolicy.Id" --output text 2>/dev/null || echo "")
+            if [ -n "$POLICY_ID" ] && [ "$POLICY_ID" != "None" ]; then
+              POLICY_ETAG=$(aws cloudfront get-response-headers-policy --id "$POLICY_ID" --query "ETag" --output text 2>/dev/null || echo "")
+              if [ -n "$POLICY_ETAG" ] && [ "$POLICY_ETAG" != "None" ]; then
+                echo "Deleting orphan Response Headers Policy: $POLICY_NAME"
+                aws cloudfront delete-response-headers-policy --id "$POLICY_ID" --if-match "$POLICY_ETAG" 2>/dev/null || true
+              fi
+            fi
+            echo "✅ Orphan dev resources cleanup step completed."
+          fi
+
+      # ── 8. 更新/建立 CloudFormation 基礎架構 ─────────────────
+      - name: Deploy CloudFormation Stack
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        run: |
+          aws cloudformation deploy \
+            --stack-name "$STACK_NAME" \
+            --template-file template.yml \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              Environment="$ENV_NAME" \
+              BucketName="$S3_BUCKET" \
+              EnableBasicAuth="$ENABLE_BASIC_AUTH" \
+              BasicAuthBase64="$BASIC_AUTH_BASE64" \
+              EnableNoIndexHeader="$ENABLE_NOINDEX" \
+              DomainName="$DOMAIN_NAME" \
+              WebACLArn="$WEB_ACL_ARN" \
+            --no-fail-on-empty-changeset
+
+      # ── 9. 動態獲取 Stack Outputs (CloudFront ID & Bucket Name) ──
+      - name: Fetch CloudFormation Stack Outputs
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        id: cf-outputs
+        run: |
+          DIST_ID=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
+            --output text)
+          echo "DISTRIBUTION_ID=${DIST_ID}" >> $GITHUB_ENV
+          echo "Target CloudFront Distribution ID: ${DIST_ID}"
+
+      # ── 10. 同步 out/ 至 S3 ──────────────────────────────────
+      - name: Sync to S3
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        run: |
+          # HTML 檔案：短快取 300 秒（確保更新後用戶能快速看到新版）
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
+            --delete \
+            --exclude "*.css" \
+            --exclude "*.js" \
+            --exclude "*.woff2" \
+            --exclude "*.woff" \
+            --exclude "_next/static/*" \
+            --exclude "img/*" \
+            --exclude "sw.js" \
+            --cache-control "public, max-age=300, s-maxage=300"
+
+          # Service Worker (sw.js) & PWA 清單：完全不快取，確保版本即時感應與更新
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
+            --exclude "*" \
+            --include "sw.js" \
+            --include "manifest.webmanifest" \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+          # JS / CSS / 字型：Next.js 會生成 content hash 檔名，可長快取 1 年
+          aws s3 sync ./out/_next/static "s3://${S3_BUCKET}/_next/static" \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # img/ 靜態圖片：快取 1 天
+          aws s3 sync ./out/img "s3://${S3_BUCKET}/img" \
+            --delete \
+            --cache-control "public, max-age=86400"
+
+          # SVG 圖片（support.svg 等）：強制正確 MIME + 快取 600 秒
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
+            --exclude "*" \
+            --include "*.svg" \
+            --content-type "image/svg+xml" \
+            --cache-control "public, max-age=600"
+
+      # ── 11. 清除 CloudFront 快取 ─────────────────────────────
+      - name: Invalidate CloudFront Cache
+        if: steps.changes.outputs.build_and_deploy == 'true'
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/*"
+

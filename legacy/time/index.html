@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線上目標計時器 - 免費倒數計時與時間累計工具 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/time/index.html">
+    <meta name="description" content="唯美精緻的線上目標計時器與倒數工具！支援自訂事件標題、時分秒與年月日時顯示格式、全螢幕播放與一鍵複製分享連結。適用於考試倒數、紀念日、旅行倒數與時間管理，免安裝即可即時使用。">
+    <meta name="keywords" content="目標計時器,倒數計時器,線上倒數,時間累計,考試倒數,紀念日倒數,時間管理工具,全螢幕計時器">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="線上目標計時器 - 免費倒數計時與時間累計工具">
+    <meta property="og:description" content="唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。">
+    <meta property="og:url" content="https://tools.cjkuo.net/time/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/time/StockSnap_BS8YSPFEGT.webp">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="線上目標計時器 - 免費倒數計時與時間累計工具">
+    <meta name="twitter:description" content="唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/time/StockSnap_BS8YSPFEGT.webp">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "線上目標計時器",
+      "url": "https://tools.cjkuo.net/time/index.html",
+      "description": "唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
+    <style>
+        :root {
+            --theme-color: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.6);
+        }
+
+        /* ====== 自訂彈出視窗樣式 ====== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1; pointer-events: auto;
+        }
+
+        .modal-box {
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            width: 90%; max-width: 360px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(255, 0, 128, 0.05);
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-box h2 {
+            font-size: 1.2rem;
+            color: #ff3366; /* 使用警示色 */
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .modal-box p {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: rgba(255, 51, 102, 0.1);
+            color: #ff3366;
+            border: 1px solid rgba(255, 51, 102, 0.4);
+            padding: 0.8rem 2rem;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .modal-btn:hover {
+            background: rgba(255, 51, 102, 0.2);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.4);
+        }
+
+        /* 回首頁按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .back-btn .back-btn-text {
+            display: inline;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+            border-color: #00f0ff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* 玻璃擬物化容器 */
+        .glass-container {
+            position: relative;
+            z-index: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 4rem 5rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.02);
+            width: 90%;
+            max-width: 80%; 
+            pointer-events: none; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-container > * { pointer-events: auto; }
+
+        h1 {
+            font-weight: 300; font-size: 1.5rem; letter-spacing: 4px; color: var(--text-secondary); margin-bottom: 3rem; text-transform: uppercase;
+        }
+
+        /* ====== 右上角控制列 ====== */
+        .top-controls {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            z-index: 10;
+        }
+
+        /* 收折區塊 */
+        .controls-panel {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            overflow: hidden;
+            max-width: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease;
+        }
+        .controls-panel.expanded {
+            max-width: 200px;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .icon-btn svg { width: 18px; height: 18px; fill: currentColor; transition: transform 0.3s ease; }
+        .icon-btn:hover { background: rgba(0, 240, 255, 0.1); color: #00f0ff; border-color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
+        .icon-btn.btn-danger:hover { background: rgba(255, 0, 128, 0.1); color: #ff3366; border-color: #ff3366; box-shadow: 0 0 15px rgba(255, 0, 128, 0.3); }
+        .icon-btn:hover svg { transform: rotate(90deg); }
+        #btn-fullscreen:hover svg { transform: scale(1.1); }
+        #btn-toggle:hover svg { transform: rotate(45deg); }
+        #btn-toggle.active { background: rgba(0, 240, 255, 0.12); color: #00f0ff; border-color: rgba(0, 240, 255, 0.5); }
+        #btn-toggle.active svg { transform: rotate(45deg); }
+
+        /* 複製連結按鈕回饋 */
+        #btn-copy.copied { background: rgba(0, 240, 255, 0.15); color: #00f0ff; border-color: rgba(0, 240, 255, 0.6); box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
+        #btn-copy.copied svg { transform: scale(1.1); }
+
+        /* ====== 格式設定懸浮選單 ====== */
+        .format-dropdown { position: absolute; top: 45px; right: 0; background: rgba(15, 15, 20, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.5rem; width: 260px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); transform-origin: top right; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: scale(0.95); pointer-events: none; }
+        .format-dropdown.active { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .format-dropdown h3 { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; text-align: left; letter-spacing: 1px; font-weight: 500; }
+        .dropdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.5rem; }
+        .btn-apply { background: rgba(0, 240, 255, 0.1); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.4); padding: 0.6rem 1rem; font-size: 0.85rem; border-radius: 8px; cursor: pointer; width: 100%; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-apply:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+
+        /* ====== 計時器視圖樣式 ====== */
+        .timer-display { display: flex; flex-wrap: wrap; gap: 2.5rem 3.5rem; justify-content: center; align-items: center; margin: 0 auto; width: 100%; }
+        .timer-group { display: flex; justify-content: center; align-items: center; gap: 2.5rem 3.5rem; }
+        .time-block { display: flex; flex-direction: column; align-items: center; flex: 0 1 auto; min-width: 80px; }
+        .number-wrapper { position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 0.8rem; perspective: 500px; }
+        .number { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; font-size: clamp(3rem, 7vw, 5rem); font-weight: 700; line-height: 1; text-shadow: 0 0 25px var(--accent-glow); transition: text-shadow 1s ease; white-space: nowrap; position: relative; z-index: 2; }
+
+        .number.materialize-down { animation: slideInDown 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .number.ghost-down { position: absolute; top: 0; left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 1; animation: slideOutDown 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .number.materialize-up { animation: slideInUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .number.ghost-up { position: absolute; top: 0; left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 1; animation: slideOutUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        @keyframes slideInDown { 0% { opacity: 0; transform: translateY(-20px) scale(0.9); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); } }
+        @keyframes slideOutDown { 0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); } 100% { opacity: 0; transform: translateY(20px) scale(0.9); filter: blur(4px); } }
+        @keyframes slideInUp { 0% { opacity: 0; transform: translateY(20px) scale(0.9); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); } }
+        @keyframes slideOutUp { 0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); } 100% { opacity: 0; transform: translateY(-20px) scale(0.9); filter: blur(4px); } }
+
+        .label { font-size: 0.9rem; letter-spacing: 3px; color: var(--text-secondary); text-transform: uppercase; }
+        .status-container {
+            margin-top: 3.5rem;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            position: relative;
+            padding-bottom: 1.2rem;
+            transition: all 0.5s ease;
+        }
+        .status-container::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 200px; height: 1.5px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            transition: background 1s, box-shadow 1s;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+        .status-english {
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            line-height: 1.4;
+        }
+        .status-chinese {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px var(--accent-glow);
+            transition: text-shadow 1s ease;
+        }
+
+        /* ====== 設定視圖樣式 ====== */
+        .input-group { margin-bottom: 1.5rem; text-align: left; }
+        .input-group label.group-label { display: block; font-size: 0.85rem; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; }
+        .input-group input[type="text"], .input-group input[type="datetime-local"] { width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); color: var(--text-primary); padding: 1rem; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 1rem; outline: none; transition: all 0.3s ease; }
+        .input-group input:focus { border-color: rgba(0, 240, 255, 0.6); box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; background: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); }
+        .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-primary); font-size: 0.9rem; user-select: none; }
+        .checkbox-label input[type="checkbox"] { accent-color: #00f0ff; width: 16px; height: 16px; cursor: pointer; }
+        .btn-generate { background: transparent; color: var(--text-primary); border: 1px solid rgba(0, 240, 255, 0.4); padding: 1rem 2rem; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 1rem; transition: all 0.3s ease; }
+        .btn-generate:hover { background: rgba(0, 240, 255, 0.05); border-color: rgba(0, 240, 255, 0.8); box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+
+        .hidden { display: none !important; }
+
+        /* 全螢幕模式下隱藏回首頁按鈕（由 JS 切換 class 控制） */
+        body.is-fullscreen .back-btn { display: none !important; }
+
+        @media (max-width: 768px) {
+            /* 手機版：back-btn 縮成圓形圖示按鈕，只保留箭頭 */
+            .back-btn {
+                position: absolute;
+                top: 1.2rem;
+                left: 1.2rem;
+                padding: 0.5rem;
+                border-radius: 50%;
+                width: 36px;
+                height: 36px;
+                justify-content: center;
+            }
+            .back-btn .back-btn-text {
+                display: none;
+            }
+            .glass-container { padding: 2.5rem 1.5rem; padding-top: 4rem; width: 95%; max-width: 95%; }
+            .timer-display { flex-direction: column; gap: 2rem; }
+            .timer-group { width: 100%; justify-content: center; gap: 1.5rem 1rem; }
+            .number { font-size: clamp(2rem, 8vw, 3.5rem); }
+        }
+            .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary, #8892b0);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- 自訂錯誤提示視窗 -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>參數錯誤</h2>
+            <p id="modal-message">錯誤訊息</p>
+            <button id="modal-btn" class="modal-btn">確定重設</button>
+        </div>
+    </div>
+
+    <div class="glass-container">
+        <!-- 回首頁：電腦版顯示文字，手機版縮成圓形圖示 -->
+        <a href="../index.html" class="back-btn" aria-label="工具庫首頁">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59-1.42-1.42L4 12l8 8 1.42-1.42L7.83 13H20v-2z"/></svg>
+            <span class="back-btn-text">工具庫首頁</span>
+        </a>
+        <div class="top-controls hidden" id="top-controls">
+            <!-- Toggle 展開按鈕（永遠顯示） -->
+            <button id="btn-toggle" class="icon-btn" aria-label="展開控制列" title="更多選項">
+                <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </button>
+            <!-- 可收折的按鈕群 -->
+            <div class="controls-panel" id="controls-panel">
+                <button id="btn-fullscreen" class="icon-btn" aria-label="Fullscreen" title="全螢幕">
+                    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                </button>
+                <button id="btn-settings" class="icon-btn" aria-label="Settings" title="顯示格式">
+                    <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+                </button>
+                <button id="btn-copy" class="icon-btn" aria-label="複製連結" title="複製分享連結">
+                    <svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>
+                </button>
+                <button id="btn-reset" class="icon-btn btn-danger" aria-label="Reset Timer" title="重設計時器">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+            <div id="format-dropdown" class="format-dropdown">
+                <h3>顯示單位</h3>
+                <div class="dropdown-grid">
+                    <label class="checkbox-label"><input type="checkbox" value="y" class="live-fmt-cb"> 年</label>
+                    <label class="checkbox-label"><input type="checkbox" value="M" class="live-fmt-cb"> 月</label>
+                    <label class="checkbox-label"><input type="checkbox" value="d" class="live-fmt-cb"> 天</label>
+                    <label class="checkbox-label"><input type="checkbox" value="h" class="live-fmt-cb"> 時</label>
+                    <label class="checkbox-label"><input type="checkbox" value="m" class="live-fmt-cb"> 分</label>
+                    <label class="checkbox-label"><input type="checkbox" value="s" class="live-fmt-cb"> 秒</label>
+                </div>
+                <button id="btn-apply-format" class="btn-apply">套用變更</button>
+            </div>
+        </div>
+
+        <div id="setup-view" class="hidden">
+            <h1>線上目標倒數計時器</h1>
+            <p class="page-description">唯美精緻的線上目標計時器與倒數工具！支援自訂事件標題、時分秒與年月日時顯示格式、全螢幕播放與一鍵複製分享連結，適合考試倒數、紀念日與時間管理。</p>
+            <div class="input-group">
+                <label class="group-label" for="input-title">Event Title (事件名稱)</label>
+                <input type="text" id="input-title" placeholder="例如：曼谷自由行倒數" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label class="group-label" for="input-date">Target Date & Time (目標時間)</label>
+                <input type="datetime-local" id="input-date">
+            </div>
+            <div class="input-group">
+                <label class="group-label">Display Format (顯示格式)</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label"><input type="checkbox" value="y" class="fmt-checkbox"> 年</label>
+                    <label class="checkbox-label"><input type="checkbox" value="M" class="fmt-checkbox"> 月</label>
+                    <label class="checkbox-label"><input type="checkbox" value="d" class="fmt-checkbox" checked> 天</label>
+                    <label class="checkbox-label"><input type="checkbox" value="h" class="fmt-checkbox" checked> 時</label>
+                    <label class="checkbox-label"><input type="checkbox" value="m" class="fmt-checkbox" checked> 分</label>
+                    <label class="checkbox-label"><input type="checkbox" value="s" class="fmt-checkbox" checked> 秒</label>
+                </div>
+            </div>
+            <button class="btn-generate" id="btn-generate">Launch Tracker</button>
+        </div>
+
+        <div id="timer-view" class="hidden">
+            <h1 id="event-title">載入中...</h1>
+            <div class="timer-display" id="timer-container"></div>
+            <div class="status-container" id="status-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // 共用彈出視窗功能
+        function showErrorModal(message, callback) {
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('modal-message').textContent = message;
+            modal.classList.add('active');
+            
+            document.getElementById('modal-btn').onclick = () => {
+                modal.classList.remove('active');
+                if (callback) callback();
+            };
+        }
+
+        // 嚴格過濾 URL 參數
+        function sanitizeInput(str, maxLength = 30) {
+            if (!str) return null;
+            const sanitized = str.replace(/[<>"'&]/g, function(match) {
+                const entities = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
+                return entities[match];
+            });
+            return sanitized.substring(0, maxLength);
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const titleParam = sanitizeInput(urlParams.get('title'));
+        const rawDate = urlParams.get('t') || urlParams.get('date');
+        
+        // 解析時間
+        const parsedDate = Date.parse(rawDate);
+        
+        // 1. 【致命錯誤：時間無效】呼叫自訂視窗，並於點擊確定後洗掉網址
+        let hasFatalError = false;
+        if (rawDate && isNaN(parsedDate)) {
+            hasFatalError = true;
+            showErrorModal('您輸入的目標時間無法解析，請重新設定！', () => {
+                window.location.href = window.location.pathname; 
+            });
+        }
+        
+        const dateParam = !isNaN(parsedDate) ? rawDate : null;
+        const formatParam = sanitizeInput(urlParams.get('f'), 20) || 'd,h,m,s'; 
+
+        const setupView = document.getElementById('setup-view');
+        const timerView = document.getElementById('timer-view');
+        const topControls = document.getElementById('top-controls');
+        const timerContainer = document.getElementById('timer-container');
+
+        let currentColorMode = 0; 
+        const unitLabels = { 'y': 'Years', 'M': 'Months', 'd': 'Days', 'h': 'Hours', 'm': 'Mins', 's': 'Secs' };
+        
+        const MS_PER_DAY = 86400000;
+        const MS_PER_HOUR = 3600000;
+        const MS_PER_MINUTE = 60000;
+        const MS_PER_SECOND = 1000;
+
+        const basePageTitle = "線上目標計時器";
+        const fullPageTitle = "線上目標計時器 - 免費倒數計時與時間累計工具 | SmallTools";
+        if (titleParam) {
+            document.title = `${titleParam} - ${basePageTitle}`;
+            document.getElementById('event-title').textContent = titleParam;
+        } else {
+            document.title = fullPageTitle;
+            document.getElementById('event-title').textContent = basePageTitle;
+        }
+
+        // ====== Toggle 收折按鈕 ======
+        const btnToggle = document.getElementById('btn-toggle');
+        const controlsPanel = document.getElementById('controls-panel');
+        btnToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = controlsPanel.classList.toggle('expanded');
+            btnToggle.classList.toggle('active', isExpanded);
+            // 收起時同步關閉 format dropdown
+            if (!isExpanded) {
+                document.getElementById('format-dropdown').classList.remove('active');
+            }
+        });
+        // 點擊外部收起
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('top-controls').contains(e.target)) {
+                controlsPanel.classList.remove('expanded');
+                btnToggle.classList.remove('active');
+            }
+        });
+
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // 全螢幕切換時隱藏/顯示回首頁按鈕
+        const onFullscreenChange = () => {
+            document.body.classList.toggle('is-fullscreen', !!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
+
+        // ====== 複製連結按鈕 ======
+        document.getElementById('btn-copy').addEventListener('click', () => {
+            const url = window.location.href;
+            const btnCopy = document.getElementById('btn-copy');
+            const copiedSvg = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+            const linkSvg = `<svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>`;
+            const doFeedback = () => {
+                btnCopy.innerHTML = copiedSvg;
+                btnCopy.classList.add('copied');
+                setTimeout(() => {
+                    btnCopy.innerHTML = linkSvg;
+                    btnCopy.classList.remove('copied');
+                }, 2200);
+            };
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(doFeedback).catch(() => {
+                    window.prompt('複製此連結：', url);
+                });
+            } else {
+                window.prompt('複製此連結：', url);
+                doFeedback();
+            }
+        });
+
+        // 確保如果發生致命錯誤，底層還是顯示設定畫面，而不是空白或錯誤的計時器
+        if (!rawDate || isNaN(parsedDate)) { 
+            setupView.classList.remove('hidden');
+            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('input-date').value = (new Date(tomorrow.getTime() - tomorrow.getTimezoneOffset() * 60000).toISOString()).slice(0, 16);
+
+            document.getElementById('btn-generate').addEventListener('click', () => {
+                const inputDate = document.getElementById('input-date').value;
+                const checkboxes = document.querySelectorAll('.fmt-checkbox:checked');
+                const selectedFormats = Array.from(checkboxes).map(cb => cb.value).join(',');
+                
+                // 這裡如果他什麼都沒填就按產生，也改用自訂視窗！
+                if (!inputDate) return showErrorModal('請選擇目標時間！');
+                if (!selectedFormats) return showErrorModal('請至少選擇一種時間顯示格式！');
+
+                const newParams = new URLSearchParams();
+                const inputTitle = document.getElementById('input-title').value.trim();
+                if (inputTitle) {
+                    newParams.set('title', inputTitle);
+                }
+                newParams.set('t', new Date(inputDate).toISOString());
+                newParams.set('f', selectedFormats);
+                window.location.href = `${window.location.pathname}?${newParams.toString()}`;
+            });
+        } else if (!hasFatalError) {
+            // 只有在沒有致命錯誤的情況下才執行計時器邏輯
+            timerView.classList.remove('hidden');
+            topControls.classList.remove('hidden');
+            
+            const targetDate = new Date(dateParam).getTime();
+            
+            // 2. 【非致命錯誤：格式無效】靜默退回預設值 (Graceful Degradation)
+            let formatArray = formatParam.split(',').filter(unit => unitLabels.hasOwnProperty(unit));
+            if (formatArray.length === 0) {
+                formatArray = ['d', 'h', 'm', 's'];
+            }
+
+            const elementsMap = {};
+
+            // 建立日期組與時間組容器
+            const dateGroup = document.createElement('div');
+            dateGroup.className = 'timer-group';
+            const timeGroup = document.createElement('div');
+            timeGroup.className = 'timer-group';
+
+            formatArray.forEach(unit => {
+                const block = document.createElement('div');
+                block.className = 'time-block';
+                
+                const numWrapper = document.createElement('div');
+                numWrapper.className = 'number-wrapper';
+
+                const spanNum = document.createElement('span');
+                spanNum.className = 'number';
+                spanNum.textContent = '00';
+                
+                numWrapper.appendChild(spanNum);
+                
+                elementsMap[unit] = {
+                    wrapper: numWrapper,
+                    element: spanNum,
+                    lastValue: -1
+                };
+                
+                const spanLabel = document.createElement('span');
+                spanLabel.className = 'label';
+                spanLabel.textContent = unitLabels[unit];
+
+                block.appendChild(numWrapper);
+                block.appendChild(spanLabel);
+
+                // 根據單位分組歸類
+                if (['y', 'M', 'd'].includes(unit)) {
+                    dateGroup.appendChild(block);
+                } else {
+                    timeGroup.appendChild(block);
+                }
+            });
+
+            if (dateGroup.children.length > 0) {
+                timerContainer.appendChild(dateGroup);
+            }
+            if (timeGroup.children.length > 0) {
+                timerContainer.appendChild(timeGroup);
+            }
+
+            const btnSettings = document.getElementById('btn-settings');
+            const dropdown = document.getElementById('format-dropdown');
+            
+            btnSettings.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('active');
+                document.querySelectorAll('.live-fmt-cb').forEach(cb => {
+                    cb.checked = formatArray.includes(cb.value);
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target) && !btnSettings.contains(e.target)) dropdown.classList.remove('active');
+            });
+
+            document.getElementById('btn-apply-format').addEventListener('click', () => {
+                const liveChecked = Array.from(document.querySelectorAll('.live-fmt-cb:checked')).map(cb => cb.value);
+                // 修改：設定頁的檢查也一併換成自訂彈窗
+                if (liveChecked.length === 0) return showErrorModal('請至少選擇一種時間顯示格式！');
+                
+                urlParams.set('f', liveChecked.join(','));
+                window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                window.location.href = window.location.pathname;
+            });
+
+            const updateTimer = () => {
+                const now = new Date();
+                const target = new Date(targetDate);
+                const diff = target.getTime() - now.getTime();
+
+                const isCountUp = diff <= 0;
+                const dirSuffix = isCountUp ? '-up' : '-down';
+
+                // 決定計算的起點和終點（d1 永遠是較早的時間，d2 永遠是較晚的時間）
+                const d1 = isCountUp ? target : now;
+                const d2 = isCountUp ? now : target;
+
+                let current = new Date(d1.getTime());
+                const values = {};
+
+                if (formatArray.includes('y')) {
+                    let yearsDiff = d2.getFullYear() - d1.getFullYear();
+                    let temp = new Date(d1.getTime());
+                    temp.setFullYear(d1.getFullYear() + yearsDiff);
+                    while (temp > d2 && yearsDiff > 0) {
+                        yearsDiff--;
+                        temp = new Date(d1.getTime());
+                        temp.setFullYear(d1.getFullYear() + yearsDiff);
+                    }
+                    values['y'] = yearsDiff;
+                    current = temp;
+                }
+
+                if (formatArray.includes('M')) {
+                    let monthsDiff = (d2.getFullYear() - current.getFullYear()) * 12 + (d2.getMonth() - current.getMonth());
+                    let temp = new Date(current.getTime());
+                    temp.setMonth(current.getMonth() + monthsDiff);
+                    while (temp > d2 && monthsDiff > 0) {
+                        monthsDiff--;
+                        temp = new Date(current.getTime());
+                        temp.setMonth(current.getMonth() + monthsDiff);
+                    }
+                    values['M'] = monthsDiff;
+                    current = temp;
+                }
+
+                if (formatArray.includes('d')) {
+                    let daysDiff = Math.floor((d2.getTime() - current.getTime()) / MS_PER_DAY);
+                    let temp = new Date(current.getTime());
+                    temp.setDate(current.getDate() + daysDiff);
+                    while (temp > d2 && daysDiff > 0) {
+                        daysDiff--;
+                        temp = new Date(current.getTime());
+                        temp.setDate(current.getDate() + daysDiff);
+                    }
+                    values['d'] = daysDiff;
+                    current = temp;
+                }
+
+                let remainder = d2.getTime() - current.getTime();
+
+                if (formatArray.includes('h')) {
+                    values['h'] = Math.floor(remainder / MS_PER_HOUR);
+                    remainder %= MS_PER_HOUR;
+                }
+                if (formatArray.includes('m')) {
+                    values['m'] = Math.floor(remainder / MS_PER_MINUTE);
+                    remainder %= MS_PER_MINUTE;
+                }
+                if (formatArray.includes('s')) {
+                    values['s'] = Math.floor(remainder / MS_PER_SECOND);
+                    remainder %= MS_PER_SECOND;
+                }
+
+                Object.keys(values).forEach(unit => {
+                    if (elementsMap[unit]) {
+                        const formattedVal = String(values[unit]).padStart(2, '0');
+                        const mapObj = elementsMap[unit];
+
+                        if (mapObj.lastValue !== formattedVal) {
+                            if (mapObj.lastValue !== -1) {
+                                const ghost = document.createElement('span');
+                                ghost.className = `number ghost${dirSuffix}`;
+                                ghost.textContent = mapObj.lastValue;
+                                mapObj.wrapper.appendChild(ghost);
+                                
+                                setTimeout(() => ghost.remove(), 400);
+
+                                const rect = mapObj.wrapper.getBoundingClientRect();
+                                const centerX = rect.left + rect.width / 2;
+                                const centerY = rect.top + rect.height / 2;
+                                createDirectionalBurst(centerX, centerY, isCountUp);
+
+                                mapObj.element.className = 'number'; 
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        mapObj.element.classList.add(`materialize${dirSuffix}`);
+                                    });
+                                });
+                            }
+
+                            mapObj.element.textContent = formattedVal;
+                            mapObj.lastValue = formattedVal;
+                        }
+                    }
+                });
+
+                const elStatus = document.getElementById('status-message');
+                const prefix = diff > 0 ? "⏳" : "🚨";
+                const eventTitleText = titleParam || basePageTitle;
+                
+                // 尋找第一個數值大於 0 的時間單位，避免顯示「00 Days」這種不實用的資訊
+                // 如果全部都是 0 (剛好到)，則使用 formatArray 的最後一個單位 (通常是秒)
+                const activeUnit = formatArray.find(unit => values[unit] > 0) || formatArray[formatArray.length - 1];
+                
+                if (activeUnit && values[activeUnit] !== undefined) {
+                    const val = values[activeUnit];
+                    const unitName = unitLabels[activeUnit];
+                    
+                    // 如果是已經過的時間 (diff <= 0)，在數值前加上 "+" 號表示累加
+                    const valPrefix = diff <= 0 && val > 0 ? "+" : "";
+                    const newTitle = `${prefix} ${valPrefix}${val} ${unitName} | ${eventTitleText}`;
+                    
+                    if (document.title !== newTitle) {
+                        document.title = newTitle;
+                    }
+                }
+
+                if (diff > 0) {
+                    elStatus.innerHTML = '<span class="status-english">REMAINING TIME</span><span class="status-chinese">剩餘時間</span>';
+                    document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 240, 255, 0.6)');
+                    document.documentElement.style.setProperty('--theme-color', '#00f0ff');
+                    if (window.setParticleFlowDirection) window.setParticleFlowDirection('down');
+                    currentColorMode = 0;
+                } else {
+                    elStatus.innerHTML = '<span class="status-english">TIME ELAPSED</span><span class="status-chinese">累計時間</span>';
+                    document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 128, 0.6)');
+                    document.documentElement.style.setProperty('--theme-color', '#ff3296');
+                    if (window.setParticleFlowDirection) window.setParticleFlowDirection('up');
+                    currentColorMode = 1;
+                }
+            };
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+    </script>
+    <script src="../js/common-particles.js" defer></script>
+</body>
+</html>

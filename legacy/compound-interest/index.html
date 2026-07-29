@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>複利試算器 - 免費線上定期定額與投資複利計算機 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/compound-interest/index.html">
+    <meta name="description" content="專業免費的線上複利計算機！支援初始本金、定期定額（月/年）、年利率與投資年限試算，即時繪製資產成長曲線圖表與每年本金利息明細表。">
+    <meta name="keywords" content="複利計算機,定期定額計算機,複利試算,投資理財,複利公式,資產成長圖表,年利率計算">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="複利試算器 - 免費線上定期定額與投資複利計算機">
+    <meta property="og:description" content="專業免費的線上複利計算機，支援初始本金、定期定額與動態圖表試算。">
+    <meta property="og:url" content="https://tools.cjkuo.net/compound-interest/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="複利試算器 - 免費線上定期定額與投資複利計算機">
+    <meta name="twitter:description" content="專業免費的線上複利計算機，支援初始本金、定期定額與動態圖表試算。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "複利計算機",
+      "url": "https://tools.cjkuo.net/compound-interest/index.html",
+      "description": "專業免費的線上複利計算機，支援初始本金、定期定額、年利率與投資年限試算。",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts & Chart.js (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --theme-color: #ffb800;
+            --accent-glow: rgba(255, 184, 0, 0.6); /* 金色發光 */
+            --accent-green: rgba(76, 217, 100, 0.6); /* 翡翠綠 */
+        }
+
+        /* 回首頁按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 184, 0, 0.1);
+            color: #ffb800;
+            border-color: #ffb800;
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.2);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 3rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* 雙欄版面 */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.9fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        /* ====== 左側表單樣式 ====== */
+        .form-section {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.8rem 1rem;
+            padding-right: 4.5rem;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: rgba(255, 184, 0, 0.6);
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.1);
+        }
+
+        /* 單位切換選擇器 (貼齊輸入框右側) */
+        .unit-selector {
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            bottom: 4px;
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .unit-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .unit-btn.active {
+            background: rgba(255, 184, 0, 0.15);
+            color: #ffb800;
+        }
+
+        /* 獨立切換按鈕組樣式 */
+        .toggle-buttons-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            width: 100%;
+        }
+
+        .toggle-buttons-container .unit-btn {
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: auto;
+            display: block;
+        }
+
+        .toggle-buttons-container .unit-btn.active {
+            background: rgba(255, 184, 0, 0.12);
+            border: 1px solid rgba(255, 184, 0, 0.3);
+            box-shadow: 0 0 10px rgba(255, 184, 0, 0.1);
+        }
+
+        /* 普通 Select 樣式 */
+        select.custom-select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238892b0'%3e%3cpath d='M7 10l5 5 5-5H7z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/1.25rem auto;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.8rem 1.5rem 0.8rem 1rem;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select.custom-select:focus {
+            border-color: rgba(255, 184, 0, 0.6);
+            box-shadow: 0 0 15px rgba(255, 184, 0, 0.1);
+        }
+
+        .btn-calculate {
+            background: transparent;
+            color: #ffb800;
+            border: 1px solid rgba(255, 184, 0, 0.4);
+            padding: 1rem;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .btn-calculate:hover {
+            background: rgba(255, 184, 0, 0.08);
+            border-color: rgba(255, 184, 0, 0.8);
+            box-shadow: 0 0 20px rgba(255, 184, 0, 0.2);
+            text-shadow: 0 0 5px rgba(255, 184, 0, 0.3);
+        }
+
+        /* ====== 右側結果樣式 ====== */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            min-width: 0; /* 防止子元素撐寬 Grid Item */
+        }
+
+        .results-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 三大指標看板 */
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+        }
+
+        .indicator-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.005);
+            transition: all 0.3s ease;
+        }
+
+        .indicator-card:hover {
+            border-color: rgba(255, 184, 0, 0.2);
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .indicator-card h4 {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+        }
+
+        .indicator-card .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 184, 0, 0.2);
+        }
+
+        .indicator-card.total-value .value {
+            color: #ffb800;
+            text-shadow: 0 0 15px rgba(255, 184, 0, 0.4);
+        }
+
+        /* 圖表區塊 */
+        .chart-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+
+        /* 明細表格區塊 */
+        .table-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%; /* 強制適應父容器寬度 */
+            max-width: 100%;
+        }
+
+        .table-container h3 {
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.85rem;
+        }
+
+        table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-family: 'JetBrains Mono', monospace;
+            color: rgba(255, 255, 255, 0.8);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ffffff;
+        }
+
+        /* 針對平板及手機等小螢幕的表格優化 */
+        @media (max-width: 768px) {
+            .table-container {
+                padding: 1rem;
+            }
+
+            table {
+                min-width: 650px; /* 確保 6 個欄位擁有舒適寬度，不因壓縮而變形 */
+            }
+
+            /* 第一欄 Sticky 固定定位，在橫向滾動時特別方便對照時間 */
+            table th:first-child,
+            table td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #0b0b0e; /* 主色調的實色，遮擋後方滑過的數字 */
+                z-index: 2;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.4); /* 輕微側邊陰影，增強分界感 */
+            }
+
+            /* Hover 第一欄時獨立上色，避免被覆蓋 */
+            table tr:hover td:first-child {
+                background-color: #1a1a24;
+            }
+        }
+
+        /* 自訂滾動條 */
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 184, 0, 0.2);
+            border-radius: 3px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 184, 0, 0.4);
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 900px) {
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+            .calculator-grid {
+                grid-template-columns: minmax(0, 1fr); /* 確保行動端網格不被大寬度表格撐開 */
+            }
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .indicators-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* 隱藏瀏覽器預設的數字輸入框微調按鈕，防止與自訂單位按鈕重疊 */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* ====== 分享連結按鈕 ====== */
+        .share-btn-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: -0.5rem;
+        }
+
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(255, 184, 0, 0.06);
+            border: 1px solid rgba(255, 184, 0, 0.25);
+            color: rgba(255, 184, 0, 0.75);
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 184, 0, 0.12);
+            border-color: rgba(255, 184, 0, 0.6);
+            color: #ffb800;
+            box-shadow: 0 0 16px rgba(255, 184, 0, 0.15);
+        }
+
+        .share-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .share-btn:hover svg {
+            transform: rotate(-8deg) scale(1.15);
+        }
+
+        .share-btn.copied {
+            background: rgba(76, 217, 100, 0.1);
+            border-color: rgba(76, 217, 100, 0.5);
+            color: #4cd964;
+            box-shadow: 0 0 14px rgba(76, 217, 100, 0.15);
+        }
+
+        .share-btn .btn-text {
+            transition: all 0.2s ease;
+        }
+            .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary, #8892b0);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 回首頁 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59-1.42-1.42L4 12l8 8 1.42-1.42L7.83 13H20v-2z"/></svg>
+            工具庫首頁
+        </a>
+
+        <h1>線上複利試算器</h1>
+        <div class="subtitle-top">Compound Interest Calculator</div>
+        <p class="page-description">專業免費的線上複利計算機，支援單筆本金與定期定額（月/年）投資試算，提供動態資產成長圖表與本息增長明細，助您精準規劃長期理財目標。</p>
+
+        <div class="calculator-grid">
+            <!-- 左側表單 -->
+            <div class="form-section">
+                <!-- 本金 -->
+                <div class="input-group">
+                    <label for="input-principal">初始本金</label>
+                    <div class="input-wrapper">
+                        <input type="text" inputmode="numeric" id="input-principal" value="100,000" placeholder="例如：100,000">
+                        <div class="unit-selector">
+                            <button class="unit-btn active" style="pointer-events: none;">元</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 定期定額投入 -->
+                <div class="input-group">
+                    <label for="input-contribution">定期定額投入金額</label>
+                    <div class="input-wrapper">
+                        <input type="text" inputmode="numeric" id="input-contribution" value="5,000" placeholder="0 為不追加">
+                        <div class="unit-selector" style="pointer-events: none; background: transparent; border: none; right: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">元</div>
+                    </div>
+                </div>
+
+                <!-- 定期定額頻率 (獨立按鈕) -->
+                <div class="input-group">
+                    <label>定期定額頻率</label>
+                    <div class="toggle-buttons-container" id="contrib-unit-selector">
+                        <button class="unit-btn active" data-unit="month">月</button>
+                        <button class="unit-btn" data-unit="year">年</button>
+                    </div>
+                </div>
+
+                <!-- 利率 -->
+                <div class="input-group">
+                    <label for="input-rate">年 / 月利率 (%)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="input-rate" value="6" min="0" step="0.01" placeholder="例如：6">
+                        <div class="unit-selector" id="rate-unit-selector">
+                            <button class="unit-btn active" data-unit="year">年</button>
+                            <button class="unit-btn" data-unit="month">月</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 期間 -->
+                <div class="input-group">
+                    <label for="input-period">存款期間</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="input-period" value="10" min="1" placeholder="例如：10">
+                        <div class="unit-selector" id="period-unit-selector">
+                            <button class="unit-btn active" data-unit="year">年</button>
+                            <button class="unit-btn" data-unit="month">月</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 複利計息頻率 -->
+                <div class="input-group">
+                    <label for="select-compound">複利計息頻率</label>
+                    <select id="select-compound" class="custom-select">
+                        <option value="12">按月複利 (每月滾利)</option>
+                        <option value="4">按季複利 (每三月滾利)</option>
+                        <option value="1" selected>按年複利 (每年滾利)</option>
+                        <option value="0">單利計息 (不滾利)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 右側結果與圖表 -->
+            <div class="results-section" id="results-sec">
+
+                <!-- 分享連結按鈕 -->
+                <div class="share-btn-wrapper">
+                    <button class="share-btn" id="share-btn" onclick="copyShareLink()" title="複製當前配置的查詢連結">
+                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                        <span class="btn-text">複製查詢連結</span>
+                    </button>
+                </div>
+
+                <!-- 看板 -->
+                <div class="indicators-grid">
+                    <div class="indicator-card total-value">
+                        <h4>累積總金額</h4>
+                        <div class="value" id="val-total">0</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h4>總投入本金</h4>
+                        <div class="value" id="val-principal">0</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h4>累積利息收益</h4>
+                        <div class="value" id="val-interest">0</div>
+                    </div>
+                </div>
+
+                <!-- 圖表 -->
+                <div class="chart-container">
+                    <canvas id="growth-chart"></canvas>
+                </div>
+
+                <!-- 明細表格 -->
+                <div class="table-container">
+                    <h3 id="table-title">本利和明細</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;" id="th-period">時間</th>
+                                <th>期初金額</th>
+                                <th>當期投入</th>
+                                <th>當期利息</th>
+                                <th>累計投入本金</th>
+                                <th>本利和累計</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- 明細行由 JS 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 介面按鈕交互 (單位切換)
+        // ==========================================
+        function setupSelector(containerId, callback) {
+            const container = document.getElementById(containerId);
+            const buttons = container.querySelectorAll('.unit-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // 在點擊切換時，於滑鼠位置觸發金泡沫粒子爆發，提升觸控微動效！
+                    createBurst(e.clientX, e.clientY);
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (callback) callback(btn.getAttribute('data-unit'));
+                });
+            });
+        }
+
+        let contribUnit = 'month'; // 'month' or 'year'
+        let rateUnit = 'year';     // 'year' or 'month'
+        let periodUnit = 'year';   // 'year' or 'month'
+
+        setupSelector('contrib-unit-selector', (unit) => { contribUnit = unit; calculateCompoundInterest(); });
+        setupSelector('rate-unit-selector', (unit) => { rateUnit = unit; calculateCompoundInterest(); });
+        setupSelector('period-unit-selector', (unit) => { periodUnit = unit; calculateCompoundInterest(); });
+
+        // ==========================================
+        // 複利計算核心與圖表渲染
+        // ==========================================
+        let chartInstance = null;
+
+        function formatCurrency(num) {
+            return Math.round(num).toLocaleString('zh-TW');
+        }
+
+        function calculateCompoundInterest() {
+            const principal = parseFloat(document.getElementById('input-principal').value.replace(/,/g, '')) || 0;
+            const contribution = parseFloat(document.getElementById('input-contribution').value.replace(/,/g, '')) || 0;
+            const ratePercent = parseFloat(document.getElementById('input-rate').value) || 0;
+            const periodVal = parseFloat(document.getElementById('input-period').value) || 0;
+            const compoundFreq = parseInt(document.getElementById('select-compound').value); // 12, 4, 1, 0 (單利)
+
+            // 1. 計算總月數 (防呆最少為 0 個月，確保為空或 0 時能渲染出初始列)
+            const totalMonths = Math.max(0, periodUnit === 'year' ? periodVal * 12 : periodVal);
+
+            // 2. 計算月利率 (做為模擬基本步長)
+            // 若為年利率，則月利率 = (年利率 / 100) / 12; 若為月利率，則月利率 = (月利率 / 100)
+            const monthlyRate = rateUnit === 'year' ? (ratePercent / 100) / 12 : (ratePercent / 100);
+
+            // 3. 模擬計算
+            let currentBalance = principal;
+            let currentPrincipal = principal;
+            let currentAccruedInterest = 0; // 尚未滾入本金的利息 (在計息期未滿時)
+            let totalInterestEarned = 0;
+
+            const monthlyData = [];
+
+            for (let month = 1; month <= totalMonths; month++) {
+                // 期初追加定期定額 (第一個月是否直接追加？這裡設計為在每月第一天，即每期初追加)
+                let addedContrib = 0;
+                if (contribUnit === 'month') {
+                    addedContrib = contribution;
+                } else if (contribUnit === 'year') {
+                    // 若是年繳定期定額，則在第1個月、第13個月等期初加入
+                    if ((month - 1) % 12 === 0) {
+                        addedContrib = contribution;
+                    }
+                }
+                currentBalance += addedContrib;
+                currentPrincipal += addedContrib;
+
+                // 利息計算方式
+                let interestThisMonth = 0;
+                if (compoundFreq === 0) {
+                    // 單利：利息基數 = 已繳本金
+                    interestThisMonth = currentPrincipal * monthlyRate;
+                    totalInterestEarned += interestThisMonth;
+                    currentBalance += interestThisMonth;
+                } else {
+                    // 複利：按月計算產生的利息
+                    interestThisMonth = currentBalance * monthlyRate;
+                    currentAccruedInterest += interestThisMonth;
+                    totalInterestEarned += interestThisMonth;
+
+                    // 依複利頻率，判斷是否於當月底將累計利息滾入本金中
+                    // 12 (月複利)：每期都滾入
+                    // 4 (季複利)：每3個月滾入一次
+                    // 1 (年複利)：每12個月滾入一次
+                    const isCompoundingTerm = 
+                        (compoundFreq === 12) || 
+                        (compoundFreq === 4 && month % 3 === 0) || 
+                        (compoundFreq === 1 && month % 12 === 0) || 
+                        (month === totalMonths); // 最後一個月強迫滾入以顯示最終值
+
+                    if (isCompoundingTerm) {
+                        currentBalance += currentAccruedInterest;
+                        currentAccruedInterest = 0; // 清空暫存利息
+                    }
+                }
+
+                monthlyData.push({
+                    month: month,
+                    totalPrincipal: currentPrincipal,
+                    totalInterest: totalInterestEarned,
+                    balance: currentBalance + currentAccruedInterest // 本月餘額加上當期尚未滾入的累計利息
+                });
+            }
+
+            // 4. 過濾數據以供圖表和表格展示 (若年期，則按年彙整展示；若月期，則按月展示)
+            const resultData = [];
+            // 插入初始狀態以顯示起步本金，利於數據對照
+            resultData.push({
+                label: '初始',
+                startBalance: 0,
+                contribution: 0,
+                interest: 0,
+                cumulativeInterest: 0,
+                totalPrincipal: principal,
+                total: principal
+            });
+            if (periodUnit === 'year') {
+                let prevTotal = principal;
+                let prevInterest = 0;
+                // 每 12 個月取一次數據代表每年年底
+                for (let year = 1; year <= periodVal; year++) {
+                    const idx = Math.min(year * 12 - 1, monthlyData.length - 1);
+                    const currentTotal = monthlyData[idx].balance;
+                    const currentPrincipal = monthlyData[idx].totalPrincipal;
+                    const currentInterest = monthlyData[idx].totalInterest;
+                    
+                    const prevPrincipal = year === 1 ? principal : monthlyData[(year - 1) * 12 - 1].totalPrincipal;
+                    const contributionThisYear = currentPrincipal - prevPrincipal;
+                    const interestThisYear = currentInterest - prevInterest;
+
+                    resultData.push({
+                        label: `第 ${year} 年`,
+                        startBalance: prevTotal,
+                        contribution: contributionThisYear,
+                        interest: interestThisYear,
+                        cumulativeInterest: currentInterest,
+                        totalPrincipal: currentPrincipal,
+                        total: currentTotal
+                    });
+
+                    prevTotal = currentTotal;
+                    prevInterest = currentInterest;
+                }
+            } else {
+                let prevTotal = principal;
+                let prevInterest = 0;
+                // 按月展示
+                monthlyData.forEach(item => {
+                    const currentTotal = item.balance;
+                    const currentPrincipal = item.totalPrincipal;
+                    const currentInterest = item.totalInterest;
+
+                    const prevPrincipal = item.month === 1 ? principal : monthlyData[item.month - 2].totalPrincipal;
+                    const contributionThisMonth = currentPrincipal - prevPrincipal;
+                    const interestThisMonth = currentInterest - prevInterest;
+
+                    resultData.push({
+                        label: `第 ${item.month} 月`,
+                        startBalance: prevTotal,
+                        contribution: contributionThisMonth,
+                        interest: interestThisMonth,
+                        cumulativeInterest: currentInterest,
+                        totalPrincipal: currentPrincipal,
+                        total: currentTotal
+                    });
+
+                    prevTotal = currentTotal;
+                    prevInterest = currentInterest;
+                });
+            }
+
+            // 5. 更新大指標看板
+            const finalState = resultData[resultData.length - 1];
+            document.getElementById('val-total').textContent = formatCurrency(finalState.total);
+            document.getElementById('val-principal').textContent = formatCurrency(finalState.totalPrincipal);
+            document.getElementById('val-interest').textContent = formatCurrency(finalState.cumulativeInterest);
+
+            // 6. 更新明細表格
+            document.getElementById('th-period').textContent = periodUnit === 'year' ? '年度' : '月份';
+            document.getElementById('table-title').textContent = periodUnit === 'year' ? '歷年本利和明細表' : '歷月本利和明細表';
+            
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            resultData.forEach(item => {
+                const tr = document.createElement('tr');
+                const isInitial = item.label === '初始';
+                tr.innerHTML = `
+                    <td style="text-align: left; color: var(--text-secondary);">${item.label}</td>
+                    <td>${isInitial ? '-' : formatCurrency(item.startBalance)}</td>
+                    <td>${isInitial ? '-' : '+' + formatCurrency(item.contribution)}</td>
+                    <td>${isInitial ? '-' : '+' + formatCurrency(item.interest)}</td>
+                    <td>${formatCurrency(item.totalPrincipal)}</td>
+                    <td style="color: #ffb800; font-weight: 500;">${formatCurrency(item.total)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 7. 更新 Chart.js 圖表
+            const labels = resultData.map(item => item.label);
+            const principalDataset = resultData.map(item => item.totalPrincipal);
+            const interestDataset = resultData.map(item => item.cumulativeInterest);
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctxChart = document.getElementById('growth-chart').getContext('2d');
+            chartInstance = new Chart(ctxChart, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '累計本金',
+                            data: principalDataset,
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            borderColor: 'rgba(255, 255, 255, 0.4)',
+                            borderWidth: 1,
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: '累積利息',
+                            data: interestDataset,
+                            backgroundColor: 'rgba(255, 184, 0, 0.65)',
+                            borderColor: 'rgba(255, 184, 0, 0.9)',
+                            borderWidth: 1,
+                            stack: 'Stack 0',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#8892b0',
+                                font: { family: 'Inter' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#8892b0', font: { family: 'Inter' } }
+                        },
+                        y: {
+                            stacked: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { 
+                                color: '#8892b0', 
+                                font: { family: 'Inter' },
+                                callback: function(value) {
+                                    return value >= 1000000 
+                                        ? (value / 1000000).toFixed(1) + 'M' 
+                                        : value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 顯示結果區塊
+            const resSec = document.getElementById('results-sec');
+            resSec.classList.add('show');
+        }
+
+        // (btn-calc 事件已被安全移除，因改為即時改即時算)
+
+        function initFormattedInput(inputId) {
+            const input = document.getElementById(inputId);
+            
+            input.addEventListener('input', (e) => {
+                let value = input.value.replace(/,/g, '');
+                if (value === '') {
+                    input.value = '';
+                    calculateCompoundInterest(); // 即時重算
+                    return;
+                }
+                const num = parseInt(value, 10);
+                if (!isNaN(num)) {
+                    const originalCursor = input.selectionStart;
+                    const originalCommaCount = (input.value.substring(0, originalCursor).match(/,/g) || []).length;
+                    
+                    const formatted = num.toLocaleString('zh-TW');
+                    input.value = formatted;
+                    
+                    const newCommaCount = (formatted.substring(0, originalCursor).match(/,/g) || []).length;
+                    const cursorOffset = newCommaCount - originalCommaCount;
+                    input.setSelectionRange(originalCursor + cursorOffset, originalCursor + cursorOffset);
+                }
+                calculateCompoundInterest(); // 即時重算
+            });
+
+            if (input.value) {
+                const num = parseInt(input.value.replace(/,/g, ''), 10);
+                if (!isNaN(num)) {
+                    input.value = num.toLocaleString('zh-TW');
+                }
+            }
+        }
+
+        // ==========================================
+        // URL 雙向連動
+        // ==========================================
+
+        // 安全解析數字，若無效則回退到預設值
+        function safeParseFloat(val, fallback) {
+            const n = parseFloat(val);
+            return (isFinite(n) && !isNaN(n)) ? n : fallback;
+        }
+        function safeParseInt(val, allowed, fallback) {
+            const n = parseInt(val, 10);
+            return allowed.includes(n) ? n : fallback;
+        }
+
+        // 將當前所有欄位狀態同步到 URL（不刷新頁面）
+        function syncToURL() {
+            const principal = document.getElementById('input-principal').value.replace(/,/g, '');
+            const contribution = document.getElementById('input-contribution').value.replace(/,/g, '');
+            const rate = document.getElementById('input-rate').value;
+            const period = document.getElementById('input-period').value;
+            const compound = document.getElementById('select-compound').value;
+
+            const params = new URLSearchParams();
+            if (principal)    params.set('p',  principal);
+            if (contribution) params.set('c',  contribution);
+            if (rate)         params.set('r',  rate);
+            if (period)       params.set('t',  period);
+            params.set('cf', compound);
+            params.set('cu', contribUnit);
+            params.set('ru', rateUnit);
+            params.set('pu', periodUnit);
+
+            history.replaceState(null, '', '?' + params.toString());
+        }
+
+        // 防抖：用於文字類金額輸入框（打字中），延遲 300ms 才更新 URL
+        let urlDebounceTimer = null;
+        function syncToURLDebounced() {
+            clearTimeout(urlDebounceTimer);
+            urlDebounceTimer = setTimeout(syncToURL, 300);
+        }
+
+        // 從 URL 讀取參數，初始化各欄位狀態（含防呆 Fallback）
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.toString()) return false; // 無參數時跳過，使用 HTML 預設值
+
+            // 解析單位狀態
+            const cuParam = params.get('cu');
+            const ruParam = params.get('ru');
+            const puParam = params.get('pu');
+
+            if (cuParam === 'year' || cuParam === 'month') contribUnit = cuParam;
+            if (ruParam === 'year' || ruParam === 'month') rateUnit = ruParam;
+            if (puParam === 'year' || puParam === 'month') periodUnit = puParam;
+
+            // 同步單位切換按鈕 UI
+            function activateUnitBtn(containerId, unit) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                container.querySelectorAll('.unit-btn').forEach(btn => {
+                    if (btn.getAttribute('data-unit') === unit) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                });
+            }
+            activateUnitBtn('contrib-unit-selector', contribUnit);
+            activateUnitBtn('rate-unit-selector', rateUnit);
+            activateUnitBtn('period-unit-selector', periodUnit);
+
+            // 解析並填入金額欄位（過濾逗號、格式化後再填入）
+            const principalRaw = safeParseFloat(params.get('p'), 100000);
+            const contributionRaw = safeParseFloat(params.get('c'), 5000);
+            document.getElementById('input-principal').value = principalRaw.toLocaleString('zh-TW');
+            document.getElementById('input-contribution').value = contributionRaw.toLocaleString('zh-TW');
+
+            // 解析利率與期間
+            const rateRaw = safeParseFloat(params.get('r'), 6);
+            const periodRaw = safeParseFloat(params.get('t'), 10);
+            document.getElementById('input-rate').value = rateRaw;
+            document.getElementById('input-period').value = periodRaw;
+
+            // 解析複利頻率（僅允許 0, 1, 4, 12）
+            const cfRaw = safeParseInt(params.get('cf'), [0, 1, 4, 12], 1);
+            document.getElementById('select-compound').value = cfRaw;
+
+            return true;
+        }
+
+        // 複製分享連結
+        function copyShareLink() {
+            syncToURL(); // 確保 URL 是最新狀態
+            const url = window.location.href;
+            const btn = document.getElementById('share-btn');
+            const btnText = btn.querySelector('.btn-text');
+
+            navigator.clipboard.writeText(url).then(() => {
+                btn.classList.add('copied');
+                btn.querySelector('svg').innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>';
+                btnText.textContent = '已複製！';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.querySelector('svg').innerHTML = '<path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>';
+                    btnText.textContent = '複製查詢連結';
+                }, 2200);
+            }).catch(() => {
+                // Fallback：選取 URL 提示使用者手動複製
+                window.prompt('請手動複製以下連結：', url);
+            });
+        }
+
+        // 頁面加載時先進行一次默認計算，並掛載其餘即時計算事件
+        window.addEventListener('load', () => {
+            // 先嘗試從 URL 反向初始化各欄位
+            initFromURL();
+
+            // 初始化千分位格式化（同時掛載 input 監聽）
+            initFormattedInput('input-principal');
+            initFormattedInput('input-contribution');
+
+            // 金額輸入框：打字時防抖更新 URL（blur 或 300ms 後同步）
+            ['input-principal', 'input-contribution'].forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener('input', syncToURLDebounced);
+                el.addEventListener('blur', syncToURL);
+            });
+
+            // 數字輸入框（利率、期間）：即時更新 URL
+            document.getElementById('input-rate').addEventListener('input', () => {
+                calculateCompoundInterest();
+                syncToURLDebounced();
+            });
+            document.getElementById('input-period').addEventListener('input', () => {
+                calculateCompoundInterest();
+                syncToURLDebounced();
+            });
+
+            // 下拉選單（複利頻率）：選擇後即時更新 URL
+            document.getElementById('select-compound').addEventListener('change', () => {
+                calculateCompoundInterest();
+                syncToURL();
+            });
+
+            // 初次計算
+            calculateCompoundInterest();
+        });
+
+        // 單位切換時也同步更新 URL（修補 setupSelector 的 callback）
+        const _origSetupSelector = setupSelector;
+        // 在 setupSelector 之後，透過包裝 contribUnit/rateUnit/periodUnit 的回調來加入 URL 同步
+        // 注意：此處直接在已有的三個 setupSelector 呼叫後覆蓋即可，因為 setupSelector 的 callback 已包含 calculateCompoundInterest()
+        // 我們利用 MutationObserver 或直接重新綁定的方式完成——改為在 setupSelector callback 內加 syncToURL
+        // 以下重新執行 setupSelector 並加入 URL 同步（覆蓋先前的綁定）
+        function setupSelectorWithURL(containerId, callback) {
+            const container = document.getElementById(containerId);
+            const buttons = container.querySelectorAll('.unit-btn');
+            // 移除舊監聽（clone 節點方式）
+            buttons.forEach(btn => {
+                const fresh = btn.cloneNode(true);
+                btn.parentNode.replaceChild(fresh, btn);
+            });
+            container.querySelectorAll('.unit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    createBurst(e.clientX, e.clientY);
+                    container.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (callback) callback(btn.getAttribute('data-unit'));
+                    syncToURL(); // 切換單位後立即同步 URL
+                });
+            });
+        }
+
+        // 在 load 之後重新綁定（DOMContentLoaded 時 setupSelector 已執行，此處覆蓋）
+        window.addEventListener('load', () => {
+            setupSelectorWithURL('contrib-unit-selector', (unit) => { contribUnit = unit; calculateCompoundInterest(); });
+            setupSelectorWithURL('rate-unit-selector',   (unit) => { rateUnit   = unit; calculateCompoundInterest(); });
+            setupSelectorWithURL('period-unit-selector', (unit) => { periodUnit = unit; calculateCompoundInterest(); });
+        }, { once: true }); // 只執行一次覆蓋
+    </script>
+
+    <script src="../js/common-particles.js" defer></script>
+</body>
+</html>

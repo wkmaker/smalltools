@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 編碼解碼器 - 免費線上網址轉碼、Percent-encoding 與 Query 參數解析工具 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/url/index.html">
+    <meta name="description" content="專業免費的線上 URL 編碼與解碼工具！支援網址 Percent-encoding 即時雙向轉換、URI/URIComponent 模式、網址結構與 Query 參數表格解析及雙向連動編輯。">
+    <meta name="keywords" content="URL編碼,URL解碼,網址轉碼,Percent-encoding,encodeURI,encodeURIComponent,Query參數解析,網址解析">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="URL 編碼解碼器 - 免費線上網址轉碼與 Query 參數解析工具">
+    <meta property="og:description" content="專業免費的線上 URL 編碼與解碼工具，支援參數表格即時解析與雙向連動編輯。">
+    <meta property="og:url" content="https://tools.cjkuo.net/url/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="URL 編碼解碼器 - 免費線上網址轉碼與 Query 參數解析工具">
+    <meta name="twitter:description" content="專業免費的線上 URL 編碼與解碼工具，支援參數表格即時解析與雙向連動編輯。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "URL 編碼/解碼器",
+      "url": "https://tools.cjkuo.net/url/index.html",
+      "description": "專業免費的線上 URL 編碼與解碼工具，支援 URI/URIComponent 模式與 Query 參數拆解。",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
+
+    <style>
+        :root {
+            --theme-color: #0077ff;
+            --accent-glow: rgba(0, 119, 255, 0.6); /* 電藍色 */
+            --accent-glow-rgb: 0, 119, 255;
+            --error-color: #ff3366;
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 119, 255, 0.1);
+            color: #0077ff;
+            border-color: #0077ff;
+            box-shadow: 0 0 15px rgba(0, 119, 255, 0.25);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* ====== 佈局 ====== */
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .panels-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 2rem;
+        }
+
+        .panel-container {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .panel-container:focus-within {
+            border-color: rgba(0, 119, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 119, 255, 0.08), inset 0 0 10px rgba(0,119,255,0.01);
+        }
+
+        .panel-container.error-state {
+            border-color: rgba(255, 51, 102, 0.4) !important;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.15) !important;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-title::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 16px;
+            background: #0077ff;
+            border-radius: 3px;
+            box-shadow: 0 0 8px #0077ff;
+            margin-right: 6px;
+        }
+
+        .panel-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        /* 輸入區域 */
+        .text-area-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-height: 250px;
+            display: flex;
+        }
+
+        .custom-textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 250px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .custom-textarea:focus {
+            border-color: rgba(0, 119, 255, 0.2);
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        /* 底部控制區與按鈕 */
+        .panel-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.6rem;
+            margin-left: auto;
+        }
+
+        /* 選項下拉選單 */
+        .select-style {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .select-style:hover, .select-style:focus {
+            border-color: rgba(0, 119, 255, 0.4);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .select-style option {
+            background-color: #121214;
+            color: var(--text-primary);
+        }
+
+        /* 核取方塊樣式 */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-container input {
+            display: none;
+        }
+
+        .checkmark {
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--glass-border);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            display: inline-block;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .checkbox-container:hover .checkmark {
+            border-color: rgba(0, 119, 255, 0.4);
+        }
+
+        .checkbox-container input:checked + .checkmark {
+            background: #0077ff;
+            border-color: #0077ff;
+            box-shadow: 0 0 8px rgba(0, 119, 255, 0.5);
+        }
+
+        .checkbox-container input:checked + .checkmark::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* 按鈕 */
+        .tech-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.3s ease;
+        }
+
+        .tech-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .tech-btn:hover {
+            background: rgba(0, 119, 255, 0.08);
+            border-color: rgba(0, 119, 255, 0.4);
+            color: #0077ff;
+            box-shadow: 0 0 12px rgba(0, 119, 255, 0.15);
+        }
+
+        .tech-btn.primary {
+            background: rgba(0, 119, 255, 0.15);
+            border-color: rgba(0, 119, 255, 0.4);
+            color: #0077ff;
+            font-weight: 500;
+        }
+
+        .tech-btn.primary:hover {
+            background: #0077ff;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 119, 255, 0.4);
+        }
+
+        /* 錯誤提示 */
+        .error-msg {
+            font-size: 0.75rem;
+            color: var(--error-color);
+            display: none;
+            align-items: center;
+            gap: 0.3rem;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        /* ====== URL 參數解析面板 (自動連動) ====== */
+        .url-parser-section {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: none; /* 有 URL 時才 JS 動態展開 */
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* URL 結構看板 (Mime-type 等級) */
+        .url-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .meta-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meta-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            color: #d1d5db;
+        }
+
+        .meta-copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .meta-copy-btn:hover {
+            color: #0077ff;
+        }
+
+        .meta-copy-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* 查詢參數表格 (Query Params) */
+        .params-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .params-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .params-table td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            vertical-align: middle;
+        }
+
+        .params-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 表格內輸入框 */
+        .table-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 0.5rem 0.8rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .table-input:focus {
+            border-color: rgba(0, 119, 255, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .table-copy-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.4rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .table-copy-btn:hover {
+            border-color: rgba(0, 119, 255, 0.3);
+            color: #0077ff;
+            background: rgba(0, 119, 255, 0.05);
+        }
+
+        .table-copy-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .table-delete-btn {
+            background: rgba(255, 51, 102, 0.05);
+            border: 1px solid rgba(255, 51, 102, 0.15);
+            color: #ff3366;
+            padding: 0.4rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .table-delete-btn:hover {
+            background: #ff3366;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
+        }
+
+        .table-delete-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* ====== Toast 訊息 ====== */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(0, 119, 255, 0.15);
+            border: 1px solid rgba(0, 119, 255, 0.3);
+            backdrop-filter: blur(10px);
+            color: #0077ff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5), 0 0 10px rgba(0,119,255,0.1);
+            z-index: 100;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 900px) {
+            .panels-grid {
+                grid-template-columns: 1fr;
+            }
+            .url-meta-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+            .panel-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-group {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .params-table {
+                min-width: 500px;
+            }
+        }
+            .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary, #8892b0);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 粒子背景 Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- 主毛玻璃容器 -->
+    <div class="glass-container">
+        <!-- 返回按鈕 (行動端自動 static) -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            返回首頁
+        </a>
+
+        <h1>URL 線上編碼與解碼器</h1>
+        <div class="subtitle-top">URL Encoder & Decoder</div>
+        <p class="page-description">專業免費的線上 URL 編碼與解碼工具，支援 Percent-encoding 與 Unicode 即時雙向轉換，提供網址結構拆解與 Query 參數表格雙向連動編輯。</p>
+
+        <div class="main-layout">
+            <!-- 雙欄文字面板 -->
+            <div class="panels-grid">
+                <!-- 左欄：原始網址/文字 Plain Text -->
+                <div class="panel-container" id="plain-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">原始網址 / 文字 (Plain Text)</div>
+                    </div>
+                    <div class="text-area-wrapper">
+                        <textarea id="plain-input" class="custom-textarea" placeholder="在此輸入要編碼的網址或文字..."></textarea>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="control-group">
+                            <label>編碼模式：</label>
+                            <select id="url-mode" class="select-style" onchange="triggerUrlEncode()">
+                                <option value="component">EncodeURIComponent (編碼所有參數)</option>
+                                <option value="uri">EncodeURI (保留網址基本結構)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group">
+                            <button class="tech-btn" onclick="loadUrlExample()">範例</button>
+                            <button class="tech-btn" onclick="clearUrlPanel('plain')">清除</button>
+                            <button class="tech-btn primary" onclick="copyText('plain-input')">複製</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右欄：URL 編碼文字 -->
+                <div class="panel-container" id="encoded-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">URL 編碼文字 (Percent-Encoded)</div>
+                        <div class="panel-header-actions">
+                            <div class="error-msg" id="url-error-msg">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                無效的 URL 編碼格式
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-area-wrapper">
+                        <textarea id="encoded-input" class="custom-textarea" placeholder="在此貼上已編碼的文字進行解碼..."></textarea>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="control-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="space-plus-opt" onchange="triggerUrlEncode()">
+                                <span class="checkmark"></span>
+                                空格轉 + (application/x-www-form-urlencoded)
+                            </label>
+                        </div>
+                        <div class="btn-group">
+                            <button class="tech-btn" onclick="clearUrlPanel('encoded')">清除</button>
+                            <button class="tech-btn primary" onclick="copyText('encoded-input')">複製</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下方：網址 Query 參數即時解析表格 (動態展開) -->
+            <div class="url-parser-section" id="url-parser-card">
+                <div class="panel-title">網址結構與 Query 參數解析 (連動編輯)</div>
+                
+                <!-- 結構元數據看板 -->
+                <div class="url-meta-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">傳輸協定 (Protocol)</span>
+                        <div class="meta-value-wrapper">
+                            <span class="meta-value" id="meta-protocol">-</span>
+                            <button class="meta-copy-btn" onclick="copyMetaValue('meta-protocol')">
+                                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">域名主機 (Host Domain)</span>
+                        <div class="meta-value-wrapper">
+                            <span class="meta-value" id="meta-host">-</span>
+                            <button class="meta-copy-btn" onclick="copyMetaValue('meta-host')">
+                                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">路徑 (Pathname)</span>
+                        <div class="meta-value-wrapper">
+                            <span class="meta-value" id="meta-path">-</span>
+                            <button class="meta-copy-btn" onclick="copyMetaValue('meta-path')">
+                                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 參數編輯表格 -->
+                <div class="params-table-wrapper">
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">參數名稱 (Query Key)</th>
+                                <th style="width: 45%;">參數內容 (Value)</th>
+                                <th style="width: 20%; text-align: center;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="params-table-body">
+                            <!-- 參數行由 JS 動態生成 -->
+                        </tbody>
+                    </table>
+                    <div class="table-footer">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);" id="params-count">共 0 個參數</span>
+                        <button class="tech-btn primary" style="padding: 0.4rem 0.8rem;" onclick="addQueryRow()">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right: 2px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                            新增參數行
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 訊息提示 Toast -->
+    <div id="copy-toast" class="toast">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toast-text">已複製到剪貼簿</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // Toast 提示
+        // ==========================================
+        function showToast(message) {
+            const toast = document.getElementById('copy-toast');
+            document.getElementById('toast-text').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // ==========================================
+        // 複製文字功能
+        // ==========================================
+        function copyText(elementId) {
+            const textEl = document.getElementById(elementId);
+            if (!textEl || !textEl.value) {
+                showToast("沒有可複製的內容");
+                return;
+            }
+            
+            textEl.select();
+            textEl.setSelectionRange(0, 99999);
+
+            navigator.clipboard.writeText(textEl.value)
+                .then(() => showToast("已複製到剪貼簿"))
+                .catch(() => showToast("複製失敗，請手動複製"));
+        }
+
+        function copyMetaValue(elementId) {
+            const valEl = document.getElementById(elementId);
+            if (!valEl || valEl.innerText === '-' || valEl.innerText === '(無)') {
+                showToast("沒有可複製的內容");
+                return;
+            }
+            navigator.clipboard.writeText(valEl.innerText)
+                .then(() => showToast("已複製到剪貼簿"));
+        }
+
+        function copyTableValue(text) {
+            if (!text) {
+                showToast("內容為空");
+                return;
+            }
+            navigator.clipboard.writeText(text)
+                .then(() => showToast("已複製到剪貼簿"));
+        }
+
+        // ==========================================
+        // URL 編碼與解碼邏輯 (雙向連動與網址解析)
+        // ==========================================
+        const plainInput = document.getElementById('plain-input');
+        const encodedInput = document.getElementById('encoded-input');
+        const encodedPanel = document.getElementById('encoded-panel');
+        const urlErrorMsg = document.getElementById('url-error-msg');
+        const urlMode = document.getElementById('url-mode');
+        const spacePlusOpt = document.getElementById('space-plus-opt');
+        
+        // 解析面板
+        const urlParserCard = document.getElementById('url-parser-card');
+        const metaProtocol = document.getElementById('meta-protocol');
+        const metaHost = document.getElementById('meta-host');
+        const metaPath = document.getElementById('meta-path');
+        const paramsTableBody = document.getElementById('params-table-body');
+        const paramsCount = document.getElementById('params-count');
+
+        let isCalculating = false; // 防止雙向更新死循環
+        let activeUrlObj = null;   // 當前成功解析的 URL 物件備用
+        let isFullUrlMode = false; // 輸入的是否是完整帶協議的 URL
+
+        plainInput.addEventListener('input', () => {
+            if (isCalculating) return;
+            triggerUrlEncode();
+        });
+
+        encodedInput.addEventListener('input', () => {
+            if (isCalculating) return;
+            triggerUrlDecode();
+        });
+
+        // 載入範例
+        function loadUrlExample() {
+            plainInput.value = "https://tools.cjkuo.net/search/v1?q=哈囉 世界!&category=極客工具&debug=true#result-hash";
+            triggerUrlEncode();
+        }
+
+        // 清除面板
+        function clearUrlPanel(type) {
+            if (type === 'plain') {
+                plainInput.value = '';
+                if (!isCalculating) {
+                    isCalculating = true;
+                    encodedInput.value = '';
+                    encodedPanel.classList.remove('error-state');
+                    urlErrorMsg.style.display = 'none';
+                    urlParserCard.style.display = 'none';
+                    isCalculating = false;
+                }
+            } else {
+                encodedInput.value = '';
+                encodedPanel.classList.remove('error-state');
+                urlErrorMsg.style.display = 'none';
+                if (!isCalculating) {
+                    isCalculating = true;
+                    plainInput.value = '';
+                    urlParserCard.style.display = 'none';
+                    isCalculating = false;
+                }
+            }
+        }
+
+        // 智慧型網址編碼：保留網址結構的同時，對查詢參數值中的特殊字元（如 `:` 與 `,`）進行全面編碼
+        function smartEncodeURI(input) {
+            const trimText = input.trim();
+            const qIndex = trimText.indexOf('?');
+            if (qIndex === -1) {
+                return encodeURI(trimText);
+            }
+            
+            const basePart = trimText.substring(0, qIndex);
+            const queryPart = trimText.substring(qIndex + 1);
+            const encodedBase = encodeURI(basePart);
+            
+            if (!queryPart) {
+                return encodedBase + '?';
+            }
+            
+            let hashPart = '';
+            let paramsStr = queryPart;
+            const hashIndex = queryPart.indexOf('#');
+            if (hashIndex !== -1) {
+                paramsStr = queryPart.substring(0, hashIndex);
+                hashPart = queryPart.substring(hashIndex);
+            }
+            
+            const paramPairs = paramsStr.split('&');
+            const encodedPairs = paramPairs.map(pair => {
+                if (!pair) return '';
+                const eqIndex = pair.indexOf('=');
+                if (eqIndex === -1) {
+                    return encodeURIComponent(pair);
+                }
+                const key = pair.substring(0, eqIndex);
+                const val = pair.substring(eqIndex + 1);
+                return encodeURIComponent(key) + '=' + encodeURIComponent(val);
+            });
+            
+            const encodedHash = hashPart ? '#' + encodeURI(hashPart.substring(1)) : '';
+            return encodedBase + '?' + encodedPairs.filter(p => p !== '').join('&') + encodedHash;
+        }
+
+        // 執行編碼：純文字/網址 -> URL 百分比編碼
+        function triggerUrlEncode() {
+            if (isCalculating) return;
+            isCalculating = true;
+
+            const text = plainInput.value;
+
+            if (!text) {
+                encodedInput.value = '';
+                encodedPanel.classList.remove('error-state');
+                urlErrorMsg.style.display = 'none';
+                urlParserCard.style.display = 'none';
+                isCalculating = false;
+                return;
+            }
+
+            try {
+                let encoded = '';
+                const mode = urlMode.value;
+
+                if (mode === 'component') {
+                    encoded = encodeURIComponent(text);
+                } else {
+                    encoded = smartEncodeURI(text);
+                }
+
+                // 空格轉 + 處理
+                if (spacePlusOpt.checked) {
+                    encoded = encoded.replace(/%20/g, '+');
+                }
+
+                encodedInput.value = encoded;
+                encodedPanel.classList.remove('error-state');
+                urlErrorMsg.style.display = 'none';
+
+                // 解鎖即時網址參數解析
+                isCalculating = false; // 解除鎖定讓 parseUrl 讀寫不受干涉
+                parseUrl(text);
+            } catch (err) {
+                encodedInput.value = '';
+                encodedPanel.classList.add('error-state');
+                console.error(err);
+                isCalculating = false;
+            }
+        }
+
+        // 執行解碼：URL 編碼 -> 原始文字
+        function triggerUrlDecode() {
+            if (isCalculating) return;
+            isCalculating = true;
+
+            let encodedText = encodedInput.value;
+
+            if (!encodedText) {
+                plainInput.value = '';
+                encodedPanel.classList.remove('error-state');
+                urlErrorMsg.style.display = 'none';
+                urlParserCard.style.display = 'none';
+                isCalculating = false;
+                return;
+            }
+
+            // 若勾選空格轉 +，解碼前需先將 + 還原為 %20 或 空格
+            if (spacePlusOpt.checked) {
+                encodedText = encodedText.replace(/\+/g, '%20');
+            }
+
+            try {
+                // 解碼一律使用 decodeURIComponent 以完全還原包含 :、/、?、&、=、, 在內的所有保留字元，提供最符合直覺的完全解碼體驗
+                decoded = decodeURIComponent(encodedText);
+
+                plainInput.value = decoded;
+                encodedPanel.classList.remove('error-state');
+                urlErrorMsg.style.display = 'none';
+
+                isCalculating = false; // 解除鎖定以執行解析
+                parseUrl(decoded);
+            } catch (err) {
+                encodedPanel.classList.add('error-state');
+                urlErrorMsg.style.display = 'flex';
+                isCalculating = false;
+            }
+        }
+
+        // ==========================================
+        // URL 參數自動解析邏輯 (精準捕獲)
+        // ==========================================
+        function parseUrl(rawText) {
+            if (!rawText.trim()) {
+                urlParserCard.style.display = 'none';
+                return;
+            }
+
+            let urlToParse = rawText.trim();
+            isFullUrlMode = false;
+
+            // 判斷是否為完整帶協議的 URL
+            if (/^[a-zA-Z0-9+.-]+:\/\//i.test(urlToParse)) {
+                isFullUrlMode = true;
+            } else {
+                // 如果沒有協議，補上臨時的偽裝域名以利 URL 物件安全解析
+                urlToParse = 'http://temporary-domain.com/' + urlToParse.replace(/^\/+/, '');
+            }
+
+            try {
+                activeUrlObj = new URL(urlToParse);
+                
+                // 填充元數據看板
+                metaProtocol.innerText = isFullUrlMode ? activeUrlObj.protocol : '(相對路徑)';
+                metaHost.innerText = isFullUrlMode ? activeUrlObj.host : '(無)';
+                metaPath.innerText = activeUrlObj.pathname;
+
+                // 渲染查詢參數表格
+                renderParamsTable(activeUrlObj.searchParams);
+                urlParserCard.style.display = 'flex';
+            } catch (e) {
+                // 如果連解析都拋錯，隱藏面板（可能只是普通的一長串文字而非網址）
+                urlParserCard.style.display = 'none';
+            }
+        }
+
+        // 渲染參數明細表
+        function renderParamsTable(searchParams) {
+            paramsTableBody.innerHTML = '';
+            let count = 0;
+
+            searchParams.forEach((value, key) => {
+                count++;
+                createRowElement(key, value);
+            });
+
+            paramsCount.innerText = `共 ${count} 個參數`;
+        }
+
+        // 在表格中創建一行參數行
+        function createRowElement(key, value) {
+            const tr = document.createElement('tr');
+            tr.className = 'param-row';
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="table-input param-key" value="${escapeHtml(key)}" oninput="onTableParamChange()">
+                </td>
+                <td>
+                    <input type="text" class="table-input param-val" value="${escapeHtml(value)}" oninput="onTableParamChange()">
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <button class="table-copy-btn" style="margin-right: 6px;" onclick="copyTableValue(this.closest('tr').querySelector('.param-val').value)" title="複製參數內容">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <button class="table-delete-btn" onclick="deleteQueryRow(this)" title="刪除此參數">
+                        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </td>
+            `;
+            paramsTableBody.appendChild(tr);
+        }
+
+        // HTML 跳脫防禦
+        function escapeHtml(string) {
+            return String(string).replace(/[&<>"']/g, function (s) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[s];
+            });
+        }
+
+        // 新增空白參數行
+        function addQueryRow() {
+            createRowElement('', '');
+            onTableParamChange(); // 即時重組更新
+        }
+
+        // 刪除參數行
+        function deleteQueryRow(btnEl) {
+            btnEl.closest('tr').remove();
+            onTableParamChange(); // 即時重組更新
+        }
+
+        // 表格中的 Key 或 Value 改變時，即時重組網址回填上方 Plain Text 框！
+        function onTableParamChange() {
+            if (!activeUrlObj || isCalculating) return;
+
+            const rows = document.querySelectorAll('.param-row');
+            let count = 0;
+            let plainQueryArr = [];
+
+            rows.forEach(row => {
+                const key = row.querySelector('.param-key').value.trim();
+                const val = row.querySelector('.param-val').value;
+                if (key !== '') {
+                    // 使用未經過 URL 編碼的 raw key 和 raw value，維護左側 Plain Text 的清爽狀態
+                    plainQueryArr.push(key + '=' + val);
+                    count++;
+                }
+            });
+
+            paramsCount.innerText = `共 ${count} 個參數`;
+
+            // 重構未編碼的 Search 字串
+            const searchStr = plainQueryArr.length > 0 ? '?' + plainQueryArr.join('&') : '';
+            
+            // 重新合成網址
+            let newUrl = '';
+            if (isFullUrlMode) {
+                newUrl = activeUrlObj.protocol + '//' + activeUrlObj.host + activeUrlObj.pathname + searchStr + activeUrlObj.hash;
+            } else {
+                newUrl = activeUrlObj.pathname.substring(1) + searchStr + activeUrlObj.hash;
+            }
+
+            // 更新 Plain 文字框，且「不干涉雙向鎖定」以防止循環觸發
+            isCalculating = true;
+            plainInput.value = newUrl;
+            isCalculating = false;
+
+            // 同步更新全域 activeUrlObj 的結構參數以利下一次點擊新增/刪除時基礎結構正確
+            try {
+                let urlToParse = newUrl;
+                if (!isFullUrlMode) {
+                    urlToParse = 'http://temporary-domain.com/' + newUrl.replace(/^\/+/, '');
+                }
+                activeUrlObj = new URL(urlToParse);
+            } catch (e) {
+                console.error(e);
+            }
+
+            // 觸發對應的 URL 編碼更新，而不干擾表格本身的焦點
+            triggerUrlEncodeFromTable();
+        }
+
+        // 專門用於表格改變時的編碼更新 (不重新 render 表格以免使用者在表格打字時輸入游標不斷被重設)
+        function triggerUrlEncodeFromTable() {
+            const text = plainInput.value;
+            if (!text) {
+                encodedInput.value = '';
+                return;
+            }
+            try {
+                let encoded = '';
+                const mode = urlMode.value;
+                if (mode === 'component') {
+                    encoded = encodeURIComponent(text);
+                } else {
+                    // 同步使用智慧型 smartEncodeURI 確保表格變更時，冒號、逗號等參數值特殊符號依然能被正確編碼
+                    encoded = smartEncodeURI(text);
+                }
+                if (spacePlusOpt.checked) {
+                    encoded = encoded.replace(/%20/g, '+');
+                }
+                encodedInput.value = encoded;
+                encodedPanel.classList.remove('error-state');
+                urlErrorMsg.style.display = 'none';
+            } catch (err) {
+                encodedInput.value = '';
+                encodedPanel.classList.add('error-state');
+            }
+        }
+    </script>
+    <script src="../js/common-particles.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code 產生器 - 免費線上藝術設計、Logo 內嵌與向量 SVG 輸出工具 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/qr-generator/index.html">
+    <meta name="description" content="專業免費的線上藝術 QR Code 產生器！支援自訂點體樣式、雙色漸層、中央 Logo 拖曳內嵌、自動 30% 高容錯率及 PNG/SVG/WEBP 向量圖檔匯出。">
+    <meta name="keywords" content="QR Code產生器,QR Code製造機,藝術QR Code,QR Code Logo,向量QR Code,SVG QR Code,免費QR Code">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="QR Code 產生器 - 免費線上藝術設計、Logo 內嵌與向量 SVG 輸出工具">
+    <meta property="og:description" content="即時設計您專屬的藝術 QR Code。支援液態點、漸層、Logo 置中與向量 SVG 輸出。">
+    <meta property="og:url" content="https://tools.cjkuo.net/qr-generator/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="QR Code 產生器 - 免費線上藝術設計、Logo 內嵌與向量 SVG 輸出工具">
+    <meta name="twitter:description" content="即時設計專屬藝術 QR Code，支援漸層、Logo 置中與向量 SVG 輸出。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Designer QR Code 產生器",
+      "url": "https://tools.cjkuo.net/qr-generator/index.html",
+      "description": "專業免費的藝術 QR Code 產生器，支援液態化點體、漸層色彩與中央 Logo 內嵌。",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
+    
+    <!-- 引入 qr-code-styling 第三方庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
+
+    <style>
+        :root {
+            --theme-color: #00ff66;
+            --accent-glow: rgba(0, 255, 102, 0.6); /* 賽博綠 */
+            --accent-glow-rgb: 0, 255, 102;
+        }
+
+        /* 返回按鈕手機防重疊 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 255, 102, 0.1);
+            color: #00ff66;
+            border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* 複製分享連結按鈕 */
+        .share-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .share-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .share-btn:hover {
+            background: rgba(0, 255, 102, 0.1);
+            color: #00ff66;
+            border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+        }
+
+        .share-btn.copied {
+            background: rgba(0, 255, 102, 0.1);
+            color: #00ff66;
+            border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .page-description {
+            max-width: 800px;
+            margin: 0 auto 2.5rem;
+            text-align: center;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            font-weight: 300;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* ====== 雙欄排版 layout ====== */
+        .text-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+        }
+
+        .panel-container {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .panel-container:focus-within {
+            border-color: rgba(0, 255, 102, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.08);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .panel-title::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 16px;
+            background: #00ff66;
+            border-radius: 3px;
+            box-shadow: 0 0 8px #00ff66;
+            margin-right: 6px;
+        }
+
+        /* 輸入群組樣式 */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15); /* 規範：非聚焦邊框至少 0.15 */
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            transition: border-color 0.3s;
+        }
+
+        .panel-container:focus-within .input-wrapper:focus-within {
+            border-color: rgba(0, 255, 102, 0.4);
+        }
+
+        .styled-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff; /* 規範：輸入文字明亮純白 */
+            font-family: inherit;
+            font-size: 1.1rem; /* 規範：1.1rem 以上 */
+            font-weight: 500; /* 規範：加粗 */
+        }
+
+        .styled-input::placeholder {
+            color: rgba(255, 255, 255, 0.38); /* 規範：占位符不透明度 0.35 以上 */
+        }
+
+        /* 下拉選單顏色與可見性規範 */
+        .styled-select {
+            width: 100%;
+            background-color: #121218 !important; /* 規範：深色背景防止文字隱形 */
+            color: #ffffff !important; /* 規範：亮白色文字 */
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            outline: none;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .styled-select:focus {
+            border-color: rgba(0, 255, 102, 0.4);
+        }
+
+        .styled-select option {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .color-pickers {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+        }
+
+        .color-picker-wrapper span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        /* Checkbox 樣式 */
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            accent-color: #00ff66;
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        /* Slider 樣式 */
+        .styled-slider {
+            width: 100%;
+            accent-color: #00ff66;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        /* ====== 樣式選擇網格 (仿截圖 UI) ====== */
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.6rem;
+            width: 100%;
+        }
+
+        .style-option-btn {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0.6rem 0.4rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            user-select: none;
+        }
+
+        .style-option-btn svg {
+            width: 20px;
+            height: 20px;
+            color: inherit;
+        }
+
+        .style-option-btn span {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .style-option-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .style-option-btn.active {
+            color: #00ff66;
+            background: rgba(0, 255, 102, 0.08);
+            border-color: rgba(0, 255, 102, 0.3);
+            box-shadow: 0 0 12px rgba(0, 255, 102, 0.15), inset 0 0 8px rgba(0, 255, 102, 0.05);
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
+        }
+
+        .style-option-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 灰白棋盤格紋背景 (透明預覽) */
+        .checkerboard-bg {
+            background-color: #ffffff !important;
+            background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%), 
+                              linear-gradient(-45deg, #e0e0e0 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #e0e0e0 75%), 
+                              linear-gradient(-45deg, transparent 75%, #e0e0e0 75%) !important;
+            background-size: 16px 16px !important;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
+        }
+
+        /* 拖曳 Logo 上傳區 */
+        .dropzone-container {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.005);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            position: relative;
+        }
+
+        .dropzone-container:hover, .dropzone-container.dragover {
+            border-color: #00ff66;
+            background: rgba(0, 255, 102, 0.02);
+            box-shadow: inset 0 0 15px rgba(0, 255, 102, 0.05);
+        }
+
+        .dropzone-container.dragover {
+            transform: scale(1.02);
+        }
+
+        .dropzone-container svg {
+            width: 2rem;
+            height: 2rem;
+            fill: var(--text-secondary);
+            transition: fill 0.3s;
+        }
+
+        .dropzone-container:hover svg, .dropzone-container.dragover svg {
+            fill: #00ff66;
+        }
+
+        .dropzone-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .logo-preview-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .logo-preview-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo-preview-img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .logo-name {
+            font-size: 0.85rem;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-primary);
+        }
+
+        .btn-remove-logo {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .btn-remove-logo:hover {
+            color: #ff3366;
+            transform: scale(1.1);
+        }
+
+        .btn-remove-logo svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* 右側展示白色卡片 */
+        .qr-display-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .qr-card-wrapper {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
+            width: 312px;
+            height: 312px;
+            margin: 0 auto;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .qr-card-wrapper:hover {
+            transform: translateY(-4px);
+        }
+
+        #qr-code-container {
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qr-code-container canvas,
+        #qr-code-container svg {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* 下載與操作按鈕 */
+        .action-group {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .btn-download {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-download:hover {
+            background: rgba(0, 255, 102, 0.08);
+            border-color: rgba(0, 255, 102, 0.3);
+            color: #00ff66;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+        }
+
+        .btn-download svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .btn-download:active {
+            transform: scale(0.97);
+        }
+
+        /* 警告資訊框 */
+        .alert-info-box {
+            background: rgba(0, 255, 102, 0.05);
+            border: 1px solid rgba(0, 255, 102, 0.15);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #00ff66;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .alert-info-box svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 1024px) {
+            .text-layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .qr-card-wrapper, .action-group {
+                max-width: 320px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+                max-width: 90%;
+            }
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+            .share-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+                float: right;
+            }
+            .grid-2col {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+        <!-- 分享按鈕 -->
+        <button id="copy-share-url" class="share-btn">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+            複製設計網址
+        </button>
+
+        <h1>線上 QR Code 產生器</h1>
+        <div class="subtitle-top">Designer QR Code Generator</div>
+        <p class="page-description">專業免費的線上藝術 QR Code 產生器，支援點體外型自訂、雙色霓虹漸層、中央 Logo 內嵌、自動容錯率提升與向量 SVG 圖檔下載。</p>
+
+        <div class="text-layout">
+            <!-- 左欄：自訂控制面板 -->
+            <div class="panel-container">
+                
+                <!-- 內容類型切換 -->
+                <div class="input-group">
+                    <label>內容類型</label>
+                    <div style="display: flex; gap: 0.5rem; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); border-radius: 50px; padding: 0.3rem; width: fit-content;">
+                        <button class="action-btn" id="type-text-btn" style="border: none; border-radius: 50px; padding: 0.5rem 1.2rem; background: rgba(0, 255, 102, 0.08); color: #00ff66;" type="button">文字 / 網址</button>
+                        <button class="action-btn" id="type-wifi-btn" style="border: none; border-radius: 50px; padding: 0.5rem 1.2rem; background: transparent; color: var(--text-secondary);" type="button">WiFi 網路</button>
+                    </div>
+                </div>
+
+                <!-- 內容輸入：文字/網址 -->
+                <div class="input-group" id="content-text-block">
+                    <span class="panel-title">QR Code 內容</span>
+                    <div class="input-wrapper">
+                        <input type="text" class="styled-input" id="qr-data" placeholder="請輸入網址或文字 (e.g. https://...)" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- 內容輸入：WiFi 網路 -->
+                <div id="content-wifi-block" style="display: none; flex-direction: column; gap: 1.2rem;">
+                    <span class="panel-title">WiFi 連線設定</span>
+                    <div class="grid-2col">
+                        <div class="input-group">
+                            <label for="wifi-ssid">WiFi SSID (網路名稱)</label>
+                            <div class="input-wrapper">
+                                <input type="text" class="styled-input" id="wifi-ssid" placeholder="例如：MyHomeWiFi" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="wifi-pass">WiFi 密碼</label>
+                            <div class="input-wrapper">
+                                <input type="text" class="styled-input" id="wifi-pass" placeholder="請輸入 WiFi 密碼" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid-2col">
+                        <div class="input-group">
+                            <label for="wifi-encryption">安全性類型</label>
+                            <select class="styled-select" id="wifi-encryption">
+                                <option value="WPA" selected>WPA/WPA2</option>
+                                <option value="WEP">WEP</option>
+                                <option value="nopass">無密碼 (nopass)</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="justify-content: flex-end; padding-bottom: 0.6rem;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="wifi-hidden">
+                                隱藏 SSID 網路
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 碼體樣式 (網格) -->
+                <div class="input-group">
+                    <span class="panel-title">碼體樣式</span>
+                    <div class="style-grid" id="dots-type-grid">
+                        <button type="button" class="style-option-btn" data-value="dots" title="流線圓點">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>
+                            <span>圓點</span>
+                        </button>
+                        <button type="button" class="style-option-btn active" data-value="square" title="傳統方形">
+                            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg>
+                            <span>方形</span>
+                        </button>
+                        <button type="button" class="style-option-btn" data-value="rounded" title="流線圓角">
+                            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5" fill="currentColor"/></svg>
+                            <span>圓角</span>
+                        </button>
+                        <button type="button" class="style-option-btn" data-value="classy" title="葉狀">
+                            <svg viewBox="0 0 24 24"><path d="M4 12C4 7.58 7.58 4 12 4H20V12C20 16.42 16.42 20 12 20H4V12Z" fill="currentColor"/></svg>
+                            <span>葉狀</span>
+                        </button>
+                        <button type="button" class="style-option-btn" data-value="classy-rounded" title="斜葉狀">
+                            <svg viewBox="0 0 24 24"><path d="M4 12C4 7.58 7.58 4 12 4H20L20 12C20 16.42 16.42 20 12 20L4 12Z" fill="currentColor"/></svg>
+                            <span>斜葉</span>
+                        </button>
+                        <button type="button" class="style-option-btn" data-value="extra-rounded" title="極致圓角">
+                            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="8" fill="currentColor"/></svg>
+                            <span>極圓</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid-2col">
+                    <!-- 定位點外框 (網格) -->
+                    <div class="input-group">
+                        <label>定位點外框形狀</label>
+                        <div class="style-grid" id="corners-square-grid">
+                            <button type="button" class="style-option-btn active" data-value="extra-rounded" title="盾牌圓角">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+                                <span>盾牌圓角</span>
+                            </button>
+                            <button type="button" class="style-option-btn" data-value="square" title="傳統方形">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+                                <span>方形</span>
+                            </button>
+                            <button type="button" class="style-option-btn" data-value="dot" title="圓環形">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+                                <span>圓環</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 定位點內核 (網格) -->
+                    <div class="input-group">
+                        <label>定位點內核形狀</label>
+                        <div class="style-grid" id="corners-dot-grid">
+                            <button type="button" class="style-option-btn active" data-value="dot" title="流線圓點">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>
+                                <span>圓點</span>
+                            </button>
+                            <button type="button" class="style-option-btn" data-value="square" title="傳統方形">
+                                <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="currentColor"/></svg>
+                                <span>方形</span>
+                            </button>
+                            <button type="button" class="style-option-btn" data-value="rounded" title="流線圓角">
+                                <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="3" fill="currentColor"/></svg>
+                                <span>圓角</span>
+                            </button>
+                            <button type="button" class="style-option-btn" data-value="classy" title="葉狀">
+                                <svg viewBox="0 0 24 24"><path d="M6 12C6 8.68 8.68 6 12 6H18V12C18 15.32 15.32 18 12 18H6V12Z" fill="currentColor"/></svg>
+                                <span>葉狀</span>
+                            </button>
+                            <button type="button" class="style-option-btn" data-value="classy-rounded" title="斜葉狀">
+                                <svg viewBox="0 0 24 24"><path d="M6 12C6 8.68 8.68 6 12 6H18L18 12C18 15.32 15.32 18 12 18L6 12Z" fill="currentColor"/></svg>
+                                <span>斜葉</span>
+                            </button>
+                            <button type="button" class="style-option-btn" data-value="extra-rounded" title="極致圓角">
+                                <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="6" fill="currentColor"/></svg>
+                                <span>極圓</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2col">
+                    <!-- 背景色與透明設定 -->
+                    <div class="input-group">
+                        <label>背景設定</label>
+                        <div class="color-pickers" style="gap: 1rem;">
+                            <div class="color-picker-wrapper" id="bg-color-picker-wrapper">
+                                <input type="color" id="qr-bg-color" value="#ffffff">
+                                <span id="label-bg-color">#FFFFFF</span>
+                            </div>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="qr-bg-transparent">
+                                背景透明
+                            </label>
+                        </div>
+                    </div>
+                    <!-- 容錯率設定 -->
+                    <div class="input-group">
+                        <label for="qr-error-correction">容錯等級 (Error Correction)</label>
+                        <select class="styled-select" id="qr-error-correction">
+                            <option value="L">L (7% 容錯)</option>
+                            <option value="M">M (15% 容錯)</option>
+                            <option value="Q" selected>Q (25% 容錯)</option>
+                            <option value="H">H (30% 容錯 - 置中Logo推薦)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2col" style="align-items: center;">
+                    <!-- 漸層勾選 -->
+                    <div class="input-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="qr-use-gradient" checked>
+                            啟用雙色漸層碼體
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 漸層色彩設定 -->
+                <div id="gradient-settings-block">
+                    <div class="grid-2col">
+                        <div class="input-group">
+                            <label>漸層類型</label>
+                            <select class="styled-select" id="qr-gradient-type">
+                                <option value="linear" selected>線性漸層 (Linear)</option>
+                                <option value="radial">放射漸層 (Radial)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>配色設定 (Color 1 / Color 2)</label>
+                            <div class="color-pickers">
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="qr-color-1" value="#00ff66">
+                                    <span id="label-color-1">#00ff66</span>
+                                </div>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="qr-color-2" value="#0077ff">
+                                    <span id="label-color-2">#0077ff</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="gradient-rotation-group" style="margin-top: 0.5rem;">
+                        <label style="display: flex; justify-content: space-between;">
+                            <span>漸層旋轉角度</span>
+                            <span id="label-rotation" style="font-family: 'JetBrains Mono', monospace;">0°</span>
+                        </label>
+                        <input type="range" class="styled-slider" id="qr-gradient-rotation" min="0" max="360" value="0">
+                    </div>
+                </div>
+
+                <!-- 單色色彩設定 (漸層未啟用時顯示) -->
+                <div id="single-color-settings-block" style="display: none;">
+                    <div class="input-group">
+                        <label>碼體單色設定</label>
+                        <div class="color-pickers">
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="qr-single-color" value="#000000">
+                                <span id="label-single-color">#000000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 內嵌 Logo 設定 -->
+                <div class="input-group">
+                    <label>置中 Logo / 頭像</label>
+                    
+                    <!-- 拖曳區 -->
+                    <div class="dropzone-container" id="logo-dropzone">
+                        <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                        <div class="dropzone-text" id="dropzone-status">將圖片拖曳至此處，或點選此處上傳</div>
+                        <input type="file" id="logo-input" accept="image/*" style="display: none;">
+                    </div>
+
+                    <!-- Logo 預覽與控制 (有 Logo 時以 JS 顯示) -->
+                    <div id="logo-preview-container" style="display: none; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
+                        <div class="logo-preview-wrapper">
+                            <div class="logo-preview-info">
+                                <img src="" class="logo-preview-img" id="logo-preview-img" alt="Logo Preview">
+                                <span class="logo-name" id="logo-preview-name">logo.png</span>
+                            </div>
+                            <button class="btn-remove-logo" id="btn-remove-logo" title="移除 Logo">
+                                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            </button>
+                        </div>
+
+                        <!-- 調整 Logo 大小 -->
+                        <div class="input-group">
+                            <label style="display: flex; justify-content: space-between;">
+                                <span>Logo 尺寸大小</span>
+                                <span id="label-logo-size" style="font-family: 'JetBrains Mono', monospace;">20%</span>
+                            </label>
+                            <input type="range" class="styled-slider" id="qr-logo-size" min="10" max="35" value="20">
+                        </div>
+
+                        <!-- 自動安全防禦提示 -->
+                        <div class="alert-info-box">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                            <div><strong>自動安全防禦啟動：</strong>已偵測到中央 Logo，程式已自動將 QR Code 容錯率調升至最高等級 H (30%)，並暫時停用手動設定以防止因遮擋失效。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右欄：展示與下載設定 -->
+            <div class="qr-display-panel">
+                <!-- 展示卡片 -->
+                <div class="qr-card-wrapper">
+                    <div id="qr-code-container"></div>
+                </div>
+
+                <!-- 下載設定面板與按鈕 -->
+                <div class="action-group" style="flex-direction: column; gap: 1rem; width: 100%; max-width: 350px;">
+                    <div class="grid-2col" style="width: 100%; gap: 1rem;">
+                        <div class="input-group" style="flex: 1;">
+                            <label for="download-format">下載格式</label>
+                            <select class="styled-select" id="download-format">
+                                <option value="png" selected>PNG (點陣圖)</option>
+                                <option value="svg">SVG (向量圖)</option>
+                                <option value="jpeg">JPEG (照片用)</option>
+                                <option value="webp">WEBP (新世代壓縮)</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label for="download-size">下載尺寸</label>
+                            <select class="styled-select" id="download-size">
+                                <option value="300">300 x 300</option>
+                                <option value="600" selected>600 x 600 (標準)</option>
+                                <option value="1200">1200 x 1200 (印刷)</option>
+                                <option value="2000">2000 x 2000 (超高畫質)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-download" id="btn-download-qrcode" style="width: 100%; padding: 1rem; font-size: 1.05rem; background: rgba(0, 255, 102, 0.08); border-color: rgba(0, 255, 102, 0.3); color: #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                        下載設計好的 QR Code
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // ==========================================
+        // Designer QR Code 核心邏輯與互動
+        // ==========================================
+        
+        // DOM Elements
+        const qrDataInput = document.getElementById('qr-data');
+        const qrErrorCorrectionSelect = document.getElementById('qr-error-correction');
+        
+        const useGradientCheck = document.getElementById('qr-use-gradient');
+        const gradientTypeSelect = document.getElementById('qr-gradient-type');
+        const color1Input = document.getElementById('qr-color-1');
+        const color2Input = document.getElementById('qr-color-2');
+        const gradientRotationInput = document.getElementById('qr-gradient-rotation');
+        const singleColorInput = document.getElementById('qr-single-color');
+        
+        const labelColor1 = document.getElementById('label-color-1');
+        const labelColor2 = document.getElementById('label-color-2');
+        const labelSingleColor = document.getElementById('label-single-color');
+        const labelRotation = document.getElementById('label-rotation');
+        const labelLogoSize = document.getElementById('label-logo-size');
+
+        const gradientBlock = document.getElementById('gradient-settings-block');
+        const singleColorBlock = document.getElementById('single-color-settings-block');
+        const rotationGroup = document.getElementById('gradient-rotation-group');
+
+        // Background Elements
+        const qrBgColorInput = document.getElementById('qr-bg-color');
+        const qrBgTransparentCheck = document.getElementById('qr-bg-transparent');
+        const labelBgColor = document.getElementById('label-bg-color');
+        const qrCardWrapper = document.querySelector('.qr-card-wrapper');
+
+        // WiFi Elements
+        const typeTextBtn = document.getElementById('type-text-btn');
+        const typeWifiBtn = document.getElementById('type-wifi-btn');
+        const contentTextBlock = document.getElementById('content-text-block');
+        const contentWifiBlock = document.getElementById('content-wifi-block');
+        const wifiSsidInput = document.getElementById('wifi-ssid');
+        const wifiPassInput = document.getElementById('wifi-pass');
+        const wifiEncryptionSelect = document.getElementById('wifi-encryption');
+        const wifiHiddenCheck = document.getElementById('wifi-hidden');
+
+        // Logo Upload Elements
+        const logoDropzone = document.getElementById('logo-dropzone');
+        const logoInput = document.getElementById('logo-input');
+        const dropzoneStatus = document.getElementById('dropzone-status');
+        const logoPreviewContainer = document.getElementById('logo-preview-container');
+        const logoPreviewImg = document.getElementById('logo-preview-img');
+        const logoPreviewName = document.getElementById('logo-preview-name');
+        const btnRemoveLogo = document.getElementById('btn-remove-logo');
+        const logoSizeInput = document.getElementById('qr-logo-size');
+
+        // Download Elements
+        const downloadFormatSelect = document.getElementById('download-format');
+        const downloadSizeSelect = document.getElementById('download-size');
+        const btnDownloadQrcode = document.getElementById('btn-download-qrcode');
+        const shareBtn = document.getElementById('copy-share-url');
+
+        // State Variables
+        let logoBase64 = "";
+        let logoFileName = "";
+        let urlSyncTimeout = null;
+        let contentType = 'text'; // 'text' or 'wifi'
+
+        // WiFi 特殊字元轉義輔助函數
+        function escapeWifiString(val) {
+            if (!val) return "";
+            return val.replace(/\\/g, '\\\\')
+                      .replace(/;/g, '\\;')
+                      .replace(/:/g, '\\:')
+                      .replace(/,/g, '\\,');
+        }
+
+        // 實例化 QRCodeStyling (固定寬高 280 預覽)
+        const qrCode = new QRCodeStyling({
+            width: 280,
+            height: 280,
+            type: "svg",
+            data: "https://tools.cjkuo.net/",
+            image: "",
+            backgroundOptions: {
+                color: "#ffffff"
+            },
+            dotsOptions: {
+                type: "square",
+                color: "#00ff66"
+            },
+            cornersSquareOptions: {
+                type: "extra-rounded",
+                color: "#00ff66"
+            },
+            cornersDotOptions: {
+                type: "dot",
+                color: "#0077ff"
+            },
+            imageOptions: {
+                crossOrigin: "anonymous",
+                margin: 4,
+                imageSize: 0.2
+            },
+            qrOptions: {
+                errorCorrectionLevel: "Q"
+            }
+        });
+
+        // 掛載 QR Code
+        qrCode.append(document.getElementById("qr-code-container"));
+
+        // 取得網格選取的值
+        function getGridValue(gridId) {
+            const grid = document.getElementById(gridId);
+            const activeBtn = grid.querySelector('.style-option-btn.active');
+            return activeBtn ? activeBtn.getAttribute('data-value') : "";
+        }
+
+        // 設定網格選取的值
+        function setGridValue(gridId, val) {
+            const grid = document.getElementById(gridId);
+            const buttons = grid.querySelectorAll('.style-option-btn');
+            buttons.forEach(btn => {
+                const isActive = btn.getAttribute('data-value') === val;
+                btn.classList.toggle('active', isActive);
+            });
+        }
+
+        // 更新背景預覽框棋盤格/顏色狀態
+        function updateBackgroundPreview() {
+            const isTransparent = qrBgTransparentCheck.checked;
+            const bgColor = qrBgColorInput.value;
+            
+            labelBgColor.textContent = bgColor.toUpperCase();
+            
+            if (isTransparent) {
+                qrCardWrapper.classList.add('checkerboard-bg');
+                qrCardWrapper.style.backgroundColor = '';
+            } else {
+                qrCardWrapper.classList.remove('checkerboard-bg');
+                qrCardWrapper.style.backgroundColor = bgColor;
+            }
+        }
+
+        // 更新 QR Code 渲染
+        function updateQRCode() {
+            let dataVal = "";
+            if (contentType === 'text') {
+                dataVal = qrDataInput.value.trim() || "https://tools.cjkuo.net/";
+            } else {
+                const ssid = escapeWifiString(wifiSsidInput.value.trim());
+                const pass = escapeWifiString(wifiPassInput.value.trim());
+                const enc = wifiEncryptionSelect.value;
+                const isHidden = wifiHiddenCheck.checked;
+                
+                if (!ssid) {
+                    dataVal = "WIFI:S:WiFi_SSID;;";
+                } else {
+                    dataVal = `WIFI:S:${ssid};`;
+                    if (enc !== 'nopass') {
+                        dataVal += `T:${enc};P:${pass};`;
+                    } else {
+                        dataVal += `T:nopass;;`;
+                    }
+                    if (isHidden) {
+                        dataVal += `H:true;`;
+                    }
+                    dataVal += `;`;
+                }
+            }
+
+            const dotsType = getGridValue('dots-type-grid');
+            const cornersSquare = getGridValue('corners-square-grid');
+            const cornersDot = getGridValue('corners-dot-grid');
+            const useGradient = useGradientCheck.checked;
+            const logoSize = parseFloat(logoSizeInput.value) / 100;
+
+            const isBgTransparent = qrBgTransparentCheck.checked;
+            const bgColor = isBgTransparent ? "transparent" : qrBgColorInput.value;
+
+            // 漸層與配色選項
+            let dotsColorOpts = {};
+            let cornersSquareOpts = { type: cornersSquare };
+            let cornersDotOpts = { type: cornersDot };
+
+            if (useGradient) {
+                const c1 = color1Input.value;
+                const c2 = color2Input.value;
+                const gType = gradientTypeSelect.value;
+                const rot = parseInt(gradientRotationInput.value);
+
+                const gradientObj = {
+                    type: gType,
+                    colorStops: [
+                        { offset: 0, color: c1 },
+                        { offset: 1, color: c2 }
+                    ]
+                };
+
+                if (gType === "linear") {
+                    gradientObj.rotation = (rot * Math.PI) / 180;
+                }
+
+                dotsColorOpts = {
+                    type: dotsType,
+                    gradient: gradientObj
+                };
+
+                cornersSquareOpts.color = c1;
+                cornersDotOpts.color = c2;
+            } else {
+                const singleC = singleColorInput.value;
+                dotsColorOpts = {
+                    type: dotsType,
+                    color: singleC
+                };
+                cornersSquareOpts.color = singleC;
+                cornersDotOpts.color = singleC;
+            }
+
+            // 安全容錯率防禦：上傳 Logo 時自動將容錯率鎖定在最高規格 H 級 (30%) 並禁用調整
+            let ecLevel = "Q";
+            if (logoBase64) {
+                ecLevel = "H";
+                qrErrorCorrectionSelect.value = "H";
+                qrErrorCorrectionSelect.disabled = true;
+            } else {
+                qrErrorCorrectionSelect.disabled = false;
+                ecLevel = qrErrorCorrectionSelect.value;
+            }
+
+            // 更新預覽背景與色彩標籤文字
+            updateBackgroundPreview();
+
+            // 清除之前的漸層設定以避免 deepMerge 殘留 Bug
+            if (!useGradient && qrCode._options && qrCode._options.dotsOptions) {
+                delete qrCode._options.dotsOptions.gradient;
+            }
+
+            // 執行更新
+            qrCode.update({
+                data: dataVal,
+                image: logoBase64 || "",
+                backgroundOptions: {
+                    color: bgColor
+                },
+                dotsOptions: dotsColorOpts,
+                cornersSquareOptions: cornersSquareOpts,
+                cornersDotOptions: cornersDotOpts,
+                imageOptions: {
+                    imageSize: logoSize,
+                    margin: 4
+                },
+                qrOptions: {
+                    errorCorrectionLevel: ecLevel
+                }
+            });
+
+            // 同步色彩標籤文字
+            labelColor1.textContent = color1Input.value.toUpperCase();
+            labelColor2.textContent = color2Input.value.toUpperCase();
+            labelSingleColor.textContent = singleColorInput.value.toUpperCase();
+        }
+
+        // 漸層與單色 UI 切換控制
+        function toggleColorUI() {
+            const useGradient = useGradientCheck.checked;
+            if (useGradient) {
+                gradientBlock.style.display = 'block';
+                singleColorBlock.style.display = 'none';
+                if (gradientTypeSelect.value === 'radial') {
+                    rotationGroup.style.display = 'none';
+                } else {
+                    rotationGroup.style.display = 'block';
+                }
+            } else {
+                gradientBlock.style.display = 'none';
+                singleColorBlock.style.display = 'block';
+            }
+        }
+
+        // URL 狀態同步 (含防抖)
+        function syncToURL(debounce = true) {
+            if (urlSyncTimeout) {
+                clearTimeout(urlSyncTimeout);
+            }
+
+            const update = () => {
+                const params = new URLSearchParams();
+                
+                params.set('ct', contentType);
+                if (contentType === 'text') {
+                    const dataVal = qrDataInput.value.trim();
+                    if (dataVal) params.set('t', dataVal);
+                } else {
+                    const ssid = wifiSsidInput.value.trim();
+                    const pass = wifiPassInput.value.trim();
+                    const enc = wifiEncryptionSelect.value;
+                    const isHidden = wifiHiddenCheck.checked;
+                    
+                    if (ssid) params.set('ws', ssid);
+                    if (pass) params.set('wp', pass);
+                    if (enc !== "WPA") params.set('we', enc);
+                    if (isHidden) params.set('wh', "1");
+                }
+
+                // 碼體樣式
+                params.set('dt', getGridValue('dots-type-grid'));
+                params.set('cs', getGridValue('corners-square-grid'));
+                params.set('cd', getGridValue('corners-dot-grid'));
+
+                // 容錯率
+                params.set('ec', qrErrorCorrectionSelect.value);
+
+                // 背景色
+                params.set('bc', qrBgColorInput.value.replace('#', ''));
+                params.set('bt', qrBgTransparentCheck.checked ? "1" : "0");
+
+                const useGrad = useGradientCheck.checked;
+                params.set('g', useGrad ? "1" : "0");
+
+                if (useGrad) {
+                    params.set('c1', color1Input.value.replace('#', ''));
+                    params.set('c2', color2Input.value.replace('#', ''));
+                    params.set('gt', gradientTypeSelect.value);
+                    params.set('rot', gradientRotationInput.value);
+                } else {
+                    params.set('sc', singleColorInput.value.replace('#', ''));
+                }
+
+                const newUrl = params.toString() ? '?' + params.toString() : window.location.pathname;
+                history.replaceState(null, '', newUrl);
+            };
+
+            if (debounce) {
+                urlSyncTimeout = setTimeout(update, 300);
+            } else {
+                update();
+            }
+        }
+
+        // URL 狀態反向解析
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+
+            const ct = params.get('ct');
+            if (ct === 'wifi') {
+                contentType = 'wifi';
+                contentTextBlock.style.display = 'none';
+                contentWifiBlock.style.display = 'flex';
+                typeTextBtn.style.background = 'transparent';
+                typeTextBtn.style.color = 'var(--text-secondary)';
+                typeWifiBtn.style.background = 'rgba(0, 255, 102, 0.08)';
+                typeWifiBtn.style.color = '#00ff66';
+
+                const ws = params.get('ws');
+                if (ws) wifiSsidInput.value = ws;
+                const wp = params.get('wp');
+                if (wp) wifiPassInput.value = wp;
+                const we = params.get('we');
+                if (we) wifiEncryptionSelect.value = we;
+                const wh = params.get('wh');
+                if (wh) wifiHiddenCheck.checked = wh === "1";
+            } else {
+                contentType = 'text';
+                contentTextBlock.style.display = 'flex';
+                contentWifiBlock.style.display = 'none';
+                typeTextBtn.style.background = 'rgba(0, 255, 102, 0.08)';
+                typeTextBtn.style.color = '#00ff66';
+                typeWifiBtn.style.background = 'transparent';
+                typeWifiBtn.style.color = 'var(--text-secondary)';
+
+                const t = params.get('t');
+                if (t) qrDataInput.value = t;
+            }
+
+            // 樣式網格反向還原
+            const dt = params.get('dt');
+            if (dt) setGridValue('dots-type-grid', dt);
+
+            const cs = params.get('cs');
+            if (cs) setGridValue('corners-square-grid', cs);
+
+            const cd = params.get('cd');
+            if (cd) setGridValue('corners-dot-grid', cd);
+
+            // 容錯率還原
+            const ec = params.get('ec');
+            if (ec) qrErrorCorrectionSelect.value = ec;
+
+            // 背景色還原
+            const bc = params.get('bc');
+            if (bc) qrBgColorInput.value = '#' + bc;
+            const bt = params.get('bt');
+            if (bt) qrBgTransparentCheck.checked = bt === "1";
+
+            const g = params.get('g');
+            if (g !== null) {
+                useGradientCheck.checked = g === "1";
+            }
+
+            // 漸層色解析
+            const c1 = params.get('c1');
+            if (c1) color1Input.value = '#' + c1;
+            const c2 = params.get('c2');
+            if (c2) color2Input.value = '#' + c2;
+
+            const gt = params.get('gt');
+            if (gt) gradientTypeSelect.value = gt;
+
+            const rot = params.get('rot');
+            if (rot) {
+                gradientRotationInput.value = rot;
+                labelRotation.textContent = rot + '°';
+            }
+
+            // 單色解析
+            const sc = params.get('sc');
+            if (sc) singleColorInput.value = '#' + sc;
+
+            toggleColorUI();
+            updateQRCode();
+        }
+
+        // ====== 樣式選擇網格事件綁定 ======
+        function setupGridSelector(gridId) {
+            const grid = document.getElementById(gridId);
+            const buttons = grid.querySelectorAll('.style-option-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    createBurst(e.clientX, e.clientY);
+                    
+                    updateQRCode();
+                    syncToURL(false);
+                });
+            });
+        }
+
+        setupGridSelector('dots-type-grid');
+        setupGridSelector('corners-square-grid');
+        setupGridSelector('corners-dot-grid');
+
+        // ====== Logo 處理與 FileReader 拖曳功能 ======
+
+        function handleLogoFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('請上傳有效的圖片檔案。');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoBase64 = e.target.result;
+                logoFileName = file.name;
+
+                // 更新預覽
+                logoPreviewImg.src = logoBase64;
+                logoPreviewName.textContent = logoFileName;
+
+                // 切換面板
+                logoDropzone.style.display = 'none';
+                logoPreviewContainer.style.display = 'flex';
+
+                updateQRCode();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        logoDropzone.addEventListener('click', () => logoInput.click());
+        logoInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleLogoFile(e.target.files[0]);
+            }
+        });
+
+        logoDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            logoDropzone.classList.add('dragover');
+        });
+
+        logoDropzone.addEventListener('dragleave', () => {
+            logoDropzone.classList.remove('dragover');
+        });
+
+        logoDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            logoDropzone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleLogoFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        btnRemoveLogo.addEventListener('click', () => {
+            logoBase64 = "";
+            logoFileName = "";
+            logoInput.value = "";
+            
+            logoDropzone.style.display = 'flex';
+            logoPreviewContainer.style.display = 'none';
+            
+            updateQRCode();
+        });
+
+        // ====== 檔案下載檔名時間戳記 ======
+        function getFormattedTimestamp() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            return `${yyyy}${mm}${dd}_${hh}${min}${ss}`;
+        }
+
+        // ====== 綁定事件監聽 ======
+
+        // 切換內容類型事件
+        typeTextBtn.addEventListener('click', (e) => {
+            if (contentType === 'text') return;
+            contentType = 'text';
+            contentTextBlock.style.display = 'flex';
+            contentWifiBlock.style.display = 'none';
+            typeTextBtn.style.background = 'rgba(0, 255, 102, 0.08)';
+            typeTextBtn.style.color = '#00ff66';
+            typeWifiBtn.style.background = 'transparent';
+            typeWifiBtn.style.color = 'var(--text-secondary)';
+
+            createBurst(e.clientX, e.clientY);
+            updateQRCode();
+            syncToURL(false);
+        });
+
+        typeWifiBtn.addEventListener('click', (e) => {
+            if (contentType === 'wifi') return;
+            contentType = 'wifi';
+            contentTextBlock.style.display = 'none';
+            contentWifiBlock.style.display = 'flex';
+            typeTextBtn.style.background = 'transparent';
+            typeTextBtn.style.color = 'var(--text-secondary)';
+            typeWifiBtn.style.background = 'rgba(0, 255, 102, 0.08)';
+            typeWifiBtn.style.color = '#00ff66';
+
+            createBurst(e.clientX, e.clientY);
+            updateQRCode();
+            syncToURL(false);
+        });
+
+        // 即時資料更新與防抖 URL
+        qrDataInput.addEventListener('input', () => {
+            updateQRCode();
+            syncToURL(true);
+        });
+
+        [wifiSsidInput, wifiPassInput].forEach(input => {
+            input.addEventListener('input', () => {
+                updateQRCode();
+                syncToURL(true);
+            });
+        });
+
+        wifiEncryptionSelect.addEventListener('change', () => {
+            updateQRCode();
+            syncToURL(false);
+        });
+
+        wifiHiddenCheck.addEventListener('change', () => {
+            updateQRCode();
+            syncToURL(false);
+        });
+
+        const instantInputs = [
+            useGradientCheck, gradientTypeSelect, color1Input, color2Input,
+            gradientRotationInput, singleColorInput, logoSizeInput,
+            qrBgColorInput, qrBgTransparentCheck, qrErrorCorrectionSelect
+        ];
+
+        instantInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                toggleColorUI();
+                updateQRCode();
+                syncToURL(false);
+            });
+            input.addEventListener('input', () => {
+                updateQRCode();
+            });
+        });
+
+        // Slider 數值更新標籤
+        gradientRotationInput.addEventListener('input', (e) => {
+            labelRotation.textContent = e.target.value + '°';
+        });
+
+        logoSizeInput.addEventListener('input', (e) => {
+            labelLogoSize.textContent = e.target.value + '%';
+        });
+
+        // 下載設計二維碼 (含時間戳記與指定尺寸及格式)
+        btnDownloadQrcode.addEventListener('click', async () => {
+            const format = downloadFormatSelect.value;
+            const size = parseInt(downloadSizeSelect.value);
+            const timestamp = getFormattedTimestamp();
+            const filename = `designer-qrcode_${timestamp}`;
+
+            // 建立一個專門用於下載的獨立實例，這樣完全不會動到預覽的實例，免去 update() 尺寸的競態問題與閃爍
+            const downloadQrCode = new QRCodeStyling({
+                ...qrCode._options,
+                width: size,
+                height: size
+            });
+
+            // 執行下載
+            await downloadQrCode.download({
+                name: filename,
+                extension: format
+            });
+        });
+
+        // 複製分享網址
+        shareBtn.addEventListener('click', async (e) => {
+            syncToURL(false);
+            const url = window.location.href;
+
+            createBurst(e.clientX, e.clientY);
+
+            try {
+                await navigator.clipboard.writeText(url);
+                shareBtn.classList.add('copied');
+                const originalText = shareBtn.innerHTML;
+                shareBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                    ✓ 已複製設計！
+                `;
+                setTimeout(() => {
+                    shareBtn.classList.remove('copied');
+                    shareBtn.innerHTML = originalText;
+                }, 2200);
+            } catch (err) {
+                window.prompt('複製以下網址以進行分享：', url);
+            }
+        });
+
+        // 初始化
+        window.addEventListener('load', () => {
+            initFromURL();
+        });
+    </script>
+    <script src="../js/common-particles.js" defer></script>
+</body>
+</html>

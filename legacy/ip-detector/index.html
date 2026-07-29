@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP 檢測助手 - 免費線上 IPv4/IPv6 查詢、IP 地理位置與連線延遲診斷 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/ip-detector/index.html">
+    <meta name="description" content="專業免費的線上 IP 檢測與診斷工具！即時查詢您的外網 IPv4 與 IPv6 位址、地理位置、Cloudflare 節點資訊及各大公有雲 (AWS, GCP, Azure) 連線延遲 (Latency)。">
+    <meta name="keywords" content="IP檢測,我的IP,IPv4查詢,IPv6查詢,IP位置,IP地理位置,連線延遲,Cloudflare Trace">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="IP 檢測助手 - 免費線上 IPv4/IPv6 查詢與連線延遲診斷">
+    <meta property="og:description" content="即時檢測您的 IPv4/IPv6，解析 Cloudflare Trace 與隱私狀態，並診斷各大公有雲與 CDN 之連線延遲。">
+    <meta property="og:url" content="https://tools.cjkuo.net/ip-detector/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="IP 檢測助手 - 免費線上 IPv4/IPv6 查詢與連線延遲診斷">
+    <meta name="twitter:description" content="即時檢測您的 IPv4/IPv6，解析 Cloudflare Trace 與隱私狀態，並診斷各大公有雲與 CDN 之連線延遲。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "IP 檢測助手",
+      "url": "https://tools.cjkuo.net/ip-detector/index.html",
+      "description": "專業免費的網路 IP 檢測與診斷助手，支援 IPv4/IPv6 雙棧查詢與公有雲延遲量測。",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
+
+    <style>
+        :root {
+            --theme-color: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.6); /* 科技天藍 */
+            --accent-glow-rgb: 0, 240, 255;
+            --success-color: #00ff66;
+            --warning-color: #ffaa00;
+            --danger-color: #ff3366;
+        }
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+            width: 100%;
+            max-width: 90%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* 返回按鈕手機防重疊 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-glow);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* ====== 頂部：IPv4 & IPv6 雙棧卡片 ====== */
+        .ip-stack-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .ip-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .ip-card.success::before {
+            background: var(--success-color);
+            box-shadow: 0 0 10px var(--success-color);
+        }
+
+        .ip-card.unsupported::before {
+            background: var(--warning-color);
+            box-shadow: 0 0 10px var(--warning-color);
+        }
+
+        .ip-card-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .ip-address-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #ffffff;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .ip-card.success .ip-address-value {
+            color: var(--success-color);
+            text-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+        }
+
+        .ip-card.unsupported .ip-address-value {
+            color: var(--warning-color);
+            text-shadow: 0 0 15px rgba(255, 170, 0, 0.15);
+        }
+
+        /* 旋轉加載中 */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-glow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ====== 中部：資訊卡雙欄排版 ====== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            min-height: 260px;
+        }
+
+        .info-card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.8rem;
+        }
+
+        .info-card-header::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 16px;
+            background: var(--accent-glow);
+            border-radius: 3px;
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin-right: 6px;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.02);
+            padding-bottom: 0.4rem;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+            font-weight: 500;
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .info-value.highlight-green {
+            color: var(--success-color);
+        }
+
+        .info-value.highlight-red {
+            color: var(--danger-color);
+        }
+
+        /* UA 特別換行處理 */
+        .info-item.ua-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.3rem;
+        }
+
+        .info-item.ua-item .info-value {
+            text-align: left;
+            max-width: 100%;
+            white-space: normal;
+            word-break: break-all;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* ====== 底部：公有雲診斷卡 ====== */
+        .cloud-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .cloud-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.2rem;
+        }
+
+        .cloud-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .cloud-item:hover {
+            border-color: rgba(0, 240, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .cloud-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .cloud-status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-dot.loading {
+            background: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .status-dot.connected {
+            background: var(--success-color);
+            box-shadow: 0 0 10px var(--success-color);
+        }
+
+        .status-dot.failed {
+            background: var(--danger-color);
+            box-shadow: 0 0 10px var(--danger-color);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .cloud-latency {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .cloud-item.connected .cloud-latency {
+            color: var(--success-color);
+        }
+
+        .cloud-item.failed .cloud-latency {
+            color: var(--danger-color);
+        }
+
+        /* 重新檢測按鈕 */
+        .recheck-btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .recheck-btn {
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--accent-glow);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.05);
+        }
+
+        .recheck-btn:hover {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .recheck-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            transition: transform 0.6s ease;
+        }
+
+        .recheck-btn:hover svg {
+            transform: rotate(180deg);
+        }
+
+        .recheck-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 1024px) {
+            body {
+                align-items: flex-start;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .cloud-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+                max-width: 90%;
+            }
+            .ip-stack-container {
+                grid-template-columns: 1fr;
+            }
+            .cloud-grid {
+                grid-template-columns: 1fr;
+            }
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.3rem;
+                border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+                padding-bottom: 0.6rem;
+            }
+            .info-value {
+                text-align: left;
+                max-width: 100%;
+                white-space: normal;
+                word-break: break-all;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+        <h1>線上 IP 檢測助手</h1>
+        <div class="subtitle-top">IP Diagnostic Tool</div>
+        <p class="page-description">專業免費的線上 IP 檢測工具，支援 IPv4/IPv6 雙棧查詢、地理位置與隱私偵測，以及各大公有雲與 CDN 業者之即時連線延遲診斷。</p>
+
+        <!-- 頂部：IPv4 & IPv6 雙棧卡片 -->
+        <div class="ip-stack-container">
+            <div class="ip-card" id="card-ipv4">
+                <div class="ip-card-title">IPv4 地址</div>
+                <div class="ip-address-value" id="ipv4-val">
+                    <span class="spinner"></span> 偵測中...
+                </div>
+            </div>
+            <div class="ip-card" id="card-ipv6">
+                <div class="ip-card-title">IPv6 地址</div>
+                <div class="ip-address-value" id="ipv6-val">
+                    <span class="spinner"></span> 偵測中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 中部：雙欄連線與隱私資訊 -->
+        <div class="info-grid">
+            <!-- Cloudflare Trace Card -->
+            <div class="info-card">
+                <div class="info-card-header">Cloudflare Trace 連線診斷</div>
+                <div class="info-list" id="cf-trace-list">
+                    <div class="info-item"><span class="info-label">載入狀態</span><span class="info-value"><span class="spinner" style="width:14px;height:14px;"></span> 查詢中...</span></div>
+                </div>
+            </div>
+
+            <!-- IP Geolocation & Privacy Card -->
+            <div class="info-card">
+                <div class="info-card-header">IP 地理位置與隱私診斷</div>
+                <div class="info-list" id="mullvad-list">
+                    <div class="info-item"><span class="info-label">載入狀態</span><span class="info-value"><span class="spinner" style="width:14px;height:14px;"></span> 查詢中...</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部：公有雲連線診斷卡 -->
+        <div class="cloud-card">
+            <div class="info-card-header">公有雲及重要服務連線診斷 (Latency)</div>
+            <div class="cloud-grid" id="cloud-grid">
+                <!-- AWS -->
+                <div class="cloud-item" id="cloud-aws">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Amazon AWS</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Google Cloud -->
+                <div class="cloud-item" id="cloud-gcp">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Google Cloud</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Microsoft Azure -->
+                <div class="cloud-item" id="cloud-azure">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Microsoft Azure</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Alibaba Cloud -->
+                <div class="cloud-item" id="cloud-aliyun">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Alibaba Cloud</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Tencent -->
+                <div class="cloud-item" id="cloud-tencent">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Tencent Cloud</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Apple Services -->
+                <div class="cloud-item" id="cloud-apple">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Apple Captive</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Fastly CDN -->
+                <div class="cloud-item" id="cloud-fastly">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Fastly CDN</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Akamai CDN -->
+                <div class="cloud-item" id="cloud-akamai">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Akamai CDN</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- LINE -->
+                <div class="cloud-item" id="cloud-line">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">LINE</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+                <!-- Facebook -->
+                <div class="cloud-item" id="cloud-facebook">
+                    <div class="cloud-status-indicator">
+                        <span class="status-dot loading"></span>
+                    </div>
+                    <div class="cloud-name">Meta / FB</div>
+                    <div class="cloud-latency">偵測中...</div>
+                </div>
+            </div>
+
+            <!-- 重新檢測按鈕 -->
+            <div class="recheck-btn-container">
+                <button class="recheck-btn" id="btn-recheck">
+                    <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    重新檢測網路連線
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // IP 檢測助手主邏輯
+        // ==========================================
+
+        const ipv4Val = document.getElementById('ipv4-val');
+        const ipv6Val = document.getElementById('ipv6-val');
+        const cardIpv4 = document.getElementById('card-ipv4');
+        const cardIpv6 = document.getElementById('card-ipv6');
+        const cfTraceList = document.getElementById('cf-trace-list');
+        const mullvadList = document.getElementById('mullvad-list');
+        const btnRecheck = document.getElementById('btn-recheck');
+
+        // 公有雲與常用服務端點
+        const cloudEndpoints = {
+            aws: { name: 'Amazon AWS', url: 'https://checkip.amazonaws.com/', elemId: 'cloud-aws' },
+            gcp: { name: 'Google Cloud', url: 'https://clients3.google.com/generate_204', elemId: 'cloud-gcp' },
+            azure: { name: 'Microsoft Azure', url: 'https://azure.microsoft.com/', elemId: 'cloud-azure' },
+            aliyun: { name: 'Alibaba Cloud', url: 'https://www.aliyun.com/', elemId: 'cloud-aliyun' },
+            tencent: { name: 'Tencent Cloud', url: 'https://www.tencentcloud.com/', elemId: 'cloud-tencent' },
+            apple: { name: 'Apple Captive', url: 'https://captive.apple.com/hotspot-detect.html', elemId: 'cloud-apple' },
+            fastly: { name: 'Fastly CDN', url: 'https://www.fastly.com/', elemId: 'cloud-fastly' },
+            akamai: { name: 'Akamai CDN', url: 'https://www.akamai.com/', elemId: 'cloud-akamai' },
+            line: { name: 'LINE', url: 'https://line.me/', elemId: 'cloud-line' },
+            facebook: { name: 'Meta / FB', url: 'https://www.facebook.com/', elemId: 'cloud-facebook' }
+        };
+
+        // 輔助：格式化加載狀態
+        function setElementLoading(element, msg = "偵測中...") {
+            element.innerHTML = `<span class="spinner" style="width: 16px; height: 16px;"></span> ${msg}`;
+        }
+
+        // 1. 檢測 IP (IPv4 / IPv6)
+        async function detectIP(type, url, container, card) {
+            card.className = "ip-card"; // 重設 class
+            setElementLoading(container, `偵測 ${type} 中...`);
+            
+            try {
+                const res = await fetch(url, {
+                    signal: AbortSignal.timeout(4000) // 4秒超時
+                });
+                const data = await res.json();
+                if (data && data.ip) {
+                    container.textContent = data.ip;
+                    card.classList.add('success');
+                } else {
+                    throw new Error("無效的 IP 資料");
+                }
+            } catch (err) {
+                container.textContent = "不支援";
+                card.classList.add('unsupported');
+            }
+        }
+
+        // 2. 解析 Cloudflare Trace
+        function parseTraceText(text) {
+            const lines = text.split('\n');
+            const result = {};
+            lines.forEach(line => {
+                const parts = line.split('=');
+                if (parts.length >= 2) {
+                    result[parts[0].trim()] = parts.slice(1).join('=').trim();
+                }
+            });
+            return result;
+        }
+
+        async function detectCloudflareTrace() {
+            setElementLoading(cfTraceList, "讀取連線資訊中...");
+            
+            const start = performance.now();
+            try {
+                const res = await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
+                    signal: AbortSignal.timeout(4500)
+                });
+                const latency = Math.round(performance.now() - start);
+                const text = await res.text();
+                const trace = parseTraceText(text);
+
+                // 呈現 IP, colo, loc, http, Latency, UA
+                cfTraceList.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">連線 IP</span>
+                        <span class="info-value" title="${trace.ip || '未知'}">${trace.ip || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">機房節點 (colo)</span>
+                        <span class="info-value highlight-green" title="${trace.colo || '未知'}">${trace.colo || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">地理位置 (loc)</span>
+                        <span class="info-value" title="${trace.loc || '未知'}">${trace.loc || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">最高連線協議</span>
+                        <span class="info-value" title="${trace.http || '未知'}">${trace.http || '未知'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">連線延遲 (Latency)</span>
+                        <span class="info-value highlight-green">${latency} ms</span>
+                    </div>
+                    <div class="info-item ua-item">
+                        <span class="info-label">瀏覽器 UA (User Agent)</span>
+                        <span class="info-value" title="${trace.uag || '未知'}">${trace.uag || '未知'}</span>
+                    </div>
+                `;
+            } catch (err) {
+                cfTraceList.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">連線狀態</span>
+                        <span class="info-value highlight-red">Cloudflare 診斷失敗 / 網路阻斷</span>
+                    </div>
+                `;
+            }
+        }
+
+        // 3. 檢測 IP 地理位置資訊 (優先 ipapi.co，限流時 fallback 至 ipwhois.app)
+        async function detectMullvad() {
+            setElementLoading(mullvadList, "查詢地理位置與網路資訊中...");
+            
+            // 將 API 回傳的原始資料標準化為統一格式
+            function normalizeIpapi(d) {
+                return {
+                    org: d.org,
+                    asn: d.asn,
+                    network: d.network || null,
+                    city: d.city,
+                    region: d.region,
+                    country_name: d.country_name,
+                    latitude: d.latitude,
+                    longitude: d.longitude,
+                    timezone: d.timezone,
+                    utc_offset: d.utc_offset,
+                    currency: d.currency,
+                    currency_name: d.currency_name,
+                    source: 'ipapi.co'
+                };
+            }
+
+            function normalizeIpwhois(d) {
+                return {
+                    org: d.org || d.isp,
+                    asn: d.asn,
+                    network: null,   // ipwhois 不提供 CIDR 網段
+                    city: d.city,
+                    region: d.region,
+                    country_name: d.country,
+                    latitude: d.latitude,
+                    longitude: d.longitude,
+                    timezone: d.timezone,
+                    utc_offset: d.timezone_gmt,
+                    currency: d.currency_code,
+                    currency_name: d.currency,
+                    source: 'ipwhois.app'
+                };
+            }
+
+            let data = null;
+
+            // 軌道 1：嘗試 ipapi.co
+            try {
+                const res = await fetch('https://ipapi.co/json/', {
+                    signal: AbortSignal.timeout(5000)
+                });
+                const raw = await res.json();
+                if (raw.error) throw new Error(raw.reason || '限流');
+                data = normalizeIpapi(raw);
+            } catch (err) {
+                // 軌道 2：fallback 至 ipwhois.app
+                try {
+                    const res = await fetch('https://ipwhois.app/json/', {
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const raw = await res.json();
+                    if (!raw.success) throw new Error('ipwhois 查詢失敗');
+                    data = normalizeIpwhois(raw);
+                } catch (fallbackErr) {
+                    mullvadList.innerHTML = `
+                        <div class="info-item">
+                            <span class="info-label">查詢狀態</span>
+                            <span class="info-value highlight-red">地理位置查詢失敗，主備來源皆無回應</span>
+                        </div>
+                    `;
+                    return;
+                }
+            }
+
+            const timezone = data.timezone
+                ? `${data.timezone} (UTC${data.utc_offset || ''})`
+                : '未知';
+            const location = [data.city, data.region, data.country_name].filter(Boolean).join(', ') || '未知';
+            const latlon = (data.latitude != null && data.longitude != null)
+                ? `${data.longitude}, ${data.latitude}` : '未知';
+            const currency = data.currency
+                ? `${data.currency} (${data.currency_name || ''})` : '未知';
+            const networkRow = data.network
+                ? `<div class="info-item">
+                        <span class="info-label">網段 (CIDR)</span>
+                        <span class="info-value" style="font-size: 0.85rem;">${data.network}</span>
+                    </div>` : '';
+
+            mullvadList.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">所屬機構 (ISP)</span>
+                    <span class="info-value" title="${data.org || '未知'}">${data.org || '未知'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">ASN</span>
+                    <span class="info-value">${data.asn || '未知'}</span>
+                </div>
+                ${networkRow}
+                <div class="info-item">
+                    <span class="info-label">地理位置</span>
+                    <span class="info-value" title="${location}">${location}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">地理經緯度</span>
+                    <span class="info-value" style="font-size: 0.85rem;">${latlon}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">時區</span>
+                    <span class="info-value">${timezone}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">貨幣</span>
+                    <span class="info-value">${currency}</span>
+                </div>
+                <div class="info-item" style="margin-top: 0.3rem;">
+                    <span class="info-label" style="font-size: 0.75rem; color: var(--text-secondary);">資料來源</span>
+                    <span class="info-value" style="font-size: 0.75rem; color: var(--text-secondary);">${data.source}</span>
+                </div>
+            `;
+        }
+
+        // 4. 公有雲延遲與連通性檢測
+        async function diagnoseCloudEndpoint(key, config) {
+            const item = document.getElementById(config.elemId);
+            const indicator = item.querySelector('.status-dot');
+            const latencyText = item.querySelector('.cloud-latency');
+
+            item.className = "cloud-item"; // 重置
+            indicator.className = "status-dot loading";
+            latencyText.textContent = "偵測中...";
+
+            const start = performance.now();
+            try {
+                // 使用 mode: 'no-cors' 規避跨網域 CORS 問題，並避免 cache
+                await fetch(config.url, {
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(4500) // 4.5秒超時
+                });
+
+                const latency = Math.round(performance.now() - start);
+                
+                indicator.className = "status-dot connected";
+                item.classList.add('connected');
+                latencyText.textContent = `${latency} ms`;
+            } catch (err) {
+                indicator.className = "status-dot failed";
+                item.classList.add('failed');
+                latencyText.textContent = "連線失敗";
+            }
+        }
+
+        async function runCloudDiagnostics() {
+            const promises = Object.keys(cloudEndpoints).map(key => 
+                diagnoseCloudEndpoint(key, cloudEndpoints[key])
+            );
+            await Promise.all(promises);
+        }
+
+        // 一鍵重新檢測
+        async function runAllChecks() {
+            // 平行載入
+            detectIP("IPv4", "https://api.ipify.org?format=json", ipv4Val, cardIpv4);
+            detectIP("IPv6", "https://api6.ipify.org?format=json", ipv6Val, cardIpv6);
+            detectCloudflareTrace();
+            detectMullvad();
+            runCloudDiagnostics();
+        }
+
+        // 重新檢測按鈕監聽
+        btnRecheck.addEventListener('click', (e) => {
+            createBurst(e.clientX, e.clientY);
+            runAllChecks();
+        });
+
+        // 初始化
+        window.addEventListener('load', () => {
+            runAllChecks();
+        });
+    </script>
+    <script src="../js/common-particles.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/dns-dig/index.html">
+    <meta name="description" content="專業免費的線上 DNS DIG 網路診斷工具！支援 Cloudflare 與 Google DNS over HTTPS (DoH) API，即時檢索 A, AAAA, CNAME, MX, TXT, NS 等紀錄。">
+    <meta name="keywords" content="DNS查詢,DIG工具,DNS Lookup,DNS記錄,Cloudflare DoH,Google DoH,網域診斷,MX記錄查詢">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器">
+    <meta property="og:description" content="工程師的線上 DNS 診斷利器。支援 Cloudflare/Google DoH 自由切換、自動網域清理與記錄檢索。">
+    <meta property="og:url" content="https://tools.cjkuo.net/dns-dig/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器">
+    <meta name="twitter:description" content="工程師的線上 DNS 診斷利器。支援 Cloudflare/Google DoH 自由切換、自動網域清理與記錄檢索。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "DIG 網路診斷工具 (DNS Lookup)",
+      "url": "https://tools.cjkuo.net/dns-dig/index.html",
+      "description": "專業免費的線上 DNS DIG 網路診斷工具，利用 Cloudflare 與 Google DoH API 即時查詢各類 DNS 記錄。",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts & JetBrains Mono (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
+
+    <style>
+        :root {
+            --theme-color: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.6); /* 電光紫 */
+            --accent-glow-rgb: 139, 92, 246;
+            --accent-color: #8b5cf6;
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--accent-color);
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.05);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            margin-top: 1rem;
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            box-shadow: 0 0 8px var(--accent-color);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-color)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-color)); }
+        }
+
+        /* 雙欄排版 */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 0.8fr 1.2fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        .pane {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            /* 防止 Grid 子元素被內容（如寬表格）撐破 */
+            min-width: 0;
+        }
+
+        .pane:hover, .pane:focus-within {
+            border-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.03);
+        }
+
+        .pane-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.8rem;
+            letter-spacing: 1px;
+            /* 在小螢幕允許分享按鈕換行 */
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .pane-title-left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .pane-title-left svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent-color);
+        }
+
+        /* 輸入表單 */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0 1rem;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .styled-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            padding: 0.8rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .styled-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        /* 快速記錄類型選擇 Tab */
+        .record-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 0.4rem;
+        }
+
+        .record-tab-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .record-tab-btn:hover {
+            color: #ffffff;
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .record-tab-btn.active {
+            background: rgba(139, 92, 246, 0.15);
+            color: #ffffff;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+        }
+
+        /* ====== 結果呈現區 ====== */
+        .result-header-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* 結果面板 flex 容器 */
+        #result-panel {
+            width: 100%;
+        }
+
+        /* 狀態卡片 */
+        .status-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            justify-content: center;
+        }
+
+        .status-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .status-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* 表格包裝容器 */
+        .table-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.003);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+            min-width: 500px; /* 防止擠壓 */
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 0.9rem 1rem;
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--glass-border);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            word-break: break-all;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(139, 92, 246, 0.02);
+        }
+
+        .td-type {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .td-ttl {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .td-data {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* 複製提示小元件 */
+        .copyable-cell {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .copyable-cell:hover::after {
+            content: '點擊複製';
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--accent-color);
+            color: #ffffff;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        /* Loader */
+        .loader-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(139, 92, 246, 0.1);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Raw JSON 面板 */
+        .raw-details {
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .raw-summary {
+            padding: 0.8rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+            background: rgba(255, 255, 255, 0.015);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            outline: none;
+        }
+
+        .raw-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .raw-summary::after {
+            content: '▼';
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .raw-details[open] .raw-summary::after {
+            transform: rotate(180deg);
+        }
+
+        .raw-content {
+            padding: 1.2rem;
+            border-top: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .btn-copy-raw {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            z-index: 10;
+        }
+
+        .json-pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #d8dee9;
+            overflow-x: auto;
+            max-height: 350px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* 提示資訊 */
+        .info-msg {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 3rem;
+            font-size: 0.9rem;
+            border: 1px dashed var(--glass-border);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.002);
+        }
+
+        /* 修正下拉選單樣式，確保選單展開時有深色背景與亮白色文字，防止文字消失 */
+        select {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+        }
+
+        option {
+            background-color: #121218 !important;
+            color: #ffffff !important;
+            padding: 0.5rem;
+        }
+
+        /* Toast 提示 */
+        .toast-notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(6, 6, 9, 0.9);
+            border: 1px solid var(--accent-color);
+            color: #ffffff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(139, 92, 246, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-notification svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-color);
+        }
+
+        /* ====== 分享連結按鈕 (電光紫主題) ====== */
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(139, 92, 246, 0.06);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            color: rgba(139, 92, 246, 0.75);
+            padding: 0.35rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            margin-left: auto;
+            text-decoration: none;
+            user-select: none;
+        }
+        .share-btn:hover {
+            background: rgba(139, 92, 246, 0.12);
+            border-color: rgba(139, 92, 246, 0.6);
+            color: #8b5cf6;
+            box-shadow: 0 0 16px rgba(139, 92, 246, 0.15);
+        }
+        .share-btn svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        .share-btn:hover svg { transform: rotate(-8deg) scale(1.15); }
+        .share-btn.copied {
+            background: rgba(0, 255, 102, 0.1);
+            border-color: rgba(0, 255, 102, 0.5);
+            color: #00ff66;
+            box-shadow: 0 0 14px rgba(0, 255, 102, 0.15);
+        }
+        .share-btn .btn-text { transition: all 0.2s ease; }
+
+        /* ====== 響應式媒體查詢 ====== */
+        @media (max-width: 1100px) {
+            .app-grid {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .glass-container {
+                max-width: 95%;
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+                align-self: flex-start;
+            }
+
+            .glass-container {
+                padding: 1.5rem 1rem;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header-section {
+                margin-top: 0;
+                margin-bottom: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .pane {
+                padding: 1.2rem;
+                /* 手機版確保不撐破父容器 */
+                min-width: 0;
+                width: 100%;
+            }
+
+            /* 手機版狀態卡片改為單欄堆疊 */
+            .result-header-row {
+                grid-template-columns: 1fr;
+            }
+
+            /* 分享按鈕在手機版佔滿整行 */
+            .share-btn {
+                margin-left: 0;
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* 手機版 pane-title 區塊排列 */
+            .pane-title {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 粒子背景 Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+        <!-- 標題 -->
+        <div class="header-section">
+            <h1>線上 DNS DIG 網路診斷工具</h1>
+            <div class="subtitle-top">DNS Dig Web Tool</div>
+            <p class="page-description">專業免費的線上 DNS DIG 查詢工具，串接 Cloudflare 與 Google DoH API，支援 A, CNAME, MX, TXT 等全紀錄類型即時檢索與自動網域清理。</p>
+        </div>
+
+        <!-- 主要雙欄應用區域 -->
+        <div class="app-grid">
+            
+            <!-- 左欄：查詢參數設定 -->
+            <div class="pane">
+                <div class="pane-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="pane-title-left">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        DNS 查詢設定
+                    </div>
+                    <!-- 分享連結按鈕 -->
+                    <button class="share-btn" id="share-btn" onclick="copyShareLink()" title="複製當前配置的查詢連結">
+                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                        <span class="btn-text">複製查詢連結</span>
+                    </button>
+                </div>
+
+                <!-- 網域輸入框 -->
+                <div class="form-group">
+                    <label class="form-label" for="domain-input">
+                        網域名稱 (Domain / URL)
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="domain-input" class="styled-input" placeholder="例如：cjkuo.net 或貼上網址" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+
+                <!-- DNS 伺服器選擇 -->
+                <div class="form-group">
+                    <label class="form-label" for="dns-server">DNS 查詢伺服器 (DoH)</label>
+                    <div class="input-wrapper">
+                        <select id="dns-server" class="styled-input" style="background: transparent; border: none; cursor:pointer;">
+                            <option value="cloudflare" selected>⚡ Cloudflare DNS</option>
+                            <option value="google">🔍 Google DNS</option>
+                            <option value="alidns">☁️ 阿里雲 DNS</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 記錄類型選擇 -->
+                <div class="form-group">
+                    <label class="form-label">查詢記錄類型 (Type)</label>
+                    <div class="record-tabs">
+                        <button class="record-tab-btn active" data-type="A">A</button>
+                        <button class="record-tab-btn" data-type="AAAA">AAAA</button>
+                        <button class="record-tab-btn" data-type="CNAME">CNAME</button>
+                        <button class="record-tab-btn" data-type="TXT">TXT</button>
+                        <button class="record-tab-btn" data-type="MX">MX</button>
+                        <button class="record-tab-btn" data-type="NS">NS</button>
+                        <button class="record-tab-btn" data-type="SRV">SRV</button>
+                        <button class="record-tab-btn" data-type="HTTPS">HTTPS</button>
+                        <button class="record-tab-btn" data-type="SVCB">SVCB</button>
+                        <button class="record-tab-btn" data-type="CAA">CAA</button>
+                        <button class="record-tab-btn" data-type="SOA">SOA</button>
+                        <button class="record-tab-btn" data-type="PTR">PTR</button>
+                        <button class="record-tab-btn" data-type="DS">DS</button>
+                        <button class="record-tab-btn" data-type="DNSKEY">DNSKEY</button>
+                        <button class="record-tab-btn" data-type="TLSA">TLSA</button>
+                        <button class="record-tab-btn" data-type="TSIG">TSIG</button>
+                        <button class="record-tab-btn" data-type="ANY">ANY</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右欄：解析結果展示 -->
+            <div class="pane" style="min-height: 480px; display: block;">
+                <!-- 資訊初始提示 -->
+                <div id="init-panel" class="info-msg">
+                    <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: var(--text-secondary); opacity: 0.5; margin-bottom: 1rem;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <p>請在左側輸入網域，並選擇記錄類型後發送查詢。</p>
+                    <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.7;">本工具完全基於前端 fetch 與 DNS over HTTPS 實作。</p>
+                </div>
+
+                <!-- 加載中 Loader -->
+                <div id="loader-panel" class="loader-container">
+                    <div class="spinner"></div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); letter-spacing: 1px;">正在向加密 DNS 伺服器請求解析記錄...</div>
+                </div>
+
+                <!-- 錯誤與空面板 -->
+                <div id="error-panel" class="info-msg" style="display: none; border-color: rgba(255,59,48,0.2); background: rgba(255,59,48,0.01);">
+                    <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: #ff3b30; opacity: 0.8; margin-bottom: 1rem;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    <p id="error-msg" style="color: #ff3b30; font-weight: 500;">發生連線錯誤或 API 無法回應</p>
+                </div>
+
+                <!-- 答覆結果面板 -->
+                <div id="result-panel" style="display: none; flex-direction: column; gap: 1.5rem;">
+                    <!-- 狀態摘要行 -->
+                    <div class="result-header-row">
+                        <div class="status-card">
+                            <span class="status-label">響應狀態 (Status)</span>
+                            <span class="status-value" id="res-status">-</span>
+                        </div>
+                        <div class="status-card">
+                            <span class="status-label">查詢耗時 (Duration)</span>
+                            <span class="status-value" id="res-time" style="color: var(--accent-color);">- ms</span>
+                        </div>
+                    </div>
+
+                    <!-- 答覆資料表 -->
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 700;">答覆紀錄 (Answer)</label>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">網域名稱</th>
+                                        <th style="width: 12%;">類型</th>
+                                        <th style="width: 12%;">TTL</th>
+                                        <th style="width: 51%;">記錄值 (Data)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="answer-tbody">
+                                    <!-- 動態插入 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Raw JSON 折疊面板 -->
+                    <div class="form-group">
+                        <details class="raw-details">
+                            <summary class="raw-summary">
+                                <span>Raw JSON 原始資料</span>
+                            </summary>
+                            <div class="raw-content">
+                                <button class="btn btn-micro btn-copy-raw" id="copy-raw-btn">複製 JSON</button>
+                                <pre class="json-pre"><code id="raw-json-block">-</code></pre>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 成功通知 -->
+    <div id="toast" class="toast-notification">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toast-text">已複製</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 2. DIG 業務邏輯與 API 串接
+        // ==========================================
+        const domainInput = document.getElementById('domain-input');
+        const dnsServerSelect = document.getElementById('dns-server');
+        const recordTabBtns = document.querySelectorAll('.record-tab-btn');
+
+        // 結果面板控制
+        const initPanel = document.getElementById('init-panel');
+        const loaderPanel = document.getElementById('loader-panel');
+        const errorPanel = document.getElementById('error-panel');
+        const errorMsg = document.getElementById('error-msg');
+        const resultPanel = document.getElementById('result-panel');
+
+        // 數據填充欄位
+        const resStatusEl = document.getElementById('res-status');
+        const resTimeEl = document.getElementById('res-time');
+        const answerTbody = document.getElementById('answer-tbody');
+        const rawJsonBlock = document.getElementById('raw-json-block');
+        const copyRawBtn = document.getElementById('copy-raw-btn');
+
+        let selectedRecordType = "A"; // 預設 A 記錄
+        let rawDnsResponse = null;
+
+        // DNS RCODE 標準對照表
+        const RCODE_MAP = {
+            0: "NOERROR (成功)",
+            1: "FORMERR (格式錯誤)",
+            2: "SERVFAIL (伺服器失敗)",
+            3: "NXDOMAIN (網域不存在)",
+            4: "NOTIMP (未實作功能)",
+            5: "REFUSED (拒絕查詢)"
+        };
+
+        // DNS Type ID 對照表
+        const TYPE_MAP = {
+            1: "A", 2: "NS", 5: "CNAME", 6: "SOA", 12: "PTR", 15: "MX", 16: "TXT", 28: "AAAA", 33: "SRV", 35: "NAPTR", 43: "DS", 46: "RRSIG", 47: "NSEC", 48: "DNSKEY", 50: "NSEC3", 52: "TLSA", 55: "HIP", 59: "CDS", 60: "CDNSKEY", 61: "OPENPGPKEY", 62: "CSYNC", 64: "SVCB", 65: "HTTPS", 250: "TSIG", 251: "IXFR", 252: "AXFR", 255: "ANY", 257: "CAA", 32768: "TA", 32769: "DLV"
+        };
+
+        // RFC 3597 Raw Hex 自動轉譯處理器
+        function formatDnsData(ans) {
+            if (!ans || !ans.data) return '';
+            const rawData = String(ans.data);
+
+            // 判斷是否為 RFC 3597 通用二進位格式 (例如: \# 13 00 01...)
+            if (/^\\?\#\s*/.test(rawData)) {
+                const parsed = parseRfc3597(rawData, ans.type);
+                if (parsed) {
+                    return parsed;
+                }
+            }
+            return rawData;
+        }
+
+        function parseRfc3597(dataStr, recordType) {
+            try {
+                const cleaned = dataStr.replace(/^\\?\#\s*/, '').trim();
+                const tokens = cleaned.split(/\s+/);
+                if (tokens.length < 2) return null;
+
+                const expectedLen = parseInt(tokens[0], 10);
+                const hexBytes = tokens.slice(1);
+                const bytes = new Uint8Array(hexBytes.map(h => parseInt(h, 16)));
+
+                // 針對 HTTPS (65) 與 SVCB (64) 解析 (RFC 9460)
+                if (recordType === 65 || recordType === 64) {
+                    return parseSvcbHttps(bytes);
+                }
+            } catch (e) {
+                console.warn("RFC 3597 解析失敗:", e);
+            }
+            return null;
+        }
+
+        function parseSvcbHttps(bytes) {
+            if (bytes.length < 3) return null;
+            let offset = 0;
+
+            // 1. SvcPriority (2 bytes)
+            const priority = (bytes[offset] << 8) | bytes[offset + 1];
+            offset += 2;
+
+            // 2. TargetName (Length-prefixed domain labels)
+            const targetParts = [];
+            while (offset < bytes.length) {
+                const len = bytes[offset++];
+                if (len === 0) break; // root domain '.'
+                if (offset + len > bytes.length) return null;
+                const labelBytes = bytes.subarray(offset, offset + len);
+                targetParts.push(new TextDecoder().decode(labelBytes));
+                offset += len;
+            }
+            const targetName = targetParts.length === 0 ? '.' : targetParts.join('.') + '.';
+
+            // 3. SvcParams
+            const params = [];
+            const KEY_NAMES = {
+                0: 'mandatory',
+                1: 'alpn',
+                2: 'no-default-alpn',
+                3: 'port',
+                4: 'ipv4hint',
+                5: 'ech',
+                6: 'ipv6hint',
+                7: 'dohpath'
+            };
+
+            while (offset + 4 <= bytes.length) {
+                const key = (bytes[offset] << 8) | bytes[offset + 1];
+                const valLen = (bytes[offset + 2] << 8) | bytes[offset + 3];
+                offset += 4;
+
+                if (offset + valLen > bytes.length) break;
+                const valBytes = bytes.subarray(offset, offset + valLen);
+                offset += valLen;
+
+                const keyName = KEY_NAMES[key] || `key${key}`;
+                let valStr = '';
+
+                if (key === 1) { // alpn
+                    const alpnList = [];
+                    let aOffset = 0;
+                    while (aOffset < valBytes.length) {
+                        const aLen = valBytes[aOffset++];
+                        if (aOffset + aLen > valBytes.length) break;
+                        alpnList.push(new TextDecoder().decode(valBytes.subarray(aOffset, aOffset + aLen)));
+                        aOffset += aLen;
+                    }
+                    valStr = alpnList.join(',');
+                } else if (key === 3) { // port
+                    if (valBytes.length === 2) {
+                        valStr = ((valBytes[0] << 8) | valBytes[1]).toString();
+                    }
+                } else if (key === 4) { // ipv4hint
+                    const ips = [];
+                    for (let i = 0; i + 4 <= valBytes.length; i += 4) {
+                        ips.push(`${valBytes[i]}.${valBytes[i+1]}.${valBytes[i+2]}.${valBytes[i+3]}`);
+                    }
+                    valStr = ips.join(',');
+                } else if (key === 6) { // ipv6hint
+                    const ips = [];
+                    for (let i = 0; i + 16 <= valBytes.length; i += 16) {
+                        const groups = [];
+                        for (let j = 0; j < 16; j += 2) {
+                            groups.push(((valBytes[i + j] << 8) | valBytes[i + j + 1]).toString(16));
+                        }
+                        ips.push(groups.join(':'));
+                    }
+                    valStr = ips.join(',');
+                } else if (key === 2) { // no-default-alpn
+                    valStr = '';
+                } else {
+                    valStr = new TextDecoder().decode(valBytes);
+                }
+
+                if (key === 2 && !valStr) {
+                    params.push(keyName);
+                } else {
+                    params.push(`${keyName}=${valStr}`);
+                }
+            }
+
+            let result = `${priority} ${targetName}`;
+            if (params.length > 0) {
+                result += ` ${params.join(' ')}`;
+            }
+            return result;
+        }
+
+        // 自動網址清理 Hostname 提取
+        function cleanInputDomain() {
+            let input = domainInput.value.trim();
+            if (!input) return;
+
+            let cleaned = input;
+            cleaned = cleaned.replace(/\/+$/, '');
+
+            if (/^https?:\/\//i.test(cleaned) || cleaned.includes('/')) {
+                if (!/^https?:\/\//i.test(cleaned)) {
+                    cleaned = 'http://' + cleaned;
+                }
+                try {
+                    const urlObj = new URL(cleaned);
+                    domainInput.value = urlObj.hostname;
+                } catch (e) {
+                    const match = input.match(/^(?:https?:\/\/)?([^/?#:]+)/i);
+                    if (match) {
+                        domainInput.value = match[1];
+                    }
+                }
+            } else {
+                const parts = cleaned.split(':');
+                if (parts.length > 0) {
+                    if (cleaned.includes(':') && !cleaned.includes('.')) {
+                        domainInput.value = cleaned;
+                    } else {
+                        domainInput.value = parts[0];
+                    }
+                }
+            }
+        }
+
+        // 查詢防抖與節流控制變數
+        let lastQueryTime = 0;
+        let throttleTimeout = null;
+        let debounceTimeout = null;
+
+        // 觸發查詢入口 (融合防抖與最少 1 秒節流保護)
+        function triggerDnsLookup() {
+            if (throttleTimeout) clearTimeout(throttleTimeout);
+
+            const now = Date.now();
+            const timeSinceLastQuery = now - lastQueryTime;
+
+            if (timeSinceLastQuery < 1000) {
+                // 距離上一次實際請求小於 1 秒，延遲到滿足 1 秒後自動送出
+                throttleTimeout = setTimeout(() => {
+                    executeDnsLookup();
+                }, 1000 - timeSinceLastQuery);
+            } else {
+                executeDnsLookup();
+            }
+        }
+
+        function executeDnsLookup() {
+            lastQueryTime = Date.now();
+            doDnsLookup();
+        }
+
+        // ==========================================
+        // URL 雙向連動 (DIG 網路診斷工具)
+        // ==========================================
+        function syncToURL() {
+            const params = new URLSearchParams();
+            params.set('d', domainInput.value.trim());
+            params.set('s', dnsServerSelect.value);
+            params.set('t', selectedRecordType);
+            history.replaceState(null, '', '?' + params.toString());
+        }
+
+        let urlDebounceTimer = null;
+        function syncToURLDebounced() {
+            clearTimeout(urlDebounceTimer);
+            urlDebounceTimer = setTimeout(syncToURL, 300);
+        }
+
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.toString()) return false;
+
+            domainInput.value = params.get('d') || '';
+            dnsServerSelect.value = params.get('s') || 'cloudflare';
+            
+            const tParam = params.get('t') || 'A';
+            selectedRecordType = tParam.toUpperCase();
+            
+            // 啟用對應的 Tab 按鈕
+            recordTabBtns.forEach(btn => {
+                if (btn.getAttribute('data-type') === selectedRecordType) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            return true;
+        }
+
+        function copyShareLink() {
+            syncToURL();
+            const url = window.location.href;
+            const btn = document.getElementById('share-btn');
+            const btnText = btn.querySelector('.btn-text');
+            navigator.clipboard.writeText(url).then(() => {
+                btn.classList.add('copied');
+                btn.querySelector('svg').innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>';
+                btnText.textContent = '已複製！';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.querySelector('svg').innerHTML = '<path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>';
+                    btnText.textContent = '複製查詢連結';
+                }, 2200);
+            }).catch(() => window.prompt('請手動複製以下連結：', url));
+        }
+
+        // DNS Server 選擇變更時，立即觸發
+        dnsServerSelect.addEventListener('change', () => {
+            syncToURL();
+            const domain = domainInput.value.trim();
+            if (domain) {
+                triggerDnsLookup();
+            }
+        });
+
+        // 停止輸入達 1 秒自動送出 (1 秒防抖)
+        domainInput.addEventListener('input', () => {
+            syncToURLDebounced();
+            if (debounceTimeout) clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                cleanInputDomain();
+                const domain = domainInput.value.trim();
+                if (domain) {
+                    triggerDnsLookup();
+                }
+            }, 1000);
+        });
+
+        domainInput.addEventListener('blur', () => {
+            cleanInputDomain();
+            syncToURL();
+        });
+        domainInput.addEventListener('change', () => {
+            cleanInputDomain();
+            syncToURL();
+        });
+
+        // 點擊類型 Tab 立即觸發
+        recordTabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                recordTabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedRecordType = btn.getAttribute('data-type');
+                syncToURL();
+                
+                const domain = domainInput.value.trim();
+                if (domain) {
+                    triggerDnsLookup();
+                } else {
+                    showToast(`已切換為 ${selectedRecordType} 紀錄，請輸入網域進行查詢`);
+                }
+            });
+        });
+
+        // 執行 DIG DNS 查詢
+        async function doDnsLookup() {
+            const domain = domainInput.value.trim();
+            if (!domain) {
+                showToast("請輸入欲查詢的網域名稱！");
+                return;
+            }
+
+            // UI 狀態切換
+            initPanel.style.display = "none";
+            errorPanel.style.display = "none";
+            resultPanel.style.display = "none";
+            loaderPanel.style.display = "flex";
+
+            const server = dnsServerSelect.value;
+            let url = "";
+            let startTime = performance.now();
+
+            try {
+                let response;
+                if (server === 'cloudflare') {
+                    url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${selectedRecordType}`;
+                    response = await fetch(url, { headers: { 'accept': 'application/dns-json' } });
+                } else if (server === 'google') {
+                    url = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${selectedRecordType}`;
+                    response = await fetch(url);
+                } else if (server === 'alidns') {
+                    url = `https://dns.alidns.com/resolve?name=${encodeURIComponent(domain)}&type=${selectedRecordType}`;
+                    response = await fetch(url);
+                }
+
+                let duration = Math.round(performance.now() - startTime);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}`);
+                }
+
+                const data = await response.json();
+                rawDnsResponse = data;
+
+                // 填入基礎數據
+                const statusName = RCODE_MAP[data.Status] || `UNKNOWN (代碼 ${data.Status})`;
+                resStatusEl.innerText = statusName;
+                resTimeEl.innerText = `${duration} ms`;
+
+                // 答覆表格填充
+                answerTbody.innerHTML = "";
+                if (data.Answer && data.Answer.length > 0) {
+                    data.Answer.forEach(ans => {
+                        const row = document.createElement('tr');
+
+                        const nameCell = document.createElement('td');
+                        nameCell.innerText = ans.name;
+                        nameCell.classList.add('copyable-cell');
+                        nameCell.addEventListener('click', () => copyCellText(ans.name));
+
+                        const typeCell = document.createElement('td');
+                        const typeText = TYPE_MAP[ans.type] || `TYPE-${ans.type}`;
+                        typeCell.innerText = typeText;
+                        typeCell.classList.add('td-type');
+
+                        const ttlCell = document.createElement('td');
+                        ttlCell.innerText = ans.TTL;
+                        ttlCell.classList.add('td-ttl');
+
+                        const dataCell = document.createElement('td');
+                        const rawData = ans.data;
+                        const dispData = formatDnsData(ans);
+                        dataCell.innerText = dispData;
+                        dataCell.classList.add('td-data', 'copyable-cell');
+                        if (dispData !== rawData) {
+                            dataCell.title = `已自動解碼 RFC 3597 原始資料：\n${rawData}`;
+                        }
+                        dataCell.addEventListener('click', () => copyCellText(dispData));
+
+                        row.appendChild(nameCell);
+                        row.appendChild(typeCell);
+                        row.appendChild(ttlCell);
+                        row.appendChild(dataCell);
+
+                        answerTbody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    const emptyCell = document.createElement('td');
+                    emptyCell.setAttribute('colspan', '4');
+                    emptyCell.style.textAlign = 'center';
+                    emptyCell.style.color = 'var(--text-secondary)';
+                    emptyCell.style.padding = '2rem';
+                    emptyCell.innerText = `⚠️ 查無對應的 ${selectedRecordType} 紀錄或該網域未解析。`;
+                    row.appendChild(emptyCell);
+                    answerTbody.appendChild(row);
+                }
+
+                // Raw JSON 展示
+                rawJsonBlock.innerText = JSON.stringify(data, null, 4);
+
+                // 面板切換
+                loaderPanel.style.display = "none";
+                resultPanel.style.display = "flex";
+
+            } catch (err) {
+                console.error("DNS Dig API 發生錯誤:", err);
+                loaderPanel.style.display = "none";
+                errorPanel.style.display = "block";
+                errorMsg.innerText = `查詢失敗: ${err.message || "連線逾時或 API 無法響應"}`;
+            }
+        }
+
+        // 綁定輸入框 Enter 立即送出查詢並清除防抖與節流定時器
+        domainInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (debounceTimeout) clearTimeout(debounceTimeout);
+                if (throttleTimeout) clearTimeout(throttleTimeout);
+                cleanInputDomain();
+                executeDnsLookup(); // Enter 直接繞過節流等待發送
+            }
+        });
+
+        // 複製儲存格內容
+        function copyCellText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`已複製: ${text}`);
+            });
+        }
+
+        // 複製 Raw JSON 原始字串
+        copyRawBtn.addEventListener('click', () => {
+            if (rawDnsResponse) {
+                navigator.clipboard.writeText(JSON.stringify(rawDnsResponse, null, 4)).then(() => {
+                    showToast("已複製完整 Raw JSON 內容！");
+                });
+            }
+        });
+
+        // ==========================================
+        // 3. 複製 Toast 通知功能
+        // ==========================================
+        const toast = document.getElementById('toast');
+        const toastText = document.getElementById('toast-text');
+        let toastTimeout = null;
+
+        function showToast(text) {
+            toastText.innerText = text;
+            toast.classList.add('show');
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // 初始化
+        const loadedFromURL = initFromURL();
+        if (loadedFromURL) {
+            const domain = domainInput.value.trim();
+            if (domain) {
+                triggerDnsLookup();
+            }
+        }
+    </script>
+    <script src="../js/common-particles.js" defer></script>
+</body>
+</html>

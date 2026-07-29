@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字處理助手 - 免費線上字數統計、大小寫轉換與文字排版工具 | SmallTools</title>
+    <link rel="icon" href="https://tools.cjkuo.net/support.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://tools.cjkuo.net/text-utility/index.html">
+    <meta name="description" content="專業免費的線上文字處理助手！支援即時中英文/字元數/行數統計、大小寫轉換、去除重複行與多餘空白、正則替換等極速線上文字排版。">
+    <meta name="keywords" content="字數統計,文字處理,大小寫轉換,文字排版,去除空白,去除重複行,線上文字工具,正則替換">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmallTools 工具庫">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:title" content="文字處理助手 - 免費線上字數統計、大小寫轉換與文字排版工具">
+    <meta property="og:description" content="即時進行文字大小寫轉換、空白字元處理，與多維度中英文統計。">
+    <meta property="og:url" content="https://tools.cjkuo.net/text-utility/index.html">
+    <meta property="og:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="文字處理助手 - 免費線上字數統計、大小寫轉換與文字排版工具">
+    <meta name="twitter:description" content="即時進行文字大小寫轉換、空白字元處理，與多維度中英文統計。">
+    <meta name="twitter:image" content="https://tools.cjkuo.net/support.svg">
+
+    <!-- 結構化資料 Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "文字處理助手",
+      "url": "https://tools.cjkuo.net/text-utility/index.html",
+      "description": "專業免費的線上文字處理與排版工具，支援大小寫轉換、空白清理與字數統計。",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires HTML5, JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "TWD"
+      }
+    }
+    </script>
+
+    <!-- 引入 Google Fonts (含 Preconnect 優化) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common-glassmorphism.css">
+    
+    <style>
+        :root {
+            --theme-color: #ff007f;
+            --accent-glow: rgba(255, 0, 127, 0.6); /* 霓虹粉紅 */
+            --accent-glow-rgb: 255, 0, 127;
+        }
+
+        /* 返回按鈕手機防重疊 */
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 0, 127, 0.1);
+            color: #ff007f;
+            border-color: #ff007f;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.25);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            margin: 0.8rem auto 0;
+            animation: glow-pulse 3s infinite ease-in-out;
+        }
+
+        .subtitle-top {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px var(--accent-glow)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+        }
+
+        /* 複製分享連結按鈕 */
+        .share-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .share-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 0, 127, 0.1);
+            color: #ff007f;
+            border-color: #ff007f;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.25);
+        }
+
+        .share-btn.copied {
+            background: rgba(0, 255, 102, 0.1);
+            color: #00ff66;
+            border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+        }
+
+        /* ====== 模式選擇器 (Mode Selector) ====== */
+        .mode-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .mode-group {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            padding: 0.4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mode-label {
+            color: var(--text-secondary);
+            padding: 0.6rem 1.4rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            user-select: none;
+        }
+
+        .mode-label input[type="radio"] {
+            display: none;
+        }
+
+        .mode-label:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .mode-label.active {
+            color: #ff007f;
+            background: rgba(255, 0, 127, 0.08);
+            border: 1px solid rgba(255, 0, 127, 0.2);
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.15), inset 0 0 10px rgba(255, 0, 127, 0.05);
+            text-shadow: 0 0 8px rgba(255, 0, 127, 0.4);
+        }
+
+        /* ====== 雙欄編輯區 layout ====== */
+        .text-layout {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 2rem;
+        }
+
+        .panel-container {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .panel-container:focus-within {
+            border-color: rgba(255, 0, 127, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.08), inset 0 0 10px rgba(255, 0, 127, 0.01);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-title::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 16px;
+            background: #ff007f;
+            border-radius: 3px;
+            box-shadow: 0 0 8px #ff007f;
+            margin-right: 6px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 0, 127, 0.08);
+            border-color: rgba(255, 0, 127, 0.3);
+            color: #ff007f;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.1);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 輸入與輸出 text-wrapper */
+        .input-wrapper {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15); /* 規範: 非聚焦邊框至少 0.15 */
+            border-radius: 10px;
+            padding: 1rem;
+            min-height: 320px;
+            display: flex;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .panel-container:focus-within .input-wrapper {
+            border-color: rgba(255, 0, 127, 0.4);
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .styled-input {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff; /* 規範: 輸入文字明亮純白 */
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem; /* 規範: 1.1rem 以上 */
+            font-weight: 500; /* 規範: 加粗 */
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .styled-input::placeholder {
+            color: rgba(255, 255, 255, 0.38); /* 規範: 占位符透明度 0.35 以上 */
+        }
+
+        /* 唯讀狀態輸出區 */
+        .styled-input[readonly] {
+            cursor: default;
+        }
+
+        /* ====== 字數統計看板 (Stats Board) ====== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 0.8rem 0.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 0, 127, 0.1);
+        }
+
+        .stat-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+            transition: color 0.3s;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        /* 閃爍更新動效 */
+        .stat-pulse {
+            color: #ff007f;
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+        }
+
+        /* 響應式佈局 */
+        @media (max-width: 1024px) {
+            .text-layout {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .glass-container {
+                padding: 2.5rem 1.5rem;
+                max-width: 90%;
+            }
+            .back-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+            }
+            .share-btn {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 1.5rem;
+                float: right;
+            }
+            .mode-container {
+                margin-bottom: 1.5rem;
+            }
+            .mode-group {
+                border-radius: 20px;
+                padding: 0.3rem;
+            }
+            .mode-label {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+            .page-description {
+            max-width: 800px;
+            margin: 1.2rem auto 0 auto;
+            font-size: 0.92rem;
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-secondary, #8892b0);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="glass-container">
+        <!-- 返回按鈕 -->
+        <a href="../index.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            回工具庫首頁
+        </a>
+
+
+
+        <h1>線上文字處理助手</h1>
+        <div class="subtitle-top">Text Processing Utility</div>
+        <p class="page-description">專業免費的線上文字處理助手，提供中英文字數統計、大小寫轉換、多餘空白與重複行清理及正規表示式取代功能。</p>
+
+        <!-- 轉換模式選取器 -->
+        <div class="mode-container">
+            <div class="mode-group" id="mode-selector">
+                <label class="mode-label active" data-tab="raw">
+                    <input type="radio" name="text-mode" value="raw" checked>無轉換
+                </label>
+                <label class="mode-label" data-tab="upper">
+                    <input type="radio" name="text-mode" value="upper">全部轉大寫
+                </label>
+                <label class="mode-label" data-tab="lower">
+                    <input type="radio" name="text-mode" value="lower">全部轉小寫
+                </label>
+                <label class="mode-label" data-tab="nospace">
+                    <input type="radio" name="text-mode" value="nospace">刪除所有空白
+                </label>
+                <label class="mode-label" data-tab="trim">
+                    <input type="radio" name="text-mode" value="trim">刪除首尾空白
+                </label>
+                <label class="mode-label" data-tab="collapse">
+                    <input type="radio" name="text-mode" value="collapse">壓縮多餘空白
+                </label>
+            </div>
+        </div>
+
+        <div class="text-layout">
+            <!-- 輸入區 -->
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-title">輸入文字</div>
+                    <div class="panel-actions">
+                        <button class="action-btn" id="btn-paste">
+                            貼上
+                        </button>
+                        <button class="action-btn" id="btn-clear">
+                            清空
+                        </button>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <textarea class="styled-input" id="input-text" placeholder="請在此輸入或貼上文字..." autocomplete="off"></textarea>
+                </div>
+                
+                <!-- 字數統計看板 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-val" id="stat-chars-all">0</span>
+                        <span class="stat-label">字元 (含空白)</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stat-chars-pure">0</span>
+                        <span class="stat-label">字元 (不含空白)</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stat-words">0</span>
+                        <span class="stat-label">英文單字</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stat-chinese">0</span>
+                        <span class="stat-label">中文字數</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stat-lines">0</span>
+                        <span class="stat-label">總行數</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 輸出區 -->
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-title">轉換結果</div>
+                    <div class="panel-actions">
+                        <button class="action-btn" id="btn-copy">
+                            複製結果
+                        </button>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <textarea class="styled-input" id="output-text" placeholder="轉換結果將顯示於此..." readonly autocomplete="off"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 背景粒子與特效動畫
+        // ==========================================
+        // 文字處理核心邏輯與互動
+        // ==========================================
+        const inputText = document.getElementById('input-text');
+        const outputText = document.getElementById('output-text');
+        const modeLabels = document.querySelectorAll('.mode-label');
+        
+        const btnClear = document.getElementById('btn-clear');
+        const btnPaste = document.getElementById('btn-paste');
+        const btnCopy = document.getElementById('btn-copy');
+
+        const statCharsAll = document.getElementById('stat-chars-all');
+        const statCharsPure = document.getElementById('stat-chars-pure');
+        const statWords = document.getElementById('stat-words');
+        const statChinese = document.getElementById('stat-chinese');
+        const statLines = document.getElementById('stat-lines');
+
+        let currentMode = 'raw';
+
+        // 即時轉換運算
+        function processText() {
+            const rawVal = inputText.value;
+            let result = '';
+
+            // 防呆與回退處理
+            if (!rawVal) {
+                outputText.value = '';
+                updateStats('');
+                return;
+            }
+
+            switch (currentMode) {
+                case 'raw':
+                    result = rawVal;
+                    break;
+                case 'upper':
+                    result = rawVal.toUpperCase();
+                    break;
+                case 'lower':
+                    result = rawVal.toLowerCase();
+                    break;
+                case 'nospace':
+                    result = rawVal.replace(/\s/g, '');
+                    break;
+                case 'trim':
+                    result = rawVal.trim();
+                    break;
+                case 'collapse':
+                    // 壓縮連續空白為單個空格，移除多餘空行，首尾去空白
+                    result = rawVal
+                        .replace(/[ \t]+/g, ' ')      // 壓縮空格/Tab
+                        .replace(/\n\s*\n/g, '\n')     // 移除多餘空行
+                        .trim();
+                    break;
+                default:
+                    result = rawVal;
+            }
+
+            outputText.value = result;
+            updateStats(rawVal);
+        }
+
+        // 即時統計面板更新
+        function updateStats(text) {
+            if (!text) {
+                statCharsAll.textContent = '0';
+                statCharsPure.textContent = '0';
+                statWords.textContent = '0';
+                statChinese.textContent = '0';
+                statLines.textContent = '0';
+                return;
+            }
+
+            // 1. 字元數 (含空白)
+            const charsAll = text.length;
+
+            // 2. 字元數 (不含空白)
+            const charsPure = text.replace(/\s/g, '').length;
+
+            // 3. 英文單字數 (Word Count)
+            // 只匹配英文與數字的字組，避免中文、標點符號計入
+            const wordsMatch = text.match(/[a-zA-Z0-9'-]+/g);
+            const wordsCount = wordsMatch ? wordsMatch.length : 0;
+
+            // 4. 中文字數
+            const chineseMatch = text.match(/[\u4e00-\u9fa5]/g);
+            const chineseCount = chineseMatch ? chineseMatch.length : 0;
+
+            // 5. 總行數
+            const linesCount = text.split('\n').length;
+
+            // 寫入數據
+            statCharsAll.textContent = charsAll;
+            statCharsPure.textContent = charsPure;
+            statWords.textContent = wordsCount;
+            statChinese.textContent = chineseCount;
+            statLines.textContent = linesCount;
+        }
+
+        // 綁定輸入與選擇事件
+        inputText.addEventListener('input', () => {
+            processText();
+        });
+
+        modeLabels.forEach(label => {
+            const radio = label.querySelector('input');
+            label.addEventListener('click', (e) => {
+                const val = radio.value;
+                if (currentMode === val) return;
+
+                modeLabels.forEach(l => l.classList.remove('active'));
+                label.classList.add('active');
+                radio.checked = true;
+                currentMode = val;
+
+                // 觸發粒子爆炸
+                createBurst(e.clientX, e.clientY);
+
+                processText();
+            });
+        });
+
+        // 按鈕功能：清空
+        btnClear.addEventListener('click', () => {
+            inputText.value = '';
+            processText();
+            inputText.focus();
+        });
+
+        // 按鈕功能：貼上
+        btnPaste.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    inputText.value = text;
+                    processText();
+                }
+            } catch (err) {
+                alert('您的瀏覽器不允許自動讀取剪貼簿，請使用 Ctrl+V 貼上。');
+            }
+        });
+
+        // 按鈕功能：複製結果
+        btnCopy.addEventListener('click', async () => {
+            const outVal = outputText.value;
+            if (!outVal) return;
+
+            try {
+                await navigator.clipboard.writeText(outVal);
+                
+                // 複製成功視覺反饋
+                const originalText = btnCopy.textContent;
+                btnCopy.textContent = '✓ 已複製！';
+                btnCopy.style.color = '#00ff66';
+                btnCopy.style.borderColor = '#00ff66';
+                
+                setTimeout(() => {
+                    btnCopy.textContent = originalText;
+                    btnCopy.style.color = '';
+                    btnCopy.style.borderColor = '';
+                }, 2200);
+            } catch (err) {
+                window.prompt('請複製以下文字：', outVal);
+            }
+        });
+
+        // 初始化
+        window.addEventListener('load', () => {
+            processText();
+        });
+    </script>
+    <script src="../js/common-particles.js" defer></script>
+</body>
+</html>

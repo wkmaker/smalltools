@@ -1,0 +1,197 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Infrastructure template for static website hosting with S3, CloudFront, WAF, and optional Staging/Dev controls'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues: [prod, dev, stg]
+    Description: Environment name (prod, dev, or stg)
+
+  BucketName:
+    Type: String
+    Default: web-tool-cjkuo
+    Description: S3 Bucket Name
+
+  EnableBasicAuth:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Enable HTTP Basic Authentication via CloudFront Function
+
+  BasicAuthBase64:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Base64 encoded string of "username:password" for Basic Auth
+
+  EnableNoIndexHeader:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Enable X-Robots-Tag noindex, nofollow response header
+
+  DomainName:
+    Type: String
+    Default: tools.cjkuo.net
+    Description: CloudFront Alias Domain Name (leave empty if no custom domain)
+
+  AcmCertificateArn:
+    Type: String
+    Default: arn:aws:acm:us-east-1:114571653217:certificate/3c20f7ce-b2ba-4ba3-b229-c11ecacc8582
+    Description: ACM Certificate ARN for CloudFront Custom Domain
+
+  WebACLArn:
+    Type: String
+    Default: ''
+    Description: WAF WebACL ARN (leave empty for dev/stg environments or if no WAF is associated)
+
+Conditions:
+  IsBasicAuthEnabled: !Equals [!Ref EnableBasicAuth, 'true']
+  IsNoIndexEnabled: !Equals [!Ref EnableNoIndexHeader, 'true']
+  HasCustomDomain: !Not [!Equals [!Ref DomainName, '']]
+  HasWebACL: !Not [!Equals [!Ref WebACLArn, '']]
+
+Resources:
+  StaticWebsiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref BucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: false
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: false
+
+  StaticWebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    Properties:
+      Bucket: !Ref StaticWebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontCustomHeaderOnly
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
+            Condition:
+              StringEquals:
+                aws:UserAgent: !Sub "CF-Access-Header-${AWS::StackName}-${AWS::AccountId}"
+
+  BasicAuthFunction:
+    Type: AWS::CloudFront::Function
+    Condition: IsBasicAuthEnabled
+    Properties:
+      Name: !Sub "${AWS::StackName}-basic-auth"
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Basic Authentication for Dev/Staging Environment
+        Runtime: cloudfront-js-2.0
+      FunctionCode: !Sub |
+        function handler(event) {
+            var request = event.request;
+            var uri = request.uri;
+
+            // 免除 PWA 描述檔與 Service Worker 的 Basic Auth 攔截 (解決 401 錯誤)
+            if (uri === '/manifest.webmanifest' || uri === '/sw.js' || uri === '/favicon.ico') {
+                return request;
+            }
+
+            var headers = request.headers;
+            var expectedAuth = 'Basic ${BasicAuthBase64}';
+            
+            if (typeof headers.authorization === 'undefined' || headers.authorization.value !== expectedAuth) {
+                return {
+                    statusCode: 401,
+                    statusDescription: 'Unauthorized',
+                    headers: {
+                        'www-authenticate': { value: 'Basic realm="Dev Access Required"' }
+                    }
+                };
+            }
+            return request;
+        }
+
+  NoIndexResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Condition: IsNoIndexEnabled
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-noindex-policy"
+        Comment: Response headers policy for blocking search engine indexing
+        CustomHeadersConfig:
+          Items:
+            - Header: X-Robots-Tag
+              Value: noindex, nofollow, noarchive
+              Override: true
+
+  StaticWebsiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    DeletionPolicy: Retain
+    Properties:
+      DistributionConfig:
+        Aliases: !If [HasCustomDomain, [!Ref DomainName], !Ref "AWS::NoValue"]
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3WebsiteOrigin
+            DomainName: !Sub "${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+            OriginCustomHeaders:
+              - HeaderName: User-Agent
+                HeaderValue: !Sub "CF-Access-Header-${AWS::StackName}-${AWS::AccountId}"
+            ConnectionAttempts: 3
+            ConnectionTimeout: 10
+        DefaultCacheBehavior:
+          TargetOriginId: S3WebsiteOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - HEAD
+            - GET
+          CachedMethods:
+            - HEAD
+            - GET
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !If [IsNoIndexEnabled, !Ref NoIndexResponseHeadersPolicy, !Ref "AWS::NoValue"]
+          FunctionAssociations: !If
+            - IsBasicAuthEnabled
+            - - EventType: viewer-request
+                FunctionARN: !GetAtt BasicAuthFunction.FunctionARN
+            - !Ref "AWS::NoValue"
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponsePagePath: /404.html
+            ResponseCode: 404
+            ErrorCachingMinTTL: 10
+        Comment: !Sub "tools_web_${Environment}"
+        PriceClass: PriceClass_All
+        Enabled: true
+        ViewerCertificate: !If
+          - HasCustomDomain
+          - AcmCertificateArn: !Ref AcmCertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
+        WebACLId: !If [HasWebACL, !Ref WebACLArn, !Ref "AWS::NoValue"]
+        HttpVersion: http2and3
+        IPV6Enabled: true
+
+Outputs:
+  BucketName:
+    Description: "S3 Bucket Name"
+    Value: !Ref StaticWebsiteBucket
+  CloudFrontDistributionId:
+    Description: "CloudFront Distribution ID"
+    Value: !Ref StaticWebsiteDistribution
+  DistributionDomainName:
+    Description: "CloudFront Distribution Domain Name"
+    Value: !GetAtt StaticWebsiteDistribution.DomainName

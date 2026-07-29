@@ -1,0 +1,107 @@
+/* app/base64/base64.module.css */
+
+.glassContainer {
+    position: relative;
+    z-index: 1;
+    background: var(--card-bg, rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+    border-radius: 24px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    padding: 3.5rem 3rem;
+    width: 100%;
+    max-width: 90%;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.backBtn {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+    color: var(--text-secondary, #94a3b8);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    z-index: 11;
+}
+
+.backBtn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    transition: transform 0.3s ease;
+}
+
+.backBtn:hover {
+    background: rgba(255, 115, 0, 0.1);
+    color: #ff7300;
+    border-color: #ff7300;
+    box-shadow: 0 0 15px rgba(255, 115, 0, 0.25);
+}
+
+.backBtn:hover svg {
+    transform: translateX(-3px);
+}
+
+.toolTitle {
+    font-weight: 300;
+    font-size: 2.2rem;
+    letter-spacing: 6px;
+    color: var(--text-primary, #ffffff);
+    margin-bottom: 0.5rem;
+    text-align: center;
+    text-transform: uppercase;
+    position: relative;
+    display: block;
+}
+
+.toolTitle::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 115, 0, 0.6), transparent);
+    box-shadow: 0 0 8px rgba(255, 115, 0, 0.6);
+    margin: 0.8rem auto 0;
+    animation: glowPulse 3s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px rgba(255, 115, 0, 0.6)); }
+    50% { opacity: 1; filter: drop-shadow(0 0 6px rgba(255, 115, 0, 0.6)); }
+}
+
+.subtitleTop {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #94a3b8);
+    letter-spacing: 2px;
+    margin-bottom: 1.2rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.pageDescription {
+    max-width: 800px;
+    margin: 1.2rem auto 2.5rem auto;
+    font-size: 0.92rem;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--text-secondary, #8892b0);
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .glassContainer { padding: 2.5rem 1.5rem; }
+    .toolTitle { font-size: 1.8rem; }
+    .backBtn { position: static; display: inline-flex; margin-bottom: 1.5rem; }
+}

@@ -1,0 +1,8 @@
+# 確保二進位圖片檔案不會在 checkout 時被 Git 進行 CRLF 換行符轉換，避免損毀
+*.webp binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
