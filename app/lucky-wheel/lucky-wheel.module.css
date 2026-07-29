@@ -27,11 +27,42 @@
 }
 
 .fullscreenSlotWrapper {
-  max-width: min(85vh, 850px) !important;
+  width: 100%;
+  max-width: min(48vh, 88vw) !important;
+  box-sizing: border-box;
 }
 
 .fullscreenSlotWindow {
-  height: min(58vh, 560px) !important;
+  height: min(32vh, 320px) !important;
+}
+
+/* 獨立全螢幕轉盤容器：硬性鎖定 1:1 正方形比例，防止任何失真橢圓化 */
+.fullscreenWheelWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 1;
+  aspect-ratio: 1 / 1 !important;
+  width: min(48vh, 85vw) !important;
+  height: min(48vh, 85vw) !important;
+  min-width: 220px;
+  min-height: 220px;
+  box-sizing: border-box;
+}
+
+/* 平板與桌機 (768px+) 切換為獨立橫向滿版比例 */
+@media (min-width: 768px) {
+  .fullscreenSlotWrapper {
+    max-width: min(84vh, 58vw) !important;
+  }
+  .fullscreenSlotWindow {
+    height: 54vh !important;
+  }
+  .fullscreenWheelWrapper {
+    width: min(84vh, calc(90vw - 420px)) !important;
+    height: min(84vh, calc(90vw - 420px)) !important;
+  }
 }
 
 .slotFrame {
@@ -177,14 +208,21 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   background: radial-gradient(ellipse at 30% 50%, #1a103c 0%, #05030a 70%);
   z-index: 9999;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box;
 }
+
+
 
 .confettiCanvas {
   position: fixed;

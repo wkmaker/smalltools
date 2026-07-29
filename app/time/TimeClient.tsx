@@ -313,6 +313,7 @@ export default function TimeClient() {
       accentColor={isPassed ? '#ff3296' : '#00f0ff'}
       accentGlow={isPassed ? 'rgba(255, 50, 150, 0.6)' : 'rgba(0, 240, 255, 0.6)'}
       hideHeader={timerActive}
+      hideFooter={isFullscreen}
     >
       <div className="flex flex-col justify-center items-center w-full min-h-[70vh] my-auto">
         {!timerActive ? (
