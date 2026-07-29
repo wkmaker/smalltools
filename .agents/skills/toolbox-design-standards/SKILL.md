@@ -154,10 +154,13 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
    ### ⑥ 亮色模式高對比度文字與數據色階降階規範 (WCAG AA Accent Contrast Rule)
    * 亮色模式下，**嚴禁將暗色高彩度/高亮度的霓虹主題色（如薄荷綠 `#00f5a0`、赤紅 `#ff3b30`、財富金黃 `#ffb800`）直接作為文字或數據數字標籤顏色**，否則會因對比度不足（< 2:1）違反 WCAG 2.1 AA 規範並引發嚴重視覺閱讀障礙。
    * 必須於對應 CSS Module (`*.module.css`) 在 `:global([data-theme='light'])` 下降階切換為同色系之 **高對比深色階 (600/700 色階)**：
-     - 薄荷綠/翡翠綠 (`#00f5a0`) ➔ 亮色模式文字降階為 **深翡翠綠 `#059669` (Emerald 600)**
-     - 赤紅/霓虹紅粉 (`#ff3b30` / `#ff0055`) ➔ 亮色模式文字降階為 **深紅 `#dc2626` (Red 600)**
-     - 財富金黃 (`#ffb800`) ➔ 亮色模式文字降階為 **深琥珀金 `#d97706` (Amber 600)**
-     - 綠色數據標籤 (`#4ade80`) ➔ 亮色模式文字降階為 **森林鮮綠 `#16a34a` (Green 600)**
+     - **霓虹粉桃/桃粉 (`#ff00aa` / `#ff007f`)** ➔ 亮色模式文字降階為 **深洋紅/紫紅 `#c026d3` (Fuchsia 600) / `#be185d` (Pink 700)**
+     - **亮翠綠/薄荷綠 (`#00ffaa` / `#00f5a0`)** ➔ 亮色模式文字降階為 **深藍綠/翡翠綠 `#0d9488` (Teal 600) / `#059669` (Emerald 600)**
+     - **賽博極光綠 (`#00ff66`)** ➔ 亮色模式文字降階為 **深翠綠 `#059669` (Emerald 600)**
+     - **活力橘 (`#ff7300`)** ➔ 亮色模式文字降階為 **深橘 `#ea580c` (Orange 600)**
+     - **赤紅/霓虹紅粉 (`#ff3b30` / `#ff0055`)** ➔ 亮色模式文字降階為 **深紅 `#dc2626` (Red 600)**
+     - **財富金黃 (`#ffb800`)** ➔ 亮色模式文字降階為 **深琥珀金 `#d97706` (Amber 600)**
+     - **綠色數據標籤 (`#4ade80`)** ➔ 亮色模式文字降階為 **森林鮮綠 `#16a34a` (Green 600)**
 
    ### ⑦ SVG 儀表盤 (Gauge Meter) 與 Range Slider 的雙主題適配規範
    * **SVG 風險儀表盤**：背景灰弧線在暗色模式為 `rgba(255, 255, 255, 0.06)`，亮色模式必須切換為 `rgba(148, 163, 184, 0.2)` (Slate-400)；指針與中心圓點必須動態連動高對比主題色 (`currentColor` / `styles.accentText`) 與適應背景。
@@ -169,6 +172,11 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    ### ⑨ 試算分享連結 (Share Link Button) 與 Toast 反饋介面規範
    * 金融與試算類工具於輸入面板上方或底部應統一提供「複製試算分享連結」按鈕，並於點擊複製後觸發淡入 Toast 彈出視窗（`animate-fade-in` 搭配雙主題半透明底與主題光點），提示使用者連結已複製。
+
+   ### ⑩ 全子頁籤/內層組件雙主題適配防盲區規範 (Deep Sub-Tab & Inner Component Rule)
+   * 具備多子頁籤 (Sub-Tabs)、多步驟彈窗 (Wizard Modal) 或複雜子表單 (如 SSL 憑證轉換器、PDF 頁面處理器) 的工具組件，**絕不能僅改寫最外層 ToolLayout 與頁頭樣式**。
+   * 必須逐一檢查每個子頁籤面板 (`activeTab === '...'`)、隱藏浮層、上傳 Dropzone、密碼輸入框、結果評估明細卡片及複製/下載按鈕。
+   * 徹底清理所有硬編碼黑底 (如 `bg-black/20`, `bg-black/40`)、硬編碼邊框 (如 `border-white/[.08]`)、硬編碼白字 (`text-white`) 及未降階之霓虹主題色 (`text-[#00ffaa]`)，全數改為語意 Token 或對應 CSS Module 的 `:global([data-theme='light'])` 特化類別。
 
 ---
 
@@ -201,6 +209,10 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
    * **`isMountedRef` 初始化防護 (Hydration Safety)**：初次掛載讀取 `window.location.search` 時，必須在讀取與 setState 後將 `isMountedRef.current` 標記為 `true`；正向連動 `useEffect` 必須確認 `isMountedRef.current === true` 才進行 `replaceState`，徹底防範初次渲染預設 state 反向覆蓋 URL Query 參數。
 
    * **反向解析與安全 Fallback**：讀取 `window.location.search` 時，必須使用 `safeParse` 或防呆校驗。若參數非法或超出邊界，必須安全回退至預設值，絕不能導致 React Hydration 崩潰。
+
+   * **工具類型選擇性排除原則 (Selective Exclusion for Non-Parameterized Tools)**：
+     - 包含複雜多欄位參數試算/模擬器的金融理財類工具 (如房貸/信貸/薪資/複利試算)，必須實作 URL 雙向狀態同步。
+     - 針對純單向輸入輸出、文件/文字處理或一次性密碼生成工具 (如 Base64、URL 編解碼、密碼產生器、JSON 格式化、SSL 憑證轉換器)，**應選擇性不啟用 URL 參數雙向連動與 Hydration 網址解析**，保持網址潔淨並避免無謂的狀態同步負擔。
 
 
 
@@ -240,9 +252,10 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
      - 共享 Client 組件：`app/[tool-name]/[ToolName]Client.tsx`，接收 `lang?: 'zh-TW' | 'en'` 屬性傳入。
 
-   * **`TRANSLATIONS` 雙語字典結構**：
+   * **`TRANSLATIONS` 雙語字典結構與全介面覆蓋率**：
 
      - 共享 Client 組件文案統一寫於檔案頂層 `TRANSLATIONS` 物件字典中控，包含 `zh-TW` 與 `en` 兩套完整文案，禁止將語系判斷散落於 JSX 邏輯中。
+     - **字典 100% 覆蓋率規範**：`TRANSLATIONS` 字典必須完全覆蓋子頁籤切換鈕、輸入框 Placeholder、密碼顯示/隱藏切換鈕、檔案上傳拖曳提示、送出按鈕、結果明細標題、告警 banner、複製/下載按鈕及動態格式化函式，嚴禁在子頁籤 JSX 中遺留硬編碼的中英文 UI 字串。
 
    * **SEO Metadata & Hreflang 宣告**：
 
