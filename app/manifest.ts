@@ -4,6 +4,7 @@ export const dynamic = 'force-static';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: '/',
     name: '工具庫 | 免費線上工具集',
     short_name: 'Smalltools',
     description:
