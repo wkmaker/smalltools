@@ -121,25 +121,44 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ── 7.5. 若 Stack 處於 ROLLBACK_COMPLETE 或有遺留的孤立 Dev Bucket 則自動清理 ──
-      - name: Cleanup Failed Rollback Stack & Orphan Bucket
+      # ── 7.5. 若 Stack 處於 ROLLBACK_COMPLETE 或有遺留的孤立 Dev 資源則自動清理 ──
+      - name: Cleanup Failed Rollback Stack & Orphan Resources
         run: |
           STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
           if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
-            echo "⚠️ Stack $STACK_NAME is in ROLLBACK_COMPLETE state. Deleting failed stack before redeploying..."
+            echo "⚠️ Stack $STACK_NAME is in ROLLBACK_COMPLETE state. Deleting failed stack..."
             aws cloudformation delete-stack --stack-name "$STACK_NAME"
-            aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+            aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" 2>/dev/null || true
             echo "✅ Failed stack deleted successfully."
             STACK_STATUS="NOT_FOUND"
           fi
 
-          # 測試環境專用：若 Stack 不存在但舊的 S3 Bucket 因 DeletionPolicy: Retain 遺留，清理該孤立 Bucket 以避免 ResourceExistenceCheck 失敗
+          # 測試環境專用：若 Stack 不存在，自動清理前次失敗遺留的孤立資源 (S3, CloudFront Function, ResponseHeadersPolicy)
           if [ "$ENV_NAME" != "prod" ] && [ "$STACK_STATUS" = "NOT_FOUND" ]; then
-            if aws s3api head-bucket --bucket "$S3_BUCKET" 2>/dev/null; then
-              echo "🧹 Cleaning up orphan dev S3 bucket $S3_BUCKET from previous failed stack..."
-              aws s3 rb "s3://$S3_BUCKET" --force || true
-              echo "✅ Orphan dev S3 bucket removed."
+            echo "🧹 Checking and cleaning up orphan dev resources..."
+
+            # 1. 清理 S3 Bucket
+            aws s3 rb "s3://$S3_BUCKET" --force 2>/dev/null || true
+
+            # 2. 清理 CloudFront Function
+            FUNC_NAME="${STACK_NAME}-basic-auth"
+            ETAG=$(aws cloudfront describe-function --name "$FUNC_NAME" --query "ETag" --output text 2>/dev/null || echo "")
+            if [ -n "$ETAG" ] && [ "$ETAG" != "None" ]; then
+              echo "Deleting orphan CloudFront Function: $FUNC_NAME"
+              aws cloudfront delete-function --name "$FUNC_NAME" --if-match "$ETAG" 2>/dev/null || true
             fi
+
+            # 3. 清理 CloudFront Response Headers Policy
+            POLICY_NAME="${STACK_NAME}-noindex-policy"
+            POLICY_ID=$(aws cloudfront list-response-headers-policies --query "ResponseHeadersPolicyList.Items[?ResponseHeadersPolicy.ResponseHeadersPolicyConfig.Name=='${POLICY_NAME}'].ResponseHeadersPolicy.Id" --output text 2>/dev/null || echo "")
+            if [ -n "$POLICY_ID" ] && [ "$POLICY_ID" != "None" ]; then
+              POLICY_ETAG=$(aws cloudfront get-response-headers-policy --id "$POLICY_ID" --query "ETag" --output text 2>/dev/null || echo "")
+              if [ -n "$POLICY_ETAG" ] && [ "$POLICY_ETAG" != "None" ]; then
+                echo "Deleting orphan Response Headers Policy: $POLICY_NAME"
+                aws cloudfront delete-response-headers-policy --id "$POLICY_ID" --if-match "$POLICY_ETAG" 2>/dev/null || true
+              fi
+            fi
+            echo "✅ Orphan dev resources cleanup step completed."
           fi
 
       # ── 8. 更新/建立 CloudFormation 基礎架構 ─────────────────
