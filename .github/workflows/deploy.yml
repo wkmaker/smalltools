@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - '**'
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.agents/**'
 
 # 事先宣告全域環境變數，解決 IDE/Linter 靜態檢查提示 Context access might be invalid 警告
 env:
@@ -31,6 +36,22 @@ jobs:
       # ── 1. 拉取代碼 ──────────────────────────────────────────
       - name: Checkout Repository
         uses: actions/checkout@v7
+
+      # ── 1.5. 智慧檢查程式碼與基礎架構是否變動 ─────────────
+      - name: Check Code & Infra Changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            build_and_deploy:
+              - 'app/**'
+              - 'public/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'next.config.*'
+              - 'tsconfig.json'
+              - 'template.yml'
+              - '.github/workflows/deploy.yml'
 
       # ── 2. 設定環境變數 (Production vs Dev/Staging) ──────────
       - name: Configure Deployment Target
@@ -70,9 +91,16 @@ jobs:
             echo "🧪 Setting up Development Test Deployment (${{ github.ref_name }} branch)"
           fi
 
+      # ── 2.5 未偵測到程式碼變動時的提示 ────────────────────────
+      - name: Skip Build & Deploy Notice
+        if: steps.changes.outputs.build_and_deploy == 'false'
+        run: |
+          echo "ℹ️ No changes detected in app/, public/, package.json, template.yml, etc."
+          echo "⚡ Skipping build, S3 sync, and CloudFront invalidation steps."
+
       # ── 3. 測試環境 (Dev) 覆蓋 robots.txt 為 Disallow ────────
       - name: Apply Dev robots.txt Disallow
-        if: env.ENV_NAME == 'dev'
+        if: steps.changes.outputs.build_and_deploy == 'true' && env.ENV_NAME == 'dev'
         run: |
           cat << 'EOF' > ./public/robots.txt
           User-agent: *
@@ -82,6 +110,7 @@ jobs:
 
       # ── 4. 設定 Node.js 環境（含 npm 快取） ──────────────────
       - name: Setup Node.js 22
+        if: steps.changes.outputs.build_and_deploy == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -89,6 +118,7 @@ jobs:
 
       # ── 4.5. 設定 Next.js Build 快取 ────────────────────────
       - name: Next.js Build Cache
+        if: steps.changes.outputs.build_and_deploy == 'true'
         uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.next/cache
@@ -98,16 +128,19 @@ jobs:
 
       # ── 5. 安裝依賴 ──────────────────────────────────────────
       - name: Install Dependencies
+        if: steps.changes.outputs.build_and_deploy == 'true'
         run: npm ci
 
       # ── 6. Next.js SSG 建置 → 產出 out/ 目錄 ────────────────
       - name: Build Next.js SSG
+        if: steps.changes.outputs.build_and_deploy == 'true'
         run: npm run build
         env:
           NODE_ENV: production
 
       # ── 6.5. 注入動態版本號至 sw.js (確保每版 sw.js 必定有字位元差異) ────
       - name: Inject Version Stamp to Service Worker
+        if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           GIT_SHA=${{ github.sha }}
@@ -116,6 +149,7 @@ jobs:
 
       # ── 7. 設定 AWS 憑證 (使用 OIDC Role) ───────────────────
       - name: Configure AWS Credentials (OIDC)
+        if: steps.changes.outputs.build_and_deploy == 'true'
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -123,6 +157,7 @@ jobs:
 
       # ── 7.5. 若 Stack 處於 ROLLBACK_COMPLETE 或有遺留的孤立 Dev 資源則自動清理 ──
       - name: Cleanup Failed Rollback Stack & Orphan Resources
+        if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
           STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
           if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
@@ -163,6 +198,7 @@ jobs:
 
       # ── 8. 更新/建立 CloudFormation 基礎架構 ─────────────────
       - name: Deploy CloudFormation Stack
+        if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
           aws cloudformation deploy \
             --stack-name "$STACK_NAME" \
@@ -180,6 +216,7 @@ jobs:
 
       # ── 9. 動態獲取 Stack Outputs (CloudFront ID & Bucket Name) ──
       - name: Fetch CloudFormation Stack Outputs
+        if: steps.changes.outputs.build_and_deploy == 'true'
         id: cf-outputs
         run: |
           DIST_ID=$(aws cloudformation describe-stacks \
@@ -191,6 +228,7 @@ jobs:
 
       # ── 10. 同步 out/ 至 S3 ──────────────────────────────────
       - name: Sync to S3
+        if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
           # HTML 檔案：短快取 300 秒（確保更新後用戶能快速看到新版）
           aws s3 sync ./out "s3://${S3_BUCKET}" \
@@ -229,7 +267,9 @@ jobs:
 
       # ── 11. 清除 CloudFront 快取 ─────────────────────────────
       - name: Invalidate CloudFront Cache
+        if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "$DISTRIBUTION_ID" \
             --paths "/*"
+
