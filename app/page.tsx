@@ -247,10 +247,24 @@ function HomePageContent() {
           </div>
         )}
 
-        <div className="text-center mt-14 pt-6 border-t border-white/[.05] text-sm text-text-sub w-full">
-          Powered by{' '}
-          <a href="https://www.cjkuo.net/" target="_blank" rel="noopener noreferrer" className="text-[#00f0ff] font-medium no-underline hover:text-white">
-            CJKuo
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-14 pt-6 border-t border-white/[.05] text-sm text-text-sub w-full">
+          <span>
+            Powered by{' '}
+            <a href="https://www.cjkuo.net/" target="_blank" rel="noopener noreferrer" className="text-[#00f0ff] font-medium no-underline hover:text-white">
+              CJKuo
+            </a>
+          </span>
+          <span className="hidden sm:inline text-white/20">•</span>
+          <a
+            href="https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/10 to-rose-500/10 border border-pink-500/30 text-pink-400 hover:text-pink-300 hover:border-pink-400 hover:bg-pink-500/20 transition-all duration-300 text-xs no-underline font-medium shadow-[0_0_10px_rgba(244,63,94,0.15)]"
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            贊助支持
           </a>
         </div>
       </div>

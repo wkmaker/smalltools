@@ -1,6 +1,7 @@
 # 🛠️ Smalltools - 現代化極簡線上工具庫
 
 [![Online Tools](https://img.shields.io/badge/Online%20Tools-tools.cjkuo.net-00f0ff?style=for-the-badge&logo=vercel)](https://tools.cjkuo.net/)
+[![Donate Stripe](https://img.shields.io/badge/Donate-Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools)
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.12-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4.3.3-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
@@ -104,6 +105,14 @@ npm run lint
 * **架構流向**：`Cloudflare (Edge CDN / DNS)` ➔ `AWS CloudFront (CDN)` ➔ `AWS S3 (源站)`
 * **自動化 CI/CD**：每次 Push 或 Merge 至 `main` 分支時，透過 GitHub Actions 觸發靜態建置，將產出之 `out/` 自動同步更新至 AWS S3 Bucket。
 * **智慧過濾部署**：具備智慧檔案變動偵測 (`dorny/paths-filter`) 與 `paths-ignore` 機制。若僅修改說明文件或程式碼完全未變動，會自動跳過打包與 AWS 快取刷新，大幅提升部署效率並減少不必要的回源請求。
+
+---
+
+## ☕ 贊助與支持 (Support & Donation)
+
+如果您覺得 **Smalltools** 對您的工作或生活有所幫助，歡迎透過 Stripe 贊助支持作者，您的支持是持續維護與開發更多精緻小工具的最大動力！
+
+👉 **[透過 Stripe 贊助支持作者 ☕](https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools)**
 
 ---
 
