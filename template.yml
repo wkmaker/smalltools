@@ -96,6 +96,13 @@ Resources:
       FunctionCode: !Sub |
         function handler(event) {
             var request = event.request;
+            var uri = request.uri;
+
+            // 免除 PWA 描述檔與 Service Worker 的 Basic Auth 攔截 (解決 401 錯誤)
+            if (uri === '/manifest.webmanifest' || uri === '/sw.js' || uri === '/favicon.ico') {
+                return request;
+            }
+
             var headers = request.headers;
             var expectedAuth = 'Basic ${BasicAuthBase64}';
             
