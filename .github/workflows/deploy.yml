@@ -36,8 +36,8 @@ jobs:
       # ── 1. 拉取代碼 ──────────────────────────────────────────
       - name: Checkout Repository
         uses: actions/checkout@v7
-
-      # ── 1.5. 智慧檢查程式碼與基礎架構是否變動 ─────────────
+        with:
+          fetch-depth: 0
       - name: Check Code & Infra Changes
         id: changes
         uses: dorny/paths-filter@v4
