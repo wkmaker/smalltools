@@ -5,6 +5,17 @@ on:
     branches:
       - '**'
 
+# 事先宣告全域環境變數，解決 IDE/Linter 靜態檢查提示 Context access might be invalid 警告
+env:
+  ENV_NAME: ''
+  STACK_NAME: ''
+  S3_BUCKET: ''
+  ENABLE_BASIC_AUTH: ''
+  BASIC_AUTH_BASE64: ''
+  ENABLE_NOINDEX: ''
+  DOMAIN_NAME: ''
+  DISTRIBUTION_ID: ''
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -111,16 +122,16 @@ jobs:
       - name: Deploy CloudFormation Stack
         run: |
           aws cloudformation deploy \
-            --stack-name ${{ env.STACK_NAME }} \
+            --stack-name "$STACK_NAME" \
             --template-file template.yml \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --parameter-overrides \
-              Environment=${{ env.ENV_NAME }} \
-              BucketName=${{ env.S3_BUCKET }} \
-              EnableBasicAuth=${{ env.ENABLE_BASIC_AUTH }} \
-              BasicAuthBase64="${{ env.BASIC_AUTH_BASE64 }}" \
-              EnableNoIndexHeader=${{ env.ENABLE_NOINDEX }} \
-              DomainName="${{ env.DOMAIN_NAME }}" \
+              Environment="$ENV_NAME" \
+              BucketName="$S3_BUCKET" \
+              EnableBasicAuth="$ENABLE_BASIC_AUTH" \
+              BasicAuthBase64="$BASIC_AUTH_BASE64" \
+              EnableNoIndexHeader="$ENABLE_NOINDEX" \
+              DomainName="$DOMAIN_NAME" \
             --no-fail-on-empty-changeset
 
       # ── 9. 動態獲取 Stack Outputs (CloudFront ID & Bucket Name) ──
@@ -128,7 +139,7 @@ jobs:
         id: cf-outputs
         run: |
           DIST_ID=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.STACK_NAME }} \
+            --stack-name "$STACK_NAME" \
             --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
             --output text)
           echo "DISTRIBUTION_ID=${DIST_ID}" >> $GITHUB_ENV
@@ -138,7 +149,7 @@ jobs:
       - name: Sync to S3
         run: |
           # HTML 檔案：短快取 300 秒（確保更新後用戶能快速看到新版）
-          aws s3 sync ./out s3://${{ env.S3_BUCKET }} \
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
             --delete \
             --exclude "*.css" \
             --exclude "*.js" \
@@ -150,23 +161,23 @@ jobs:
             --cache-control "public, max-age=300, s-maxage=300"
 
           # Service Worker (sw.js) & PWA 清單：完全不快取，確保版本即時感應與更新
-          aws s3 sync ./out s3://${{ env.S3_BUCKET }} \
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
             --exclude "*" \
             --include "sw.js" \
             --include "manifest.webmanifest" \
             --cache-control "no-cache, no-store, must-revalidate"
 
           # JS / CSS / 字型：Next.js 會生成 content hash 檔名，可長快取 1 年
-          aws s3 sync ./out/_next/static s3://${{ env.S3_BUCKET }}/_next/static \
+          aws s3 sync ./out/_next/static "s3://${S3_BUCKET}/_next/static" \
             --cache-control "public, max-age=31536000, immutable"
 
           # img/ 靜態圖片：快取 1 天
-          aws s3 sync ./out/img s3://${{ env.S3_BUCKET }}/img \
+          aws s3 sync ./out/img "s3://${S3_BUCKET}/img" \
             --delete \
             --cache-control "public, max-age=86400"
 
           # SVG 圖片（support.svg 等）：強制正確 MIME + 快取 600 秒
-          aws s3 sync ./out s3://${{ env.S3_BUCKET }} \
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
             --exclude "*" \
             --include "*.svg" \
             --content-type "image/svg+xml" \
@@ -176,5 +187,5 @@ jobs:
       - name: Invalidate CloudFront Cache
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ env.DISTRIBUTION_ID }} \
+            --distribution-id "$DISTRIBUTION_ID" \
             --paths "/*"
