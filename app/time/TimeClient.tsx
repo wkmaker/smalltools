@@ -312,7 +312,7 @@ export default function TimeClient() {
       <div className="flex flex-col justify-center items-center w-full min-h-[70vh] my-auto">
         {!timerActive ? (
           /* 設定視圖 (Setup View) */
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg max-w-[800px] mx-auto w-full my-auto animate-fadeIn">
+          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg max-w-4xl md:max-w-5xl mx-auto w-full my-auto animate-fadeIn">
             <h3 className="text-sm text-[#00f0ff] uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
               設定目標事件與時間
             </h3>
@@ -351,7 +351,7 @@ export default function TimeClient() {
               <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
                 顯示時間單位 (Display Units)
               </span>
-              <div className="grid grid-cols-6 gap-2 max-sm:grid-cols-3">
+              <div className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-6 gap-2.5">
                 {ALL_UNITS.map(unit => {
                   const isChecked = selectedUnits.includes(unit);
                   return (
@@ -359,13 +359,14 @@ export default function TimeClient() {
                       key={unit}
                       type="button"
                       onClick={() => toggleUnit(unit)}
-                      className={`py-2 px-3 text-sm font-semibold rounded-xl cursor-pointer transition-all border ${
+                      className={`py-2.5 px-3 min-h-[44px] text-sm font-semibold rounded-xl cursor-pointer transition-all border flex items-center justify-center gap-1 whitespace-nowrap ${
                         isChecked
                           ? 'bg-[#00f0ff]/20 border-[#00f0ff]/40 text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.2)]'
                           : 'border-white/[.08] bg-black/40 text-text-sub hover:text-white'
                       }`}
                     >
-                      {UNIT_LABELS[unit].zh} ({UNIT_LABELS[unit].en})
+                      <span>{UNIT_LABELS[unit].zh}</span>
+                      <span className="text-xs opacity-80">({UNIT_LABELS[unit].en})</span>
                     </button>
                   );
                 })}

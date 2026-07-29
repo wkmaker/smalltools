@@ -10,6 +10,16 @@ export default function ServiceWorkerRegister() {
       return;
     }
 
+    // 在本地開發環境 (npm run dev) 下停用 Service Worker，並自動卸載舊的 SW 避免干擾 HMR 與開發
+    if (process.env.NODE_ENV === 'development') {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister();
+        }
+      });
+      return;
+    }
+
     let refreshing = false;
 
     // 當 Controller 控制權轉移（新版 SW 激活）時，自動重新整理頁面顯示最新內容
