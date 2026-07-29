@@ -99,10 +99,11 @@ npm run lint
 
 ## 🏗️ 部署說明 (Deployment)
 
-本專案正式環境部署於 **AWS S3 + CloudFront** 架構，自動對應網域 **[https://tools.cjkuo.net/](https://tools.cjkuo.net/)**。
+本專案正式環境部署於 **Cloudflare + AWS CloudFront + AWS S3** 高性能託管架構，自動對應網域 **[https://tools.cjkuo.net/](https://tools.cjkuo.net/)**。
 
-* 每次 push 或 merge 至 `main` 分支時，透過 GitHub Actions Workflow 觸發靜態建置並將 `out/` 自動同步更新至 AWS S3 Bucket。
-* 使用 CloudFront CDN 作為快取與 SSL 憑證終端，確保全球高速存取與安全性。
+* **架構流向**：`Cloudflare (Edge CDN / DNS)` ➔ `AWS CloudFront (CDN)` ➔ `AWS S3 (源站)`
+* **自動化 CI/CD**：每次 Push 或 Merge 至 `main` 分支時，透過 GitHub Actions 觸發靜態建置，將產出之 `out/` 自動同步更新至 AWS S3 Bucket。
+* **智慧過濾部署**：具備智慧檔案變動偵測 (`dorny/paths-filter`) 與 `paths-ignore` 機制。若僅修改說明文件或程式碼完全未變動，會自動跳過打包與 AWS 快取刷新，大幅提升部署效率並減少不必要的回源請求。
 
 ---
 
