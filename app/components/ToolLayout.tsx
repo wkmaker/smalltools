@@ -23,6 +23,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface ToolLayoutProps {
   title: string;
@@ -62,13 +63,18 @@ export default function ToolLayout({
         relative z-[1] w-full max-w-[90%] mx-auto
         flex flex-col
         bg-surface-glass border border-border-glass rounded-3xl
-        backdrop-blur-[12px] [-webkit-backdrop-filter:blur(12px)]
-        shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]
+        backdrop-blur-[24px] [-webkit-backdrop-filter:blur(24px)]
+        shadow-[var(--glass-shadow)]
         px-12 pt-16 pb-14
         max-sm:px-5 max-sm:pt-12 max-sm:pb-10
         max-[768px]:max-w-[98%]
       "
     >
+      {/* ── 亮暗模式切換按鈕 ── */}
+      <div className="absolute top-6 right-6 z-[11] max-sm:top-4 max-sm:right-4">
+        <ThemeToggle />
+      </div>
+
       {/* ── 返回按鈕 ── */}
       <Link
         href={backHref}

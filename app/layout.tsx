@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -71,18 +72,38 @@ export const metadata: Metadata = {
   },
 };
 
+const themeScript = `
+  (function() {
+    try {
+      var saved = localStorage.getItem('theme');
+      var theme = saved ? saved : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'light') {
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.remove('light');
+      }
+    } catch (e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="zh-TW" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
-        {/* 全站粒子背景動效 */}
-        <ParticleCanvas />
-        <ServiceWorkerRegister />
-        {children}
+        <ThemeProvider>
+          {/* 全站粒子背景動效 */}
+          <ParticleCanvas />
+          <ServiceWorkerRegister />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
