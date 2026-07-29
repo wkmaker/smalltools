@@ -112,7 +112,22 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
     * **中央單一資料源 (`app/config/tools.tsx`)**：全站所有小工具清單、分類 (`category`)、主題向量 SVG 圖示 (`svg`)、簡介與關鍵字統一收錄於 `app/config/tools.tsx`，嚴禁在多個頁面中重複硬編碼全站工具清單。未來新增工具時僅需編輯此檔。
     * **首頁與 404 自動同步連動**：
       - 首頁 (`app/page.tsx`) 直接導入 `CATEGORIES` 進行選單與卡片渲染。
-      - 404 頁面 (`app/not-found.tsx`) 導入 `ALL_TOOLS`，並根據 404 URL 請求路徑關鍵字自動判斷分類，優先推薦同類型工具，若少於 6 個則隨機打亂補充其餘工具填滿至 6 個。
+      - 404 頁面 (`app/not-found.tsx`) 導入 `ALL_TOOLS`，並根據 404 URL 請求路徑關鍵字自動判斷分類，優先推薦同類型工具，若少於 6 個則隨機打亂補充其餘工具填滿至 6 個。11. **持續性與無縫互動上傳大原則 (Persistent & Seamless Drag-and-Drop UX)**
+    * 凡具備檔案處理能力的小工具，載入初始檔案後**絕不可將 Drag & Drop 互動入口完全刪除**。
+    * 必須支援「全域拖曳感應 Overlay」與「列表底部輕量擴充 Dropzone」，保證使用者在任何操作階段皆能無縫拖曳追加新檔案。
+    * **多層級拖曳隔離**：當組件同時具備「檔案上傳」與「內部卡片排序」時，必須透過 DataTransfer 類型嚴格隔離，防止排序操作誤觸上傳浮層。
+
+12. **高負載運算之「UI 線程非阻塞 (Non-Blocking Yielding)」與「漸進式串流呈現 (Progressive Streaming)」大原則**
+    * 凡涉及多檔案、高解析度圖像或大數據處理的密集運算，**嚴禁連續霸佔 JavaScript 主執行緒 (Main Thread)** 引發 UI 畫面凍結或懸停動畫卡頓 (Frame Drop)。
+    * **時間片釋放 (Yielding)**：在密集處理迴圈中非同步釋放 CPU 時間片，確保瀏覽器能隨時維持 60fps 滑順響應與動態進度反饋。
+    * **漸進式即時呈現 (Incremental Rendering)**：採用「單項處理完成即時連動畫面」的串流體驗，無須死等整體批次完成，大幅降低使用者感知等待時間。
+    * **預覽畫質降採樣**：列表縮圖一律適度降採樣 (Downsampling)，節省記憶體與渲染負載。
+
+13. **彈出檢視視窗之「頂層 Portal 隔離」與「雙階動態畫質 JIT」大原則 (Full-Viewport Lightbox & JIT)**
+    * **視圖獨立性 (DOM Portal)**：所有彈出式 Lightbox / Modal / 大圖檢視器統一使用 React Portal 渲染至 `document.body` 頂層，徹底擺脫外層容器邊界與 CSS 堆疊上下文 (Stacking Context) 之邊界限制與遮擋。
+    * **視埠動態適應 (Full-Viewport Responsive)**：檢視視窗必須隨螢幕視埠動態放大適應 (Viewport-Aware)，最大化擴展顯示區域，避免固定微縮小框。
+    * **雙階動態畫質 (Two-Tier JIT Rendering)**：預覽縮圖採用低維度以極速載入；僅在點擊展開檢視時才動態觸發 JIT (Just-In-Time) 高解析度無損渲染，兼顧首屏載入速度與極致細節呈現。
+    * **無跳動控制介面 (Non-Shifting Controls)**：Modal 內部控制項（如縮放、重置、操作鈕）佈局必須絕對靜態固定，嚴禁隨狀態產生 Layout Shift 導致滑鼠連擊時誤觸。
 
 ---
 
