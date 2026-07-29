@@ -43,8 +43,8 @@ Parameters:
 
   WebACLArn:
     Type: String
-    Default: arn:aws:wafv2:us-east-1:114571653217:global/webacl/CreatedByCloudFront-1368b7c6/b33d948b-c516-498c-afb7-cbb14fce7501
-    Description: WAF WebACL ARN
+    Default: ''
+    Description: WAF WebACL ARN (leave empty for dev/stg environments or if no WAF is associated)
 
 Conditions:
   IsBasicAuthEnabled: !Equals [!Ref EnableBasicAuth, 'true']

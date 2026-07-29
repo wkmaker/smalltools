@@ -15,6 +15,7 @@ env:
   ENABLE_NOINDEX: ''
   DOMAIN_NAME: ''
   DISTRIBUTION_ID: ''
+  WEB_ACL_ARN: ''
 
 jobs:
   build-and-deploy:
@@ -47,6 +48,7 @@ jobs:
             echo "BASIC_AUTH_BASE64=" >> $GITHUB_ENV
             echo "ENABLE_NOINDEX=false" >> $GITHUB_ENV
             echo "DOMAIN_NAME=${PROD_DOMAIN}" >> $GITHUB_ENV
+            echo "WEB_ACL_ARN=arn:aws:wafv2:us-east-1:114571653217:global/webacl/CreatedByCloudFront-1368b7c6/b33d948b-c516-498c-afb7-cbb14fce7501" >> $GITHUB_ENV
             echo "🚀 Setting up Production Deployment (main branch)"
           else
             echo "ENV_NAME=dev" >> $GITHUB_ENV
@@ -64,6 +66,7 @@ jobs:
             echo "BASIC_AUTH_BASE64=${AUTH_BASE64}" >> $GITHUB_ENV
             echo "ENABLE_NOINDEX=true" >> $GITHUB_ENV
             echo "DOMAIN_NAME=" >> $GITHUB_ENV
+            echo "WEB_ACL_ARN=" >> $GITHUB_ENV
             echo "🧪 Setting up Development Test Deployment (${{ github.ref_name }} branch)"
           fi
 
@@ -132,6 +135,7 @@ jobs:
               BasicAuthBase64="$BASIC_AUTH_BASE64" \
               EnableNoIndexHeader="$ENABLE_NOINDEX" \
               DomainName="$DOMAIN_NAME" \
+              WebACLArn="$WEB_ACL_ARN" \
             --no-fail-on-empty-changeset
 
       # ── 9. 動態獲取 Stack Outputs (CloudFront ID & Bucket Name) ──
