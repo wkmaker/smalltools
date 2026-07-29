@@ -24,6 +24,3 @@ Thumbs.db
 # IDE 設定
 .vscode/settings.json
 .idea/
-
-# 內部 Agent 設定（不應上傳至生產環境）
-.agents/
