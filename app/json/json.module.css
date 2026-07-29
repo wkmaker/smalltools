@@ -1,107 +1,253 @@
 /* app/json/json.module.css */
 
-.glassContainer {
-    position: relative;
-    z-index: 1;
-    background: var(--card-bg, rgba(255, 255, 255, 0.02));
-    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-    padding: 3.5rem 3rem;
-    width: 100%;
-    max-width: 90%;
-    margin: 0 auto;
-    text-align: left;
+.mainLayout {
+  width: 100%;
 }
 
-.backBtn {
-    position: absolute;
-    top: 1.5rem;
-    left: 1.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-    color: var(--text-sub, #94a3b8);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 0.875rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    z-index: 11;
+/* ── Panel Box Container ── */
+.panelCard {
+  background: var(--card-bg, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
-.backBtn svg {
-    width: 16px;
-    height: 16px;
-    fill: currentColor;
-    transition: transform 0.3s ease;
+:global([data-theme='light']) .panelCard {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(203, 213, 225, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
-.backBtn:hover {
-    background: rgba(255, 0, 170, 0.05);
-    color: #ff00aa;
-    border-color: rgba(255, 0, 170, 0.3);
-    box-shadow: 0 0 12px rgba(255, 0, 170, 0.15);
+/* ── Dropzone & Textarea ── */
+.dropzoneBox {
+  position: relative;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.15));
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-.backBtn:hover svg {
-    transform: translateX(-3px);
+:global([data-theme='light']) .dropzoneBox {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(203, 213, 225, 0.8);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.toolTitle {
-    font-weight: 300;
-    font-size: 2.2rem;
-    letter-spacing: 4px;
-    color: var(--text-main, #ffffff);
-    margin-bottom: 0.5rem;
-    text-align: center;
-    text-transform: uppercase;
-    position: relative;
-    display: block;
+.dropzoneBoxActive {
+  border-color: #ff00aa !important;
+  background: rgba(255, 0, 170, 0.03) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 170, 0.25) !important;
 }
 
-.toolTitle::after {
-    content: '';
-    display: block;
-    width: 80px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255, 0, 170, 0.6), transparent);
-    box-shadow: 0 0 8px rgba(255, 0, 170, 0.6);
-    margin: 0.8rem auto 0;
-    animation: glowPulse 3s infinite ease-in-out;
+:global([data-theme='light']) .dropzoneBoxActive {
+  border-color: #c026d3 !important;
+  background: rgba(192, 38, 211, 0.04) !important;
 }
 
-@keyframes glowPulse {
-    0%, 100% { opacity: 0.35; filter: drop-shadow(0 0 1px rgba(255, 0, 170, 0.6)); }
-    50% { opacity: 1; filter: drop-shadow(0 0 6px rgba(255, 0, 170, 0.6)); }
+.jsonTextareaField {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #ffffff);
+  padding: 1.2rem;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: none;
+  box-sizing: border-box;
 }
 
-.subtitleTop {
-    font-size: 0.875rem;
-    color: var(--text-sub, #94a3b8);
-    letter-spacing: 2px;
-    margin-bottom: 1.2rem;
-    text-align: center;
-    text-transform: uppercase;
+.jsonTextareaField::placeholder {
+  color: var(--text-secondary, #94a3b8);
+  opacity: 0.7;
 }
 
-.pageDescription {
-    max-width: 800px;
-    margin: 1.2rem auto 2.5rem auto;
-    font-size: 1rem;
-    font-weight: 300;
-    line-height: 1.6;
-    color: var(--text-sub, #94a3b8);
-    text-align: center;
+:global([data-theme='light']) .jsonTextareaField {
+  color: #0f172a;
 }
 
-@media (max-width: 600px) {
-    .glassContainer { padding: 2.5rem 1.5rem; }
-    .toolTitle { font-size: 1.8rem; }
-    .backBtn { position: static; display: inline-flex; margin-bottom: 1.5rem; }
+/* ── Result Box ── */
+.resultBox {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  border-radius: 0.75rem;
+  overflow: auto;
+  padding: 1rem;
+  max-height: 500px;
+  min-height: 420px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme='light']) .resultBox {
+  background: rgba(241, 245, 249, 0.8);
+  border-color: rgba(203, 213, 225, 0.7);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Buttons ── */
+.btnSecondary {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  color: var(--text-main, #ffffff);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme='light']) .btnSecondary {
+  background: rgba(241, 245, 249, 0.9);
+  border-color: rgba(203, 213, 225, 0.8);
+  color: #334155;
+}
+
+.btnSecondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main, #ffffff);
+}
+
+:global([data-theme='light']) .btnSecondary:hover {
+  background: rgba(226, 232, 240, 0.9);
+  color: #0f172a;
+}
+
+.btnPrimary {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(255, 0, 170, 0.15);
+  border: 1px solid rgba(255, 0, 170, 0.3);
+  color: #ff00aa;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnPrimary:hover {
+  background: #ff00aa;
+  color: #030305;
+  box-shadow: 0 0 10px rgba(255, 0, 170, 0.4);
+}
+
+:global([data-theme='light']) .btnPrimary {
+  background: rgba(192, 38, 211, 0.12);
+  border-color: rgba(192, 38, 211, 0.4);
+  color: #c026d3;
+}
+
+:global([data-theme='light']) .btnPrimary:hover {
+  background: #c026d3;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(192, 38, 211, 0.3);
+}
+
+/* ── Tabs ── */
+.tabBtn {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  color: var(--text-sub, #94a3b8);
+}
+
+.tabBtn:hover {
+  color: var(--text-main, #ffffff);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tabActive {
+  background: rgba(255, 0, 170, 0.15);
+  color: #ff00aa;
+  border: 1px solid rgba(255, 0, 170, 0.3);
+  box-shadow: 0 0 10px rgba(255, 0, 170, 0.2);
+}
+
+:global([data-theme='light']) .tabActive {
+  background: rgba(192, 38, 211, 0.12);
+  color: #be185d;
+  border-color: rgba(192, 38, 211, 0.4);
+  box-shadow: 0 0 8px rgba(192, 38, 211, 0.2);
+}
+
+/* ── Tree View Syntax Highlight Colors (Dark & Light) ── */
+.treeKey {
+  color: #e06c75;
+}
+
+:global([data-theme='light']) .treeKey {
+  color: #b91c1c;
+}
+
+.treeString {
+  color: #98c379;
+}
+
+:global([data-theme='light']) .treeString {
+  color: #15803d;
+}
+
+.treeNumber {
+  color: #d19a66;
+}
+
+:global([data-theme='light']) .treeNumber {
+  color: #c2410c;
+}
+
+.treeBoolean {
+  color: #56b6c2;
+}
+
+:global([data-theme='light']) .treeBoolean {
+  color: #0284c7;
+}
+
+.treeNull {
+  color: #c678dd;
+}
+
+:global([data-theme='light']) .treeNull {
+  color: #7e22ce;
+}
+
+.treeBracket {
+  color: #e5c07b;
+  font-weight: bold;
+}
+
+:global([data-theme='light']) .treeBracket {
+  color: #b45309;
+}
+
+.formattedCode {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  color: #e5c07b;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+:global([data-theme='light']) .formattedCode {
+  color: #0f172a;
 }

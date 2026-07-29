@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'Base64,Base64編碼,Base64解碼,Base64轉換器,URL Safe Base64,UTF-8 Base64,線上Base64',
   alternates: {
     canonical: 'https://tools.cjkuo.net/base64/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/base64/',
+      en: 'https://tools.cjkuo.net/base64/en/',
+    },
   },
   openGraph: {
     title: 'Base64 編碼解碼器 - 免費線上文字與 URL 安全 Base64 轉換工具',

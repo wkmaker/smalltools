@@ -198,6 +198,8 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    * **正向連動（無感更新網址）**：嚴禁使用 `window.location.href`。必須使用 `window.history.replaceState(null, '', '?' + params.toString())` 更新網址。打字輸入時使用 300ms 防抖更新，切換按鈕即時同步。
 
+   * **`isMountedRef` 初始化防護 (Hydration Safety)**：初次掛載讀取 `window.location.search` 時，必須在讀取與 setState 後將 `isMountedRef.current` 標記為 `true`；正向連動 `useEffect` 必須確認 `isMountedRef.current === true` 才進行 `replaceState`，徹底防範初次渲染預設 state 反向覆蓋 URL Query 參數。
+
    * **反向解析與安全 Fallback**：讀取 `window.location.search` 時，必須使用 `safeParse` 或防呆校驗。若參數非法或超出邊界，必須安全回退至預設值，絕不能導致 React Hydration 崩潰。
 
 
@@ -238,6 +240,10 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
      - 共享 Client 組件：`app/[tool-name]/[ToolName]Client.tsx`，接收 `lang?: 'zh-TW' | 'en'` 屬性傳入。
 
+   * **`TRANSLATIONS` 雙語字典結構**：
+
+     - 共享 Client 組件文案統一寫於檔案頂層 `TRANSLATIONS` 物件字典中控，包含 `zh-TW` 與 `en` 兩套完整文案，禁止將語系判斷散落於 JSX 邏輯中。
+
    * **SEO Metadata & Hreflang 宣告**：
 
      在語系頁面的 `metadata.alternates` 必須配置 `languages` 對照，確保搜尋引擎抓取：
@@ -260,13 +266,15 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
      ```
 
-   * **介面無縫切換鈕**：在 Client 試算面板右上方放置雙語切換開關，以 Next.js `<Link>` 連結至對應網址，並連動切換組件內部文案語系。
+   * **介面無縫切換鈕**：在 Client 試算面板右上方放置雙語切換開關，以 Next.js `<Link>` 連結至對應網址，樣式套用語意類別 `bg-select-bg border-border-glass text-text-sub hover:text-text-main`。
 
 
 
 9. **Next.js App Router 靜態 Sitemap 生成與 AWS 部署避坑規範 (Sitemap & AWS Deployment)**
 
    * **`app/sitemap.ts` 原生動態生成**：全站統一採用 App Router 原生 `app/sitemap.ts` 定義 `MetadataRoute.Sitemap`。當執行 `next build` 進行靜態導出 (`output: 'export'`) 時，Next.js 會自動於 `out/sitemap.xml` 產出對應的 XML。
+
+   * **多語言獨立路由 Sitemap 清單同步**：新增工具之多語言獨立路由（如 `/my-salary-calculator/en/`）時，除了宣告 Metadata，**必須同步將英文路由網址更新至 `app/sitemap.ts` 的 `pages` 清單陣列**，確保產出的 XML 100% 覆蓋所有語系頁面。
 
    * **必須顯式宣告靜態導出 (`export const dynamic = 'force-static'`)**：在 `app/sitemap.ts` 檔案頂層**必須顯式加入 `export const dynamic = 'force-static';`**。若未宣告，Next.js 在 `output: export` 靜態導出模式下執行 `next build` 會拋出 `/sitemap.xml` 路由未設置靜態導出而中斷編譯的錯誤。
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './url.module.css';
 
@@ -17,6 +18,77 @@ interface UrlMeta {
   host: string;
   pathname: string;
 }
+
+interface Props {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: 'URL 線上編碼與解碼器',
+    subtitle: 'URL ENCODER & DECODER',
+    description:
+      '專業免費的線上 URL 編碼與解碼工具，支援 Percent-encoding 與 Unicode 即時雙向轉換，提供網址結構拆解與 Query 參數表格雙向連動編輯。',
+    langToggleLabel: 'English',
+    langToggleUrl: '/url/en/',
+    plainLabel: '原始網址 / 文字 (Plain Text)',
+    encodedLabel: 'URL 編碼文字 (Percent-Encoded)',
+    placeholderPlain: '在此輸入要編碼的網址或文字...',
+    placeholderEncoded: '在此貼上已編碼的文字進行解碼...',
+    modeLabel: '編碼模式：',
+    modeComponent: 'EncodeURIComponent (編碼所有參數)',
+    modeUri: 'EncodeURI (保留網址基本結構)',
+    spacePlusLabel: '空格轉 + (application/x-www-form-urlencoded)',
+    exampleBtn: '範例',
+    clearBtn: '清除',
+    copyBtn: '複製',
+    invalidFormat: '無效的 URL 編碼格式',
+    parserTitle: '網址結構與 Query 參數解析 (連動編輯)',
+    protocolLabel: '傳輸協定 (Protocol)',
+    hostLabel: '域名主機 (Host Domain)',
+    pathLabel: '路徑 (Pathname)',
+    tableKeyHeader: '參數名稱 (Query Key)',
+    tableValueHeader: '參數內容 (Value)',
+    tableActionsHeader: '操作',
+    paramCount: (count: number) => `共 ${count} 個參數`,
+    addParamBtn: '新增參數行',
+    toastCopied: '已複製到剪貼簿',
+    toastCopyFailed: '複製失敗，請手動複製',
+    toastNoContent: '沒有可複製的內容',
+  },
+  en: {
+    title: 'URL Encoder & Decoder',
+    subtitle: 'URL ENCODER & DECODER',
+    description:
+      'Professional free online URL encoder and decoder tool. Instant Percent-encoding & Unicode conversion, URL structure parsing, and live interactive query parameter table editing.',
+    langToggleLabel: '繁體中文',
+    langToggleUrl: '/url/',
+    plainLabel: 'Original URL / Text (Plain Text)',
+    encodedLabel: 'URL Encoded Text (Percent-Encoded)',
+    placeholderPlain: 'Type URL or text here to encode...',
+    placeholderEncoded: 'Paste encoded URL string here to decode...',
+    modeLabel: 'Encoding Mode:',
+    modeComponent: 'EncodeURIComponent (Encode All Params)',
+    modeUri: 'EncodeURI (Preserve Basic URL Structure)',
+    spacePlusLabel: 'Encode Space as + (application/x-www-form-urlencoded)',
+    exampleBtn: 'Sample',
+    clearBtn: 'Clear',
+    copyBtn: 'Copy',
+    invalidFormat: 'Invalid URL encoded format',
+    parserTitle: 'URL Structure & Query Parameter Parser (Interactive)',
+    protocolLabel: 'Protocol',
+    hostLabel: 'Host Domain',
+    pathLabel: 'Pathname',
+    tableKeyHeader: 'Query Key',
+    tableValueHeader: 'Value',
+    tableActionsHeader: 'Actions',
+    paramCount: (count: number) => `Total ${count} params`,
+    addParamBtn: 'Add Query Row',
+    toastCopied: 'Copied to clipboard',
+    toastCopyFailed: 'Copy failed, please copy manually',
+    toastNoContent: 'Nothing to copy',
+  },
+};
 
 function smartEncodeURI(input: string): string {
   const trimText = input.trim();
@@ -74,8 +146,8 @@ function parseUrlStructure(rawText: string): {
 
     return {
       meta: {
-        protocol: isFullUrl ? urlObj.protocol : '(相對路徑)',
-        host: isFullUrl ? urlObj.host : '(無)',
+        protocol: isFullUrl ? urlObj.protocol : '(Relative)',
+        host: isFullUrl ? urlObj.host : '(None)',
         pathname: urlObj.pathname,
       },
       params,
@@ -89,7 +161,9 @@ function parseUrlStructure(rawText: string): {
 
 let _nextParamId = 100;
 
-export default function UrlEncoderClient() {
+export default function UrlEncoderClient({ lang = 'zh-TW' }: Props) {
+  const t = TRANSLATIONS[lang];
+
   const plainTextId = useId();
   const encodedTextId = useId();
   const modeSelectId = useId();
@@ -179,17 +253,17 @@ export default function UrlEncoderClient() {
   }, [mode, spacePlus]);
 
   const loadExample = () => {
-    const ex = 'https://tools.cjkuo.net/search/v1?q=哈囉 世界!&category=極客工具&debug=true#result-hash';
+    const ex = 'https://tools.cjkuo.net/search/v1?q=Hello World!&category=developer&debug=true#result-hash';
     handlePlainChange(ex);
   };
 
-  const clearPanel = (which: 'plain' | 'encoded') => {
+  const clearPanel = () => {
     setPlainText(''); setEncodedText(''); setEncodedError(false); setShowParser(false);
   };
 
   const copyValue = (val: string) => {
-    if (!val) { showToast('沒有可複製的內容'); return; }
-    navigator.clipboard.writeText(val).then(() => showToast('已複製到剪貼簿')).catch(() => showToast('複製失敗'));
+    if (!val) { showToast(t.toastNoContent); return; }
+    navigator.clipboard.writeText(val).then(() => showToast(t.toastCopied)).catch(() => showToast(t.toastCopyFailed));
   };
 
   const onParamChange = (id: number, field: 'key' | 'value', val: string) => {
@@ -240,60 +314,72 @@ export default function UrlEncoderClient() {
   return (
     <>
       <ToolLayout
-        title="URL 線上編碼與解碼器"
-        subtitle="URL ENCODER & DECODER"
-        description="專業免費的線上 URL 編碼與解碼工具，支援 Percent-encoding 與 Unicode 即時雙向轉換，提供網址結構拆解與 Query 參數表格雙向連動編輯。"
+        title={t.title}
+        subtitle={t.subtitle}
+        description={t.description}
         accentColor="#ff7300"
         accentGlow="rgba(255,115,0,0.6)"
       >
         <div className={styles.mainLayout}>
+          {/* Top Bar Language Switcher */}
+          <div className="flex justify-end mb-6">
+            <Link
+              href={t.langToggleUrl}
+              className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#ff7300)] transition-all no-underline"
+            >
+              {t.langToggleLabel}
+            </Link>
+          </div>
+
           <div className={styles.panelsGrid}>
-            {/* 原始文字 */}
+            {/* Plain Text Panel */}
             <div className={`${styles.panelContainer} ${encodedError ? styles.errorState : ''}`}>
               <div className={styles.panelHeader}>
                 <label htmlFor={plainTextId} className="text-sm font-semibold text-text-main flex items-center gap-2 cursor-pointer">
                   <span className="w-1.5 h-4 bg-[var(--theme-color,#ff7300)] rounded-full shadow-[0_0_8px_var(--theme-color,#ff7300)] inline-block flex-shrink-0" />
-                  原始網址 / 文字 (Plain Text)
+                  {t.plainLabel}
                 </label>
               </div>
               <div className={styles.textAreaWrapper}>
                 <textarea
                   id={plainTextId}
                   className={styles.customTextarea}
-                  placeholder="在此輸入要編碼的網址或文字..."
+                  placeholder={t.placeholderPlain}
                   value={plainText}
                   onChange={e => handlePlainChange(e.target.value)}
                 />
               </div>
               <div className={styles.panelFooter}>
                 <div className={styles.controlGroup}>
-                  <label htmlFor={modeSelectId} className="text-sm font-medium text-text-sub flex-shrink-0">編碼模式：</label>
+                  <label htmlFor={modeSelectId} className="text-sm font-medium text-text-sub flex-shrink-0">
+                    {t.modeLabel}
+                  </label>
                   <select id={modeSelectId} className={styles.selectStyle} value={mode} onChange={e => setMode(e.target.value as UrlMode)}>
-                    <option value="component">EncodeURIComponent (編碼所有參數)</option>
-                    <option value="uri">EncodeURI (保留網址基本結構)</option>
+                    <option value="component">{t.modeComponent}</option>
+                    <option value="uri">{t.modeUri}</option>
                   </select>
                 </div>
                 <div className={styles.btnGroup}>
-                  <button type="button" onClick={loadExample} className={styles.techBtn}>範例</button>
-                  <button type="button" onClick={() => clearPanel('plain')} className={styles.techBtn}>清除</button>
-                  <button type="button" onClick={() => copyValue(plainText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>複製</button>
+                  <button type="button" onClick={loadExample} className={styles.techBtn}>{t.exampleBtn}</button>
+                  <button type="button" onClick={clearPanel} className={styles.techBtn}>{t.clearBtn}</button>
+                  <button type="button" onClick={() => copyValue(plainText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>{t.copyBtn}</button>
                 </div>
               </div>
             </div>
 
-            {/* URL 編碼文字 */}
+            {/* URL Encoded Panel */}
             <div className={`${styles.panelContainer} ${encodedError ? styles.errorState : ''}`}>
               <div className={styles.panelHeader}>
                 <label htmlFor={encodedTextId} className="text-sm font-semibold text-text-main flex items-center gap-2 cursor-pointer">
                   <span className="w-1.5 h-4 bg-[var(--theme-color,#ff7300)] rounded-full shadow-[0_0_8px_var(--theme-color,#ff7300)] inline-block flex-shrink-0" />
-                  URL 編碼文字 (Percent-Encoded)
+                  {t.encodedLabel}
                 </label>
                 {encodedError && (
                   <div className={styles.errorMsg}>
                     <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                     </svg>
-                    無效的 URL 編碼格式
+                    {t.invalidFormat}
                   </div>
                 )}
               </div>
@@ -301,7 +387,7 @@ export default function UrlEncoderClient() {
                 <textarea
                   id={encodedTextId}
                   className={styles.customTextarea}
-                  placeholder="在此貼上已編碼的文字進行解碼..."
+                  placeholder={t.placeholderEncoded}
                   value={encodedText}
                   onChange={e => handleEncodedChange(e.target.value)}
                 />
@@ -311,37 +397,37 @@ export default function UrlEncoderClient() {
                   <label htmlFor={spacePlusId} className={styles.checkboxContainer}>
                     <input id={spacePlusId} type="checkbox" checked={spacePlus} onChange={e => setSpacePlus(e.target.checked)} />
                     <span className={styles.checkmark} />
-                    空格轉 + (application/x-www-form-urlencoded)
+                    <span>{t.spacePlusLabel}</span>
                   </label>
                 </div>
                 <div className={styles.btnGroup}>
-                  <button type="button" onClick={() => clearPanel('encoded')} className={styles.techBtn}>清除</button>
-                  <button type="button" onClick={() => copyValue(encodedText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>複製</button>
+                  <button type="button" onClick={clearPanel} className={styles.techBtn}>{t.clearBtn}</button>
+                  <button type="button" onClick={() => copyValue(encodedText)} className={`${styles.techBtn} ${styles.techBtnPrimary}`}>{t.copyBtn}</button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* URL 解析面板 */}
+          {/* URL Parser Section */}
           {showParser && urlMeta && (
             <div className={styles.urlParserSection}>
               <div className="text-sm font-semibold text-text-main flex items-center gap-2">
                 <span className="w-1.5 h-4 bg-[var(--theme-color,#ff7300)] rounded-full shadow-[0_0_8px_var(--theme-color,#ff7300)] inline-block flex-shrink-0" />
-                網址結構與 Query 參數解析 (連動編輯)
+                {t.parserTitle}
               </div>
 
               <div className={styles.urlMetaGrid}>
                 {[
-                  { label: '傳輸協定 (Protocol)', value: urlMeta.protocol },
-                  { label: '域名主機 (Host Domain)', value: urlMeta.host },
-                  { label: '路徑 (Pathname)', value: urlMeta.pathname },
+                  { label: t.protocolLabel, value: urlMeta.protocol },
+                  { label: t.hostLabel, value: urlMeta.host },
+                  { label: t.pathLabel, value: urlMeta.pathname },
                 ].map(item => (
                   <div key={item.label} className={styles.metaItem}>
-                    <span className="text-xs text-text-sub uppercase tracking-[0.5px] font-medium">{item.label}</span>
+                    <span className="text-xs text-text-sub uppercase tracking-[0.5px] font-semibold">{item.label}</span>
                     <div className={styles.metaValueWrapper}>
                       <span className={styles.metaValue}>{item.value}</span>
-                      <button type="button" onClick={() => copyValue(item.value === '-' || item.value === '(無)' ? '' : item.value)}
-                        className={styles.metaCopyBtn} title="複製內容">
+                      <button type="button" onClick={() => copyValue(item.value === '-' || item.value === '(無)' || item.value === '(None)' ? '' : item.value)}
+                        className={styles.metaCopyBtn} title="Copy">
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                         </svg>
@@ -355,9 +441,9 @@ export default function UrlEncoderClient() {
                 <table className={styles.paramsTable}>
                   <thead>
                     <tr>
-                      <th style={{ width: '35%' }} className="text-sm font-semibold text-text-sub p-3">參數名稱 (Query Key)</th>
-                      <th style={{ width: '45%' }} className="text-sm font-semibold text-text-sub p-3">參數內容 (Value)</th>
-                      <th style={{ width: '20%', textAlign: 'center' }} className="text-sm font-semibold text-text-sub p-3">操作</th>
+                      <th style={{ width: '35%' }} className="p-3 text-sm font-semibold text-text-sub">{t.tableKeyHeader}</th>
+                      <th style={{ width: '45%' }} className="p-3 text-sm font-semibold text-text-sub">{t.tableValueHeader}</th>
+                      <th style={{ width: '20%', textAlign: 'center' }} className="p-3 text-sm font-semibold text-text-sub">{t.tableActionsHeader}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -366,10 +452,10 @@ export default function UrlEncoderClient() {
                         <td><input type="text" className={styles.tableInput} value={p.key} onChange={e => onParamChange(p.id, 'key', e.target.value)} aria-label="Query Key" /></td>
                         <td><input type="text" className={styles.tableInput} value={p.value} onChange={e => onParamChange(p.id, 'value', e.target.value)} aria-label="Query Value" /></td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          <button type="button" className={styles.techBtn} onClick={() => copyValue(p.value)} title="複製參數內容" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem' }}>
+                          <button type="button" className={styles.techBtn} onClick={() => copyValue(p.value)} title="Copy Value" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem' }}>
                             <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" /></svg>
                           </button>
-                          <button type="button" className={styles.techBtn} onClick={() => deleteParam(p.id)} title="刪除此參數" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem', marginLeft: '6px' }}>
+                          <button type="button" className={styles.techBtn} onClick={() => deleteParam(p.id)} title="Delete Param" style={{ display: 'inline-flex', padding: '0.3rem 0.6rem', marginLeft: '6px' }}>
                             <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
                           </button>
                         </td>
@@ -377,11 +463,11 @@ export default function UrlEncoderClient() {
                     ))}
                   </tbody>
                 </table>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1rem', background: 'rgba(0, 0, 0, 0.1)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-sub)' }} className="font-medium">共 {params.filter(p => p.key.trim()).length} 個參數</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1rem', background: 'rgba(0, 0, 0, 0.05)', borderTop: '1px solid var(--card-border, rgba(255, 255, 255, 0.05))', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <span className="text-sm font-medium text-text-sub">{t.paramCount(params.filter(p => p.key.trim()).length)}</span>
                   <button type="button" onClick={addParam} className={`${styles.techBtn} ${styles.techBtnPrimary}`} style={{ padding: '0.4rem 0.8rem' }}>
                     <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" style={{ marginRight: '2px' }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
-                    新增參數行
+                    {t.addParamBtn}
                   </button>
                 </div>
               </div>
@@ -390,10 +476,13 @@ export default function UrlEncoderClient() {
         </div>
       </ToolLayout>
 
-      <div className={`fixed bottom-4 right-4 left-4 sm:left-auto sm:right-8 sm:bottom-8 flex items-center justify-center gap-2 px-6 py-3 text-sm rounded-lg z-[100] pointer-events-none
-        bg-[rgba(255,115,0,0.15)] border border-[rgba(255,115,0,0.3)] backdrop-blur-[10px] text-[var(--theme-color,#ff7300)]
-        transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
-        <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+      {/* Toast Notification */}
+      <div
+        className={`fixed bottom-8 right-8 flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl z-[100] pointer-events-none
+          bg-surface-glass border border-border-glass backdrop-blur-[16px] text-text-main shadow-lg
+          transition-all duration-300 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      >
+        <svg viewBox="0 0 24 24" width={16} height={16} fill="#ff7300">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
         </svg>
         {toast.msg}
