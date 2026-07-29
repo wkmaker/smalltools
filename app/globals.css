@@ -258,3 +258,12 @@ input[type='date'] {
   color: var(--text-secondary);
   text-align: center;
 }
+
+/* ── 全螢幕展示模式隱藏頁尾贊助與無關裝飾 ── */
+body.is-fullscreen .tool-layout-footer,
+:fullscreen .tool-layout-footer,
+:-webkit-full-screen .tool-layout-footer,
+:-moz-full-screen .tool-layout-footer,
+:-ms-fullscreen .tool-layout-footer {
+  display: none !important;
+}
