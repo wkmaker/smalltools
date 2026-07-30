@@ -40,6 +40,8 @@ const TRANSLATIONS = {
       m: { full: 'MINS', label: '分' },
       s: { full: 'SECS', label: '秒' },
     } as Record<string, { full: string; label: string }>,
+    startTimeLabel: '起始時間',
+    targetTimeLabel: '目標時間',
     switchLangText: 'English',
     switchLangHref: '/time/en/',
   },
@@ -75,10 +77,35 @@ const TRANSLATIONS = {
       m: { full: 'MINS', label: 'Mins' },
       s: { full: 'SECS', label: 'Secs' },
     } as Record<string, { full: string; label: string }>,
+    startTimeLabel: 'Start Time',
+    targetTimeLabel: 'Target Time',
     switchLangText: '繁體中文',
     switchLangHref: '/time/',
   },
 };
+
+function formatTargetDateDisplay(dateStr: string, lang: 'zh-TW' | 'en'): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+
+  const weekdaysZh = ['日', '一', '二', '三', '四', '五', '六'];
+  const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  if (lang === 'zh-TW') {
+    const weekday = weekdaysZh[d.getDay()];
+    return `${year}/${month}/${day} (${weekday}) ${hours}:${minutes}`;
+  } else {
+    const weekday = weekdaysEn[d.getDay()];
+    return `${year}-${month}-${day} (${weekday}) ${hours}:${minutes}`;
+  }
+}
 
 function getTomorrowDefaultIso(): string {
   const tomorrow = new Date();
@@ -577,6 +604,16 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
               </span>
               <span className={`text-sm font-semibold tracking-[2px] ${isPassed ? styles.statusElapsed : styles.statusRemaining}`}>
                 {isPassed ? t.timeElapsed : t.remainingTime}
+              </span>
+            </div>
+
+            {/* 呼吸燈正下方：精確目標/起始日期時間標籤 */}
+            <div className={styles.targetDateBadge}>
+              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="text-[var(--theme-color)] transition-colors duration-500 flex-shrink-0">
+                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z" />
+              </svg>
+              <span>
+                {isPassed ? t.startTimeLabel : t.targetTimeLabel}：{formatTargetDateDisplay(targetDateStr, lang)}
               </span>
             </div>
           </div>
