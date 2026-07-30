@@ -340,10 +340,14 @@ export default function MySalaryCalculatorClient({ lang = 'zh-TW' }: Props) {
                 </label>
                 <input
                   id={salaryInputId}
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   placeholder={t.monthlySalaryPlaceholder}
-                  value={monthlySalary}
-                  onChange={e => setMonthlySalary(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  value={monthlySalary === '' ? '' : monthlySalary.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setMonthlySalary(raw === '' ? '' : parseInt(raw, 10));
+                  }}
                   className={styles.inputField}
                 />
               </div>
@@ -354,10 +358,14 @@ export default function MySalaryCalculatorClient({ lang = 'zh-TW' }: Props) {
                 </label>
                 <input
                   id={baseInputId}
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   placeholder={t.insuranceBasePlaceholder(formatNumber(numSalary))}
-                  value={customInsuranceBase}
-                  onChange={e => setCustomInsuranceBase(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  value={customInsuranceBase === '' ? '' : customInsuranceBase.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setCustomInsuranceBase(raw === '' ? '' : parseInt(raw, 10));
+                  }}
                   className={styles.inputField}
                 />
                 <span className="text-xs text-text-sub">{t.insuranceBaseDesc}</span>

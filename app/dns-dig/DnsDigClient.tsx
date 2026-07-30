@@ -255,17 +255,38 @@ function parseSvcbHttps(bytes: Uint8Array): string | null {
   return result;
 }
 
+// RFC 6844 CAA Record Hex decoder
+function parseCaa(bytes: Uint8Array): string | null {
+  if (bytes.length < 2) return null;
+  const flags = bytes[0];
+  const tagLen = bytes[1];
+  if (bytes.length < 2 + tagLen) return null;
+
+  const tag = new TextDecoder().decode(bytes.subarray(2, 2 + tagLen));
+  const valueBytes = bytes.subarray(2 + tagLen);
+  const value = new TextDecoder().decode(valueBytes);
+
+  return `${flags} ${tag} "${value}"`;
+}
+
 function parseRfc3597(dataStr: string, recordType: number): string | null {
   try {
     const cleaned = dataStr.replace(/^\\?\#\s*/, '').trim();
     const tokens = cleaned.split(/\s+/);
     if (tokens.length < 2) return null;
 
-    const hexBytes = tokens.slice(1);
-    const bytes = new Uint8Array(hexBytes.map(h => parseInt(h, 16)));
+    const rawHex = tokens.slice(1).join('');
+    if (rawHex.length % 2 !== 0) return null;
+    const bytes = new Uint8Array(rawHex.length / 2);
+    for (let i = 0; i < rawHex.length; i += 2) {
+      bytes[i / 2] = parseInt(rawHex.substring(i, i + 2), 16);
+    }
 
     if (recordType === 65 || recordType === 64) {
       return parseSvcbHttps(bytes);
+    }
+    if (recordType === 257) {
+      return parseCaa(bytes);
     }
   } catch {
     // Silent catch

@@ -103,3 +103,55 @@
   border-color: rgba(255, 255, 255, 0.8);
   color: #0f172a;
 }
+
+/* 數據文字雙主題適配 (符合 SKILL.md 一.7.⑥ 色階降階與雙主題規範) */
+.interestText {
+  color: #00f5a0;
+}
+
+:global([data-theme='light']) .interestText {
+  color: #059669;
+}
+
+.totalText {
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .totalText {
+  color: #d97706;
+}
+
+/* 本金圖例圓點雙主題適配 */
+.principalDot {
+  background-color: #94a3b8;
+}
+
+:global([data-theme='light']) .principalDot {
+  background-color: #0284c7;
+}
+
+/* 表格邊框與懸停列雙主題適配 */
+.tableHeaderRow {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='light']) .tableHeaderRow {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.tableDataRow {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+:global([data-theme='light']) .tableDataRow {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.tableDataRow:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+:global([data-theme='light']) .tableDataRow:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+

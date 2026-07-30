@@ -17,6 +17,7 @@ interface UrlMeta {
   protocol: string;
   host: string;
   pathname: string;
+  hash: string;
 }
 
 interface Props {
@@ -47,6 +48,7 @@ const TRANSLATIONS = {
     protocolLabel: '傳輸協定 (Protocol)',
     hostLabel: '域名主機 (Host Domain)',
     pathLabel: '路徑 (Pathname)',
+    hashLabel: '錨點 (Hash / Fragment)',
     tableKeyHeader: '參數名稱 (Query Key)',
     tableValueHeader: '參數內容 (Value)',
     tableActionsHeader: '操作',
@@ -79,6 +81,7 @@ const TRANSLATIONS = {
     protocolLabel: 'Protocol',
     hostLabel: 'Host Domain',
     pathLabel: 'Pathname',
+    hashLabel: 'Hash / Fragment',
     tableKeyHeader: 'Query Key',
     tableValueHeader: 'Value',
     tableActionsHeader: 'Actions',
@@ -125,7 +128,7 @@ function parseUrlStructure(rawText: string): {
   isFullUrl: boolean;
   urlObj: URL | null;
 } {
-  if (!rawText.trim()) return { meta: { protocol: '-', host: '-', pathname: '-' }, params: [], isFullUrl: false, urlObj: null };
+  if (!rawText.trim()) return { meta: { protocol: '-', host: '-', pathname: '-', hash: '-' }, params: [], isFullUrl: false, urlObj: null };
 
   let urlToParse = rawText.trim();
   let isFullUrl = false;
@@ -149,13 +152,14 @@ function parseUrlStructure(rawText: string): {
         protocol: isFullUrl ? urlObj.protocol : '(Relative)',
         host: isFullUrl ? urlObj.host : '(None)',
         pathname: urlObj.pathname,
+        hash: urlObj.hash || '-',
       },
       params,
       isFullUrl,
       urlObj,
     };
   } catch {
-    return { meta: { protocol: '-', host: '-', pathname: '-' }, params: [], isFullUrl: false, urlObj: null };
+    return { meta: { protocol: '-', host: '-', pathname: '-', hash: '-' }, params: [], isFullUrl: false, urlObj: null };
   }
 }
 
@@ -171,7 +175,7 @@ export default function UrlEncoderClient({ lang = 'zh-TW' }: Props) {
 
   const [plainText, setPlainText] = useState('');
   const [encodedText, setEncodedText] = useState('');
-  const [mode, setMode] = useState<UrlMode>('component');
+  const [mode, setMode] = useState<UrlMode>('uri');
   const [spacePlus, setSpacePlus] = useState(false);
   const [encodedError, setEncodedError] = useState(false);
   const [urlMeta, setUrlMeta] = useState<UrlMeta | null>(null);
@@ -355,8 +359,8 @@ export default function UrlEncoderClient({ lang = 'zh-TW' }: Props) {
                     {t.modeLabel}
                   </label>
                   <select id={modeSelectId} className={styles.selectStyle} value={mode} onChange={e => setMode(e.target.value as UrlMode)}>
-                    <option value="component">{t.modeComponent}</option>
                     <option value="uri">{t.modeUri}</option>
+                    <option value="component">{t.modeComponent}</option>
                   </select>
                 </div>
                 <div className={styles.btnGroup}>
@@ -411,7 +415,7 @@ export default function UrlEncoderClient({ lang = 'zh-TW' }: Props) {
           {/* URL Parser Section */}
           {showParser && urlMeta && (
             <div className={styles.urlParserSection}>
-              <div className="text-sm font-semibold text-text-main flex items-center gap-2">
+              <div className="text-base font-semibold text-text-main flex items-center gap-2">
                 <span className="w-1.5 h-4 bg-[var(--theme-color,#ff7300)] rounded-full shadow-[0_0_8px_var(--theme-color,#ff7300)] inline-block flex-shrink-0" />
                 {t.parserTitle}
               </div>
@@ -421,12 +425,13 @@ export default function UrlEncoderClient({ lang = 'zh-TW' }: Props) {
                   { label: t.protocolLabel, value: urlMeta.protocol },
                   { label: t.hostLabel, value: urlMeta.host },
                   { label: t.pathLabel, value: urlMeta.pathname },
+                  { label: t.hashLabel, value: urlMeta.hash },
                 ].map(item => (
                   <div key={item.label} className={styles.metaItem}>
                     <span className="text-xs text-text-sub uppercase tracking-[0.5px] font-semibold">{item.label}</span>
                     <div className={styles.metaValueWrapper}>
                       <span className={styles.metaValue}>{item.value}</span>
-                      <button type="button" onClick={() => copyValue(item.value === '-' || item.value === '(無)' || item.value === '(None)' ? '' : item.value)}
+                      <button type="button" onClick={() => copyValue(item.value === '-' || item.value === '(無)' || item.value === '(None)' || item.value === '(Relative)' ? '' : item.value)}
                         className={styles.metaCopyBtn} title="Copy">
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
@@ -463,7 +468,7 @@ export default function UrlEncoderClient({ lang = 'zh-TW' }: Props) {
                     ))}
                   </tbody>
                 </table>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1rem', background: 'rgba(0, 0, 0, 0.05)', borderTop: '1px solid var(--card-border, rgba(255, 255, 255, 0.05))', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div className={styles.tableFooter}>
                   <span className="text-sm font-medium text-text-sub">{t.paramCount(params.filter(p => p.key.trim()).length)}</span>
                   <button type="button" onClick={addParam} className={`${styles.techBtn} ${styles.techBtnPrimary}`} style={{ padding: '0.4rem 0.8rem' }}>
                     <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" style={{ marginRight: '2px' }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>

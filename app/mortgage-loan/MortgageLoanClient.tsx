@@ -1148,9 +1148,13 @@ export default function MortgageLoanClient() {
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">開辦手續費 (元)</span>
                     <input
-                      type="number"
-                      value={fee1}
-                      onChange={e => setFee1(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                      type="text"
+                      inputMode="numeric"
+                      value={fee1 === '' ? '' : fee1.toLocaleString('zh-TW')}
+                      onChange={e => {
+                        const raw = e.target.value.replace(/[^\d]/g, '');
+                        setFee1(raw === '' ? '' : parseInt(raw, 10));
+                      }}
                       className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
                     />
                   </div>

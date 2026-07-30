@@ -44,22 +44,22 @@ function calculateAPR(loanAmount: number, fee: number, payments: number[]): numb
 }
 
 export default function CarLoanClient() {
-  const [carPrice, setCarPrice] = useState<number>(1000000);
-  const [downPaymentPercent, setDownPaymentPercent] = useState<number>(20);
-  const [downPaymentAmount, setDownPaymentAmount] = useState<number>(200000);
-  const [loanAmount, setLoanAmount] = useState<number>(800000);
-  const [interestRate, setInterestRate] = useState<number>(2.5);
-  const [periodVal, setPeriodVal] = useState<number>(5);
+  const [carPrice, setCarPrice] = useState<number | ''>(1000000);
+  const [downPaymentPercent, setDownPaymentPercent] = useState<number | ''>(20);
+  const [downPaymentAmount, setDownPaymentAmount] = useState<number | ''>(200000);
+  const [loanAmount, setLoanAmount] = useState<number | ''>(800000);
+  const [interestRate, setInterestRate] = useState<number | ''>(2.5);
+  const [periodVal, setPeriodVal] = useState<number | ''>(5);
   const [periodUnit, setPeriodUnit] = useState<'year' | 'month'>('year');
   const [repayType, setRepayType] = useState<'equal-total' | 'equal-principal'>('equal-total');
   const [loanScheme, setLoanScheme] = useState<'standard' | 'grace' | 'stepped' | 'balloon'>('standard');
-  const [fee, setFee] = useState<number>(3500);
+  const [fee, setFee] = useState<number | ''>(3500);
 
   // 條件方案欄位
-  const [gracePeriod, setGracePeriod] = useState<number>(12);
-  const [stepPayment, setStepPayment] = useState<number>(5000);
-  const [stepPeriods, setStepPeriods] = useState<number>(12);
-  const [balloonAmount, setBalloonAmount] = useState<number>(200000);
+  const [gracePeriod, setGracePeriod] = useState<number | ''>(12);
+  const [stepPayment, setStepPayment] = useState<number | ''>(5000);
+  const [stepPeriods, setStepPeriods] = useState<number | ''>(12);
+  const [balloonAmount, setBalloonAmount] = useState<number | ''>(200000);
 
   // 運算結果
   const [monthlyPayment, setMonthlyPayment] = useState<number>(0);
@@ -97,40 +97,61 @@ export default function CarLoanClient() {
   }, []);
 
   // 車價與自備款連動
-  const handleCarPriceChange = (val: number) => {
+  const handleCarPriceChange = (val: number | '') => {
     setCarPrice(val);
-    const newDpAmount = Math.round(val * (downPaymentPercent / 100));
+    const numVal = val === '' ? 0 : val;
+    const numPct = downPaymentPercent === '' ? 0 : downPaymentPercent;
+    const newDpAmount = Math.round(numVal * (numPct / 100));
     setDownPaymentAmount(newDpAmount);
-    setLoanAmount(Math.max(0, val - newDpAmount));
+    setLoanAmount(Math.max(0, numVal - newDpAmount));
   };
 
-  const handleDownPercentChange = (pct: number) => {
+  const handleDownPercentChange = (pct: number | '') => {
+    if (pct === '') {
+      setDownPaymentPercent('');
+      return;
+    }
     const validPct = Math.min(100, Math.max(0, pct));
     setDownPaymentPercent(validPct);
-    const newDpAmount = Math.round(carPrice * (validPct / 100));
+    const numCar = carPrice === '' ? 0 : carPrice;
+    const newDpAmount = Math.round(numCar * (validPct / 100));
     setDownPaymentAmount(newDpAmount);
-    setLoanAmount(Math.max(0, carPrice - newDpAmount));
+    setLoanAmount(Math.max(0, numCar - newDpAmount));
   };
 
-  const handleDownAmountChange = (amt: number) => {
+  const handleDownAmountChange = (amt: number | '') => {
     setDownPaymentAmount(amt);
-    const newPct = carPrice > 0 ? (amt / carPrice) * 100 : 0;
+    const numAmt = amt === '' ? 0 : amt;
+    const numCar = carPrice === '' ? 0 : carPrice;
+    const newPct = numCar > 0 ? (numAmt / numCar) * 100 : 0;
     setDownPaymentPercent(parseFloat(newPct.toFixed(1)));
-    setLoanAmount(Math.max(0, carPrice - amt));
+    setLoanAmount(Math.max(0, numCar - numAmt));
   };
 
-  const handleLoanAmountChange = (amt: number) => {
+  const handleLoanAmountChange = (amt: number | '') => {
     setLoanAmount(amt);
-    const newDpAmount = Math.max(0, carPrice - amt);
+    const numAmt = amt === '' ? 0 : amt;
+    const numCar = carPrice === '' ? 0 : carPrice;
+    const newDpAmount = Math.max(0, numCar - numAmt);
     setDownPaymentAmount(newDpAmount);
-    const newPct = carPrice > 0 ? (newDpAmount / carPrice) * 100 : 0;
+    const newPct = numCar > 0 ? (newDpAmount / numCar) * 100 : 0;
     setDownPaymentPercent(parseFloat(newPct.toFixed(1)));
   };
 
   // 主計算邏輯
   const runCalculation = useCallback(() => {
-    const totalMonths = Math.max(0, periodUnit === 'year' ? periodVal * 12 : periodVal);
-    if (totalMonths <= 0 || loanAmount <= 0) {
+    const numLoanAmount = loanAmount === '' ? 0 : loanAmount;
+    const numPeriodVal = periodVal === '' ? 0 : periodVal;
+    const numInterestRate = interestRate === '' ? 0 : interestRate;
+    const numGracePeriod = gracePeriod === '' ? 0 : gracePeriod;
+    const numStepPayment = stepPayment === '' ? 0 : stepPayment;
+    const numStepPeriods = stepPeriods === '' ? 0 : stepPeriods;
+    const numBalloonAmount = balloonAmount === '' ? 0 : balloonAmount;
+
+    const numFee = fee === '' ? 0 : fee;
+
+    const totalMonths = Math.max(0, periodUnit === 'year' ? numPeriodVal * 12 : numPeriodVal);
+    if (totalMonths <= 0 || numLoanAmount <= 0) {
       setMonthlyPayment(0);
       setAfterSpecialPayment(0);
       setTotalInterest(0);
@@ -140,10 +161,10 @@ export default function CarLoanClient() {
       return;
     }
 
-    const monthlyRate = interestRate / 100 / 12;
+    const monthlyRate = numInterestRate / 100 / 12;
     const paymentArray: number[] = [];
     const rows: LoanRow[] = [];
-    let remBalance = loanAmount;
+    let remBalance = numLoanAmount;
     let interestSum = 0;
     let firstPay = 0;
     let afterPay = 0;
@@ -154,7 +175,7 @@ export default function CarLoanClient() {
       principalPaid: 0,
       interestPaid: 0,
       totalPayment: 0,
-      endBalance: loanAmount,
+      endBalance: numLoanAmount,
       statusTag: '',
     });
 
@@ -162,9 +183,9 @@ export default function CarLoanClient() {
       if (repayType === 'equal-total') {
         let pmt = 0;
         if (monthlyRate === 0) {
-          pmt = loanAmount / totalMonths;
+          pmt = numLoanAmount / totalMonths;
         } else {
-          pmt = (loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths))) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+          pmt = (numLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths))) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
         }
         firstPay = pmt;
 
@@ -188,7 +209,7 @@ export default function CarLoanClient() {
           });
         }
       } else {
-        const principalPerMonth = loanAmount / totalMonths;
+        const principalPerMonth = numLoanAmount / totalMonths;
         for (let m = 1; m <= totalMonths; m++) {
           const start = remBalance;
           const interest = start * monthlyRate;
@@ -211,7 +232,7 @@ export default function CarLoanClient() {
         }
       }
     } else if (loanScheme === 'grace') {
-      const validGrace = Math.min(gracePeriod, totalMonths - 1);
+      const validGrace = Math.min(numGracePeriod, totalMonths - 1);
       const remMonths = totalMonths - validGrace;
 
       for (let m = 1; m <= validGrace; m++) {
@@ -275,13 +296,13 @@ export default function CarLoanClient() {
         });
       }
     } else if (loanScheme === 'stepped') {
-      const validStepMonths = Math.min(stepPeriods, totalMonths - 1);
+      const validStepMonths = Math.min(numStepPeriods, totalMonths - 1);
       const remMonths = totalMonths - validStepMonths;
 
       for (let m = 1; m <= validStepMonths; m++) {
         const start = remBalance;
         const interest = start * monthlyRate;
-        const pmt = stepPayment;
+        const pmt = numStepPayment;
         const principal = pmt - interest;
         remBalance -= principal;
         interestSum += interest;
@@ -297,7 +318,7 @@ export default function CarLoanClient() {
         });
       }
 
-      firstPay = validStepMonths > 0 ? stepPayment : 0;
+      firstPay = validStepMonths > 0 ? numStepPayment : 0;
 
       let postPmt = 0;
       if (remMonths > 0) {
@@ -342,8 +363,8 @@ export default function CarLoanClient() {
         });
       }
     } else if (loanScheme === 'balloon') {
-      const validBalloon = Math.min(balloonAmount, loanAmount);
-      const amortizePrincipal = loanAmount - validBalloon;
+      const validBalloon = Math.min(numBalloonAmount, numLoanAmount);
+      const amortizePrincipal = numLoanAmount - validBalloon;
 
       let pmt = 0;
       if (repayType === 'equal-total') {
@@ -396,10 +417,10 @@ export default function CarLoanClient() {
     setMonthlyPayment(firstPay);
     setAfterSpecialPayment(afterPay);
     setTotalInterest(interestSum);
-    setTotalPayment(loanAmount + interestSum + fee);
+    setTotalPayment(numLoanAmount + interestSum + numFee);
     setSchedule(rows);
 
-    const calculatedApr = calculateAPR(loanAmount, fee, paymentArray);
+    const calculatedApr = calculateAPR(numLoanAmount, numFee, paymentArray);
     setApr(calculatedApr);
   }, [carPrice, loanAmount, interestRate, periodVal, periodUnit, repayType, loanScheme, fee, gracePeriod, stepPayment, stepPeriods, balloonAmount]);
 
@@ -534,9 +555,13 @@ export default function CarLoanClient() {
                 <div className="relative flex items-center">
                   <input
                     id={carPriceInputId}
-                    type="number"
-                    value={carPrice}
-                    onChange={e => handleCarPriceChange(parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={carPrice === '' ? '' : carPrice.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      handleCarPriceChange(raw === '' ? 0 : parseInt(raw, 10));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                   <span className="absolute right-4 text-xs text-text-sub">元</span>
@@ -563,9 +588,13 @@ export default function CarLoanClient() {
                   <div className="relative flex items-center">
                     <input
                       id={downPaymentAmountInputId}
-                      type="number"
-                      value={downPaymentAmount}
-                      onChange={e => handleDownAmountChange(parseFloat(e.target.value) || 0)}
+                      type="text"
+                      inputMode="numeric"
+                      value={downPaymentAmount === '' ? '' : downPaymentAmount.toLocaleString('zh-TW')}
+                      onChange={e => {
+                        const raw = e.target.value.replace(/[^\d]/g, '');
+                        handleDownAmountChange(raw === '' ? 0 : parseInt(raw, 10));
+                      }}
                       className={`w-full ${styles.inputField} px-4 py-3 pr-10 rounded-xl text-base outline-none transition-all font-mono`}
                     />
                     <span className="absolute right-4 text-xs text-text-sub">元</span>
@@ -579,9 +608,13 @@ export default function CarLoanClient() {
                 <div className="relative flex items-center">
                   <input
                     id={loanAmountInputId}
-                    type="number"
-                    value={loanAmount}
-                    onChange={e => handleLoanAmountChange(parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={loanAmount === '' ? '' : loanAmount.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      handleLoanAmountChange(raw === '' ? 0 : parseInt(raw, 10));
+                    }}
                     className={`w-full ${styles.inputField} ${styles.accentText} font-bold px-4 py-3 pr-12 rounded-xl text-lg outline-none transition-all font-mono`}
                   />
                   <span className={`absolute right-4 text-xs ${styles.accentText}`}>元</span>
@@ -663,9 +696,13 @@ export default function CarLoanClient() {
                 <div className="relative flex items-center">
                   <input
                     id={feeInputId}
-                    type="number"
-                    value={fee}
-                    onChange={e => setFee(parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={fee === '' ? '' : fee.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      setFee(raw === '' ? 0 : parseInt(raw, 10));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                   <span className="absolute right-4 text-xs text-text-sub">元</span>
@@ -693,9 +730,13 @@ export default function CarLoanClient() {
                   <label htmlFor={stepPaymentInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>前期超低月付金額 (元)</label>
                   <input
                     id={stepPaymentInputId}
-                    type="number"
-                    value={stepPayment}
-                    onChange={e => setStepPayment(parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={stepPayment === '' ? '' : stepPayment.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      setStepPayment(raw === '' ? 0 : parseInt(raw, 10));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                   />
                 </div>
@@ -715,13 +756,17 @@ export default function CarLoanClient() {
             {loanScheme === 'balloon' && (
               <div className="border-l-2 border-[var(--theme-color)] pl-4 flex flex-col gap-2 py-1">
                 <label htmlFor={balloonAmountInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>
-                  氣球貸尾款保留金額 (元) <span className="text-[0.75rem] text-text-sub">({((balloonAmount / (loanAmount || 1)) * 100).toFixed(1)}%)</span>
+                  氣球貸尾款保留金額 (元) <span className="text-[0.75rem] text-text-sub">({((((balloonAmount === '' ? 0 : balloonAmount) / ((loanAmount === '' ? 0 : loanAmount) || 1))) * 100).toFixed(1)}%)</span>
                 </label>
                 <input
                   id={balloonAmountInputId}
-                  type="number"
-                  value={balloonAmount}
-                  onChange={e => setBalloonAmount(parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={balloonAmount === '' ? '' : balloonAmount.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setBalloonAmount(raw === '' ? 0 : parseInt(raw, 10));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                 />
               </div>

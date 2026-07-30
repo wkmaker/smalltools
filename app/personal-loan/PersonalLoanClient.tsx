@@ -334,9 +334,13 @@ export default function PersonalLoanClient() {
             </label>
             <input
               id={feeInputId}
-              type="number"
-              value={fee}
-              onChange={e => setFee(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+              type="text"
+              inputMode="numeric"
+              value={fee === '' ? '' : fee.toLocaleString('zh-TW')}
+              onChange={e => {
+                const raw = e.target.value.replace(/[^\d]/g, '');
+                setFee(raw === '' ? '' : parseInt(raw, 10));
+              }}
               className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
             />
           </div>

@@ -29,10 +29,10 @@ const TRANSLATIONS = {
   'zh-TW': {
     title: 'EPOCH 時間戳記轉換器',
     subtitle: 'UNIX TIMESTAMP CONVERTER',
-    description: '專業免費的線上 Unix Epoch 時間戳記轉換工具！支援秒/毫秒自動判定、即時雙向轉換、台北時間/UTC/美西時間(PST)等多時區比較與歷史紀錄。',
+    description: '專業免費的線上 Unix Epoch 時間戳記轉換工具！支援秒/毫秒自動判定、即時雙向轉換、當地時間/UTC/美西時間(PST)等多時區比較與歷史紀錄。',
     liveSecTitle: '當前 UNIX TIMESTAMP (秒)',
     liveMsTitle: '當前時間戳記 (毫秒)',
-    liveTaipeiTitle: '當前台北時間 (Asia/Taipei)',
+    liveLocalTitle: '當前當地時間',
     copy: '複製',
     resumeClock: '▶ 繼續',
     pauseClock: '⏸ 暫停',
@@ -44,7 +44,7 @@ const TRANSLATIONS = {
     unitMs: '毫秒 (13位)',
     btnFillNow: '帶入現在時間',
     btnClear: '清除',
-    taipeiTimeLabel: '台北時間 (Asia/Taipei)',
+    localTimeLabel: '當地時間',
     utcTimeLabel: '世界標準時間 (UTC)',
     laTimeLabel: '美西時間 (Los Angeles)',
     selectCustomTzLabel: '選擇自訂時區',
@@ -66,7 +66,7 @@ const TRANSLATIONS = {
     thRecordTime: '記錄時間',
     thType: '轉換類型',
     thInputRaw: '輸入原始值',
-    thTaipei: '台北時間 (GMT+8)',
+    thLocal: '當地時間 (Local)',
     thUtc: '世界標準時間 (UTC)',
     thLa: '美西時間 (LA)',
     thAction: '操作',
@@ -97,10 +97,10 @@ const TRANSLATIONS = {
   en: {
     title: 'Epoch Timestamp Converter',
     subtitle: 'UNIX TIMESTAMP CONVERTER',
-    description: 'Free online Unix Epoch timestamp converter tool! Auto second/millisecond detection, instant 2-way conversion, multi-timezone comparison (Taipei, UTC, PST), and conversion history.',
+    description: 'Free online Unix Epoch timestamp converter tool! Auto second/millisecond detection, instant 2-way conversion, multi-timezone comparison (Local, UTC, PST), and conversion history.',
     liveSecTitle: 'Current Unix Timestamp (sec)',
     liveMsTitle: 'Current Timestamp (ms)',
-    liveTaipeiTitle: 'Current Taipei Time (Asia/Taipei)',
+    liveLocalTitle: 'Current Local Time',
     copy: 'Copy',
     resumeClock: '▶ Resume',
     pauseClock: '⏸ Pause',
@@ -112,7 +112,7 @@ const TRANSLATIONS = {
     unitMs: 'Mins (13-digit)',
     btnFillNow: 'Fill Current Time',
     btnClear: 'Clear',
-    taipeiTimeLabel: 'Taipei Time (Asia/Taipei)',
+    localTimeLabel: 'Local Time',
     utcTimeLabel: 'UTC Time (Etc/UTC)',
     laTimeLabel: 'LA Time (America/Los_Angeles)',
     selectCustomTzLabel: 'Select Custom Timezone',
@@ -134,7 +134,7 @@ const TRANSLATIONS = {
     thRecordTime: 'Record Time',
     thType: 'Type',
     thInputRaw: 'Raw Input',
-    thTaipei: 'Taipei Time (GMT+8)',
+    thLocal: 'Local Time',
     thUtc: 'UTC Time',
     thLa: 'LA Time',
     thAction: 'Actions',
@@ -164,7 +164,46 @@ const TRANSLATIONS = {
   },
 };
 
-// 格式化時間輔助函數 YYYY-MM-DD HH:mm:ss.SSS
+// 取得乾淨且人體工學的時區標籤（淨化 POSIX Etc/GMT-8 反向符號引發的混淆）
+function getCleanTzLabel(date: Date = new Date()): { tzName: string; utcOffset: string; displayLabel: string } {
+  try {
+    const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const offsetMinutes = -date.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absMin = Math.abs(offsetMinutes);
+    const hours = Math.floor(absMin / 60);
+    const mins = absMin % 60;
+    const minsStr = mins > 0 ? `:${String(mins).padStart(2, '0')}` : '';
+    const utcOffset = `UTC${sign}${hours}${minsStr}`;
+
+    // 若 tzName 包含 Etc/ 或 GMT，屬 POSIX 符號會造成混淆 (如 Etc/GMT-8 = UTC+8)，淨化為只顯示 UTC 標籤
+    if (!tzName || tzName.startsWith('Etc/') || tzName.includes('GMT')) {
+      return { tzName: '', utcOffset, displayLabel: utcOffset };
+    }
+
+    return { tzName, utcOffset, displayLabel: `${tzName}, ${utcOffset}` };
+  } catch {
+    return { tzName: '', utcOffset: 'UTC+8', displayLabel: 'UTC+8' };
+  }
+}
+
+// 格式化本機當地時間 (100% 精準對齊使用者裝置電腦時間)
+function formatLocalTime(date: Date): string {
+  try {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    const ms = String(date.getMilliseconds()).padStart(3, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}.${ms}`;
+  } catch {
+    return 'Invalid Date';
+  }
+}
+
+// 格式化時間輔助函數 YYYY-MM-DD HH:mm:ss.SSS (指定 IANA 時區)
 function formatInTimezone(date: Date, timeZone: string): string {
   try {
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -283,6 +322,10 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
   const [liveNow, setLiveNow] = useState<Date | null>(null);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
+  // 本機時區 (自動偵測與淨化)
+  const [userTz, setUserTz] = useState<string>('Asia/Taipei');
+  const [displayTzLabel, setDisplayTzLabel] = useState<string>('UTC+8');
+
   // 1. Timestamp ➜ 日期
   const [tsInput, setTsInput] = useState<string>('');
   const [unitMode, setUnitMode] = useState<'auto' | 's' | 'ms'>('auto');
@@ -335,9 +378,19 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
     setDtInput(`${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`);
     setDtMsInput(now.getMilliseconds().toString());
 
-    // 自動測算本地時區偏移量
+    // 自動測算本地時區偏移量與名稱
     const localOffset = -now.getTimezoneOffset() / 60;
     setDtTzOffset(localOffset);
+
+    try {
+      const tzInfo = getCleanTzLabel(now);
+      setDisplayTzLabel(tzInfo.displayLabel);
+      if (tzInfo.tzName) {
+        setUserTz(tzInfo.tzName);
+      }
+    } catch {
+      // 保留 fallback
+    }
 
     // 讀取 LocalStorage 歷史紀錄
     try {
@@ -376,6 +429,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
     const dateObj = new Date(unit === 's' ? tsNum * 1000 : tsNum);
     if (isNaN(dateObj.getTime())) return null;
 
+    const localStr = formatLocalTime(dateObj);
     const taipeiStr = formatInTimezone(dateObj, 'Asia/Taipei');
     const utcStr = formatInTimezone(dateObj, 'Etc/UTC');
     const laStr = formatInTimezone(dateObj, 'America/Los_Angeles');
@@ -396,6 +450,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
       cleanTs: clean,
       unit,
       dateObj,
+      localStr,
       taipeiStr,
       utcStr,
       laStr,
@@ -423,6 +478,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
       secEpoch,
       msEpoch,
       dateObj,
+      localStr: formatLocalTime(dateObj),
       taipeiStr: formatInTimezone(dateObj, 'Asia/Taipei'),
       utcStr: formatInTimezone(dateObj, 'Etc/UTC'),
       laStr:
@@ -449,7 +505,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
         type: 'ts2date',
         typeLabel: t.typeLabelTs2Date,
         inputRaw: `${parsedTsResult.cleanTs} (${parsedTsResult.unit})`,
-        taipeiTime: parsedTsResult.taipeiStr,
+        taipeiTime: parsedTsResult.localStr,
         utcTime: parsedTsResult.utcStr,
         laTime: `${parsedTsResult.laStr} (${parsedTsResult.laBadge})`,
         loadData: {
@@ -465,7 +521,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
         type: 'date2ts',
         typeLabel: t.typeLabelDate2Ts,
         inputRaw: `${dtInput.replace('T', ' ')}.${dtMsInput} (UTC ${sign}${dtTzOffset})`,
-        taipeiTime: parsedDateResult.taipeiStr,
+        taipeiTime: parsedDateResult.localStr,
         utcTime: parsedDateResult.utcStr,
         laTime: parsedDateResult.laStr,
         loadData: {
@@ -568,7 +624,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
 
   const liveSec = liveNow ? Math.floor(liveNow.getTime() / 1000) : 0;
   const liveMs = liveNow ? liveNow.getTime() : 0;
-  const liveDateStr = isMounted && liveNow ? formatInTimezone(liveNow, 'Asia/Taipei') : 'YYYY-MM-DD HH:mm:ss.SSS';
+  const liveDateStr = isMounted && liveNow ? formatLocalTime(liveNow) : 'YYYY-MM-DD HH:mm:ss.SSS';
 
   return (
     <ToolLayout
@@ -622,7 +678,9 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
             </div>
 
             <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
-              <span className="text-sm font-semibold text-text-sub truncate">{t.liveTaipeiTitle}</span>
+              <span className="text-sm font-semibold text-text-sub truncate">
+                {isMounted ? `${t.liveLocalTitle} (${displayTzLabel})` : `${t.liveLocalTitle} (UTC+8)`}
+              </span>
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <span className={`font-mono min-w-0 truncate ${styles.liveClock}`}>{liveDateStr}</span>
                 <button
@@ -704,15 +762,17 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
             <div className="flex flex-col gap-3 font-mono text-xs border-t border-border-glass pt-5">
               <div className={`flex justify-between items-center ${styles.innerBlock} min-w-0`}>
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-text-sub text-[0.75rem]">{t.taipeiTimeLabel}</span>
+                  <span className="text-text-sub text-[0.75rem]">
+                    {t.localTimeLabel} ({isMounted ? displayTzLabel : 'UTC+8'})
+                  </span>
                   <span className="text-text-main font-bold text-sm truncate">
-                    {parsedTsResult ? parsedTsResult.taipeiStr : '-'}
+                    {parsedTsResult ? parsedTsResult.localStr : '-'}
                   </span>
                 </div>
                 {parsedTsResult && (
                   <button
                     type="button"
-                    onClick={() => copyAndRecord(parsedTsResult.taipeiStr, 'ts2date')}
+                    onClick={() => copyAndRecord(parsedTsResult.localStr, 'ts2date')}
                     className={styles.copyBtn}
                   >
                     {t.copy}
@@ -764,16 +824,16 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
               </div>
 
               {/* 自訂選單時區 */}
-              <div className={`flex justify-between items-center ${styles.innerBlock} min-w-0`}>
-                <div className="flex flex-col gap-1 w-full mr-2 min-w-0">
-                  <label htmlFor={selectCustomTzId} className="sr-only">
+              <div className={`flex flex-col gap-2.5 ${styles.innerBlock} min-w-0`}>
+                <div className="flex items-center justify-between gap-2 min-w-0 flex-wrap">
+                  <label htmlFor={selectCustomTzId} className="text-text-sub text-[0.75rem] font-medium min-w-0">
                     {t.selectCustomTzLabel}
                   </label>
                   <select
                     id={selectCustomTzId}
                     value={customTzOffset}
                     onChange={(e) => setCustomTzOffset(parseFloat(e.target.value))}
-                    className={`${styles.selectInput} w-full max-w-[220px] py-1 px-2 text-xs`}
+                    className={`${styles.selectInput} py-1 pl-2.5 pr-8 text-xs font-mono rounded-lg border bg-select-bg max-w-full sm:max-w-[260px]`}
                   >
                     <option value="-12">UTC -12:00</option>
                     <option value="-11">UTC -11:00</option>
@@ -811,19 +871,22 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
                     <option value="13">UTC +13:00</option>
                     <option value="14">UTC +14:00</option>
                   </select>
-                  <span className="text-text-main font-bold text-sm truncate">
+                </div>
+
+                <div className="flex items-center justify-between gap-2 min-w-0 pt-2 border-t border-border-glass/40">
+                  <span className="text-text-main font-bold text-sm truncate font-mono">
                     {parsedTsResult ? parsedTsResult.customStr : '-'}
                   </span>
+                  {parsedTsResult && (
+                    <button
+                      type="button"
+                      onClick={() => copyAndRecord(parsedTsResult.customStr, 'ts2date')}
+                      className={styles.copyBtn}
+                    >
+                      {t.copy}
+                    </button>
+                  )}
                 </div>
-                {parsedTsResult && (
-                  <button
-                    type="button"
-                    onClick={() => copyAndRecord(parsedTsResult.customStr, 'ts2date')}
-                    className={styles.copyBtn}
-                  >
-                    {t.copy}
-                  </button>
-                )}
               </div>
             </div>
 
@@ -1028,7 +1091,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
                     <th className={styles.stickyCol}>{t.thRecordTime}</th>
                     <th>{t.thType}</th>
                     <th>{t.thInputRaw}</th>
-                    <th>{t.thTaipei}</th>
+                    <th>{t.thLocal}</th>
                     <th>{t.thUtc}</th>
                     <th>{t.thLa}</th>
                     <th className="text-right">{t.thAction}</th>

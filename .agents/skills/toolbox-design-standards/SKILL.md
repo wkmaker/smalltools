@@ -134,6 +134,8 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
      - **精細邊框**：`border-border-glass` (連動 `--card-border`)
      - **主要文字**：`text-text-main` (連動 `--text-primary`：暗色 `#ffffff` / 亮色 `#0f172a`)
      - **次要標籤**：`text-text-sub` (連動 `--text-secondary`：暗色 `#94a3b8` / 亮色 `#334155`)
+   * **全站 CSS 變數別名防錯 (CRITICAL - Invalid CSS Variable Fallback Trap)**：
+     在 CSS Module (`*.module.css`) 中引用全域文字變數時，**必須嚴格對齊 `:root` 所宣告之 `var(--text-primary)` 與 `var(--text-secondary)`**。嚴禁使用未於 `:root` 定義的 `var(--text-main)` 或 `var(--text-sub)`，否則在亮色模式下會因變數未命中而繼續套用白字 fallback，引發淺色背景下文字隱形之死鎖 Bug。
    * **Tailwind `dark:` 變體失效陷阱 (CRITICAL - Dark Variant Trap)**：
      - 專案全站由 `<html data-theme="...">` 驅動主題，**嚴禁在 JSX 中直接使用 Tailwind 預設的 `dark:` 類別**（例如 `bg-white/40 dark:bg-black/20`）。在未宣告自訂 `@variant dark` 時，Tailwind 在亮色模式下會無視 `dark:` 條件而誤套用黑底，在淺色背景上疊加出巨幅沉重、髒灰色的「泥塊障礙區」。
      - **正確特化做法**：組件專屬樣式統一寫於對應 CSS Module (`*.module.css`)，使用 `:global([data-theme='light']) .className` 與 `:global([data-theme='dark']) .className` 做亮暗特化。
@@ -219,6 +221,9 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
    * **工具類型選擇性排除原則 (Selective Exclusion for Non-Parameterized Tools)**：
      - 包含複雜多欄位參數試算/模擬器的金融理財類工具 (如房貸/信貸/薪資/複利試算)，必須實作 URL 雙向狀態同步。
      - 針對純單向輸入輸出、文件/文字處理或一次性密碼生成工具 (如 Base64、URL 編解碼、密碼產生器、JSON 格式化、SSL 憑證轉換器)，**應選擇性不啟用 URL 參數雙向連動與 Hydration 網址解析**，保持網址潔淨並避免無謂的狀態同步負擔。
+
+   * **結構化資料與 URL 拆解完整性規範 (Structured Parser Completeness)**：
+     凡提供網址或結構化資料拆解/連動編輯功能的工具，解析器必須 100% 完整拆解與展示該資料結構之所有標準組成要素（例如 URL 結構必須涵蓋 Protocol, Host Domain, Pathname, Query Parameters 以及 Fragment / Anchor Hash `#`），防止組件拆解時遺漏重要欄位。
 
 
 
@@ -435,7 +440,12 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
 
 
-4. **輸入控制項與格式化細節**
+4. **輸入控制項與格式化細節與金額千分位規範**
+
+   * **金額與貨幣輸入框即時千分位格式化 (Formatted Currency Input Standard)**：
+     - 凡涉及金額、本金、貸款額度、定期定額、薪資、合約價值或股票質押金額等貨幣輸入框（如房貸、信貸、車貸、複利、算薪水、期貨槓桿、質押計算機），統一採用 `type="text"` 搭配 `inputMode="numeric"`。
+     - **即時視覺千分位**：`value={amount === '' ? '' : amount.toLocaleString('zh-TW')}`，使數字在輸入時即時呈現千分位逗號（如 `1,000,000`），顯著提升大額金融數據的可讀性。
+     - **防呆解析與輸入處理**：於 `onChange` 透過非數字正則過濾 `const raw = e.target.value.replace(/[^\d]/g, '')` 並安全解析寫回狀態 `setAmount(raw === '' ? '' : parseInt(raw, 10))`，兼顧無縫輸入、全選清空與剪貼簿貼上。
 
    * **隱藏預設 Number Spinners**：`app/globals.css` 已內建隱藏 `input[type='number']` 之上下箭頭。
 
@@ -468,6 +478,8 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 8. **全站字體可讀性與視覺高對比度規範 (Typography & Accessibility)**
 
    * **Form Label 高對比度與字級**：表單標籤禁止使用過暗之 Slate-400 (`text-[#94a3b8]`) 或過小字體 (`text-xs` / 12px)。統一升級採用語意化類別 **`text-sm font-medium text-text-sub`** (14px)，符合 WCAG 2.1 行動端可讀性標準與 Google Mobile SEO 規範。
+
+   * **表單輸入框與 Monospace 數據 14px 規範 (Input & Monospace Font Size Standard)**：所有表單輸入框 (`<input>` / `<textarea>`)、動態表格輸入欄位、Monospace 代碼與數據卡片，字級一律保持 **14px (`text-sm` / `0.875rem` / `0.9rem`)**。控制與操作按鈕一律維持 **13px~14px (`0.8125rem`~`0.875rem`)**。嚴禁將輸入框字級設為 `< 13px` (`0.75rem`)，以防範行動裝置 (iOS Safari) 聚焦輸入框時觸發視埠自動強行放大 (Auto-zoom Bug) 及視覺閱讀障礙。
 
    * **指標看板標題醒目化 (Stat Card Titles)**：核心數據或統計看板之卡片標題（如「首期月付額」、「實質年利率」、「總還款金額」、「總字元數」等）一律採用 **`text-sm font-semibold text-text-sub`** (14px 粗體醒目化)，嚴禁使用 12px 微縮字級。
 

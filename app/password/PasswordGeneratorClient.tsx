@@ -154,7 +154,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
   const [strictMode, setStrictMode] = useState(true);
 
   const [password, setPassword] = useState(t.placeholderInitial);
-  const [passwordColor, setPasswordColor] = useState('var(--text-main)');
+  const [passwordColor, setPasswordColor] = useState('var(--text-primary)');
   const [strength, setStrength] = useState<StrengthResult>({ label: '-', percent: 0, color: 'transparent' });
   const [history, setHistory] = useState<string[]>([]);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
@@ -180,7 +180,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
         setStrength({ label: '-', percent: 0, color: 'transparent' });
         return null;
       }
-      setPasswordColor('var(--text-main)');
+      setPasswordColor('var(--text-primary)');
 
       const processed = selected
         .map(({ key, chars }) => ({

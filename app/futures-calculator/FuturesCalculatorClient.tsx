@@ -230,10 +230,14 @@ export default function FuturesCalculatorClient() {
                 <label htmlFor={indexInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">成交指數點位 (點)</label>
                 <input
                   id={indexInputId}
-                  type="number"
-                  placeholder="例如：22000"
-                  value={indexPrice}
-                  onChange={e => setIndexPrice(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="例如：22,000"
+                  value={indexPrice === '' ? '' : indexPrice.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setIndexPrice(raw === '' ? '' : parseInt(raw, 10));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
@@ -255,9 +259,13 @@ export default function FuturesCalculatorClient() {
                   <label htmlFor={capitalInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">準備本金 (元)</label>
                   <input
                     id={capitalInputId}
-                    type="number"
-                    value={capital}
-                    onChange={e => setCapital(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={capital === '' ? '' : capital.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      setCapital(raw === '' ? '' : parseInt(raw, 10));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                 </div>
@@ -286,9 +294,13 @@ export default function FuturesCalculatorClient() {
                 <label htmlFor={initMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">單口原始保證金 (元)</label>
                 <input
                   id={initMarginInputId}
-                  type="number"
-                  value={initialMargin}
-                  onChange={e => setInitialMargin(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={initialMargin === '' ? '' : initialMargin.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setInitialMargin(raw === '' ? '' : parseInt(raw, 10));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
@@ -297,9 +309,13 @@ export default function FuturesCalculatorClient() {
                 <label htmlFor={maintMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">單口維持保證金 (元)</label>
                 <input
                   id={maintMarginInputId}
-                  type="number"
-                  value={maintMargin}
-                  onChange={e => setMaintMargin(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={maintMargin === '' ? '' : maintMargin.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setMaintMargin(raw === '' ? '' : parseInt(raw, 10));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>

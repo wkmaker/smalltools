@@ -157,10 +157,14 @@ export default function PledgeCalculatorClient() {
                 <div className="relative flex items-center">
                   <input
                     id={qtyInputId}
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="例如：50"
-                    value={stockQty}
-                    onChange={e => setStockQty(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                    value={stockQty === '' ? '' : stockQty.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      setStockQty(raw === '' ? '' : parseInt(raw, 10));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-16 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                   <select
@@ -193,10 +197,14 @@ export default function PledgeCalculatorClient() {
               </div>
               <input
                 id={loanInputId}
-                type="number"
-                placeholder="例如：6000000"
-                value={loanAmount}
-                onChange={e => setLoanAmount(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                type="text"
+                inputMode="numeric"
+                placeholder="例如：6,000,000"
+                value={loanAmount === '' ? '' : loanAmount.toLocaleString('zh-TW')}
+                onChange={e => {
+                  const raw = e.target.value.replace(/[^\d]/g, '');
+                  setLoanAmount(raw === '' ? '' : parseInt(raw, 10));
+                }}
                 className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
               />
 

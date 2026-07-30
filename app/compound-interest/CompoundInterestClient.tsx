@@ -329,9 +329,13 @@ export default function CompoundInterestClient() {
               <div className="relative flex items-center">
                 <input
                   id={principalInputId}
-                  type="number"
-                  value={principal}
-                  onChange={e => setPrincipal(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={principal === '' ? '' : principal.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setPrincipal(raw === '' ? '' : parseInt(raw, 10));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono`}
                 />
                 <span className="absolute right-4 text-sm text-text-sub font-medium">元</span>
@@ -345,9 +349,13 @@ export default function CompoundInterestClient() {
                 <div className="relative flex items-center">
                   <input
                     id={contributionInputId}
-                    type="number"
-                    value={contribution}
-                    onChange={e => setContribution(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="numeric"
+                    value={contribution === '' ? '' : contribution.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      setContribution(raw === '' ? '' : parseInt(raw, 10));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono`}
                   />
                   <span className="absolute right-4 text-sm text-text-sub font-medium">元</span>
@@ -468,7 +476,7 @@ export default function CompoundInterestClient() {
             <div className="grid grid-cols-3 gap-4 max-sm:grid-cols-1">
               <div className={`${styles.glassCard} p-5 flex flex-col items-center justify-center text-center transition-all hover:translate-y-[-2px]`}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">累積總金額</span>
-                <span className="font-mono text-2xl font-bold text-[#ffb800] drop-shadow-[0_2px_10px_rgba(255,184,0,0.25)]">
+                <span className={`font-mono text-2xl font-bold ${styles.totalText} drop-shadow-[0_2px_10px_rgba(255,184,0,0.25)]`}>
                   ${formatNumber(totalAsset)}
                 </span>
               </div>
@@ -482,7 +490,7 @@ export default function CompoundInterestClient() {
 
               <div className={`${styles.glassCard} p-5 flex flex-col items-center justify-center text-center transition-all hover:translate-y-[-2px]`}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">累積利息收益</span>
-                <span className="font-mono text-xl font-bold text-[#00c875] dark:text-[#00f5a0]">
+                <span className={`font-mono text-xl font-bold ${styles.interestText}`}>
                   ${formatNumber(totalInterest)}
                 </span>
               </div>
@@ -493,8 +501,8 @@ export default function CompoundInterestClient() {
               <div className="flex justify-between items-center text-sm font-semibold text-text-sub uppercase tracking-[1px]">
                 <span>複利資產累積趨勢圖</span>
                 <div className="flex gap-4">
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#ffb800]" />複利利息</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#0284c7] dark:bg-[#94a3b8]" />投入本金</span>
+                  <span className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-full ${styles.totalText} bg-current`} />複利利息</span>
+                  <span className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-full ${styles.principalDot}`} />投入本金</span>
                 </div>
               </div>
               <div className="relative w-full h-[230px]">
@@ -509,7 +517,7 @@ export default function CompoundInterestClient() {
               </h3>
               <table className="w-full text-right text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200/80 dark:border-white/[.08] text-text-sub text-sm font-semibold">
+                  <tr className={`${styles.tableHeaderRow} text-text-sub text-sm font-semibold`}>
                     <th className={`text-left p-2.5 ${styles.stickyPeriod}`}>{periodUnit === 'year' ? '年度' : '月份'}</th>
                     <th className="p-2.5">期初金額</th>
                     <th className="p-2.5">當期投入</th>
@@ -520,13 +528,13 @@ export default function CompoundInterestClient() {
                 </thead>
                 <tbody>
                   {schedule.map((row, idx) => (
-                    <tr key={idx} className="border-b border-slate-200/50 dark:border-white/[.03] hover:bg-slate-100/60 dark:hover:bg-white/[.02] text-text-main transition-colors">
+                    <tr key={idx} className={`${styles.tableDataRow} text-text-main transition-colors`}>
                       <td className={`text-left p-2.5 font-mono text-text-main ${styles.stickyPeriod}`}>{row.label}</td>
                       <td className="p-2.5 font-mono">{row.label === '初始' ? '-' : `$${formatNumber(row.startBalance)}`}</td>
                       <td className="p-2.5 font-mono">{row.label === '初始' ? '-' : `+$${formatNumber(row.contribution)}`}</td>
-                      <td className="p-2.5 font-mono text-[#00c875] dark:text-[#00f5a0]">{row.label === '初始' ? '-' : `+$${formatNumber(row.interest)}`}</td>
+                      <td className={`p-2.5 font-mono ${styles.interestText}`}>{row.label === '初始' ? '-' : `+$${formatNumber(row.interest)}`}</td>
                       <td className="p-2.5 font-mono">${formatNumber(row.totalPrincipal)}</td>
-                      <td className="p-2.5 font-mono text-[#ffb800] font-semibold">${formatNumber(row.total)}</td>
+                      <td className={`p-2.5 font-mono ${styles.totalText} font-semibold`}>${formatNumber(row.total)}</td>
                     </tr>
                   ))}
                 </tbody>
