@@ -60,6 +60,15 @@ const TRANSLATIONS = {
     toastExportSuccess: 'PDF 匯出下載成功！',
     toastExportFailed: (msg: string) => `PDF 匯出失敗：${msg}`,
     toastPdfError: (name: string) => `無法解析 PDF 檔案 [${name}]，可能檔案已加密或毀損`,
+    unlockModalTitle: '檔案受密碼保護',
+    unlockModalSub: (name: string) => `PDF 檔案 [${name}] 受到開啟密碼保護，請輸入密碼以拆解與預覽頁面。`,
+    passwordPlaceholder: '請輸入 PDF 開啟密碼',
+    unlockBtn: '解鎖並拆頁',
+    unlocking: '驗證解鎖中...',
+    cancelBtn: '取消',
+    invalidPasswordMsg: '密碼不正確，請確認後重新輸入。',
+    showPassword: '顯示密碼',
+    hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-processor/en/',
   },
@@ -106,6 +115,15 @@ const TRANSLATIONS = {
     toastExportSuccess: 'PDF export downloaded successfully!',
     toastExportFailed: (msg: string) => `PDF export failed: ${msg}`,
     toastPdfError: (name: string) => `Failed to parse PDF [${name}]. File might be encrypted or corrupted.`,
+    unlockModalTitle: 'Password Protected File',
+    unlockModalSub: (name: string) => `PDF [${name}] is password protected. Enter password to split & preview pages.`,
+    passwordPlaceholder: 'Enter PDF password',
+    unlockBtn: 'Unlock & Split Pages',
+    unlocking: 'Unlocking...',
+    cancelBtn: 'Cancel',
+    invalidPasswordMsg: 'Incorrect password. Please try again.',
+    showPassword: 'Show Password',
+    hidePassword: 'Hide Password',
     switchLangText: '繁體中文',
     switchLangHref: '/pdf-processor/',
   },
@@ -132,8 +150,19 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [toast, setToast] = useState<string>('');
 
+  // 密碼解鎖對話框狀態
+  const [pendingPasswordFile, setPendingPasswordFile] = useState<{
+    file: File;
+    buffer: ArrayBuffer;
+  } | null>(null);
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isUnlocking, setIsUnlocking] = useState<boolean>(false);
+
   const fileInputId = useId();
   const exportQualityId = useId();
+  const pwdInputId = useId();
 
   useEffect(() => {
     setIsMounted(true);
@@ -168,7 +197,12 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
 
     if (currentItem.sourceType === 'PDF' && currentItem.pdfArrayBuffer) {
       setIsLoadingHighRes(true);
-      renderSinglePdfPageHighRes(currentItem.pdfArrayBuffer, currentItem.pageIndex, 2400)
+      renderSinglePdfPageHighRes(
+        currentItem.pdfArrayBuffer,
+        currentItem.pageIndex,
+        2400,
+        currentItem.password
+      )
         .then((url) => {
           if (url) setHighResUrl(url);
           else setHighResUrl(currentItem.thumbnailUrl);
@@ -309,9 +343,17 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
             },
             800
           );
-        } catch (err) {
-          console.error('PDF 解析失敗:', err);
-          showToast(t.toastPdfError(file.name));
+        } catch (err: any) {
+          if (err.message === 'PASSWORD_REQUIRED' || err.message === 'PASSWORD_INCORRECT') {
+            const buffer = await file.arrayBuffer();
+            setPendingPasswordFile({ file, buffer });
+            setPasswordInput('');
+            setPasswordError('');
+            setShowPassword(false);
+          } else {
+            console.error('PDF 解析失敗:', err);
+            showToast(t.toastPdfError(file.name));
+          }
         }
       } else {
         // PNG / JPG / WebP 圖片檔案處理
@@ -344,6 +386,50 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
     setIsProcessing(false);
     setProcessingMsg('');
     showToast(t.toastParsedDone);
+  };
+
+  const handleUnlockPendingFile = async () => {
+    if (!pendingPasswordFile || !passwordInput) return;
+    setIsUnlocking(true);
+    setPasswordError('');
+
+    try {
+      const { file, buffer } = pendingPasswordFile;
+      const pwd = passwordInput;
+
+      await renderPdfPagesProgressive(
+        buffer,
+        (p) => {
+          setPages((prev) => [
+            ...prev,
+            {
+              id: `pdf_${Date.now()}_${p.pageIndex}_${Math.random().toString(36).substring(2, 6)}`,
+              sourceType: 'PDF',
+              fileName: file.name,
+              pageIndex: p.pageIndex,
+              rotation: 0,
+              thumbnailUrl: p.thumbnailUrl,
+              pdfArrayBuffer: buffer,
+              fileSize: file.size,
+              password: pwd,
+            },
+          ]);
+        },
+        (curr, total) => {
+          setProcessingMsg(`PDF [${file.name}]: ${curr} / ${total}`);
+        },
+        800,
+        pwd
+      );
+
+      setPendingPasswordFile(null);
+      setPasswordInput('');
+      showToast(t.toastParsedDone);
+    } catch (err: any) {
+      setPasswordError(t.invalidPasswordMsg);
+    } finally {
+      setIsUnlocking(false);
+    }
   };
 
   // 單頁 90° 順時針旋轉
@@ -822,6 +908,102 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         document.body
       )}
 
+      {/* 密碼解鎖 Modal */}
+      {isMounted && pendingPasswordFile && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className={`w-full max-w-md p-6 rounded-2xl flex flex-col gap-4 shadow-2xl ${styles.modalCard}`}>
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-red-500/20 text-red-500 shrink-0">
+                <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor">
+                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                </svg>
+              </div>
+              <div className="flex flex-col gap-1 min-w-0">
+                <h3 className="text-base font-bold text-text-main">
+                  {t.unlockModalTitle}
+                </h3>
+                <p className="text-xs text-text-sub leading-relaxed">
+                  {t.unlockModalSub(pendingPasswordFile.file.name)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor={pwdInputId} className="sr-only">
+                {t.passwordPlaceholder}
+              </label>
+              <div className="relative w-full">
+                <input
+                  id={pwdInputId}
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleUnlockPendingFile();
+                  }}
+                  placeholder={t.passwordPlaceholder}
+                  className={`w-full pr-10 ${styles.passwordInput}`}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main p-1 cursor-pointer"
+                  title={showPassword ? t.hidePassword : t.showPassword}
+                >
+                  {showPassword ? (
+                    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                      <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.17c0-1.66-1.34-3-3-3l-.17.02z" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {passwordError && (
+                <span className="text-xs text-red-500 font-medium">{passwordError}</span>
+              )}
+            </div>
+
+            <div className="flex justify-end items-center gap-2 pt-2 border-t border-border-glass">
+              <button
+                type="button"
+                onClick={() => setPendingPasswordFile(null)}
+                className={styles.secondaryBtn}
+              >
+                {t.cancelBtn}
+              </button>
+              <button
+                type="button"
+                onClick={handleUnlockPendingFile}
+                disabled={isUnlocking || !passwordInput}
+                className={`disabled:opacity-40 flex items-center gap-2 ${styles.unlockBtn}`}
+              >
+                {isUnlocking ? (
+                  <>
+                    <svg className="animate-spin" viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+                    </svg>
+                    {t.unlocking}
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor">
+                      <path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                    </svg>
+                    {t.unlockBtn}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {toast && (
         <div className={styles.toast}>
           {toast}
@@ -830,3 +1012,4 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
     </ToolLayout>
   );
 }
+

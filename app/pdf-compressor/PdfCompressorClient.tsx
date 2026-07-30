@@ -17,7 +17,11 @@ interface QueueItem {
   size: number;
   buffer: ArrayBuffer | null;
   inspectData: InspectResult | null;
-  status: 'inspecting' | 'ready' | 'compressing' | 'done' | 'error';
+  status: 'inspecting' | 'ready' | 'need_password' | 'compressing' | 'done' | 'error';
+  password?: string;
+  passwordError?: string;
+  showPassword?: boolean;
+  isUnlocking?: boolean;
   progressMsg?: string;
   progressPct?: number;
   compressedBlob: Blob | null;
@@ -74,6 +78,15 @@ const TRANSLATIONS = {
     toastCompressDone: '所有 PDF 檔案壓縮瘦身完成！',
     toastZipBuilding: '正在打包 ZIP 壓縮檔...',
     toastZipDone: 'ZIP 打包下載完成！',
+    needPasswordTitle: '檔案受密碼保護',
+    needPasswordSub: '解析此 PDF 檔案需要開啟密碼，請輸入密碼以進行結構預檢與壓縮處理。',
+    passwordPlaceholder: '請輸入 PDF 開啟密碼',
+    unlockBtn: '解鎖驗證',
+    unlocking: '驗證中...',
+    passwordProtectedTag: '加密保護',
+    invalidPasswordMsg: '密碼不正確，請確認後重新輸入。',
+    showPassword: '顯示密碼',
+    hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-compressor/en/',
   },
@@ -124,6 +137,15 @@ const TRANSLATIONS = {
     toastCompressDone: 'All PDF files compressed successfully!',
     toastZipBuilding: 'Creating ZIP archive...',
     toastZipDone: 'ZIP download started!',
+    needPasswordTitle: 'Password Protected File',
+    needPasswordSub: 'This PDF requires an open password to inspect structure & compress.',
+    passwordPlaceholder: 'Enter PDF password',
+    unlockBtn: 'Unlock & Verify',
+    unlocking: 'Unlocking...',
+    passwordProtectedTag: 'Encrypted',
+    invalidPasswordMsg: 'Incorrect password. Please try again.',
+    showPassword: 'Show Password',
+    hidePassword: 'Hide Password',
     switchLangText: '繁體中文',
     switchLangHref: '/pdf-compressor/',
   },
@@ -364,12 +386,72 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
               : it
           )
         );
-      } catch (err) {
-        console.error('預檢失敗:', err);
-        setFileQueue((prev) =>
-          prev.map((it) => (it.id === item.id ? { ...it, status: 'ready' } : it))
-        );
+      } catch (err: any) {
+        if (err.message === 'PASSWORD_REQUIRED' || err.message === 'PASSWORD_INCORRECT') {
+          setFileQueue((prev) =>
+            prev.map((it) =>
+              it.id === item.id
+                ? {
+                    ...it,
+                    buffer: null,
+                    status: 'need_password',
+                    passwordError: undefined,
+                  }
+                : it
+            )
+          );
+        } else {
+          console.error('預檢失敗:', err);
+          setFileQueue((prev) =>
+            prev.map((it) => (it.id === item.id ? { ...it, status: 'ready' } : it))
+          );
+        }
       }
+    }
+  };
+
+  const unlockQueueItem = async (id: string, pwd?: string) => {
+    setFileQueue((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, isUnlocking: true, passwordError: undefined } : it))
+    );
+
+    const item = fileQueue.find((f) => f.id === id);
+    if (!item) return;
+
+    try {
+      let buffer = item.buffer;
+      if (!buffer) {
+        buffer = await item.file.arrayBuffer();
+      }
+      const inspectRes = await inspectPdfStructure(buffer, pwd || '');
+
+      setFileQueue((prev) =>
+        prev.map((it) =>
+          it.id === id
+            ? {
+                ...it,
+                buffer,
+                password: pwd,
+                inspectData: inspectRes,
+                status: 'ready',
+                isUnlocking: false,
+                passwordError: undefined,
+              }
+            : it
+        )
+      );
+    } catch (err: any) {
+      setFileQueue((prev) =>
+        prev.map((it) =>
+          it.id === id
+            ? {
+                ...it,
+                isUnlocking: false,
+                passwordError: t.invalidPasswordMsg,
+              }
+            : it
+        )
+      );
     }
   };
 
@@ -393,7 +475,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
 
     for (let i = 0; i < fileQueue.length; i++) {
       const item = fileQueue[i];
-      if (item.status === 'done') continue;
+      if (item.status === 'done' || item.status === 'need_password') continue;
 
       try {
         let buffer = item.buffer;
@@ -418,7 +500,8 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                 it.id === item.id ? { ...it, progressMsg: msg, progressPct: pct } : it
               )
             );
-          }
+          },
+          item.password
         );
 
         setFileQueue((prev) =>
@@ -580,7 +663,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
               <button
                 type="button"
                 onClick={downloadAllAsZip}
-                className="px-5 py-2 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 font-bold text-sm rounded-xl cursor-pointer hover:bg-emerald-500/30 transition-all flex items-center gap-2"
+                className={`flex items-center gap-2 ${styles.zipBtn}`}
               >
                 <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                   <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
@@ -733,8 +816,13 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                           <span className="text-xs font-mono text-text-sub">
                             {formatBytes(item.size)}
                           </span>
+                          {item.status === 'need_password' && (
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.encryptedTag}`}>
+                              🔒 {t.passwordProtectedTag}
+                            </span>
+                          )}
                           {item.inspectData && (
-                            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${styles.accentTag}`}>
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.accentTag}`}>
                               {t.inspectTag(item.inspectData.totalImages, item.inspectData.estRatio)}
                             </span>
                           )}
@@ -768,6 +856,101 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                     </div>
                   </div>
 
+                  {/* 受密碼保護提示與解鎖 UI Block */}
+                  {item.status === 'need_password' && (
+                    <div className={`mt-1 ${styles.passwordBlock} flex flex-col gap-3`}>
+                      <div className="flex items-start gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-red-500/20 text-red-500 shrink-0 mt-0.5">
+                          <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold text-text-main">
+                            {t.needPasswordTitle}
+                          </span>
+                          <span className="text-xs text-text-sub">
+                            {t.needPasswordSub}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="relative flex-1 min-w-[200px]">
+                          <input
+                            type={item.showPassword ? 'text' : 'password'}
+                            value={item.password || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFileQueue((prev) =>
+                                prev.map((it) => (it.id === item.id ? { ...it, password: val } : it))
+                              );
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                unlockQueueItem(item.id, item.password);
+                              }
+                            }}
+                            placeholder={t.passwordPlaceholder}
+                            className={`w-full pr-10 ${styles.passwordInput}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFileQueue((prev) =>
+                                prev.map((it) =>
+                                  it.id === item.id ? { ...it, showPassword: !it.showPassword } : it
+                                )
+                              );
+                            }}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main p-1 cursor-pointer"
+                            title={item.showPassword ? t.hidePassword : t.showPassword}
+                          >
+                            {item.showPassword ? (
+                              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                                <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.17c0-1.66-1.34-3-3-3l-.17.02z" />
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => unlockQueueItem(item.id, item.password)}
+                          disabled={item.isUnlocking || !item.password}
+                          className={`disabled:opacity-40 flex items-center gap-1.5 ${styles.unlockBtn}`}
+                        >
+                          {item.isUnlocking ? (
+                            <>
+                              <svg className="animate-spin" viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+                              </svg>
+                              {t.unlocking}
+                            </>
+                          ) : (
+                            <>
+                              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                                <path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                              </svg>
+                              {t.unlockBtn}
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {item.passwordError && (
+                        <span className="text-xs text-red-500 font-medium">
+                          {item.passwordError}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   {/* 進度條 */}
                   {item.status === 'compressing' && (
                     <div className="flex flex-col gap-1.5 pt-2 border-t border-border-glass">
@@ -787,13 +970,13 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                   {/* 完成與下載列 */}
                   {item.status === 'done' && item.compressedBlob && (
                     <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs flex-wrap gap-2">
-                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-medium">
+                      <div className={`flex items-center gap-2 font-medium ${styles.doneBadge}`}>
                         <span>{t.original} {formatBytes(item.size)}</span>
                         <span>➔</span>
                         <strong className="font-mono text-text-main font-bold">
                           {t.compressed} {formatBytes(item.compressedSize)}
                         </strong>
-                        <span className="text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-500/20 px-2 py-0.5 rounded">
+                        <span className={`font-bold px-2 py-0.5 rounded ${styles.savedTag}`}>
                           {t.saved(ratio.toString())}
                         </span>
                       </div>
@@ -821,27 +1004,27 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                   {/* 明細 Drawer */}
                   {item.showDetails && item.inspectData && item.inspectData.images.length > 0 && (
                     <div className={`mt-2 p-3 ${styles.innerBlock} overflow-x-auto`}>
-                      <table className="w-full text-xs text-left">
+                      <table className="w-full text-sm text-left">
                         <thead>
-                          <tr className="border-b border-border-glass text-text-sub">
-                            <th className="p-1.5">{t.tableHeaderIdx}</th>
-                            <th className="p-1.5">{t.tableHeaderDim}</th>
-                            <th className="p-1.5">{t.tableHeaderFormat}</th>
-                            <th className="p-1.5">{t.tableHeaderDecision}</th>
+                          <tr className="border-b border-border-glass text-text-sub font-semibold">
+                            <th className="p-2">{t.tableHeaderIdx}</th>
+                            <th className="p-2">{t.tableHeaderDim}</th>
+                            <th className="p-2">{t.tableHeaderFormat}</th>
+                            <th className="p-2">{t.tableHeaderDecision}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {item.inspectData.images.map((img, idx) => (
                             <tr key={idx} className="border-b border-border-glass text-text-main">
-                              <td className="p-1.5 font-mono">#{idx + 1}</td>
-                              <td className="p-1.5 font-mono">{img.width} × {img.height}</td>
-                              <td className="p-1.5">{img.filter || 'Raw'} ({img.colorSpace})</td>
-                              <td className="p-1.5">
+                              <td className="p-2 font-mono">#{idx + 1}</td>
+                              <td className="p-2 font-mono">{img.width} × {img.height}</td>
+                              <td className="p-2">{img.filter || 'Raw'} ({img.colorSpace})</td>
+                              <td className="p-2">
                                 <span
-                                  className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+                                  className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                                     img.status === 'compressible'
-                                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                                      : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                                      ? styles.statusCompressible
+                                      : styles.statusProtected
                                   }`}
                                 >
                                   {img.statusReason}
