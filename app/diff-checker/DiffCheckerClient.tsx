@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useLayoutEffect, useCallback, useRef, useId } from 'react';
+import Link from 'next/link';
 import * as Diff from 'diff';
 import ToolLayout from '../components/ToolLayout';
 import styles from './diff-checker.module.css';
@@ -26,14 +27,101 @@ interface UnifiedDecision {
   defaultState: 'active' | 'skipped';
 }
 
-export default function DiffCheckerClient() {
+interface DiffCheckerClientProps {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '兩份文件比對工具',
+    subtitle: 'TEXT DIFF CHECKER',
+    description:
+      '專業免費的線上文件比對工具 (Text Diff Checker)！支援 Myers 演算法精確對比、雙欄同步滾動鎖定、檔案拖曳匯入與 Unified 互動式逐行合併。',
+    defaultOriginal:
+      '// 原始版本範例程式碼\nfunction calculateTotal(price, tax) {\n  return price + tax;\n}\nconsole.log(calculateTotal(100, 5));',
+    defaultModified:
+      '// 修改後版本範例程式碼\nfunction calculateTotal(price, tax, discount = 0) {\n  const subtotal = price + tax;\n  return subtotal - discount;\n}\nconsole.log(calculateTotal(100, 5, 10));',
+    splitMode: '左右對比 (Split)',
+    unifiedMode: '單欄混合 (Unified)',
+    ignoreCase: '忽略大小寫',
+    swap: '交換左右',
+    swapToast: '已完成左右文件交換',
+    clear: '清除',
+    clearToast: '已清空所有內容',
+    showDiffOnly: '隱藏編輯器 (Show Diff Only)',
+    showEditors: '展開編輯器 (Show Editors)',
+    addedStat: '新增',
+    removedStat: '刪除',
+    originalDoc: '原始文件 (Original)',
+    modifiedDoc: '修改後文件 (Modified)',
+    dropHint: '支援拖曳 txt / code',
+    placeholderOriginal: '在此貼上原始文字，或將檔案拖曳至此...',
+    placeholderModified: '在此貼上變更後的文字，或將檔案拖曳至此...',
+    loadedFileToast: '已成功載入檔案：',
+    analysisTitle: '比對分析結果',
+    splitSubtext: '雙欄同步滾動檢視',
+    unifiedSubtext: '可點擊右側按鈕進行互動式合併',
+    restoreOld: '↩ 保留舊版',
+    excludeLine: '✕ 排除此行',
+    revertDefault: '↺ 還原預設',
+    finalMergeResult: '✏️ 最終合併結果',
+    canEditNotice: '（可直接編輯此區域）',
+    copyResult: '複製結果',
+    copiedResultToast: '✓ 已複製合併結果至剪貼簿！',
+    copyFailedToast: '複製失敗，請手動複製文字框內容。',
+    unifiedPlaceholder: '（Unified 模式比對後，可在此取得動態合併結果）',
+    langSwitchLabel: 'English',
+    langSwitchHref: '/diff-checker/en/',
+  },
+  en: {
+    title: 'Document Diff Checker',
+    subtitle: 'TEXT DIFF CHECKER',
+    description:
+      'Free online Document Diff Checker! Supports Myers algorithm accurate diff, synchronized side-by-side scrolling, drag & drop files, and interactive line-by-line unified merge.',
+    defaultOriginal:
+      '// Original Version Sample Code\nfunction calculateTotal(price, tax) {\n  return price + tax;\n}\nconsole.log(calculateTotal(100, 5));',
+    defaultModified:
+      '// Modified Version Sample Code\nfunction calculateTotal(price, tax, discount = 0) {\n  const subtotal = price + tax;\n  return subtotal - discount;\n}\nconsole.log(calculateTotal(100, 5, 10));',
+    splitMode: 'Split View',
+    unifiedMode: 'Unified View',
+    ignoreCase: 'Ignore Case',
+    swap: 'Swap Sides',
+    swapToast: 'Swapped original and modified text',
+    clear: 'Clear',
+    clearToast: 'Cleared all text contents',
+    showDiffOnly: 'Hide Editors (Show Diff Only)',
+    showEditors: 'Show Editors',
+    addedStat: 'Added',
+    removedStat: 'Removed',
+    originalDoc: 'Original File',
+    modifiedDoc: 'Modified File',
+    dropHint: 'Supports drag & drop txt / code',
+    placeholderOriginal: 'Paste original text here, or drop file...',
+    placeholderModified: 'Paste modified text here, or drop file...',
+    loadedFileToast: 'Successfully loaded file: ',
+    analysisTitle: 'Diff Analysis Result',
+    splitSubtext: 'Synchronized dual-pane scrolling view',
+    unifiedSubtext: 'Click action buttons on the right for interactive merge',
+    restoreOld: '↩ Keep Old',
+    excludeLine: '✕ Exclude Line',
+    revertDefault: '↺ Revert Default',
+    finalMergeResult: '✏️ Final Merged Result',
+    canEditNotice: '(Editable area)',
+    copyResult: 'Copy Result',
+    copiedResultToast: '✓ Merged result copied to clipboard!',
+    copyFailedToast: 'Copy failed. Please manually copy from text area.',
+    unifiedPlaceholder: '(Merged result will appear here after unified diff analysis)',
+    langSwitchLabel: '繁體中文',
+    langSwitchHref: '/diff-checker/',
+  },
+};
+
+export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientProps) {
+  const t = TRANSLATIONS[lang];
+
   // --- 預設範例文字 ---
-  const [originalText, setOriginalText] = useState<string>(
-    '// 原始版本範例程式碼\nfunction calculateTotal(price, tax) {\n  return price + tax;\n}\nconsole.log(calculateTotal(100, 5));'
-  );
-  const [modifiedText, setModifiedText] = useState<string>(
-    '// 修改後版本範例程式碼\nfunction calculateTotal(price, tax, discount = 0) {\n  const subtotal = price + tax;\n  return subtotal - discount;\n}\nconsole.log(calculateTotal(100, 5, 10));'
-  );
+  const [originalText, setOriginalText] = useState<string>(t.defaultOriginal);
+  const [modifiedText, setModifiedText] = useState<string>(t.defaultModified);
 
   // --- UI 與設定狀態 ---
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
@@ -57,6 +145,7 @@ export default function DiffCheckerClient() {
   // --- HTML ID 宣告 ---
   const originalInputId = useId();
   const modifiedInputId = useId();
+  const mergeResultInputId = useId();
 
   // --- Scroll Synchronization Refs ---
   const leftPaneRef = useRef<HTMLDivElement>(null);
@@ -69,15 +158,10 @@ export default function DiffCheckerClient() {
     const el = mergeTextareaRef.current;
     if (!el) return;
 
-    // 1. 記錄變更前頁面捲動位置
     const currentScrollY = window.scrollY;
-
-    // 2. 高度計算
     el.style.height = 'auto';
     const newHeight = Math.max(80, el.scrollHeight);
     el.style.height = `${newHeight}px`;
-
-    // 3. 瞬間還原捲動位置，消除瀏覽器因為 DOM 暫時坍塌導致的跳頁問題
     window.scrollTo(window.scrollX, currentScrollY);
   }, []);
 
@@ -87,7 +171,6 @@ export default function DiffCheckerClient() {
     document.documentElement.style.setProperty('--accent-glow', 'rgba(139, 92, 246, 0.6)');
   }, []);
 
-  // 使用 useLayoutEffect 在 Paint 之前完成微調，徹底避免畫面閃爍與跳捲
   useLayoutEffect(() => {
     if (viewMode === 'unified') {
       adjustMergeTextareaHeight();
@@ -99,7 +182,6 @@ export default function DiffCheckerClient() {
     setTimeout(() => setToast(''), 2500);
   };
 
-  // 輔助函數：換行符與字串規範化
   const normalizeNewlines = (str: string): string => {
     if (!str) return '';
     return str.replace(/\r\n/g, '\n').replace(/\n*$/, '\n');
@@ -113,7 +195,7 @@ export default function DiffCheckerClient() {
     return lines;
   };
 
-  // 核心比對處理：Myers 演算法 (`Diff.diffLines`)
+  // 核心比對處理
   const runDiff = useCallback(() => {
     const oldStr = normalizeNewlines(originalText);
     const newStr = normalizeNewlines(modifiedText);
@@ -123,7 +205,6 @@ export default function DiffCheckerClient() {
     let totalAdd = 0;
     let totalRem = 0;
 
-    // === 1. 計算 Split 雙欄視窗對齊列 ===
     const newSplitRows: SplitRow[] = [];
     let leftLineNum = 1;
     let rightLineNum = 1;
@@ -184,7 +265,6 @@ export default function DiffCheckerClient() {
     setAddedCount(totalAdd);
     setRemovedCount(totalRem);
 
-    // === 2. 計算 Unified 單欄混合與互動式決策列表 ===
     const newDecisions: UnifiedDecision[] = [];
     let uLeftNum = 1;
     let uRightNum = 1;
@@ -231,7 +311,6 @@ export default function DiffCheckerClient() {
 
     setUnifiedDecisions(newDecisions);
 
-    // 初始構建合併結果
     const initialMergedText = newDecisions
       .filter((d) => d.state === 'active')
       .map((d) => d.text)
@@ -239,12 +318,10 @@ export default function DiffCheckerClient() {
     setMergeResultText(initialMergedText);
   }, [originalText, modifiedText, ignoreCase]);
 
-  // 監聽文字或設定變化，觸發比對
   useEffect(() => {
     runDiff();
   }, [runDiff]);
 
-  // --- 雙欄同步滾動鎖定事件處理 ---
   const handleLeftScroll = () => {
     if (!isSyncingLeft.current && leftPaneRef.current && rightPaneRef.current) {
       isSyncingRight.current = true;
@@ -263,24 +340,22 @@ export default function DiffCheckerClient() {
     isSyncingRight.current = false;
   };
 
-  // --- 操作按鈕功能 ---
   const swapDocuments = () => {
     setOriginalText(modifiedText);
     setModifiedText(originalText);
-    showToast('已完成左右文件交換');
+    showToast(t.swapToast);
   };
 
   const clearAll = () => {
     setOriginalText('');
     setModifiedText('');
-    showToast('已清空所有內容');
+    showToast(t.clearToast);
   };
 
   const toggleEditorVisibility = () => {
     setIsEditorVisible(!isEditorVisible);
   };
 
-  // --- 檔案拖曳讀取處理 ---
   const handleDropFile = (file: File, target: 'left' | 'right') => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -290,12 +365,11 @@ export default function DiffCheckerClient() {
       } else {
         setModifiedText(content);
       }
-      showToast(`已成功載入檔案：${file.name}`);
+      showToast(`${t.loadedFileToast}${file.name}`);
     };
     reader.readAsText(file);
   };
 
-  // --- Unified 互動式行切換處理 ---
   const toggleUnifiedLine = (idx: number) => {
     setUnifiedDecisions((prev) => {
       const next = [...prev];
@@ -310,7 +384,6 @@ export default function DiffCheckerClient() {
 
       next[idx] = dec;
 
-      // 同步更新合併結果
       const newMergedText = next
         .filter((d) => d.state === 'active')
         .map((d) => d.text)
@@ -321,102 +394,97 @@ export default function DiffCheckerClient() {
     });
   };
 
-  // --- 複製合併結果 ---
   const copyMergeResult = async () => {
     try {
       await navigator.clipboard.writeText(mergeResultText);
-      showToast('✓ 已複製合併結果至剪貼簿！');
+      showToast(t.copiedResultToast);
     } catch (err) {
-      showToast('複製失敗，請手動複製文字框內容。');
+      showToast(t.copyFailedToast);
     }
   };
 
   return (
     <ToolLayout
-      title="兩份文件比對工具"
-      subtitle="TEXT DIFF CHECKER"
-      description="專業免費的線上文件比對工具 (Text Diff Checker)！支援 Myers 演算法精確對比、雙欄同步滾動鎖定、檔案拖曳匯入與 Unified 互動式逐行合併。"
+      title={t.title}
+      subtitle={t.subtitle}
+      description={t.description}
       accentColor="#8b5cf6"
       accentGlow="rgba(139, 92, 246, 0.6)"
     >
       <div className="flex flex-col gap-6 text-left w-full px-4 max-sm:px-0">
+        {/* 右上方雙語切換按鈕 */}
+        <div className="flex justify-end items-center">
+          <Link
+            href={t.langSwitchHref}
+            className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors flex items-center gap-1.5"
+          >
+            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20" />
+            </svg>
+            {t.langSwitchLabel}
+          </Link>
+        </div>
+
         {/* 控制設定列 */}
-        <div className="bg-black/20 border border-white/[.08] rounded-2xl p-4 sm:p-6 flex items-center justify-between flex-wrap gap-4 backdrop-blur-md">
-          <div className="flex items-center gap-4 flex-wrap">
-            {/* 模式切換 */}
-            <div className="flex bg-black/40 p-1 rounded-xl border border-white/[.08]">
-              <button
-                type="button"
-                onClick={() => setViewMode('split')}
-                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
-                  viewMode === 'split'
-                    ? 'bg-[#8b5cf6]/20 border border-[#8b5cf6]/40 text-[#8b5cf6] shadow-[0_0_10px_rgba(139,92,246,0.2)]'
-                    : 'text-text-sub hover:text-white'
-                }`}
-              >
-                左右對比 (Split)
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('unified')}
-                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
-                  viewMode === 'unified'
-                    ? 'bg-[#8b5cf6]/20 border border-[#8b5cf6]/40 text-[#8b5cf6] shadow-[0_0_10px_rgba(139,92,246,0.2)]'
-                    : 'text-text-sub hover:text-white'
-                }`}
-              >
-                單欄混合 (Unified)
-              </button>
+        <div className={styles.panelCard}>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* 模式切換 */}
+              <div className={styles.segmentedBg}>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('split')}
+                  className={viewMode === 'split' ? styles.modeBtnActive : styles.modeBtnInactive}
+                >
+                  {t.splitMode}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('unified')}
+                  className={viewMode === 'unified' ? styles.modeBtnActive : styles.modeBtnInactive}
+                >
+                  {t.unifiedMode}
+                </button>
+              </div>
+
+              {/* 忽略大小寫 Toggle */}
+              <label className="flex items-center gap-2 text-sm font-medium text-text-sub cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={ignoreCase}
+                  onChange={(e) => setIgnoreCase(e.target.checked)}
+                  className="accent-[#8b5cf6] w-4 h-4 rounded"
+                />
+                {t.ignoreCase}
+              </label>
             </div>
 
-            {/* 忽略大小寫 Toggle */}
-            <label className="flex items-center gap-2 text-sm font-medium text-text-sub cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={ignoreCase}
-                onChange={(e) => setIgnoreCase(e.target.checked)}
-                className="accent-[#8b5cf6] w-4 h-4 rounded"
-              />
-              忽略大小寫
-            </label>
-          </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* 交換與清空按鈕 */}
+              <button type="button" onClick={swapDocuments} className={styles.actionHeaderBtn}>
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+                  <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
+                </svg>
+                {t.swap}
+              </button>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* 交換與清空按鈕 */}
-            <button
-              type="button"
-              onClick={swapDocuments}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-sub bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
-                <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
-              </svg>
-              交換左右
-            </button>
+              <button type="button" onClick={clearAll} className={styles.actionHeaderBtn}>
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                </svg>
+                {t.clear}
+              </button>
 
-            <button
-              type="button"
-              onClick={clearAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-sub bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-red-500/50 hover:text-red-400 transition-all cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-              </svg>
-              清除
-            </button>
+              <button type="button" onClick={toggleEditorVisibility} className={styles.toggleEditorBtn}>
+                {isEditorVisible ? t.showDiffOnly : t.showEditors}
+              </button>
 
-            <button
-              type="button"
-              onClick={toggleEditorVisibility}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-white bg-[#8b5cf6]/20 border border-[#8b5cf6]/40 rounded-xl hover:bg-[#8b5cf6]/30 hover:border-[#8b5cf6] hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all cursor-pointer"
-            >
-              {isEditorVisible ? '隱藏編輯器 (Show Diff Only)' : '展開編輯器 (Show Editors)'}
-            </button>
-
-            {/* 統計面板 */}
-            <div className="flex items-center gap-3 text-xs font-mono bg-black/40 px-3 py-1.5 rounded-xl border border-white/[.05]">
-              <span className="text-[#00ffaa]">+ {addedCount} 新增</span>
-              <span className="text-[#ff3b30]">- {removedCount} 刪除</span>
+              {/* 統計面板 */}
+              <div className={styles.statPill}>
+                <span className={styles.addedStat}>+ {addedCount} {t.addedStat}</span>
+                <span className={styles.removedStat}>- {removedCount} {t.removedStat}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -428,9 +496,9 @@ export default function DiffCheckerClient() {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <label htmlFor={originalInputId} className="text-sm font-medium text-text-sub">
-                  原始文件 (Original)
+                  {t.originalDoc}
                 </label>
-                <span className="text-xs text-text-sub">支援拖曳 txt / code</span>
+                <span className="text-xs text-text-sub">{t.dropHint}</span>
               </div>
               <div
                 onDragOver={(e) => {
@@ -445,18 +513,14 @@ export default function DiffCheckerClient() {
                     handleDropFile(e.dataTransfer.files[0], 'left');
                   }
                 }}
-                className={`relative rounded-xl overflow-hidden transition-all border ${
-                  isLeftDragOver
-                    ? styles.dropZoneDragover
-                    : 'border-white/[.08] hover:border-white/20'
-                }`}
+                className={`${styles.editorBox} ${isLeftDragOver ? styles.dropZoneDragover : ''}`}
               >
                 <textarea
                   id={originalInputId}
                   value={originalText}
                   onChange={(e) => setOriginalText(e.target.value)}
-                  placeholder="在此貼上原始文字，或將檔案拖曳至此..."
-                  className="w-full h-[200px] bg-black/30 text-white p-4 font-mono text-xs outline-none focus:border-[#8b5cf6] resize-y leading-relaxed"
+                  placeholder={t.placeholderOriginal}
+                  className={styles.editorTextArea}
                 />
               </div>
             </div>
@@ -465,9 +529,9 @@ export default function DiffCheckerClient() {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <label htmlFor={modifiedInputId} className="text-sm font-medium text-text-sub">
-                  修改後文件 (Modified)
+                  {t.modifiedDoc}
                 </label>
-                <span className="text-xs text-text-sub">支援拖曳 txt / code</span>
+                <span className="text-xs text-text-sub">{t.dropHint}</span>
               </div>
               <div
                 onDragOver={(e) => {
@@ -482,18 +546,14 @@ export default function DiffCheckerClient() {
                     handleDropFile(e.dataTransfer.files[0], 'right');
                   }
                 }}
-                className={`relative rounded-xl overflow-hidden transition-all border ${
-                  isRightDragOver
-                    ? styles.dropZoneDragover
-                    : 'border-white/[.08] hover:border-white/20'
-                }`}
+                className={`${styles.editorBox} ${isRightDragOver ? styles.dropZoneDragover : ''}`}
               >
                 <textarea
                   id={modifiedInputId}
                   value={modifiedText}
                   onChange={(e) => setModifiedText(e.target.value)}
-                  placeholder="在此貼上變更後的文字，或將檔案拖曳至此..."
-                  className="w-full h-[200px] bg-black/30 text-white p-4 font-mono text-xs outline-none focus:border-[#8b5cf6] resize-y leading-relaxed"
+                  placeholder={t.placeholderModified}
+                  className={styles.editorTextArea}
                 />
               </div>
             </div>
@@ -501,11 +561,11 @@ export default function DiffCheckerClient() {
         )}
 
         {/* 比對結果預覽面板 */}
-        <div className="bg-black/30 border border-white/[.08] rounded-2xl p-4 sm:p-6 flex flex-col gap-4 overflow-hidden shadow-lg backdrop-blur-md">
+        <div className={styles.panelCard}>
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-text-sub">比對分析結果</h3>
+            <h3 className="text-sm font-semibold text-text-sub">{t.analysisTitle}</h3>
             <span className="text-xs text-text-sub">
-              {viewMode === 'split' ? '雙欄同步滾動檢視' : '可點擊右側按鈕進行互動式合併'}
+              {viewMode === 'split' ? t.splitSubtext : t.unifiedSubtext}
             </span>
           </div>
 
@@ -518,11 +578,7 @@ export default function DiffCheckerClient() {
             >
               <div className={styles.splitDivider} />
               {/* 左側面板 */}
-              <div
-                ref={leftPaneRef}
-                onScroll={handleLeftScroll}
-                className={styles.diffPane}
-              >
+              <div ref={leftPaneRef} onScroll={handleLeftScroll} className={styles.diffPane}>
                 <table className={styles.diffTable}>
                   <tbody>
                     {splitRows.map((row, idx) => (
@@ -547,11 +603,7 @@ export default function DiffCheckerClient() {
               </div>
 
               {/* 右側面板 */}
-              <div
-                ref={rightPaneRef}
-                onScroll={handleRightScroll}
-                className={styles.diffPane}
-              >
+              <div ref={rightPaneRef} onScroll={handleRightScroll} className={styles.diffPane}>
                 <table className={styles.diffTable}>
                   <tbody>
                     {splitRows.map((row, idx) => (
@@ -577,7 +629,7 @@ export default function DiffCheckerClient() {
             </div>
           ) : (
             /* Unified 單視窗樣式 (互動式逐行選擇合併) */
-            <div className="bg-black/40 border border-white/[.05] rounded-xl p-3 flex flex-col gap-1 overflow-x-auto">
+            <div className="bg-select-bg border border-border-glass rounded-xl p-3 flex flex-col gap-1 overflow-x-auto">
               <table className={styles.unifiedTable}>
                 <tbody>
                   {unifiedDecisions.map((dec, idx) => {
@@ -613,9 +665,9 @@ export default function DiffCheckerClient() {
                             >
                               {isDefault
                                 ? dec.type === 'removed'
-                                  ? '↩ 保留舊版'
-                                  : '✕ 排除此行'
-                                : '↺ 還原預設'}
+                                  ? t.restoreOld
+                                  : t.excludeLine
+                                : t.revertDefault}
                             </button>
                           )}
                         </td>
@@ -629,43 +681,36 @@ export default function DiffCheckerClient() {
 
           {/* 合併結果區 (Unified 模式下顯示) */}
           {viewMode === 'unified' && (
-            <div className="flex flex-col gap-3 border-t border-white/[.08] pt-4 mt-2">
+            <div className="flex flex-col gap-3 border-t border-border-glass pt-4 mt-2">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-text-sub flex items-center gap-2">
-                  <span>✏️ 最終合併結果</span>
-                  <span className="text-xs text-text-sub font-normal">（可直接編輯此區域）</span>
+                <label htmlFor={mergeResultInputId} className="text-sm font-medium text-text-sub flex items-center gap-2 cursor-pointer">
+                  <span>{t.finalMergeResult}</span>
+                  <span className="text-xs text-text-sub font-normal">{t.canEditNotice}</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={copyMergeResult}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#00ffaa] bg-[#00ffaa]/10 border border-[#00ffaa]/30 rounded-xl hover:bg-[#00ffaa]/20 hover:shadow-[0_0_10px_rgba(0,255,170,0.2)] transition-all cursor-pointer"
-                >
+                <button type="button" onClick={copyMergeResult} className={styles.copyResultBtn}>
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                     <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                   </svg>
-                  複製結果
+                  {t.copyResult}
                 </button>
               </div>
               <textarea
+                id={mergeResultInputId}
                 ref={mergeTextareaRef}
                 value={mergeResultText}
                 onChange={(e) => {
                   setMergeResultText(e.target.value);
                   adjustMergeTextareaHeight();
                 }}
-                placeholder="（Unified 模式比對後，可在此取得動態合併結果）"
-                className="w-full min-h-[80px] bg-black/40 border border-white/[.08] text-white p-3 rounded-xl font-mono text-xs outline-none focus:border-[#8b5cf6] leading-relaxed overflow-hidden transition-[height] duration-150"
+                placeholder={t.unifiedPlaceholder}
+                className={`${styles.editorTextArea} min-h-[80px] rounded-xl overflow-hidden transition-[height] duration-150`}
               />
             </div>
           )}
         </div>
       </div>
 
-      {toast && (
-        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm font-medium rounded-xl bg-[#8b5cf6]/20 border border-[#8b5cf6]/40 text-[#8b5cf6] backdrop-blur-md shadow-lg z-50">
-          {toast}
-        </div>
-      )}
+      {toast && <div className={styles.toast}>{toast}</div>}
     </ToolLayout>
   );
 }

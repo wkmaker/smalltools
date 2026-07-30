@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'SSL憑證轉換,PFX轉PEM,PEM轉PFX,DER轉PEM,P12轉換,SSL憑證,私鑰轉換,憑證效期查詢',
   alternates: {
     canonical: 'https://tools.cjkuo.net/ssl-converter/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/ssl-converter/',
+      en: 'https://tools.cjkuo.net/ssl-converter/en/',
+    },
   },
   openGraph: {
     title: 'SSL 憑證格式轉換器 - 免費線上 PFX/P12/PEM/DER 憑證轉換與效能驗證工具',

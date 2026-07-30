@@ -55,7 +55,7 @@ export default function FuturesCalculatorClient() {
     toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   }, []);
 
-  // 設定全頁背景粒子色 (赤紅/火力紅)
+  // 設定全頁背景主題色 (赤紅/火力紅)
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#ff3b30');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 59, 48, 0.6)');
@@ -107,7 +107,6 @@ export default function FuturesCalculatorClient() {
   const simCapital = numCapital - simLoss;
 
   // C. SVG 風險指標儀表板 (-90deg ~ +90deg)
-  // 風險指標 = (模擬權益數 / 總原始保證金) * 100%
   let riskRatio = 0;
   if (totalInitMargin > 0) {
     riskRatio = (simCapital / totalInitMargin) * 100;
@@ -159,23 +158,23 @@ export default function FuturesCalculatorClient() {
       >
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：設定區 */}
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
-            <h3 className="text-sm text-[#ff3b30] uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
+          <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
+            <h3 className={`text-sm ${styles.accentText} uppercase tracking-[1px] font-semibold border-b border-border-glass pb-3`}>
               期貨部位與保證金設定
             </h3>
 
             {/* 商品規格選擇 */}
             <div className="flex flex-col gap-2">
               <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">商品規格</span>
-              <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/[.08]">
+              <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
                 {PRESETS.map(p => (
                   <button
                     key={p.id}
                     onClick={() => handlePresetSelect(p.id)}
                     className={`py-2 px-3 text-sm rounded-lg cursor-pointer transition-all border ${
                       selectedPreset === p.id
-                        ? 'bg-[#ff3b30]/15 border-[#ff3b30]/40 text-[#ff3b30] font-semibold'
-                        : 'border-transparent text-text-sub hover:text-white'
+                        ? styles.activeScheme
+                        : 'border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
                     {p.name}
@@ -186,14 +185,14 @@ export default function FuturesCalculatorClient() {
 
             {/* 自訂每點點值 */}
             {selectedPreset === 'custom' && (
-              <div className="flex flex-col gap-2 bg-black/30 p-4 rounded-xl border border-white/[.08]">
-                <label htmlFor={multInputId} className="text-sm text-[#ff3b30] font-medium uppercase tracking-[1px]">自訂每點點值 (元/點)</label>
+              <div className="flex flex-col gap-2 bg-surface-glass p-4 rounded-xl border border-border-glass">
+                <label htmlFor={multInputId} className={`text-sm ${styles.accentText} font-medium uppercase tracking-[1px]`}>自訂每點點值 (元/點)</label>
                 <input
                   id={multInputId}
                   type="number"
                   value={multiplier}
                   onChange={e => setMultiplier(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-3 py-2 rounded-lg text-base outline-none font-mono"
+                  className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-base outline-none font-mono`}
                 />
               </div>
             )}
@@ -201,13 +200,13 @@ export default function FuturesCalculatorClient() {
             {/* 多空部位切換 */}
             <div className="flex flex-col gap-2">
               <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">交易方向 (部位)</span>
-              <div className="grid grid-cols-2 gap-2 bg-black/40 p-1 rounded-xl border border-white/[.08]">
+              <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1 rounded-xl`}>
                 <button
                   onClick={() => setPosition('long')}
                   className={`py-2 text-sm rounded-lg cursor-pointer transition-all border ${
                     position === 'long'
-                      ? 'bg-red-500/20 border-red-500/40 text-red-400 font-semibold'
-                      : 'border-transparent text-text-sub hover:text-white'
+                      ? 'bg-red-500/20 border-red-500/40 text-red-500 font-semibold'
+                      : 'border-transparent text-text-sub hover:text-text-main'
                   }`}
                 >
                   多頭 (看漲 做多)
@@ -216,8 +215,8 @@ export default function FuturesCalculatorClient() {
                   onClick={() => setPosition('short')}
                   className={`py-2 text-sm rounded-lg cursor-pointer transition-all border ${
                     position === 'short'
-                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 font-semibold'
-                      : 'border-transparent text-text-sub hover:text-white'
+                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-600 font-semibold'
+                      : 'border-transparent text-text-sub hover:text-text-main'
                   }`}
                 >
                   空頭 (看跌 做空)
@@ -226,16 +225,20 @@ export default function FuturesCalculatorClient() {
             </div>
 
             {/* 成交點位、口數與準備本金 */}
-            <div className="flex flex-col gap-4 border-t border-white/[.05] pt-4">
+            <div className={`flex flex-col gap-4 ${styles.divider} pt-4`}>
               <div className="flex flex-col gap-2">
                 <label htmlFor={indexInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">成交指數點位 (點)</label>
                 <input
                   id={indexInputId}
-                  type="number"
-                  placeholder="例如：22000"
-                  value={indexPrice}
-                  onChange={e => setIndexPrice(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#ff3b30] font-mono"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="例如：22,000"
+                  value={indexPrice === '' ? '' : indexPrice.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setIndexPrice(raw === '' ? '' : parseInt(raw, 10));
+                  }}
+                  className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
 
@@ -248,7 +251,7 @@ export default function FuturesCalculatorClient() {
                     min="1"
                     value={quantity}
                     onChange={e => setQuantity(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#ff3b30] font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                 </div>
 
@@ -256,10 +259,14 @@ export default function FuturesCalculatorClient() {
                   <label htmlFor={capitalInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">準備本金 (元)</label>
                   <input
                     id={capitalInputId}
-                    type="number"
-                    value={capital}
-                    onChange={e => setCapital(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#ff3b30] font-mono"
+                    type="text"
+                    inputMode="numeric"
+                    value={capital === '' ? '' : capital.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      setCapital(raw === '' ? '' : parseInt(raw, 10));
+                    }}
+                    className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                 </div>
               </div>
@@ -268,13 +275,13 @@ export default function FuturesCalculatorClient() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setCapitalPreset(1.5)}
-                  className="py-2 px-1 text-sm bg-[#ff3b30]/10 border border-[#ff3b30]/30 text-[#ff3b30] rounded-lg hover:bg-[#ff3b30]/20 transition-all cursor-pointer font-mono font-medium"
+                  className={`py-2 px-1 text-sm ${styles.activeScheme} rounded-lg transition-all cursor-pointer font-mono font-medium`}
                 >
                   投入 1.5 倍原始保證金
                 </button>
                 <button
                   onClick={() => setCapitalPreset(2.0)}
-                  className="py-2 px-1 text-sm bg-white/[.05] border border-white/[.1] text-text-sub rounded-lg hover:bg-white/[.1] hover:text-white transition-all cursor-pointer font-mono font-medium"
+                  className="py-2 px-1 text-sm bg-surface-glass border border-border-glass text-text-sub rounded-lg hover:text-text-main transition-all cursor-pointer font-mono font-medium"
                 >
                   投入 2.0 倍原始保證金
                 </button>
@@ -282,15 +289,19 @@ export default function FuturesCalculatorClient() {
             </div>
 
             {/* 單口保證金標準 (自由編輯) */}
-            <div className="grid grid-cols-2 gap-4 border-t border-white/[.05] pt-4">
+            <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-4`}>
               <div className="flex flex-col gap-2">
                 <label htmlFor={initMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">單口原始保證金 (元)</label>
                 <input
                   id={initMarginInputId}
-                  type="number"
-                  value={initialMargin}
-                  onChange={e => setInitialMargin(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#ff3b30] font-mono"
+                  type="text"
+                  inputMode="numeric"
+                  value={initialMargin === '' ? '' : initialMargin.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setInitialMargin(raw === '' ? '' : parseInt(raw, 10));
+                  }}
+                  className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
 
@@ -298,10 +309,14 @@ export default function FuturesCalculatorClient() {
                 <label htmlFor={maintMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">單口維持保證金 (元)</label>
                 <input
                   id={maintMarginInputId}
-                  type="number"
-                  value={maintMargin}
-                  onChange={e => setMaintMargin(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 rounded-xl text-base outline-none focus:border-[#ff3b30] font-mono"
+                  type="text"
+                  inputMode="numeric"
+                  value={maintMargin === '' ? '' : maintMargin.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setMaintMargin(raw === '' ? '' : parseInt(raw, 10));
+                  }}
+                  className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
             </div>
@@ -309,10 +324,8 @@ export default function FuturesCalculatorClient() {
             {/* 複製試算分享按鈕 */}
             <button
               onClick={copyShareLink}
-              className="mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
-                bg-[#ff3b30]/15 border border-[#ff3b30]/40 text-[#ff3b30] rounded-xl
-                transition-all duration-300 hover:bg-[#ff3b30] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(255,59,48,0.4)]
-                cursor-pointer"
+              className={`mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
+                ${styles.activeScheme} rounded-xl transition-all duration-300 cursor-pointer`}
             >
               複製期貨槓桿試算分享連結
             </button>
@@ -321,21 +334,21 @@ export default function FuturesCalculatorClient() {
           {/* 右欄：風險計算與指標 */}
           <div className="flex flex-col gap-6">
             {/* 1. SVG 風險指標儀表板 */}
-            <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg relative">
+            <div className={`${styles.glassCard} p-6 flex flex-col items-center justify-center shadow-lg relative`}>
               <h3 className="text-sm text-text-sub uppercase tracking-[1px] font-semibold mb-4 self-start">
                 風控指標與實質槓桿儀表板
               </h3>
 
               <div className="relative w-full max-w-[320px] flex flex-col items-center">
-                <svg className="w-full drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" viewBox="0 0 200 110">
+                <svg className="w-full drop-shadow-[0_5px_15px_rgba(0,0,0,0.3)]" viewBox="0 0 200 110">
                   {/* 背景弧線 */}
-                  <path d="M 30,90 A 70,70 0 0,1 170,90" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="12" strokeLinecap="round" />
+                  <path d="M 30,90 A 70,70 0 0,1 170,90" fill="none" stroke="rgba(148,163,184,0.2)" strokeWidth="12" strokeLinecap="round" />
                   {/* 斷頭區 (紅色 0%-25%) */}
-                  <path d="M 30,90 A 70,70 0 0,1 35.33,63.21" fill="none" stroke="#ff3b30" strokeWidth="12" strokeLinecap="butt" />
+                  <path d="M 30,90 A 70,70 0 0,1 35.33,63.21" fill="none" stroke="#ef4444" strokeWidth="12" strokeLinecap="butt" />
                   {/* 追繳警示區 (黃色 25%-100%) */}
-                  <path d="M 35.33,63.21 A 70,70 0 0,1 100,20" fill="none" stroke="#fbbf24" strokeWidth="12" strokeLinecap="butt" />
+                  <path d="M 35.33,63.21 A 70,70 0 0,1 100,20" fill="none" stroke="#f59e0b" strokeWidth="12" strokeLinecap="butt" />
                   {/* 安全區 (綠色 100%-200%) */}
-                  <path d="M 100,20 A 70,70 0 0,1 170,90" fill="none" stroke="#4ade80" strokeWidth="12" strokeLinecap="round" />
+                  <path d="M 100,20 A 70,70 0 0,1 170,90" fill="none" stroke="#10b981" strokeWidth="12" strokeLinecap="round" />
 
                   {/* 指針 */}
                   <line
@@ -343,26 +356,26 @@ export default function FuturesCalculatorClient() {
                     y1="90"
                     x2="100"
                     y2="35"
-                    stroke="#ff3b30"
+                    stroke="currentColor"
                     strokeWidth="4"
                     strokeLinecap="round"
-                    className={styles.gaugeNeedle}
+                    className={`${styles.gaugeNeedle} ${styles.accentText}`}
                     style={{ transform: `rotate(${needleDeg}deg)` }}
                   />
                   {/* 中心點 */}
-                  <circle cx="100" cy="90" r="7" fill="#ffffff" stroke="#ff3b30" strokeWidth="2" />
+                  <circle cx="100" cy="90" r="7" fill="var(--card-bg-solid, #ffffff)" stroke="currentColor" strokeWidth="2" className={styles.accentText} />
                 </svg>
 
-                <div className="font-mono text-3xl font-bold text-white mt-[-1rem] drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                <div className="font-mono text-3xl font-bold text-text-main mt-[-1rem]">
                   {totalInitMargin === 0 && simCapital > 0 ? '∞' : totalInitMargin > 0 ? `${(riskRatio > 0 ? riskRatio : 0).toFixed(2)}%` : '- %'}
                 </div>
 
                 <div className={`mt-2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-[1px] border ${
                   totalInitMargin === 0 || riskRatio >= 100
-                    ? 'bg-[#4ade80]/15 border-[#4ade80]/40 text-[#4ade80]'
+                    ? 'bg-[#10b981]/15 border-[#10b981]/40 text-[#10b981]'
                     : simCapital >= totalMaintMargin
-                    ? 'bg-[#fbbf24]/15 border-[#fbbf24]/40 text-[#fbbf24]'
-                    : 'bg-[#ff3b30]/15 border-[#ff3b30]/40 text-[#ff3b30] animate-pulse'
+                    ? 'bg-[#f59e0b]/15 border-[#f59e0b]/40 text-[#f59e0b]'
+                    : 'bg-[#ef4444]/15 border-[#ef4444]/40 text-[#ef4444] animate-pulse'
                 }`}>
                   {totalInitMargin === 0 && simCapital > 0
                     ? '部位完全安全'
@@ -379,14 +392,14 @@ export default function FuturesCalculatorClient() {
 
             {/* 實質槓桿與合約規模 */}
             <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={styles.statCard}>
                 <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px] mb-1">合約總價值 (規模)</span>
-                <span className="font-mono text-xl font-bold text-white">${formatNumber(contractValue)} 元</span>
+                <span className="font-mono text-xl font-bold text-text-main">${formatNumber(contractValue)} 元</span>
               </div>
 
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={styles.statCard}>
                 <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px] mb-1">當前實質資金槓桿</span>
-                <span className="font-mono text-2xl font-bold text-[#ff3b30] drop-shadow-[0_0_10px_rgba(255,59,48,0.3)]">
+                <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
                   {actualLeverage.toFixed(2)} 倍
                 </span>
                 <span className="text-xs text-text-sub mt-1">
@@ -396,12 +409,12 @@ export default function FuturesCalculatorClient() {
             </div>
 
             {/* 2. 0%-60% 逆風波段壓力測試 */}
-            <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
+            <div className={`${styles.glassCard} p-6 flex flex-col gap-4 shadow-lg`}>
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-text-sub uppercase tracking-[1px]">
                   模擬逆風波段 ({position === 'long' ? '指數下跌' : '指數上漲'})
                 </span>
-                <span className="font-mono text-sm text-[#ff3b30] font-bold">
+                <span className={`font-mono text-sm ${styles.accentText} font-bold`}>
                   {stressDropPct.toFixed(1)}% <span className="text-xs text-text-sub font-normal">(折合 {formatNumber(dropPoints)} 點)</span>
                 </span>
               </div>
@@ -417,13 +430,13 @@ export default function FuturesCalculatorClient() {
               />
 
               <div className="grid grid-cols-2 gap-4 font-mono text-xs max-sm:grid-cols-1">
-                <div className="bg-black/40 border border-white/[.06] p-3 rounded-xl flex flex-col gap-1">
+                <div className="bg-surface-glass border border-border-glass p-3 rounded-xl flex flex-col gap-1">
                   <span className="text-text-sub">模擬成交指數</span>
-                  <span className="text-base text-white font-bold">{formatNumber(simIndex)} 點</span>
+                  <span className="text-base text-text-main font-bold">{formatNumber(simIndex)} 點</span>
                 </div>
-                <div className="bg-black/40 border border-white/[.06] p-3 rounded-xl flex flex-col gap-1">
+                <div className="bg-surface-glass border border-border-glass p-3 rounded-xl flex flex-col gap-1">
                   <span className="text-text-sub">預估模擬權益數</span>
-                  <span className="text-base text-white font-bold">${formatNumber(simCapital)} 元</span>
+                  <span className="text-base text-text-main font-bold">${formatNumber(simCapital)} 元</span>
                   <span className="text-[0.7rem] text-[#ef4444]">損益：-${formatNumber(simLoss)} 元</span>
                 </div>
               </div>
@@ -431,19 +444,19 @@ export default function FuturesCalculatorClient() {
 
             {/* 3. 臨界點資訊卡片 */}
             <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col gap-1 shadow-lg font-mono">
+              <div className={`${styles.statCard} font-mono`}>
                 <span className="text-sm font-semibold text-text-sub">追繳警示點位 (維持保證金)</span>
-                <span className="text-xl font-bold text-[#fbbf24]">{formatNumber(marginCallPrice)} 點</span>
+                <span className="text-xl font-bold text-[#f59e0b]">{formatNumber(marginCallPrice)} 點</span>
                 <span className="text-xs text-text-sub">
-                  容許逆風：<strong className="text-[#fbbf24]">{formatNumber(marginCallPts)} 點</strong>
+                  容許逆風：<strong className="text-[#f59e0b]">{formatNumber(marginCallPts)} 點</strong>
                 </span>
               </div>
 
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col gap-1 shadow-lg font-mono">
+              <div className={`${styles.statCard} font-mono`}>
                 <span className="text-sm font-semibold text-text-sub">強制平倉點位 (風險指標 25%)</span>
-                <span className="text-xl font-bold text-[#ff3b30]">{formatNumber(liqPrice)} 點</span>
+                <span className={`text-xl font-bold ${styles.accentText}`}>{formatNumber(liqPrice)} 點</span>
                 <span className="text-xs text-text-sub">
-                  容許逆風：<strong className="text-[#ff3b30]">{formatNumber(liqPts)} 點</strong>
+                  容許逆風：<strong className={styles.accentText}>{formatNumber(liqPts)} 點</strong>
                 </span>
               </div>
             </div>
@@ -451,20 +464,20 @@ export default function FuturesCalculatorClient() {
             {/* 4. 保證金安全回補金額試算 */}
             <div className={`border rounded-2xl p-6 flex flex-col gap-4 shadow-lg transition-all ${
               isBelowInit
-                ? 'bg-[#ff3b30]/10 border-[#ff3b30]/40'
-                : 'bg-black/30 border-white/[.08]'
+                ? 'bg-[#ef4444]/10 border-[#ef4444]/40'
+                : styles.glassCard
             }`}>
               <h3 className="text-xs uppercase tracking-[1px] font-semibold flex items-center gap-2">
                 {isBelowInit ? (
-                  <span className="text-[#ff3b30]">⚠️ 模擬權益數已低於總原始保證金，回補至 100% 原始保證金水位：</span>
+                  <span className="text-[#ef4444]">⚠️ 模擬權益數已低於總原始保證金，回補至 100% 原始保證金水位：</span>
                 ) : (
-                  <span className="text-[#4ade80]">🟢 權益數高於原始保證金，無須補繳</span>
+                  <span className="text-[#10b981]">🟢 權益數高於原始保證金，無須補繳</span>
                 )}
               </h3>
 
-              <div className="font-mono text-xs bg-black/40 border border-white/[.06] p-4 rounded-xl flex flex-col gap-1">
+              <div className="font-mono text-xs bg-surface-glass border border-border-glass p-4 rounded-xl flex flex-col gap-1">
                 <span className="text-text-sub font-semibold text-xs">需補足至 100% 原始保證金之現金</span>
-                <span className={`text-base font-bold ${isBelowInit ? 'text-[#ff3b30]' : 'text-white'}`}>
+                <span className={`text-base font-bold ${isBelowInit ? 'text-[#ef4444]' : 'text-text-main'}`}>
                   ${formatNumber(topupCash)} 元
                 </span>
               </div>
@@ -474,9 +487,8 @@ export default function FuturesCalculatorClient() {
       </ToolLayout>
 
       {/* Toast 提示條 */}
-      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-lg z-[100] pointer-events-none
-        bg-[rgba(255,59,48,0.15)] border border-[rgba(255,59,48,0.3)] backdrop-blur-[10px] text-[#ff3b30]
-        transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
+      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-xl z-[100] pointer-events-none
+        ${styles.activeScheme} backdrop-blur-[10px] shadow-2xl transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
         <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
         </svg>

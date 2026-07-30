@@ -25,8 +25,16 @@ export default function ParticleCanvas() {
     let flowDirection: 'up' | 'down' = 'up';
     let animationId: number;
 
+    const LIGHT_PARTICLE_COLORS = [
+      'rgba(56, 189, 248, 0.72)',  // 湛藍
+      'rgba(99, 102, 241, 0.68)', // 靛藍
+      'rgba(14, 165, 233, 0.72)',  // 天藍
+      'rgba(129, 140, 248, 0.65)', // 柔紫
+    ];
+
     function getActiveThemeColor(): string {
       const docEl = document.documentElement;
+      const isLight = docEl.getAttribute('data-theme') === 'light';
       let color =
         docEl.style.getPropertyValue('--theme-color').trim() ||
         getComputedStyle(docEl).getPropertyValue('--theme-color').trim() ||
@@ -35,10 +43,50 @@ export default function ParticleCanvas() {
         getComputedStyle(docEl).getPropertyValue('--accent-color').trim();
       if (color) {
         const rgbaMatch = color.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-        if (rgbaMatch) return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
+        if (rgbaMatch) {
+          if (isLight) {
+            return `rgb(${Math.max(0, parseInt(rgbaMatch[1]) - 20)}, ${Math.max(0, parseInt(rgbaMatch[2]) - 20)}, ${Math.min(255, parseInt(rgbaMatch[3]) + 20)})`;
+          }
+          return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
+        }
         return color;
       }
-      return '#00f0ff';
+      return isLight ? '#0284c7' : '#00f0ff';
+    }
+
+    function connectParticles() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const maxDistance = 125;
+      const themeColor = getActiveThemeColor();
+
+      for (let a = 0; a < particles.length; a++) {
+        for (let b = a + 1; b < particles.length; b++) {
+          const dx = particles[a].x - particles[b].x;
+          const dy = particles[a].y - particles[b].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < maxDistance) {
+            const opacityFactor = (1 - dist / maxDistance);
+            ctx.beginPath();
+            ctx.moveTo(particles[a].x, particles[a].y);
+            ctx.lineTo(particles[b].x, particles[b].y);
+
+            if (isLight) {
+              ctx.strokeStyle = `rgba(2, 132, 199, ${opacityFactor * 0.28})`;
+              ctx.lineWidth = 1.2;
+            } else {
+              // 暗色模式：動態連動工具主題霓虹發光色 (如科技藍 #00f0ff, 財富金 #ffb800 等)
+              const rgbaMatch = themeColor.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+              if (rgbaMatch) {
+                ctx.strokeStyle = `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${opacityFactor * 0.20})`;
+              } else {
+                ctx.strokeStyle = `rgba(0, 240, 255, ${opacityFactor * 0.20})`;
+              }
+              ctx.lineWidth = 0.9;
+            }
+            ctx.stroke();
+          }
+        }
+      }
     }
 
     class Particle {
@@ -49,10 +97,10 @@ export default function ParticleCanvas() {
         if (fromPos === 'top') this.y = -10 - Math.random() * 20;
         else if (fromPos === 'bottom') this.y = canvas!.height + Math.random() * 20;
         else this.y = Math.random() * canvas!.height;
-        this.size = Math.random() * 1.8 + 0.6;
-        this.speedY = Math.random() * 0.45 + 0.15;
-        this.speedX = (Math.random() - 0.5) * 0.25;
-        this.opacity = Math.random() * 0.55 + 0.15;
+        this.size = Math.random() * 1.8 + 1.2;
+        this.speedY = Math.random() * 0.35 + 0.12;
+        this.speedX = (Math.random() - 0.5) * 0.2;
+        this.opacity = Math.random() * 0.45 + 0.35;
         this.density = Math.random() * 25 + 5;
       }
       update() {
@@ -76,11 +124,25 @@ export default function ParticleCanvas() {
       }
       draw() {
         ctx.save();
-        ctx.globalAlpha = this.opacity;
-        ctx.fillStyle = getActiveThemeColor();
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        if (isLight) {
+          // 亮色模式：清晰立體 2px 晶體星芒點
+          ctx.globalAlpha = Math.min(0.85, this.opacity * 1.3);
+          ctx.fillStyle = '#0284c7';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // 暗色模式：經典賽博霓虹發光點與連線星網
+          ctx.globalAlpha = Math.min(0.9, this.opacity * 1.25);
+          const color = getActiveThemeColor();
+          ctx.fillStyle = color;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
         ctx.restore();
       }
     }
@@ -88,17 +150,20 @@ export default function ParticleCanvas() {
     class BurstParticle {
       x: number; y: number; size: number; vx: number; vy: number; alpha: number; color: string;
       constructor(x: number, y: number, isCountUp: boolean | null = null) {
-        this.x = x; this.y = y; this.size = Math.random() * 4 + 2;
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        this.x = x; this.y = y; this.size = Math.random() * 3.5 + 1.5;
         if (isCountUp === true) { this.vx = (Math.random() - 0.5) * 3.5; this.vy = -(Math.random() * 2.5 + 1); }
         else if (isCountUp === false) { this.vx = (Math.random() - 0.5) * 3.5; this.vy = (Math.random() * 2.5 + 1); }
         else { const angle = Math.random() * Math.PI * 2, speed = Math.random() * 3.5 + 1; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed; }
         this.alpha = 1;
-        this.color = Math.random() > 0.4 ? getActiveThemeColor() : '#ffffff';
+        this.color = isLight ? '#0284c7' : (Math.random() > 0.4 ? getActiveThemeColor() : '#ffffff');
       }
       update() { this.x += this.vx; this.y += this.vy; this.alpha -= 0.028; }
       draw() {
         ctx.save(); ctx.globalAlpha = Math.max(0, this.alpha);
-        ctx.fillStyle = this.color; ctx.shadowBlur = 6; ctx.shadowColor = this.color;
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        ctx.fillStyle = this.color;
+        if (!isLight) { ctx.shadowBlur = 6; ctx.shadowColor = this.color; }
         ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
@@ -119,6 +184,7 @@ export default function ParticleCanvas() {
 
     function animate() {
       ctx.clearRect(0, 0, canvas!.width, canvas!.height);
+      connectParticles();
       particles.forEach(p => { p.update(); p.draw(); });
       for (let i = burstParticles.length - 1; i >= 0; i--) {
         const p = burstParticles[i]; p.update(); p.draw();

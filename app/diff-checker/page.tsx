@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: '文件比對,文字比對,Diff Checker,程式碼比對,Text Diff,差異分析,文本比對',
   alternates: {
     canonical: 'https://tools.cjkuo.net/diff-checker/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/diff-checker/',
+      en: 'https://tools.cjkuo.net/diff-checker/en/',
+    },
   },
   openGraph: {
     title: '兩份文件比對工具 - 免費線上 Text Diff Checker 與程式碼文字差異分析工具',

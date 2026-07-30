@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'DNS查詢,DIG工具,DNS Lookup,DNS記錄,Cloudflare DoH,Google DoH,網域診斷,MX記錄查詢',
   alternates: {
     canonical: 'https://tools.cjkuo.net/dns-dig/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/dns-dig/',
+      en: 'https://tools.cjkuo.net/dns-dig/en/',
+    },
   },
   openGraph: {
     title: 'DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器',
@@ -37,7 +41,7 @@ export default function DnsDigPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <DnsDigClient />
+      <DnsDigClient lang="zh-TW" />
     </>
   );
 }

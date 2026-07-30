@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'URL編碼,URL解碼,URL Encoder,URL Decoder,encodeURIComponent,decodeURIComponent,網址轉碼',
   alternates: {
     canonical: 'https://tools.cjkuo.net/url/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/url/',
+      en: 'https://tools.cjkuo.net/url/en/',
+    },
   },
   openGraph: {
     title: 'URL 編碼解碼器 - 免費線上網址 encodeURIComponent 與 decodeURIComponent 工具',

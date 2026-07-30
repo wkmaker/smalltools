@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'JSON格式化,JSON Formatter,JSON驗證,JSON Validator,JSON美化,JSON壓縮,JSON排版',
   alternates: {
     canonical: 'https://tools.cjkuo.net/json/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/json/',
+      en: 'https://tools.cjkuo.net/json/en/',
+    },
   },
   openGraph: {
     title: 'JSON 格式化與驗證器 - 免費線上 JSON Formatter & Validator',

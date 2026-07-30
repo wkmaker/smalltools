@@ -197,6 +197,8 @@ export default function CompoundInterestClient() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
@@ -214,10 +216,15 @@ export default function CompoundInterestClient() {
       yTotal: height - 30 - (row.total / maxVal) * (height - 60),
     }));
 
-    // 1. 本金層 (下方藍灰色區域)
+    // 1. 本金層
     const gradPrincipal = ctx.createLinearGradient(0, 0, 0, height);
-    gradPrincipal.addColorStop(0, 'rgba(148, 163, 184, 0.35)');
-    gradPrincipal.addColorStop(1, 'rgba(148, 163, 184, 0.05)');
+    if (isLight) {
+      gradPrincipal.addColorStop(0, 'rgba(2, 132, 199, 0.18)');
+      gradPrincipal.addColorStop(1, 'rgba(2, 132, 199, 0.02)');
+    } else {
+      gradPrincipal.addColorStop(0, 'rgba(148, 163, 184, 0.35)');
+      gradPrincipal.addColorStop(1, 'rgba(148, 163, 184, 0.05)');
+    }
 
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].yPrincipal);
@@ -230,10 +237,15 @@ export default function CompoundInterestClient() {
     ctx.fillStyle = gradPrincipal;
     ctx.fill();
 
-    // 2. 利息層 (最上方金黃色發光區域)
+    // 2. 利息層
     const gradInterest = ctx.createLinearGradient(0, 0, 0, height);
-    gradInterest.addColorStop(0, 'rgba(255, 184, 0, 0.4)');
-    gradInterest.addColorStop(1, 'rgba(255, 184, 0, 0.05)');
+    if (isLight) {
+      gradInterest.addColorStop(0, 'rgba(245, 158, 11, 0.45)');
+      gradInterest.addColorStop(1, 'rgba(245, 158, 11, 0.08)');
+    } else {
+      gradInterest.addColorStop(0, 'rgba(255, 184, 0, 0.4)');
+      gradInterest.addColorStop(1, 'rgba(255, 184, 0, 0.05)');
+    }
 
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].yTotal);
@@ -247,37 +259,37 @@ export default function CompoundInterestClient() {
     ctx.fillStyle = gradInterest;
     ctx.fill();
 
-    // 3. 投入本金邊界線 (顯眼藍灰色虛線，讓投入本金清晰分明)
+    // 3. 投入本金邊界線
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].yPrincipal);
     for (let i = 1; i < points.length; i++) {
       ctx.lineTo(points[i].x, points[i].yPrincipal);
     }
-    ctx.strokeStyle = '#94a3b8';
+    ctx.strokeStyle = isLight ? '#0284c7' : '#94a3b8';
     ctx.lineWidth = 2;
     ctx.setLineDash([4, 4]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 4. 總資產頂線 (金黃色主線)
+    // 4. 總資產頂線
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].yTotal);
     for (let i = 1; i < points.length; i++) {
       ctx.lineTo(points[i].x, points[i].yTotal);
     }
-    ctx.strokeStyle = '#ffb800';
+    ctx.strokeStyle = isLight ? '#d97706' : '#ffb800';
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
     // X / Y 軸刻度
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.8)' : 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(40, height - 30);
     ctx.lineTo(width - 20, height - 30);
     ctx.stroke();
 
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
     ctx.font = '11px sans-serif';
     ctx.fillText('初始', 35, height - 12);
     ctx.fillText(`${schedule.length - 1}${periodUnit === 'year' ? '年' : '月'}`, width - 45, height - 12);
@@ -310,53 +322,61 @@ export default function CompoundInterestClient() {
       >
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：表單設定區 */}
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
+          <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
             {/* 初始本金 */}
             <div className="flex flex-col gap-2">
-              <label htmlFor={principalInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">初始本金 (元)</label>
+              <label htmlFor={principalInputId} className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">初始本金 (元)</label>
               <div className="relative flex items-center">
                 <input
                   id={principalInputId}
-                  type="number"
-                  value={principal}
-                  onChange={e => setPrincipal(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                  className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ffb800] focus:shadow-[0_0_15px_rgba(255,184,0,0.2)] transition-all font-mono"
+                  type="text"
+                  inputMode="numeric"
+                  value={principal === '' ? '' : principal.toLocaleString('zh-TW')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '');
+                    setPrincipal(raw === '' ? '' : parseInt(raw, 10));
+                  }}
+                  className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono`}
                 />
-                <span className="absolute right-4 text-sm text-slate-300 font-medium">元</span>
+                <span className="absolute right-4 text-sm text-text-sub font-medium">元</span>
               </div>
             </div>
 
             {/* 定期定額金額與頻率 */}
-            <div className="flex flex-col gap-5 border-t border-white/[.05] pt-5">
+            <div className={`flex flex-col gap-5 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor={contributionInputId} className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">定期定額投入金額 (元)</label>
+                <label htmlFor={contributionInputId} className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">定期定額投入金額 (元)</label>
                 <div className="relative flex items-center">
                   <input
                     id={contributionInputId}
-                    type="number"
-                    value={contribution}
-                    onChange={e => setContribution(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono"
+                    type="text"
+                    inputMode="numeric"
+                    value={contribution === '' ? '' : contribution.toLocaleString('zh-TW')}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^\d]/g, '');
+                      setContribution(raw === '' ? '' : parseInt(raw, 10));
+                    }}
+                    className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono`}
                   />
-                  <span className="absolute right-4 text-sm text-slate-300 font-medium">元</span>
+                  <span className="absolute right-4 text-sm text-text-sub font-medium">元</span>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor="contrib-freq-select" className="text-sm text-slate-300 font-medium uppercase tracking-[1px]">定期定額頻率</label>
-                <div className="grid grid-cols-2 gap-2 bg-black/40 p-1 rounded-xl border border-white/[.08]">
+                <label htmlFor="contrib-freq-select" className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">定期定額頻率</label>
+                <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1 rounded-xl`}>
                   <button
                     onClick={() => setContribUnit('month')}
-                    className={`py-2 text-sm rounded-lg cursor-pointer border ${
-                      contribUnit === 'month' ? 'bg-[#ffb800]/15 border-[#ffb800]/40 text-[#ffb800] font-medium' : 'border-transparent text-slate-300'
+                    className={`py-2 text-sm rounded-lg cursor-pointer border transition-all ${
+                      contribUnit === 'month' ? 'bg-[#ffb800]/20 border-[#ffb800]/50 text-[#ffb800] font-semibold shadow-sm' : 'border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
                     按月投入
                   </button>
                   <button
                     onClick={() => setContribUnit('year')}
-                    className={`py-2 text-sm rounded-lg cursor-pointer border ${
-                      contribUnit === 'year' ? 'bg-[#ffb800]/15 border-[#ffb800]/40 text-[#ffb800] font-medium' : 'border-transparent text-slate-300'
+                    className={`py-2 text-sm rounded-lg cursor-pointer border transition-all ${
+                      contribUnit === 'year' ? 'bg-[#ffb800]/20 border-[#ffb800]/50 text-[#ffb800] font-semibold shadow-sm' : 'border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
                     按年投入
@@ -366,9 +386,9 @@ export default function CompoundInterestClient() {
             </div>
 
             {/* 年/月利率與期限 */}
-            <div className="grid grid-cols-2 gap-4 border-t border-white/[.05] pt-5">
+            <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor={rateInputId} className="text-xs text-slate-300 font-medium uppercase tracking-[1px]">預期報酬率 (%)</label>
+                <label htmlFor={rateInputId} className="text-xs text-text-sub font-semibold uppercase tracking-[1px]">預期報酬率 (%)</label>
                 <div className="relative flex items-center">
                   <input
                     id={rateInputId}
@@ -376,18 +396,18 @@ export default function CompoundInterestClient() {
                     step="0.1"
                     value={ratePercent}
                     onChange={e => setRatePercent(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-16 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 pr-16 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono`}
                   />
-                  <div className="absolute right-1 top-1 bottom-1 flex bg-white/[.05] rounded-lg overflow-hidden border border-white/[.05]">
+                  <div className={`absolute right-1 top-1 bottom-1 flex ${styles.segmentGroup} rounded-lg overflow-hidden`}>
                     <button
                       onClick={() => setRateUnit('year')}
-                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${rateUnit === 'year' ? 'bg-[#ffb800]/20 text-[#ffb800]' : 'text-slate-300'}`}
+                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${rateUnit === 'year' ? 'bg-[#ffb800]/25 text-[#ffb800] font-semibold' : 'text-text-sub'}`}
                     >
                       年
                     </button>
                     <button
                       onClick={() => setRateUnit('month')}
-                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${rateUnit === 'month' ? 'bg-[#ffb800]/20 text-[#ffb800]' : 'text-slate-300'}`}
+                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${rateUnit === 'month' ? 'bg-[#ffb800]/25 text-[#ffb800] font-semibold' : 'text-text-sub'}`}
                     >
                       月
                     </button>
@@ -396,25 +416,25 @@ export default function CompoundInterestClient() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={periodInputId} className="text-xs text-slate-300 font-medium uppercase tracking-[1px]">投資期間</label>
+                <label htmlFor={periodInputId} className="text-xs text-text-sub font-semibold uppercase tracking-[1px]">投資期間</label>
                 <div className="relative flex items-center">
                   <input
                     id={periodInputId}
                     type="number"
                     value={periodVal}
                     onChange={e => setPeriodVal(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/[.08] text-white px-4 py-3 pr-16 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono"
+                    className={`w-full ${styles.inputField} px-4 py-3 pr-16 rounded-xl text-base outline-none focus:border-[#ffb800] transition-all font-mono`}
                   />
-                  <div className="absolute right-1 top-1 bottom-1 flex bg-white/[.05] rounded-lg overflow-hidden border border-white/[.05]">
+                  <div className={`absolute right-1 top-1 bottom-1 flex ${styles.segmentGroup} rounded-lg overflow-hidden`}>
                     <button
                       onClick={() => setPeriodUnit('year')}
-                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'year' ? 'bg-[#ffb800]/20 text-[#ffb800]' : 'text-slate-300'}`}
+                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'year' ? 'bg-[#ffb800]/25 text-[#ffb800] font-semibold' : 'text-text-sub'}`}
                     >
                       年
                     </button>
                     <button
                       onClick={() => setPeriodUnit('month')}
-                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'month' ? 'bg-[#ffb800]/20 text-[#ffb800]' : 'text-slate-300'}`}
+                      className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'month' ? 'bg-[#ffb800]/25 text-[#ffb800] font-semibold' : 'text-text-sub'}`}
                     >
                       月
                     </button>
@@ -424,13 +444,13 @@ export default function CompoundInterestClient() {
             </div>
 
             {/* 複利計息頻率 */}
-            <div className="flex flex-col gap-2 border-t border-white/[.05] pt-5">
-              <label htmlFor="compound-freq-select" className="text-xs text-slate-300 font-medium uppercase tracking-[1px]">複利計息頻率</label>
+            <div className={`flex flex-col gap-2 ${styles.divider} pt-5`}>
+              <label htmlFor="compound-freq-select" className="text-xs text-text-sub font-semibold uppercase tracking-[1px]">複利計息頻率</label>
               <select
                 id="compound-freq-select"
                 value={compoundFreq}
                 onChange={e => setCompoundFreq(parseInt(e.target.value))}
-                className="w-full bg-select-bg border border-border-glass text-text-main px-4 py-3 rounded-xl text-sm outline-none cursor-pointer"
+                className={`w-full ${styles.selectControl} px-4 py-3 rounded-xl text-sm outline-none cursor-pointer transition-all`}
               >
                 <option value={12}>按月複利 (每月滾利)</option>
                 <option value={4}>按季複利 (每三月滾利)</option>
@@ -441,9 +461,9 @@ export default function CompoundInterestClient() {
 
             <button
               onClick={copyShareLink}
-              className="mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
+              className="mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-semibold tracking-[1px]
                 bg-[#ffb800]/15 border border-[#ffb800]/40 text-[#ffb800] rounded-xl
-                transition-all duration-300 hover:bg-[#ffb800] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(255,184,0,0.4)]
+                transition-all duration-300 hover:bg-[#ffb800] hover:text-[#030305] shadow-sm hover:shadow-[0_4px_16px_rgba(255,184,0,0.3)]
                 cursor-pointer"
             >
               複製試算分享連結
@@ -454,35 +474,35 @@ export default function CompoundInterestClient() {
           <div className="flex flex-col gap-6">
             {/* 三大指標看板 */}
             <div className="grid grid-cols-3 gap-4 max-sm:grid-cols-1">
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={`${styles.glassCard} p-5 flex flex-col items-center justify-center text-center transition-all hover:translate-y-[-2px]`}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">累積總金額</span>
-                <span className="font-mono text-2xl font-bold text-[#ffb800] drop-shadow-[0_0_10px_rgba(255,184,0,0.3)]">
+                <span className={`font-mono text-2xl font-bold ${styles.totalText} drop-shadow-[0_2px_10px_rgba(255,184,0,0.25)]`}>
                   ${formatNumber(totalAsset)}
                 </span>
               </div>
 
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={`${styles.glassCard} p-5 flex flex-col items-center justify-center text-center transition-all hover:translate-y-[-2px]`}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">總投入本金</span>
                 <span className="font-mono text-xl font-bold text-text-main">
                   ${formatNumber(totalPrincipal)}
                 </span>
               </div>
 
-              <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+              <div className={`${styles.glassCard} p-5 flex flex-col items-center justify-center text-center transition-all hover:translate-y-[-2px]`}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">累積利息收益</span>
-                <span className="font-mono text-xl font-bold text-[#00f5a0]">
+                <span className={`font-mono text-xl font-bold ${styles.interestText}`}>
                   ${formatNumber(totalInterest)}
                 </span>
               </div>
             </div>
 
             {/* 資產成長趨勢圖 (Canvas 堆疊區域圖) */}
-            <div className="bg-black/30 border border-white/[.08] rounded-2xl p-5 flex flex-col gap-3">
+            <div className={`${styles.glassCard} p-5 flex flex-col gap-3`}>
               <div className="flex justify-between items-center text-sm font-semibold text-text-sub uppercase tracking-[1px]">
                 <span>複利資產累積趨勢圖</span>
                 <div className="flex gap-4">
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#ffb800]" />複利利息</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]" />投入本金</span>
+                  <span className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-full ${styles.totalText} bg-current`} />複利利息</span>
+                  <span className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-full ${styles.principalDot}`} />投入本金</span>
                 </div>
               </div>
               <div className="relative w-full h-[230px]">
@@ -497,7 +517,7 @@ export default function CompoundInterestClient() {
               </h3>
               <table className="w-full text-right text-sm">
                 <thead>
-                  <tr className="border-b border-white/[.08] text-text-sub text-sm font-semibold">
+                  <tr className={`${styles.tableHeaderRow} text-text-sub text-sm font-semibold`}>
                     <th className={`text-left p-2.5 ${styles.stickyPeriod}`}>{periodUnit === 'year' ? '年度' : '月份'}</th>
                     <th className="p-2.5">期初金額</th>
                     <th className="p-2.5">當期投入</th>
@@ -508,13 +528,13 @@ export default function CompoundInterestClient() {
                 </thead>
                 <tbody>
                   {schedule.map((row, idx) => (
-                    <tr key={idx} className="border-b border-white/[.03] hover:bg-white/[.02] text-white/80 transition-colors">
-                      <td className={`text-left p-2.5 font-mono text-white ${styles.stickyPeriod}`}>{row.label}</td>
+                    <tr key={idx} className={`${styles.tableDataRow} text-text-main transition-colors`}>
+                      <td className={`text-left p-2.5 font-mono text-text-main ${styles.stickyPeriod}`}>{row.label}</td>
                       <td className="p-2.5 font-mono">{row.label === '初始' ? '-' : `$${formatNumber(row.startBalance)}`}</td>
                       <td className="p-2.5 font-mono">{row.label === '初始' ? '-' : `+$${formatNumber(row.contribution)}`}</td>
-                      <td className="p-2.5 font-mono text-[#00f5a0]">{row.label === '初始' ? '-' : `+$${formatNumber(row.interest)}`}</td>
+                      <td className={`p-2.5 font-mono ${styles.interestText}`}>{row.label === '初始' ? '-' : `+$${formatNumber(row.interest)}`}</td>
                       <td className="p-2.5 font-mono">${formatNumber(row.totalPrincipal)}</td>
-                      <td className="p-2.5 font-mono text-[#ffb800] font-semibold">${formatNumber(row.total)}</td>
+                      <td className={`p-2.5 font-mono ${styles.totalText} font-semibold`}>${formatNumber(row.total)}</td>
                     </tr>
                   ))}
                 </tbody>

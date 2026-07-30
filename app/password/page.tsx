@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: '密碼產生器,亂數密碼,高強度密碼,密碼生成器,Password Generator,隨機密碼',
   alternates: {
     canonical: 'https://tools.cjkuo.net/password/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/password/',
+      en: 'https://tools.cjkuo.net/password/en/',
+    },
   },
   openGraph: {
     title: '高強度亂數密碼產生器 - 免費線上客製化密碼生成工具',

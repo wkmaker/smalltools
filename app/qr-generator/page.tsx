@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'QR Code產生器,QR Code製造機,藝術QR Code,QR Code Logo,向量QR Code,SVG QR Code,免費QR Code',
   alternates: {
     canonical: 'https://tools.cjkuo.net/qr-generator/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/qr-generator/',
+      en: 'https://tools.cjkuo.net/qr-generator/en/',
+    },
   },
   openGraph: {
     title: 'QR Code 產生器 - 免費線上藝術設計、Logo 內嵌與向量 SVG 輸出工具',

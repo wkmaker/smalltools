@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'PDF壓縮大師,PDF壓縮,PDF圖片壓縮,PDF瘦身,PDF檔案縮小,線上PDF壓縮,免費PDF工具,純前端PDF壓縮',
   alternates: {
     canonical: 'https://tools.cjkuo.net/pdf-compressor/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/pdf-compressor/',
+      en: 'https://tools.cjkuo.net/pdf-compressor/en/',
+    },
   },
   openGraph: {
     title: 'PDF 壓縮大師 - 免費線上瘦身與頂級隱私',

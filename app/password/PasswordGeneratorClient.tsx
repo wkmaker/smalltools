@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './password.module.css';
 
@@ -20,12 +21,81 @@ const CONFUSABLE = {
 
 type CharSetKey = keyof typeof CHAR_SETS;
 
+interface Props {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '線上安全密碼產生器',
+    subtitle: 'CSPRNG Password Generator',
+    description:
+      '專業免費的線上安全密碼生成器，採用 CSPRNG 密碼學隨機數引擎，支援自訂長度、大小寫字母、數字及特殊符號，並可即時評估密碼強度與熵值。',
+    langToggleLabel: 'English',
+    langToggleUrl: '/password/en/',
+    lengthLabel: '密碼長度 (Length)',
+    upperLabel: '大寫字母 (A-Z)',
+    lowerLabel: '小寫字母 (a-z)',
+    numberLabel: '數字 (0-9)',
+    symbolLabel: '特殊符號 (!@#...)',
+    excludeLabel: '排除相似與混淆字元 (如 1, l, I, 0, O, o 等)',
+    strictLabel: '強制每種字元集至少出現一個 (分佈更均勻)',
+    generateBtn: '重新生成安全密碼',
+    strengthLabel: '密碼安全強度：',
+    copyBtn: '複製',
+    historyTitle: '歷史生成記錄 (最近 5 組)',
+    placeholderSelectCharset: '請至少選擇一種字元集！',
+    placeholderNoChars: '字元池過濾後無可用字元！',
+    placeholderInitial: '點擊生成按鈕獲取密碼',
+    strengthWeak: '弱 (Weak) - 易受爆破',
+    strengthMedium: '中等 (Medium) - 尚可安全',
+    strengthStrong: '強 (Strong) - 建議採用',
+    strengthSecure: '安全 (Secure) - 密碼學防護',
+    toastCopied: '已複製密碼到剪貼簿',
+    toastCopyHistory: '已複製歷史密碼',
+    toastCopyFailed: '複製失敗，請手動複製',
+    toastInvalidPassword: '無效的密碼內容',
+  },
+  en: {
+    title: 'Secure Password Generator',
+    subtitle: 'CSPRNG Password Generator',
+    description:
+      'Cryptographically secure online password generator using CSPRNG engine. Customize length, uppercase/lowercase, digits, and symbols with live password strength analysis.',
+    langToggleLabel: '繁體中文',
+    langToggleUrl: '/password/',
+    lengthLabel: 'Password Length',
+    upperLabel: 'Uppercase (A-Z)',
+    lowerLabel: 'Lowercase (a-z)',
+    numberLabel: 'Digits (0-9)',
+    symbolLabel: 'Symbols (!@#...)',
+    excludeLabel: 'Exclude ambiguous chars (e.g. 1, l, I, 0, O, o)',
+    strictLabel: 'Include at least one from each selected set',
+    generateBtn: 'Generate Secure Password',
+    strengthLabel: 'Password Strength:',
+    copyBtn: 'Copy',
+    historyTitle: 'History (Recent 5)',
+    placeholderSelectCharset: 'Please select at least one character set!',
+    placeholderNoChars: 'No available characters after filtering!',
+    placeholderInitial: 'Click generate to get password',
+    strengthWeak: 'Weak - Vulnerable',
+    strengthMedium: 'Medium - Fairly Safe',
+    strengthStrong: 'Strong - Recommended',
+    strengthSecure: 'Secure - Cryptographic',
+    toastCopied: 'Copied password to clipboard',
+    toastCopyHistory: 'Copied historical password',
+    toastCopyFailed: 'Copy failed, please copy manually',
+    toastInvalidPassword: 'Invalid password content',
+  },
+};
+
 function secureRandomInt(max: number): number {
   if (max <= 0) return 0;
   const array = new Uint32Array(1);
   const maxUint32 = 4294967295;
   const limit = maxUint32 - (maxUint32 % max);
-  do { crypto.getRandomValues(array); } while (array[0] >= limit);
+  do {
+    crypto.getRandomValues(array);
+  } while (array[0] >= limit);
   return array[0] % max;
 }
 
@@ -42,7 +112,12 @@ interface StrengthResult {
   color: string;
 }
 
-function evaluateStrength(password: string, selectedSetsCount: number, length: number): StrengthResult {
+function evaluateStrength(
+  password: string,
+  selectedSetsCount: number,
+  length: number,
+  labels: { weak: string; medium: string; strong: string; secure: string }
+): StrengthResult {
   if (!password) return { label: '-', percent: 0, color: 'transparent' };
   let score = length * 4 + selectedSetsCount * 12;
   const hasUpper = /[A-Z]/.test(password);
@@ -53,13 +128,23 @@ function evaluateStrength(password: string, selectedSetsCount: number, length: n
   score += mixCount * 8;
   if (mixCount === 1) score = Math.min(score, 35);
 
-  if (score < 40)  return { label: '弱 (Weak) - 易受爆破',      percent: 25,  color: '#ff3366' };
-  if (score < 65)  return { label: '中等 (Medium) - 尚可安全',   percent: 50,  color: '#ff9900' };
-  if (score < 85)  return { label: '強 (Strong) - 建議採用',     percent: 75,  color: '#ffcc00' };
-  return           { label: '安全 (Secure) - 密碼學防護',         percent: 100, color: '#00ff66' };
+  if (score < 40) return { label: labels.weak, percent: 25, color: '#ef4444' };
+  if (score < 65) return { label: labels.medium, percent: 50, color: '#f59e0b' };
+  if (score < 85) return { label: labels.strong, percent: 75, color: '#eab308' };
+  return { label: labels.secure, percent: 100, color: '#10b981' };
 }
 
-export default function PasswordGeneratorClient() {
+export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
+  const t = TRANSLATIONS[lang];
+
+  const lengthSliderId = useId();
+  const useUpperId = useId();
+  const useLowerId = useId();
+  const useNumberId = useId();
+  const useSymbolId = useId();
+  const excludeConfusableId = useId();
+  const strictModeId = useId();
+
   const [length, setLength] = useState(16);
   const [useUpper, setUseUpper] = useState(true);
   const [useLower, setUseLower] = useState(true);
@@ -68,8 +153,8 @@ export default function PasswordGeneratorClient() {
   const [excludeConfusable, setExcludeConfusable] = useState(false);
   const [strictMode, setStrictMode] = useState(true);
 
-  const [password, setPassword] = useState('點擊生成按鈕獲取密碼');
-  const [passwordColor, setPasswordColor] = useState('#ffffff');
+  const [password, setPassword] = useState(t.placeholderInitial);
+  const [passwordColor, setPasswordColor] = useState('var(--text-primary)');
   const [strength, setStrength] = useState<StrengthResult>({ label: '-', percent: 0, color: 'transparent' });
   const [history, setHistory] = useState<string[]>([]);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
@@ -81,56 +166,83 @@ export default function PasswordGeneratorClient() {
     toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   }, []);
 
-  const generatePassword = useCallback((pushHistory = false): string | null => {
-    const selected: { key: CharSetKey; chars: string }[] = [];
-    if (useUpper)  selected.push({ key: 'upper',  chars: CHAR_SETS.upper });
-    if (useLower)  selected.push({ key: 'lower',  chars: CHAR_SETS.lower });
-    if (useNumber) selected.push({ key: 'number', chars: CHAR_SETS.number });
-    if (useSymbol) selected.push({ key: 'symbol', chars: CHAR_SETS.symbol });
+  const generatePassword = useCallback(
+    (pushHistory = false): string | null => {
+      const selected: { key: CharSetKey; chars: string }[] = [];
+      if (useUpper) selected.push({ key: 'upper', chars: CHAR_SETS.upper });
+      if (useLower) selected.push({ key: 'lower', chars: CHAR_SETS.lower });
+      if (useNumber) selected.push({ key: 'number', chars: CHAR_SETS.number });
+      if (useSymbol) selected.push({ key: 'symbol', chars: CHAR_SETS.symbol });
 
-    if (selected.length === 0) {
-      setPassword('請至少選擇一種字元集！');
-      setPasswordColor('#ff3366');
-      setStrength({ label: '-', percent: 0, color: 'transparent' });
-      return null;
-    }
-    setPasswordColor('#ffffff');
+      if (selected.length === 0) {
+        setPassword(t.placeholderSelectCharset);
+        setPasswordColor('#ef4444');
+        setStrength({ label: '-', percent: 0, color: 'transparent' });
+        return null;
+      }
+      setPasswordColor('var(--text-primary)');
 
-    const processed = selected.map(({ key, chars }) => ({
-      key,
-      chars: excludeConfusable
-        ? chars.split('').filter(c => !(CONFUSABLE[key] as readonly string[]).includes(c)).join('')
-        : chars,
-    })).filter(p => p.chars.length > 0);
+      const processed = selected
+        .map(({ key, chars }) => ({
+          key,
+          chars: excludeConfusable
+            ? chars.split('').filter(c => !(CONFUSABLE[key] as readonly string[]).includes(c)).join('')
+            : chars,
+        }))
+        .filter(p => p.chars.length > 0);
 
-    if (processed.length === 0) {
-      setPassword('字元池過濾後無可用字元！');
-      return null;
-    }
+      if (processed.length === 0) {
+        setPassword(t.placeholderNoChars);
+        setPasswordColor('#ef4444');
+        return null;
+      }
 
-    const chars: string[] = [];
-    if (strictMode && length >= processed.length) {
-      processed.forEach(p => chars.push(p.chars[secureRandomInt(p.chars.length)]));
-    }
+      const chars: string[] = [];
+      if (strictMode && length >= processed.length) {
+        processed.forEach(p => chars.push(p.chars[secureRandomInt(p.chars.length)]));
+      }
 
-    const pool = processed.map(p => p.chars).join('');
-    while (chars.length < length) {
-      chars.push(pool[secureRandomInt(pool.length)]);
-    }
-    secureShuffle(chars);
+      const pool = processed.map(p => p.chars).join('');
+      while (chars.length < length) {
+        chars.push(pool[secureRandomInt(pool.length)]);
+      }
+      secureShuffle(chars);
 
-    const pwd = chars.join('');
-    setPassword(pwd);
-    setStrength(evaluateStrength(pwd, processed.length, length));
+      const pwd = chars.join('');
+      setPassword(pwd);
+      setStrength(
+        evaluateStrength(pwd, processed.length, length, {
+          weak: t.strengthWeak,
+          medium: t.strengthMedium,
+          strong: t.strengthStrong,
+          secure: t.strengthSecure,
+        })
+      );
 
-    if (pushHistory) {
-      setHistory(prev => {
-        if (prev[0] === pwd) return prev;
-        return [pwd, ...prev].slice(0, 5);
-      });
-    }
-    return pwd;
-  }, [length, useUpper, useLower, useNumber, useSymbol, excludeConfusable, strictMode]);
+      if (pushHistory) {
+        setHistory(prev => {
+          if (prev[0] === pwd) return prev;
+          return [pwd, ...prev].slice(0, 5);
+        });
+      }
+      return pwd;
+    },
+    [
+      length,
+      useUpper,
+      useLower,
+      useNumber,
+      useSymbol,
+      excludeConfusable,
+      strictMode,
+      t.placeholderSelectCharset,
+      t.placeholderNoChars,
+      t.strengthWeak,
+      t.strengthMedium,
+      t.strengthStrong,
+      t.strengthSecure,
+    ]
+  );
 
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#00ff66');
@@ -145,7 +257,7 @@ export default function PasswordGeneratorClient() {
   }, [length, useUpper, useLower, useNumber, useSymbol, excludeConfusable, strictMode]);
 
   const handleRegenerate = () => {
-    if (password && !password.includes('請') && !password.includes('字元')) {
+    if (password && !password.includes('!') && !password.includes('請') && !password.includes('Please')) {
       setHistory(prev => {
         if (prev[0] === password) return prev;
         return [password, ...prev].slice(0, 5);
@@ -155,192 +267,200 @@ export default function PasswordGeneratorClient() {
   };
 
   const copyPassword = () => {
-    if (!password || password.includes('請') || password.includes('字元')) {
-      showToast('無效的密碼內容');
+    if (!password || password.includes('!') || password.includes('請') || password.includes('Please')) {
+      showToast(t.toastInvalidPassword);
       return;
     }
-    navigator.clipboard.writeText(password)
-      .then(() => showToast('已複製密碼到剪貼簿'))
-      .catch(() => showToast('複製失敗，請手動複製'));
+    navigator.clipboard
+      .writeText(password)
+      .then(() => showToast(t.toastCopied))
+      .catch(() => showToast(t.toastCopyFailed));
   };
 
   const copyHistoryItem = (val: string) => {
-    navigator.clipboard.writeText(val).then(() => showToast('已複製歷史密碼'));
+    navigator.clipboard
+      .writeText(val)
+      .then(() => showToast(t.toastCopyHistory))
+      .catch(() => showToast(t.toastCopyFailed));
   };
 
   return (
     <>
-      <style>{`
-        .custom-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
-          border-radius: 3px; background: rgba(255,255,255,0.05); outline: none; transition: background 0.3s; }
-        .custom-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none;
-          width: 18px; height: 18px; border-radius: 50%; background: #ffffff;
-          border: 2px solid #00ff66; box-shadow: 0 0 8px #00ff66;
-          cursor: pointer; transition: transform 0.2s, background-color 0.2s; }
-        .custom-slider::-webkit-slider-thumb:hover { transform: scale(1.2); background: #00ff66; }
-        .custom-checkbox input { display: none; }
-        .checkmark { width: 18px; height: 18px; border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 4px; background: rgba(255,255,255,0.02);
-          display: inline-block; position: relative; transition: all 0.3s; flex-shrink: 0; }
-        .custom-checkbox:hover .checkmark { border-color: rgba(0,255,102,0.4); }
-        .custom-checkbox input:checked + .checkmark {
-          background: #00ff66; border-color: #00ff66; box-shadow: 0 0 8px rgba(0,255,102,0.5); }
-        .custom-checkbox input:checked + .checkmark::after {
-          content: ''; position: absolute; left: 6px; top: 2px;
-          width: 4px; height: 8px; border: solid #030305; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .slide-down { animation: slideDown 0.4s ease forwards; }
-      `}</style>
-
       <ToolLayout
-        title="線上安全密碼產生器"
-        subtitle="CSPRNG Password Generator"
-        description="專業免費的線上安全密碼生成器，採用 CSPRNG 密碼學隨機數引擎，支援自訂長度、大小寫字母、數字及特殊符號，並可即時評估密碼強度與熵值。"
+        title={t.title}
+        subtitle={t.subtitle}
+        description={t.description}
         accentColor="#00ff66"
         accentGlow="rgba(0,255,102,0.6)"
       >
-        <div className="grid grid-cols-[1.1fr_0.9fr] gap-8 items-start text-left max-[900px]:grid-cols-1 max-[900px]:gap-6">
-          {/* 左欄：控制選項區 (options-container) */}
-          <div className="flex flex-col gap-6">
-            <div className="bg-white/[.005] border border-white/[.08] rounded-2xl p-8 flex flex-col gap-6 shadow-lg">
-              {/* 密碼長度 Slider */}
-              <div className="flex flex-col gap-2.5">
-                <div className="flex justify-between items-center text-sm font-semibold text-text-sub uppercase tracking-[1px]">
-                  <span>密碼長度 (Length)</span>
-                  <span
-                    className="font-mono text-xl font-bold text-[#00ff66]"
-                    style={{ textShadow: '0 0 10px rgba(0, 255, 102, 0.4)' }}
-                  >
-                    {length}
-                  </span>
-                </div>
-                <input
-                  type="range" min={4} max={64} value={length}
-                  onChange={e => setLength(parseInt(e.target.value))}
-                  className="custom-slider"
-                />
-              </div>
-
-              {/* 字元集複選 */}
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1 max-sm:gap-3">
-                {([
-                  { id: 'upper',  label: '大寫字母 (A-Z)',       val: useUpper,  set: setUseUpper },
-                  { id: 'lower',  label: '小寫字母 (a-z)',       val: useLower,  set: setUseLower },
-                  { id: 'number', label: '數字 (0-9)',            val: useNumber, set: setUseNumber },
-                  { id: 'symbol', label: '特殊符號 (!@#...)',     val: useSymbol, set: setUseSymbol },
-                ] as const).map(opt => (
-                  <label key={opt.id} className="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none text-sm font-medium text-text-sub hover:text-white transition-colors">
-                    <input type="checkbox" checked={opt.val} onChange={e => (opt.set as (v: boolean) => void)(e.target.checked)} />
-                    <span className="checkmark" />
-                    {opt.label}
-                  </label>
-                ))}
-              </div>
-
-              {/* 高級選項 */}
-              <div className="border-t border-white/[.05] pt-6 flex flex-col gap-4">
-                {([
-                  { id: 'exclude', label: '排除相似與混淆字元 (如 1, l, I, 0, O, o 等)', val: excludeConfusable, set: setExcludeConfusable },
-                  { id: 'strict',  label: '強制每種字元集至少出現一個 (分佈更均勻)',     val: strictMode,        set: setStrictMode },
-                ] as const).map(opt => (
-                  <label key={opt.id} className="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none text-sm font-medium text-text-sub hover:text-white transition-colors">
-                    <input type="checkbox" checked={opt.val} onChange={e => (opt.set as (v: boolean) => void)(e.target.checked)} />
-                    <span className="checkmark" />
-                    {opt.label}
-                  </label>
-                ))}
-              </div>
-
-              {/* 重新生成滿版按鈕 */}
-              <button
-                type="button"
-                onClick={handleRegenerate}
-                className="mt-1 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1.5px]
-                  bg-[rgba(0,255,102,0.15)] border border-[rgba(0,255,102,0.4)] text-[#00ff66] rounded-xl
-                  transition-all duration-300 hover:bg-[#00ff66] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(0,255,102,0.4)]
-                  cursor-pointer"
-              >
-                重新生成安全密碼
-              </button>
-            </div>
+        <div className={styles.mainLayout}>
+          {/* Top Bar Language Switcher */}
+          <div className="flex justify-end mb-6">
+            <Link
+              href={t.langToggleUrl}
+              className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#00ff66)] transition-all no-underline"
+            >
+              {t.langToggleLabel}
+            </Link>
           </div>
 
-          {/* 右欄：展示與歷史紀錄區 (column-right) */}
-          <div className="flex flex-col gap-6">
-            {/* 密碼展示大卡片 (password-display-card) */}
-            <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-5
-              transition-all duration-300 hover:border-[rgba(0,255,102,0.2)] hover:shadow-[0_0_20px_rgba(0,255,102,0.05)]">
-              <div className="flex items-center justify-between gap-4">
-                <span
-                  className="font-mono font-bold text-[clamp(1.1rem,3vw,1.6rem)] text-white break-all select-all flex-1 flex items-center min-h-[2.2rem]"
-                  style={{ color: passwordColor, textShadow: '0 0 15px rgba(255,255,255,0.1)' }}
-                >
-                  {password}
-                </span>
-                <div className="flex gap-2 shrink-0">
-                  <button type="button" onClick={handleRegenerate} title="重新生成"
-                    className="flex items-center justify-center w-[38px] h-[38px] bg-white/[.03] border border-white/[.08] text-white rounded-xl
-                      cursor-pointer transition-all hover:bg-[rgba(0,255,102,0.08)] hover:border-[rgba(0,255,102,0.4)] hover:text-[#00ff66] hover:shadow-[0_0_12px_rgba(0,255,102,0.15)]">
-                    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                      <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
-                    </svg>
-                  </button>
-                  <button type="button" onClick={copyPassword} title="複製密碼"
-                    className="flex items-center gap-1.5 px-4 h-[38px] bg-[rgba(0,255,102,0.15)] border border-[rgba(0,255,102,0.4)] text-[#00ff66] rounded-xl
-                      cursor-pointer transition-all hover:bg-[#00ff66] hover:text-[#030305] hover:shadow-[0_0_15px_rgba(0,255,102,0.4)] font-medium text-sm">
-                    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                    </svg>
-                    複製
-                  </button>
-                </div>
-              </div>
-
-              {/* 密碼強度視覺看板 (strength-indicator-section) */}
-              <div className="flex flex-col gap-1.5 pt-2">
-                <div className="flex justify-between text-sm font-semibold uppercase tracking-[0.5px]">
-                  <span className="text-text-sub">密碼安全強度：</span>
-                  <span className="font-bold transition-colors duration-300" style={{ color: strength.color }}>
-                    {strength.label}
-                  </span>
-                </div>
-                <div className="h-1.5 bg-white/[.05] rounded-full overflow-hidden border border-white/[.02]">
-                  <div
-                    className="h-full rounded-full transition-[width,background-color] duration-400"
-                    style={{ width: `${strength.percent}%`, backgroundColor: strength.color, boxShadow: `0 0 10px ${strength.color}` }}
+          <div className={styles.gridContainer}>
+            {/* Options Column */}
+            <div className="flex flex-col gap-6">
+              <div className={styles.panelCard}>
+                {/* Length Slider */}
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex justify-between items-center text-sm font-semibold text-text-sub uppercase tracking-[1px]">
+                    <label htmlFor={lengthSliderId}>{t.lengthLabel}</label>
+                    <span className={`font-mono text-xl font-bold ${styles.accentText}`}>{length}</span>
+                  </div>
+                  <input
+                    id={lengthSliderId}
+                    type="range"
+                    min={4}
+                    max={64}
+                    value={length}
+                    onChange={e => setLength(parseInt(e.target.value))}
+                    className={styles.customSlider}
                   />
                 </div>
+
+                {/* Character Sets Grid */}
+                <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1 max-sm:gap-3">
+                  {[
+                    { id: useUpperId, label: t.upperLabel, val: useUpper, set: setUseUpper },
+                    { id: useLowerId, label: t.lowerLabel, val: useLower, set: setUseLower },
+                    { id: useNumberId, label: t.numberLabel, val: useNumber, set: setUseNumber },
+                    { id: useSymbolId, label: t.symbolLabel, val: useSymbol, set: setUseSymbol },
+                  ].map(opt => (
+                    <label key={opt.id} htmlFor={opt.id} className={styles.customCheckbox}>
+                      <input
+                        id={opt.id}
+                        type="checkbox"
+                        checked={opt.val}
+                        onChange={e => opt.set(e.target.checked)}
+                      />
+                      <span className={styles.checkmark} />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Advanced Checkboxes */}
+                <div className="border-t border-border-glass pt-6 flex flex-col gap-4">
+                  {[
+                    { id: excludeConfusableId, label: t.excludeLabel, val: excludeConfusable, set: setExcludeConfusable },
+                    { id: strictModeId, label: t.strictLabel, val: strictMode, set: setStrictMode },
+                  ].map(opt => (
+                    <label key={opt.id} htmlFor={opt.id} className={styles.customCheckbox}>
+                      <input
+                        id={opt.id}
+                        type="checkbox"
+                        checked={opt.val}
+                        onChange={e => opt.set(e.target.checked)}
+                      />
+                      <span className={styles.checkmark} />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Generate Button */}
+                <button type="button" onClick={handleRegenerate} className={styles.btnGenerate}>
+                  {t.generateBtn}
+                </button>
               </div>
             </div>
 
-            {/* 歷史紀錄卡片 (history-section - 有點擊重新生成才展開) */}
-            {history.length > 0 && (
-              <div className="bg-white/[.003] border border-white/[.08] rounded-2xl p-6 flex flex-col gap-3 slide-down mt-1">
-                <div className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">歷史生成記錄 (最近 5 組)</div>
-                <div className="flex flex-col gap-2">
-                  {history.map((pwd, i) => (
-                    <div key={i} className="flex justify-between items-center gap-4 bg-black/20 border border-white/[.02] rounded-xl px-4 py-2.5
-                      transition-colors hover:bg-white/[.015]">
-                      <span className="font-mono text-sm text-text-main break-all select-all">{pwd}</span>
-                      <button type="button" onClick={() => copyHistoryItem(pwd)} title="複製此組密碼"
-                        className="text-text-sub hover:text-[#00ff66] transition-colors p-1 cursor-pointer bg-none border-none flex shrink-0">
-                        <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-                          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+            {/* Display & History Column */}
+            <div className="flex flex-col gap-6">
+              {/* Display Card */}
+              <div className={styles.displayCard}>
+                <div className="flex items-center justify-between gap-4">
+                  <span
+                    className="font-mono font-bold text-[clamp(1.1rem,3vw,1.6rem)] break-all select-all flex-1 flex items-center min-h-[2.2rem]"
+                    style={{ color: passwordColor }}
+                  >
+                    {password}
+                  </span>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleRegenerate}
+                      title="Re-generate"
+                      className={styles.btnIconOnly}
+                    >
+                      <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                      </svg>
+                    </button>
+                    <button type="button" onClick={copyPassword} title="Copy" className={styles.btnCopyPrimary}>
+                      <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                      </svg>
+                      {t.copyBtn}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Strength Indicator */}
+                <div className="flex flex-col gap-1.5 pt-2">
+                  <div className="flex justify-between text-sm font-semibold uppercase tracking-[0.5px]">
+                    <span className="text-text-sub">{t.strengthLabel}</span>
+                    <span className="font-bold transition-colors duration-300" style={{ color: strength.color }}>
+                      {strength.label}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-white/[.08] rounded-full overflow-hidden border border-border-glass">
+                    <div
+                      className="h-full rounded-full transition-[width,background-color] duration-400"
+                      style={{
+                        width: `${strength.percent}%`,
+                        backgroundColor: strength.color,
+                        boxShadow: `0 0 10px ${strength.color}`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            )}
+
+              {/* History Card */}
+              {history.length > 0 && (
+                <div className={styles.historyCard}>
+                  <div className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">
+                    {t.historyTitle}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {history.map((pwd, i) => (
+                      <div key={i} className={styles.historyItem}>
+                        <span className="font-mono text-sm text-text-main break-all select-all">{pwd}</span>
+                        <button
+                          type="button"
+                          onClick={() => copyHistoryItem(pwd)}
+                          title="Copy"
+                          className="text-text-sub hover:text-[var(--theme-color,#00ff66)] transition-colors p-1 cursor-pointer bg-none border-none flex shrink-0"
+                        >
+                          <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </ToolLayout>
 
-      <div className={`fixed bottom-8 right-8 flex items-center gap-2 px-6 py-3 text-sm rounded-lg z-[100] pointer-events-none
-        bg-[rgba(0,255,102,0.15)] border border-[rgba(0,255,102,0.3)] backdrop-blur-[10px] text-[#00ff66]
-        transition-all duration-400 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[100px]'}`}>
-        <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+      {/* Toast Notification */}
+      <div
+        className={`fixed bottom-8 right-8 flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl z-[100] pointer-events-none
+          bg-surface-glass border border-border-glass backdrop-blur-[16px] text-text-main shadow-lg
+          transition-all duration-300 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      >
+        <svg viewBox="0 0 24 24" width={16} height={16} fill="#00ff66">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
         </svg>
         {toast.msg}
@@ -348,4 +468,3 @@ export default function PasswordGeneratorClient() {
     </>
   );
 }
-

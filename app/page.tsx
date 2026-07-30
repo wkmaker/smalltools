@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
+import ThemeToggle from '@/components/ThemeToggle';
 
 import { CATEGORIES, Category, Tool } from './config/tools';
 
@@ -145,6 +146,11 @@ function HomePageContent() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJsonLd) }} />
 
       <div className={styles.homeContainer}>
+        {/* 亮暗模式切換按鈕 */}
+        <div className="absolute top-6 right-6 z-10 max-sm:top-4 max-sm:right-4">
+          <ThemeToggle />
+        </div>
+
         <h1 className={styles.homeTitle}>工具庫</h1>
         <div className={styles.subtitleTop}>MY TOOLBOX</div>
         <p className={styles.pageDescription}>
@@ -250,7 +256,7 @@ function HomePageContent() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-14 pt-6 border-t border-white/[.05] text-sm text-text-sub w-full">
           <span>
             Powered by{' '}
-            <a href="https://www.cjkuo.net/" target="_blank" rel="noopener noreferrer" className="text-[#00f0ff] font-medium no-underline hover:text-white">
+            <a href="https://www.cjkuo.net/" target="_blank" rel="noopener noreferrer" className="text-[var(--theme-color)] font-medium no-underline hover:text-white">
               CJKuo
             </a>
           </span>

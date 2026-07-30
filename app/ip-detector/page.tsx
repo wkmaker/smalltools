@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'IP檢測,我的IP,IPv4查詢,IPv6查詢,IP位置,IP地理位置,連線延遲,Cloudflare Trace',
   alternates: {
     canonical: 'https://tools.cjkuo.net/ip-detector/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/ip-detector/',
+      en: 'https://tools.cjkuo.net/ip-detector/en/',
+    },
   },
   openGraph: {
     title: 'IP 檢測助手 - 免費線上 IPv4/IPv6 查詢與連線延遲診斷',
@@ -37,7 +41,7 @@ export default function IpDetectorPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <IpDetectorClient />
+      <IpDetectorClient lang="zh-TW" />
     </>
   );
 }

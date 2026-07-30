@@ -68,13 +68,33 @@ export async function renderPdfPagesProgressive(
   arrayBuffer: ArrayBuffer,
   onPageRendered: (page: RenderedPdfPage) => void,
   onProgress?: (current: number, total: number) => void,
-  maxDimension: number = 800
+  maxDimension: number = 800,
+  password?: string
 ): Promise<void> {
   await loadPdfScripts();
   const pdfjsLib = window.pdfjsLib;
 
-  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-  const pdfDoc = await loadingTask.promise;
+  const docParams: any = { data: arrayBuffer };
+  if (password) docParams.password = password;
+  const loadingTask = pdfjsLib.getDocument(docParams);
+  let pdfDoc: any;
+  try {
+    pdfDoc = await loadingTask.promise;
+  } catch (err: any) {
+    const errStr = String(err?.message || err || '');
+    const isPasswordErr =
+      err?.name === 'PasswordException' ||
+      /password|encrypted|encrypt/i.test(errStr);
+    if (isPasswordErr) {
+      if (password) {
+        throw new Error('PASSWORD_INCORRECT');
+      } else {
+        throw new Error('PASSWORD_REQUIRED');
+      }
+    }
+    throw err;
+  }
+
   const numPages = pdfDoc.numPages;
 
   for (let i = 1; i <= numPages; i++) {
@@ -121,12 +141,15 @@ export async function renderPdfPagesProgressive(
 export async function renderSinglePdfPageHighRes(
   arrayBuffer: ArrayBuffer,
   pageIndex: number,
-  targetWidth: number = 2400
+  targetWidth: number = 2400,
+  password?: string
 ): Promise<string> {
   await loadPdfScripts();
   const pdfjsLib = window.pdfjsLib;
 
-  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer.slice(0) });
+  const docParams: any = { data: arrayBuffer.slice(0) };
+  if (password) docParams.password = password;
+  const loadingTask = pdfjsLib.getDocument(docParams);
   const pdfDoc = await loadingTask.promise;
   const page = await pdfDoc.getPage(pageIndex + 1);
 
@@ -167,6 +190,7 @@ export interface PdfComposerItem {
   thumbnailUrl: string;
   imageDataUrl?: string; // 圖片專用
   pdfArrayBuffer?: ArrayBuffer; // 原 PDF raw 檔專用 (如果有)
+  password?: string;
 }
 
 /**
@@ -192,7 +216,9 @@ export async function compilePagesToPdfBlob(
     if (item.sourceType === 'PDF' && item.pdfArrayBuffer) {
       let srcPdfDoc = pdfDocCache.get(item.pdfArrayBuffer);
       if (!srcPdfDoc) {
-        srcPdfDoc = await PDFLib.PDFDocument.load(item.pdfArrayBuffer, { ignoreEncryption: true });
+        const loadOpts: any = { ignoreEncryption: true };
+        if (item.password) loadOpts.password = item.password;
+        srcPdfDoc = await PDFLib.PDFDocument.load(item.pdfArrayBuffer, loadOpts);
         pdfDocCache.set(item.pdfArrayBuffer, srcPdfDoc);
       }
 
@@ -275,12 +301,64 @@ export interface InspectResult {
 /**
  * 預檢 PDF 結構與內嵌圖片 (Inspection)
  */
-export async function inspectPdfStructure(pdfBuffer: ArrayBuffer): Promise<InspectResult> {
+export async function inspectPdfStructure(
+  pdfBuffer: ArrayBuffer,
+  password?: string
+): Promise<InspectResult> {
   await loadPdfScripts();
   const PDFLib = window.PDFLib;
+  const pdfjsLib = window.pdfjsLib;
 
+  // 1. 優先使用 PDF.js 執行開檔與加密密碼預檢 (PDF.js 針對 Encrypted/PasswordException 拋錯極為精準)
+  try {
+    const docParams: any = { data: pdfBuffer.slice(0) };
+    if (password) docParams.password = password;
+    const task = pdfjsLib.getDocument(docParams);
+    await task.promise;
+  } catch (err: any) {
+    const errStr = String(err?.message || err || '');
+    const isPasswordErr =
+      err?.name === 'PasswordException' ||
+      err?.code === 1 ||
+      err?.code === 2 ||
+      /password|encrypted|encrypt/i.test(errStr);
+    if (isPasswordErr) {
+      if (password) {
+        throw new Error('PASSWORD_INCORRECT');
+      } else {
+        throw new Error('PASSWORD_REQUIRED');
+      }
+    }
+  }
+
+  // 2. 透過 PDFLib 解析物件層級結構
   const originalSize = pdfBuffer.byteLength;
-  const pdfDoc = await PDFLib.PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+  let pdfDoc: any;
+  try {
+    const options: any = {};
+    if (password) {
+      options.password = password;
+      options.ignoreEncryption = true;
+    }
+    pdfDoc = await PDFLib.PDFDocument.load(pdfBuffer, options);
+    if (pdfDoc.isEncrypted && !password) {
+      throw new Error('PASSWORD_REQUIRED');
+    }
+  } catch (err: any) {
+    const errStr = String(err?.message || err || '');
+    const isPasswordErr =
+      err?.name === 'PasswordException' ||
+      /password|encrypted|encrypt/i.test(errStr);
+    if (isPasswordErr) {
+      if (password) {
+        throw new Error('PASSWORD_INCORRECT');
+      } else {
+        throw new Error('PASSWORD_REQUIRED');
+      }
+    }
+    throw err;
+  }
+
   const indirectObjects = pdfDoc.context.enumerateIndirectObjects();
 
   const imagesInfo: ImageInspectItem[] = [];
@@ -369,15 +447,65 @@ export interface CompressConfig {
 export async function compressPdfInPlace(
   pdfBuffer: ArrayBuffer,
   config: CompressConfig,
-  onProgress?: (msg: string, pct: number) => void
+  onProgress?: (msg: string, pct: number) => void,
+  password?: string
 ): Promise<Blob> {
   await loadPdfScripts();
   const PDFLib = window.PDFLib;
+  const pdfjsLib = window.pdfjsLib;
 
   const { quality = 0.65, maxDpi = 144 } = config;
 
   onProgress?.('正在載入與解析 PDF 檔案結構...', 10);
-  const pdfDoc = await PDFLib.PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+
+  // 1. PDF.js 預檢
+  try {
+    const docParams: any = { data: pdfBuffer.slice(0) };
+    if (password) docParams.password = password;
+    const task = pdfjsLib.getDocument(docParams);
+    await task.promise;
+  } catch (err: any) {
+    const errStr = String(err?.message || err || '');
+    const isPasswordErr =
+      err?.name === 'PasswordException' ||
+      err?.code === 1 ||
+      err?.code === 2 ||
+      /password|encrypted|encrypt/i.test(errStr);
+    if (isPasswordErr) {
+      if (password) {
+        throw new Error('PASSWORD_INCORRECT');
+      } else {
+        throw new Error('PASSWORD_REQUIRED');
+      }
+    }
+  }
+
+  // 2. PDFLib 載入
+  let pdfDoc: any;
+  try {
+    const options: any = {};
+    if (password) {
+      options.password = password;
+      options.ignoreEncryption = true;
+    }
+    pdfDoc = await PDFLib.PDFDocument.load(pdfBuffer, options);
+    if (pdfDoc.isEncrypted && !password) {
+      throw new Error('PASSWORD_REQUIRED');
+    }
+  } catch (err: any) {
+    const errStr = String(err?.message || err || '');
+    const isPasswordErr =
+      err?.name === 'PasswordException' ||
+      /password|encrypted|encrypt/i.test(errStr);
+    if (isPasswordErr) {
+      if (password) {
+        throw new Error('PASSWORD_INCORRECT');
+      } else {
+        throw new Error('PASSWORD_REQUIRED');
+      }
+    }
+    throw err;
+  }
   const indirectObjects = pdfDoc.context.enumerateIndirectObjects();
 
   const imageItems: { ref: any; pdfObject: any; dict: any }[] = [];

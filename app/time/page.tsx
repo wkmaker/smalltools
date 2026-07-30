@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: '目標計時器,倒數計時器,線上倒數,時間累計,考試倒數,紀念日倒數,時間管理工具,全螢幕計時器',
   alternates: {
     canonical: 'https://tools.cjkuo.net/time/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/time/',
+      en: 'https://tools.cjkuo.net/time/en/',
+    },
   },
   openGraph: {
     title: '線上目標計時器 - 免費倒數計時與時間累計工具',

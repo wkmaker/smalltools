@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './ip-detector.module.css';
 
@@ -34,6 +35,89 @@ interface GeoInfo {
   error?: boolean;
 }
 
+interface IpDetectorClientProps {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '線上 IP 檢測助手',
+    subtitle: 'MY IP ADDRESS & DIAGNOSTICS',
+    description:
+      '專業免費的線上 IP 檢測與診斷工具！支援 IPv4/IPv6 雙棧即時查詢、Cloudflare Trace 機房節點解析、IP 地理位置與 10 大公有雲 (AWS, GCP, Azure) 連線延遲診斷。',
+    ipv4Title: 'IPv4 地址',
+    ipv6Title: 'IPv6 地址',
+    detecting: '偵測中...',
+    unsupported: '不支援',
+    copyBtn: '複製',
+    cfTraceTitle: 'Cloudflare Trace 連線診斷',
+    cfLoading: '讀取連線資訊中...',
+    cfError: 'Cloudflare 診斷失敗 / 網路連線阻斷',
+    connIp: '連線 IP:',
+    coloNode: '機房節點 (colo):',
+    geoLoc: '地理位置 (loc):',
+    httpProto: '最高連線協定:',
+    latency: '連線延遲 (Latency):',
+    browserUa: '瀏覽器 UA (User Agent):',
+    geoTitle: 'IP 地理位置與網路診斷',
+    geoLoading: '查詢地理位置資訊中...',
+    geoError: '地理位置查詢失敗，主備來源皆無回應',
+    ispOrg: '所屬機構 (ISP):',
+    asnLabel: 'ASN:',
+    cidrLabel: '網段 (CIDR):',
+    locationLabel: '地理位置:',
+    latlonLabel: '地理經緯度:',
+    timezoneLabel: '時區:',
+    currencyLabel: '貨幣:',
+    dataSource: '資料來源:',
+    cloudTitle: '公有雲及重要服務連線延遲診斷 (Latency)',
+    retestBtn: '重新測速',
+    testing: '測速中...',
+    failed: '連線失敗',
+    recheckAllBtn: '一鍵重新檢測全站網路連線',
+    copiedToast: '已複製',
+    unknown: '未知',
+  },
+  en: {
+    title: 'My IP Address & Diagnostics Tool',
+    subtitle: 'MY IP ADDRESS & DIAGNOSTICS',
+    description:
+      'Free online IP address detector & network diagnostic tool! Supports instant dual-stack IPv4/IPv6 lookup, Cloudflare Trace node analysis, IP geolocation, and cloud latency testing.',
+    ipv4Title: 'IPv4 Address',
+    ipv6Title: 'IPv6 Address',
+    detecting: 'Detecting...',
+    unsupported: 'Not Supported',
+    copyBtn: 'Copy',
+    cfTraceTitle: 'Cloudflare Trace Diagnostics',
+    cfLoading: 'Reading connection info...',
+    cfError: 'Cloudflare trace failed / Network blocked',
+    connIp: 'Connection IP:',
+    coloNode: 'Data Center Node (colo):',
+    geoLoc: 'Location Code (loc):',
+    httpProto: 'Highest HTTP Protocol:',
+    latency: 'Connection Latency:',
+    browserUa: 'User Agent (UA):',
+    geoTitle: 'IP Geolocation & Network Info',
+    geoLoading: 'Fetching geolocation data...',
+    geoError: 'Geolocation lookup failed, fallback unavailable',
+    ispOrg: 'ISP / Organization:',
+    asnLabel: 'ASN:',
+    cidrLabel: 'Network (CIDR):',
+    locationLabel: 'Location:',
+    latlonLabel: 'Coordinates (Lat/Lon):',
+    timezoneLabel: 'Timezone:',
+    currencyLabel: 'Currency:',
+    dataSource: 'Data Source:',
+    cloudTitle: 'Cloud & CDN Service Latency Diagnostics',
+    retestBtn: 'Retest Latency',
+    testing: 'Testing...',
+    failed: 'Connection Failed',
+    recheckAllBtn: 'Re-run All Network Diagnostics',
+    copiedToast: 'Copied',
+    unknown: 'Unknown',
+  },
+};
+
 const CLOUD_ENDPOINTS: Array<{ key: string; name: string; url: string }> = [
   { key: 'aws', name: 'Amazon AWS', url: 'https://checkip.amazonaws.com/' },
   { key: 'gcp', name: 'Google Cloud', url: 'https://clients3.google.com/generate_204' },
@@ -47,28 +131,25 @@ const CLOUD_ENDPOINTS: Array<{ key: string; name: string; url: string }> = [
   { key: 'facebook', name: 'Meta / FB', url: 'https://www.facebook.com/' },
 ];
 
-export default function IpDetectorClient() {
-  // IPv4 / IPv6 雙棧狀態
-  const [ipv4, setIpv4] = useState<string>('偵測中...');
+export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientProps) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
+
+  const [ipv4, setIpv4] = useState<string>(t.detecting);
   const [ipv4Status, setIpv4Status] = useState<'loading' | 'success' | 'unsupported'>('loading');
 
-  const [ipv6, setIpv6] = useState<string>('偵測中...');
+  const [ipv6, setIpv6] = useState<string>(t.detecting);
   const [ipv6Status, setIpv6Status] = useState<'loading' | 'success' | 'unsupported'>('loading');
 
-  // Cloudflare Trace 診斷
   const [cfTrace, setCfTrace] = useState<CfTraceInfo | null>(null);
   const [cfLoading, setCfLoading] = useState<boolean>(true);
 
-  // IP 地理位置與隱私診斷
   const [geoInfo, setGeoInfo] = useState<GeoInfo | null>(null);
   const [geoLoading, setGeoLoading] = useState<boolean>(true);
 
-  // 公有雲與服務延遲測速
   const [cloudTargets, setCloudTargets] = useState<CloudTarget[]>(
     CLOUD_ENDPOINTS.map(ep => ({ ...ep, latency: null, status: 'loading' }))
   );
 
-  // Toast 浮動提示
   const [toast, setToast] = useState<string>('');
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -85,7 +166,7 @@ export default function IpDetectorClient() {
 
   // 1. 檢測 IPv4
   const detectIpv4 = useCallback(async () => {
-    setIpv4('偵測中...');
+    setIpv4(t.detecting);
     setIpv4Status('loading');
     try {
       const res = await fetch('https://api.ipify.org?format=json', {
@@ -99,14 +180,14 @@ export default function IpDetectorClient() {
         throw new Error('No IP');
       }
     } catch {
-      setIpv4('不支援');
+      setIpv4(t.unsupported);
       setIpv4Status('unsupported');
     }
-  }, []);
+  }, [t.detecting, t.unsupported]);
 
   // 2. 檢測 IPv6
   const detectIpv6 = useCallback(async () => {
-    setIpv6('偵測中...');
+    setIpv6(t.detecting);
     setIpv6Status('loading');
     try {
       const res = await fetch('https://api6.ipify.org?format=json', {
@@ -120,10 +201,10 @@ export default function IpDetectorClient() {
         throw new Error('No IP');
       }
     } catch {
-      setIpv6('不支援');
+      setIpv6(t.unsupported);
       setIpv6Status('unsupported');
     }
-  }, []);
+  }, [t.detecting, t.unsupported]);
 
   // 3. 檢測 Cloudflare Trace
   const detectCfTrace = useCallback(async () => {
@@ -145,11 +226,11 @@ export default function IpDetectorClient() {
       });
 
       setCfTrace({
-        ip: map.ip || '未知',
-        colo: map.colo || '未知',
-        loc: map.loc || '未知',
-        http: map.http || '未知',
-        uag: map.uag || (typeof navigator !== 'undefined' ? navigator.userAgent : '未知'),
+        ip: map.ip || t.unknown,
+        colo: map.colo || t.unknown,
+        loc: map.loc || t.unknown,
+        http: map.http || t.unknown,
+        uag: map.uag || (typeof navigator !== 'undefined' ? navigator.userAgent : t.unknown),
         latency,
       });
     } catch {
@@ -157,28 +238,27 @@ export default function IpDetectorClient() {
     } finally {
       setCfLoading(false);
     }
-  }, []);
+  }, [t.unknown]);
 
-  // 4. 檢測 IP 地理位置資訊 (ipapi.co 主軌 + ipwhois.app 備用軌)
+  // 4. 檢測 IP 地理位置
   const detectGeoLocation = useCallback(async () => {
     setGeoLoading(true);
 
     try {
-      // 軌道 1：ipapi.co
       const res = await fetch('https://ipapi.co/json/', {
         signal: AbortSignal.timeout(4500),
       });
       const raw = await res.json();
       if (raw.error) throw new Error(raw.reason || 'Rate limit');
 
-      const locStr = [raw.city, raw.region, raw.country_name].filter(Boolean).join(', ') || '未知';
-      const latlonStr = raw.latitude != null && raw.longitude != null ? `${raw.longitude}, ${raw.latitude}` : '未知';
-      const tzStr = raw.timezone ? `${raw.timezone} (UTC${raw.utc_offset || ''})` : '未知';
-      const currStr = raw.currency ? `${raw.currency} (${raw.currency_name || ''})` : '未知';
+      const locStr = [raw.city, raw.region, raw.country_name].filter(Boolean).join(', ') || t.unknown;
+      const latlonStr = raw.latitude != null && raw.longitude != null ? `${raw.longitude}, ${raw.latitude}` : t.unknown;
+      const tzStr = raw.timezone ? `${raw.timezone} (UTC${raw.utc_offset || ''})` : t.unknown;
+      const currStr = raw.currency ? `${raw.currency} (${raw.currency_name || ''})` : t.unknown;
 
       setGeoInfo({
-        org: raw.org || '未知',
-        asn: raw.asn || '未知',
+        org: raw.org || t.unknown,
+        asn: raw.asn || t.unknown,
         network: raw.network || undefined,
         location: locStr,
         latlon: latlonStr,
@@ -187,7 +267,6 @@ export default function IpDetectorClient() {
         source: 'ipapi.co',
       });
     } catch {
-      // 軌道 2：fallback 至 ipwhois.app
       try {
         const resFallback = await fetch('https://ipwhois.app/json/', {
           signal: AbortSignal.timeout(4500),
@@ -195,17 +274,17 @@ export default function IpDetectorClient() {
         const rawFallback = await resFallback.json();
         if (!rawFallback.success) throw new Error('ipwhois failed');
 
-        const locStr = [rawFallback.city, rawFallback.region, rawFallback.country].filter(Boolean).join(', ') || '未知';
+        const locStr = [rawFallback.city, rawFallback.region, rawFallback.country].filter(Boolean).join(', ') || t.unknown;
         const latlonStr =
           rawFallback.latitude != null && rawFallback.longitude != null
             ? `${rawFallback.longitude}, ${rawFallback.latitude}`
-            : '未知';
-        const tzStr = rawFallback.timezone ? `${rawFallback.timezone} (UTC${rawFallback.timezone_gmt || ''})` : '未知';
-        const currStr = rawFallback.currency_code ? `${rawFallback.currency_code} (${rawFallback.currency || ''})` : '未知';
+            : t.unknown;
+        const tzStr = rawFallback.timezone ? `${rawFallback.timezone} (UTC${rawFallback.timezone_gmt || ''})` : t.unknown;
+        const currStr = rawFallback.currency_code ? `${rawFallback.currency_code} (${rawFallback.currency || ''})` : t.unknown;
 
         setGeoInfo({
-          org: rawFallback.org || rawFallback.isp || '未知',
-          asn: rawFallback.asn || '未知',
+          org: rawFallback.org || rawFallback.isp || t.unknown,
+          asn: rawFallback.asn || t.unknown,
           network: undefined,
           location: locStr,
           latlon: latlonStr,
@@ -219,11 +298,11 @@ export default function IpDetectorClient() {
     } finally {
       setGeoLoading(false);
     }
-  }, []);
+  }, [t.unknown]);
 
-  // 5. 檢測公有雲與 CDN 連線延遲
+  // 5. 測速公有雲
   const runCloudDiagnostics = useCallback(async () => {
-    setCloudTargets(prev => prev.map(t => ({ ...t, latency: null, status: 'loading' })));
+    setCloudTargets(prev => prev.map(target => ({ ...target, latency: null, status: 'loading' })));
 
     const updated = await Promise.all(
       CLOUD_ENDPOINTS.map(async ep => {
@@ -245,7 +324,6 @@ export default function IpDetectorClient() {
     setCloudTargets(updated);
   }, []);
 
-  // 一鍵執行所有連線診斷
   const runAllChecks = useCallback(() => {
     detectIpv4();
     detectIpv6();
@@ -259,18 +337,31 @@ export default function IpDetectorClient() {
   }, [runAllChecks]);
 
   const copyText = (text: string, label: string) => {
-    if (!text || text === '偵測中...' || text === '不支援') return;
-    navigator.clipboard.writeText(text).then(() => showToast(`已複製 ${label}`));
+    if (!text || text === t.detecting || text === t.unsupported) return;
+    navigator.clipboard.writeText(text).then(() => showToast(`${t.copiedToast} ${label}`));
   };
 
   return (
     <ToolLayout
-      title="線上 IP 檢測助手"
-      subtitle="MY IP ADDRESS & DIAGNOSTICS"
-      description="專業免費的線上 IP 檢測與診斷工具！支援 IPv4/IPv6 雙棧即時查詢、Cloudflare Trace 機房節點解析、IP 地理位置與 10 大公有雲 (AWS, GCP, Azure) 連線延遲診斷。"
+      title={t.title}
+      subtitle={t.subtitle}
+      description={t.description}
       accentColor="#00f0ff"
       accentGlow="rgba(0, 240, 255, 0.6)"
     >
+      {/* 右上方語言切換開關 */}
+      <div className="flex justify-end mb-4">
+        <Link
+          href={lang === 'en' ? '/ip-detector/' : '/ip-detector/en/'}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-all flex items-center gap-1.5"
+        >
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+          </svg>
+          {lang === 'en' ? '繁體中文' : 'English'}
+        </Link>
+      </div>
+
       <div className="flex flex-col gap-8 text-left w-full">
         {/* 頂部：IPv4 & IPv6 雙棧卡片 */}
         <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
@@ -281,14 +372,14 @@ export default function IpDetectorClient() {
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">IPv4 地址</span>
+              <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">{t.ipv4Title}</span>
               <button
                 type="button"
-                onClick={() => copyText(ipv4, 'IPv4 位址')}
+                onClick={() => copyText(ipv4, t.ipv4Title)}
                 disabled={ipv4Status !== 'success'}
-                className="text-sm font-medium text-[#00f0ff] hover:underline disabled:opacity-40 cursor-pointer"
+                className={`text-sm font-medium ${styles.accentValue} hover:underline disabled:opacity-40 cursor-pointer`}
               >
-                複製
+                {t.copyBtn}
               </button>
             </div>
             <div className={styles.ipBadge}>{ipv4}</div>
@@ -301,19 +392,19 @@ export default function IpDetectorClient() {
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">IPv6 地址</span>
+              <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">{t.ipv6Title}</span>
               <button
                 type="button"
-                onClick={() => copyText(ipv6, 'IPv6 位址')}
+                onClick={() => copyText(ipv6, t.ipv6Title)}
                 disabled={ipv6Status !== 'success'}
-                className="text-sm font-medium text-[#00f0ff] hover:underline disabled:opacity-40 cursor-pointer"
+                className={`text-sm font-medium ${styles.accentValue} hover:underline disabled:opacity-40 cursor-pointer`}
               >
-                複製
+                {t.copyBtn}
               </button>
             </div>
             <div
               className={`${styles.ipBadge} ${
-                ipv6Status === 'unsupported' ? 'text-amber-400 text-shadow-none text-xl' : ''
+                ipv6Status === 'unsupported' ? 'text-amber-500 dark:text-amber-400 text-shadow-none text-xl' : ''
               }`}
             >
               {ipv6}
@@ -324,93 +415,105 @@ export default function IpDetectorClient() {
         {/* 中部：雙欄連線與地理隱私資訊 */}
         <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
           {/* 左欄：Cloudflare Trace 連線診斷 */}
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
-            <h3 className="text-sm text-[#00f0ff] uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
-              Cloudflare Trace 連線診斷
+          <div className={styles.cardPanel}>
+            <h3 className={`text-sm ${styles.accentValue} uppercase tracking-[1px] font-semibold border-b border-border-glass pb-3`}>
+              {t.cfTraceTitle}
             </h3>
 
             {cfLoading ? (
               <div className="py-8 text-center text-sm text-text-sub font-mono">
-                <span className={`${styles.statusDot} ${styles.statusDotLoading} mr-2`} /> 讀取連線資訊中...
+                <span className={`${styles.statusDot} ${styles.statusDotLoading} mr-2`} /> {t.cfLoading}
               </div>
             ) : cfTrace?.error ? (
-              <div className="py-6 text-center text-sm text-red-400">⚠️ Cloudflare 診斷失敗 / 網路連線阻斷</div>
+              <div className="py-6 text-center text-sm text-red-500 dark:text-red-400 flex items-center justify-center gap-2">
+                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+                <span>{t.cfError}</span>
+              </div>
             ) : (
               <div className="flex flex-col gap-3 font-mono text-xs">
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">連線 IP:</span>
-                  <span className="text-sm text-white font-bold">{cfTrace?.ip || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.connIp}</span>
+                  <span className="text-sm text-text-main font-bold">{cfTrace?.ip || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">機房節點 (colo):</span>
-                  <span className="text-sm text-[#00f0ff] font-bold">{cfTrace?.colo || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.coloNode}</span>
+                  <span className={`text-sm ${styles.accentValue} font-bold`}>{cfTrace?.colo || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">地理位置 (loc):</span>
-                  <span className="text-sm text-white font-bold">{cfTrace?.loc || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.geoLoc}</span>
+                  <span className="text-sm text-text-main font-bold">{cfTrace?.loc || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">最高連線協定:</span>
-                  <span className="text-sm text-white font-bold">{cfTrace?.http || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.httpProto}</span>
+                  <span className="text-sm text-text-main font-bold">{cfTrace?.http || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">連線延遲 (Latency):</span>
-                  <span className="text-sm text-emerald-400 font-bold">{cfTrace?.latency !== undefined ? `${cfTrace.latency} ms` : '-'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.latency}</span>
+                  <span className={`text-sm ${styles.successText} font-bold`}>
+                    {cfTrace?.latency !== undefined ? `${cfTrace.latency} ms` : '-'}
+                  </span>
                 </div>
-                <div className="flex flex-col gap-1 bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">瀏覽器 UA (User Agent):</span>
-                  <span className="text-xs text-text-sub break-all leading-relaxed">{cfTrace?.uag || '未知'}</span>
+                <div className="flex flex-col gap-1 bg-select-bg p-3 rounded-xl border border-border-glass">
+                  <span className="text-sm font-semibold text-text-sub">{t.browserUa}</span>
+                  <span className="text-xs text-text-sub break-all leading-relaxed">{cfTrace?.uag || t.unknown}</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* 右欄：IP 地理位置與 ISP 診斷 */}
-          <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
-            <h3 className="text-sm text-[#00f0ff] uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
-              IP 地理位置與網路診斷
+          <div className={styles.cardPanel}>
+            <h3 className={`text-sm ${styles.accentValue} uppercase tracking-[1px] font-semibold border-b border-border-glass pb-3`}>
+              {t.geoTitle}
             </h3>
 
             {geoLoading ? (
               <div className="py-8 text-center text-sm text-text-sub font-mono">
-                <span className={`${styles.statusDot} ${styles.statusDotLoading} mr-2`} /> 查詢地理位置資訊中...
+                <span className={`${styles.statusDot} ${styles.statusDotLoading} mr-2`} /> {t.geoLoading}
               </div>
             ) : geoInfo?.error ? (
-              <div className="py-6 text-center text-sm text-red-400">⚠️ 地理位置查詢失敗，主備來源皆無回應</div>
+              <div className="py-6 text-center text-sm text-red-500 dark:text-red-400 flex items-center justify-center gap-2">
+                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+                <span>{t.geoError}</span>
+              </div>
             ) : (
               <div className="flex flex-col gap-3 font-mono text-xs">
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">所屬機構 (ISP):</span>
-                  <span className="text-sm text-white font-bold truncate max-w-[60%]">{geoInfo?.org || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.ispOrg}</span>
+                  <span className="text-sm text-text-main font-bold truncate max-w-[60%]">{geoInfo?.org || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">ASN:</span>
-                  <span className="text-sm text-white font-bold">{geoInfo?.asn || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.asnLabel}</span>
+                  <span className="text-sm text-text-main font-bold">{geoInfo?.asn || t.unknown}</span>
                 </div>
                 {geoInfo?.network && (
-                  <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                    <span className="text-sm font-semibold text-text-sub">網段 (CIDR):</span>
-                    <span className="text-sm text-white font-bold">{geoInfo.network}</span>
+                  <div className={styles.detailRow}>
+                    <span className="text-sm font-semibold text-text-sub">{t.cidrLabel}</span>
+                    <span className="text-sm text-text-main font-bold">{geoInfo.network}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">地理位置:</span>
-                  <span className="text-sm text-white font-bold truncate max-w-[60%]">{geoInfo?.location || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.locationLabel}</span>
+                  <span className="text-sm text-text-main font-bold truncate max-w-[60%]">{geoInfo?.location || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">地理經緯度:</span>
-                  <span className="text-sm text-white font-bold">{geoInfo?.latlon || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.latlonLabel}</span>
+                  <span className="text-sm text-text-main font-bold">{geoInfo?.latlon || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">時區:</span>
-                  <span className="text-sm text-white font-bold truncate max-w-[60%]">{geoInfo?.timezone || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.timezoneLabel}</span>
+                  <span className="text-sm text-text-main font-bold truncate max-w-[60%]">{geoInfo?.timezone || t.unknown}</span>
                 </div>
-                <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/[.04]">
-                  <span className="text-sm font-semibold text-text-sub">貨幣:</span>
-                  <span className="text-sm text-white font-bold">{geoInfo?.currency || '未知'}</span>
+                <div className={styles.detailRow}>
+                  <span className="text-sm font-semibold text-text-sub">{t.currencyLabel}</span>
+                  <span className="text-sm text-text-main font-bold">{geoInfo?.currency || t.unknown}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-text-sub pt-1">
-                  <span>資料來源:</span>
+                  <span>{t.dataSource}</span>
                   <span>{geoInfo?.source}</span>
                 </div>
               </div>
@@ -419,52 +522,49 @@ export default function IpDetectorClient() {
         </div>
 
         {/* 底部：公有雲與 CDN 連線延遲測速 */}
-        <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-6 shadow-lg">
-          <div className="flex justify-between items-center border-b border-white/[.06] pb-3">
-            <h3 className="text-sm text-[#00f0ff] uppercase tracking-[1px] font-semibold">
-              公有雲及重要服務連線延遲診斷 (Latency)
+        <div className={styles.cardPanel}>
+          <div className="flex justify-between items-center border-b border-border-glass pb-3">
+            <h3 className={`text-sm ${styles.accentValue} uppercase tracking-[1px] font-semibold`}>
+              {t.cloudTitle}
             </h3>
             <button
               type="button"
               onClick={runCloudDiagnostics}
-              className="px-3.5 py-1.5 text-sm bg-[#00f0ff]/15 border border-[#00f0ff]/30 text-[#00f0ff] rounded-xl hover:bg-[#00f0ff] hover:text-[#030305] transition-all cursor-pointer font-medium"
+              className={styles.accentBtn}
             >
-              重新測速
+              {t.retestBtn}
             </button>
           </div>
 
           <div className="grid grid-cols-5 gap-4 max-lg:grid-cols-3 max-sm:grid-cols-2">
-            {cloudTargets.map(t => (
-              <div
-                key={t.key}
-                className="bg-black/40 border border-white/[.05] rounded-xl p-4 flex flex-col items-center gap-2 text-center hover:border-[#00f0ff]/30 transition-all"
-              >
+            {cloudTargets.map(target => (
+              <div key={target.key} className={styles.targetCard}>
                 <div className="flex items-center gap-2">
                   <span
                     className={`${styles.statusDot} ${
-                      t.status === 'loading'
+                      target.status === 'loading'
                         ? styles.statusDotLoading
-                        : t.status === 'connected'
+                        : target.status === 'connected'
                         ? styles.statusDotConnected
                         : styles.statusDotFailed
                     }`}
                   />
                 </div>
-                <span className="text-sm font-bold text-white">{t.name}</span>
+                <span className="text-sm font-bold text-text-main">{target.name}</span>
                 <span
                   className={`text-sm font-mono font-bold ${
-                    t.status === 'connected'
-                      ? 'text-emerald-400'
-                      : t.status === 'failed'
-                      ? 'text-red-400'
+                    target.status === 'connected'
+                      ? styles.successText
+                      : target.status === 'failed'
+                      ? 'text-red-500 dark:text-red-400'
                       : 'text-text-sub'
                   }`}
                 >
-                  {t.status === 'loading'
-                    ? '測速中...'
-                    : t.status === 'connected' && t.latency !== null
-                    ? `${t.latency} ms`
-                    : '連線失敗'}
+                  {target.status === 'loading'
+                    ? t.testing
+                    : target.status === 'connected' && target.latency !== null
+                    ? `${target.latency} ms`
+                    : t.failed}
                 </span>
               </div>
             ))}
@@ -474,9 +574,9 @@ export default function IpDetectorClient() {
             <button
               type="button"
               onClick={runAllChecks}
-              className="py-3.5 px-10 bg-[#00f0ff]/15 border border-[#00f0ff]/40 text-[#00f0ff] font-semibold text-sm rounded-full hover:bg-[#00f0ff] hover:text-[#030305] transition-all cursor-pointer shadow-[0_0_20px_rgba(0,240,255,0.2)]"
+              className={`${styles.accentBtn} !rounded-full !py-3.5 !px-10`}
             >
-              一鍵重新檢測全站網路連線
+              {t.recheckAllBtn}
             </button>
           </div>
         </div>

@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: 'Epoch轉換器,Unix時間戳記,Timestamp轉換,時間戳記,Unix Epoch,時間轉換,秒轉日期,毫秒轉日期',
   alternates: {
     canonical: 'https://tools.cjkuo.net/epoch/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/epoch/',
+      en: 'https://tools.cjkuo.net/epoch/en/',
+    },
   },
   openGraph: {
     title: 'Epoch 時間戳記轉換器 - 免費線上 Unix Timestamp 與日期雙向轉換工具',

@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useId } from 'react';
+import { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './ip-calculator.module.css';
-
-// === IPv4 核心位元運算與型別定義 ===
 
 interface SubnetResult {
   inputIp: string;
@@ -29,7 +28,111 @@ interface SubnetResult {
   binaryIp: string;
 }
 
-// IP 字串轉 32 位無符號整數
+interface IpCalculatorClientProps {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: 'IP 子網段與可用 IP 計算器',
+    subtitle: 'IPV4 & CIDR SUBNET CALCULATOR',
+    description:
+      '專業免費的線上 IP 子網段與可用 IP 計算器！支援 CIDR 標記與標準點分十進制切換，精確計算網路位址、廣播位址、子網遮罩、可用 IP 範圍與百萬級 TXT/CSV 導出。',
+    paramsTitle: '輸入網段參數',
+    modeCidr: 'CIDR 標記法',
+    modeStd: '標準 IP + 遮罩',
+    labelCidr: 'IP 位址 / CIDR 前綴 (例如: 192.168.1.50/24)',
+    labelIp: 'IP 位址 (例如: 192.168.1.50)',
+    labelMask: '子網遮罩 Subnet Mask',
+    btnClear: '清空重填',
+    btnExample: '載入範例 (/24)',
+    summaryTitle: '計算摘要 Summary',
+    networkAddr: '網路位址 (Network IP)',
+    broadcastAddr: '廣播位址 (Broadcast IP)',
+    subnetMaskLabel: '子網遮罩 (Subnet Mask)',
+    wildcardMaskLabel: '通配符遮罩 (Wildcard Mask)',
+    cidrNotation: 'CIDR 標記法',
+    totalIpsLabel: 'IP 總數量 (Total IPs)',
+    usableHostsLabel: '可用 IP 總數 (Usable Hosts)',
+    classScopeLabel: 'IP 類別與屬性 (Class & Scope)',
+    usableRangeLabel: '可用 IP 範圍 (Usable IP Range)',
+    binaryLabel: 'IP 二進制 (Binary Representation)',
+    usableListTitle: '可用 IP 位址列表',
+    copyAllBtn: '複製全量',
+    exportTxtBtn: '匯出 TXT',
+    exportCsvBtn: '匯出 CSV',
+    filterPlaceholder: '過濾 IP 位址 (例如 .100)...',
+    largeNetNotice: '目前網段包含 {count} 個可用 IP。畫面上預設呈現前 1,000 筆分頁；完整數據可點擊右上角「匯出 TXT / CSV」極速線上下載。',
+    colIndex: '編號 #',
+    colIp: 'IP 位址',
+    colAction: '操作',
+    copyBtn: '複製',
+    noMatchingIps: '查無符合關鍵字的可用 IP',
+    paginationInfo: '顯示第 {start} - {end} 筆 / 共 {total} 筆',
+    prevPage: '上一頁',
+    nextPage: '下一頁',
+    toastCleared: '已清空輸入項目',
+    toastExampleLoaded: '已載入預設範例 /24',
+    toastCopied: '已複製',
+    toastExporting: '正在產生 {count} 筆可用 IP 匯出檔...',
+    toastExportSuccess: '全量 {count} 筆 IP 已成功匯出 .{type} 檔案！',
+    errCidrSlash: 'CIDR 格式錯誤，僅能包含一個斜線 (例如 192.168.1.1/24)',
+    errCidrRange: 'CIDR 前綴長度必須在 0 到 32 之間的整數 (例如 /24)',
+    errInvalidIp: '無效的 IP 位址，各 Octet 需為 0~255',
+    errStdIp: '請輸入有效的 IPv4 位址 (例如 192.168.1.50)',
+    hostsUnit: '個',
+  },
+  en: {
+    title: 'IPv4 Subnet & CIDR Calculator',
+    subtitle: 'IPV4 & CIDR SUBNET CALCULATOR',
+    description:
+      'Free online IPv4 & CIDR subnet calculator! Calculate network address, broadcast address, subnet mask, wildcard mask, usable IP range, and export full IP lists to TXT or CSV.',
+    paramsTitle: 'Subnet Input Parameters',
+    modeCidr: 'CIDR Notation',
+    modeStd: 'Standard IP + Mask',
+    labelCidr: 'IP Address / CIDR Prefix (e.g., 192.168.1.50/24)',
+    labelIp: 'IP Address (e.g., 192.168.1.50)',
+    labelMask: 'Subnet Mask',
+    btnClear: 'Clear Fields',
+    btnExample: 'Load Example (/24)',
+    summaryTitle: 'Calculation Summary',
+    networkAddr: 'Network Address (IP)',
+    broadcastAddr: 'Broadcast Address (IP)',
+    subnetMaskLabel: 'Subnet Mask',
+    wildcardMaskLabel: 'Wildcard Mask',
+    cidrNotation: 'CIDR Notation',
+    totalIpsLabel: 'Total IP Addresses',
+    usableHostsLabel: 'Usable Hosts Count',
+    classScopeLabel: 'IP Class & Scope',
+    usableRangeLabel: 'Usable IP Range',
+    binaryLabel: 'Binary Representation',
+    usableListTitle: 'Usable IP Addresses List',
+    copyAllBtn: 'Copy All',
+    exportTxtBtn: 'Export TXT',
+    exportCsvBtn: 'Export CSV',
+    filterPlaceholder: 'Filter IP address (e.g. .100)...',
+    largeNetNotice: 'This subnet contains {count} usable IPs. The list displays the first 1,000 items. Click "Export TXT / CSV" to download all IPs.',
+    colIndex: 'Index #',
+    colIp: 'IP Address',
+    colAction: 'Action',
+    copyBtn: 'Copy',
+    noMatchingIps: 'No usable IP address matching filter',
+    paginationInfo: 'Showing {start} - {end} of {total} entries',
+    prevPage: 'Previous',
+    nextPage: 'Next',
+    toastCleared: 'Cleared input fields',
+    toastExampleLoaded: 'Loaded default example /24',
+    toastCopied: 'Copied',
+    toastExporting: 'Generating export file for {count} IPs...',
+    toastExportSuccess: 'Successfully exported {count} IPs to .{type} file!',
+    errCidrSlash: 'Invalid CIDR format. Include exactly one slash (e.g. 192.168.1.1/24)',
+    errCidrRange: 'CIDR prefix length must be an integer between 0 and 32',
+    errInvalidIp: 'Invalid IP address. Each octet must be 0-255',
+    errStdIp: 'Please enter a valid IPv4 address (e.g. 192.168.1.50)',
+    hostsUnit: 'hosts',
+  },
+};
+
 function ipToInt(ipStr: string): number | null {
   if (typeof ipStr !== 'string') return null;
   const parts = ipStr.trim().split('.');
@@ -45,7 +148,6 @@ function ipToInt(ipStr: string): number | null {
   return num >>> 0;
 }
 
-// 32 位無符號整數轉 IP 字串
 function intToIp(intVal: number): string {
   return [
     (intVal >>> 24) & 255,
@@ -55,7 +157,6 @@ function intToIp(intVal: number): string {
   ].join('.');
 }
 
-// 32 位無符號整數轉二進制點分格式
 function intToBinary(intVal: number): string {
   return [
     (intVal >>> 24) & 255,
@@ -67,13 +168,11 @@ function intToBinary(intVal: number): string {
     .join('.');
 }
 
-// CIDR 前綴轉遮罩整數
 function cidrToMaskInt(cidr: number): number {
   if (cidr === 0) return 0;
   return (~0 << (32 - cidr)) >>> 0;
 }
 
-// 判斷 IP 類別與屬性
 function getIpScopeInfo(ipInt: number) {
   const firstOctet = (ipInt >>> 24) & 255;
   let ipClass = 'C';
@@ -83,22 +182,16 @@ function getIpScopeInfo(ipInt: number) {
   else if (firstOctet <= 239) ipClass = 'D (Multicast)';
   else ipClass = 'E (Experimental)';
 
-  // Private 10.0.0.0/8
   if ((ipInt >>> 24) === 10)
     return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: styles.badgePrivate };
-  // Private 172.16.0.0/12
   if ((ipInt >>> 20) === ((ipToInt('172.16.0.0') ?? 0) >>> 20))
     return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: styles.badgePrivate };
-  // Private 192.168.0.0/16
   if ((ipInt >>> 16) === ((ipToInt('192.168.0.0') ?? 0) >>> 16))
     return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: styles.badgePrivate };
-  // Loopback 127.0.0.0/8
   if (firstOctet === 127)
     return { classStr: `${ipClass} Class`, scope: 'Loopback', badgeClass: styles.badgeSpecial };
-  // CGNAT 100.64.0.0/10
   if ((ipInt >>> 22) === ((ipToInt('100.64.0.0') ?? 0) >>> 22))
     return { classStr: `${ipClass} Class`, scope: 'CGNAT', badgeClass: styles.badgeSpecial };
-  // Link-Local 169.254.0.0/16
   if ((ipInt >>> 16) === ((ipToInt('169.254.0.0') ?? 0) >>> 16))
     return { classStr: `${ipClass} Class`, scope: 'Link-Local', badgeClass: styles.badgeSpecial };
 
@@ -108,68 +201,39 @@ function getIpScopeInfo(ipInt: number) {
   return { classStr: `${ipClass} Class`, scope: 'Public', badgeClass: styles.badgePublic };
 }
 
-export default function IpCalculatorClient() {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-  const [mode, setMode] = useState<'cidr' | 'std'>('cidr');
+export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClientProps) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
 
-  // 輸入項目
+  const [mode, setMode] = useState<'cidr' | 'std'>('cidr');
   const [inputCidr, setInputCidr] = useState<string>('192.168.1.50/24');
   const [inputIp, setInputIp] = useState<string>('192.168.1.50');
   const [selectMask, setSelectMask] = useState<number>(24);
   const [errMessage, setErrMessage] = useState<string>('');
 
-  // 計算結果
   const [calcResult, setCalcResult] = useState<SubnetResult | null>(null);
 
-  // 列表過濾與分頁
   const [filterKeyword, setFilterKeyword] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 100;
 
-  // Toast 提示
   const [toast, setToast] = useState<string>('');
+  const isMountedRef = useRef<boolean>(false);
 
-  // 唯一 HTML ID
   const inputCidrId = useId();
   const inputIpId = useId();
   const selectMaskId = useId();
   const filterInputId = useId();
 
-  // 初始化主題顏色
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#00f0ff');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 240, 255, 0.6)');
   }, []);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
-  };
-
-  // 反向解析 URL 參數 (僅在掛載後執行一次)
-  useEffect(() => {
-    setIsMounted(true);
-    const params = new URLSearchParams(window.location.search);
-    const cidrParam = params.get('cidr');
-    const ipParam = params.get('ip');
-    const maskParam = params.get('mask');
-
-    if (cidrParam) {
-      setMode('cidr');
-      setInputCidr(cidrParam);
-    } else if (ipParam) {
-      setMode('std');
-      setInputIp(ipParam);
-      if (maskParam) {
-        const m = parseInt(maskParam, 10);
-        if (!isNaN(m) && m >= 0 && m <= 32) {
-          setSelectMask(m);
-        }
-      }
-    }
   }, []);
 
-  // 核心計算函數
   const calculateSubnet = useCallback((ipInt: number, rawIpStr: string, cidr: number): SubnetResult => {
     const maskInt = cidrToMaskInt(cidr);
     const maskStr = intToIp(maskInt);
@@ -189,17 +253,14 @@ export default function IpCalculatorClient() {
     let lastUsableInt = 0;
 
     if (cidr === 31) {
-      // RFC 3021 Point-to-Point
       usableCount = 2;
       firstUsableInt = netInt;
       lastUsableInt = broadcastInt;
     } else if (cidr === 32) {
-      // Single Host
       usableCount = 1;
       firstUsableInt = netInt;
       lastUsableInt = netInt;
     } else {
-      // Standard subnet (<= 30)
       usableCount = totalIps - 2;
       firstUsableInt = netInt + 1;
       lastUsableInt = broadcastInt - 1;
@@ -230,7 +291,31 @@ export default function IpCalculatorClient() {
     };
   }, []);
 
-  // 即時解析與計算
+  // URL 初始化讀取
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const cidrParam = params.get('cidr');
+    const ipParam = params.get('ip');
+    const maskParam = params.get('mask');
+
+    if (cidrParam) {
+      setMode('cidr');
+      setInputCidr(cidrParam);
+    } else if (ipParam) {
+      setMode('std');
+      setInputIp(ipParam);
+      if (maskParam) {
+        const m = parseInt(maskParam, 10);
+        if (!isNaN(m) && m >= 0 && m <= 32) {
+          setSelectMask(m);
+        }
+      }
+    }
+    isMountedRef.current = true;
+  }, []);
+
+  // 核心計算
   useEffect(() => {
     setErrMessage('');
 
@@ -244,7 +329,7 @@ export default function IpCalculatorClient() {
       const rawIp = parts[0].trim();
 
       if (parts.length > 2) {
-        setErrMessage('CIDR 格式錯誤，僅能包含一個斜線 (例如 192.168.1.1/24)');
+        setErrMessage(t.errCidrSlash);
         setCalcResult(null);
         return;
       }
@@ -252,27 +337,26 @@ export default function IpCalculatorClient() {
       let cidr = 32;
       if (parts.length === 2) {
         const cStr = parts[1].trim();
-        if (cStr === '') return; // 輸入中
+        if (cStr === '') return;
         const c = parseInt(cStr, 10);
         if (isNaN(c) || c < 0 || c > 32 || cStr !== c.toString()) {
-          setErrMessage('CIDR 前綴長度必須在 0 到 32 之間的整數 (例如 /24)');
+          setErrMessage(t.errCidrRange);
           setCalcResult(null);
           return;
         }
         cidr = c;
       }
 
-      if (rawIp.endsWith('.')) return; // 輸入中
+      if (rawIp.endsWith('.')) return;
       const ipInt = ipToInt(rawIp);
       if (ipInt === null) {
-        setErrMessage(`無效的 IP 位址: "${rawIp}"，各 Octet 需為 0~255`);
+        setErrMessage(`${t.errInvalidIp}: "${rawIp}"`);
         setCalcResult(null);
         return;
       }
 
       setCalcResult(calculateSubnet(ipInt, rawIp, cidr));
     } else {
-      // 標準模式 (std)
       const rawIp = inputIp.trim();
       if (!rawIp) {
         setCalcResult(null);
@@ -281,7 +365,7 @@ export default function IpCalculatorClient() {
       if (rawIp.endsWith('.')) return;
       const ipInt = ipToInt(rawIp);
       if (ipInt === null) {
-        setErrMessage('請輸入有效的 IPv4 位址 (例如 192.168.1.50)');
+        setErrMessage(t.errStdIp);
         setCalcResult(null);
         return;
       }
@@ -290,11 +374,11 @@ export default function IpCalculatorClient() {
     }
 
     setCurrentPage(1);
-  }, [mode, inputCidr, inputIp, selectMask, calculateSubnet]);
+  }, [mode, inputCidr, inputIp, selectMask, calculateSubnet, t.errCidrSlash, t.errCidrRange, t.errInvalidIp, t.errStdIp]);
 
-  // 正向連動 300ms 防抖更新 URL
+  // URL 正向同步 (replaceState)
   useEffect(() => {
-    if (!isMounted || !calcResult) return;
+    if (!isMountedRef.current || !calcResult) return;
 
     const handler = setTimeout(() => {
       const params = new URLSearchParams();
@@ -308,9 +392,8 @@ export default function IpCalculatorClient() {
     }, 300);
 
     return () => clearTimeout(handler);
-  }, [calcResult, mode, isMounted]);
+  }, [calcResult, mode]);
 
-  // 產生過濾後的可用 IP 數組 (極速動態 Memo)
   const filteredUsableIps = useMemo(() => {
     if (!calcResult) return [];
 
@@ -318,7 +401,6 @@ export default function IpCalculatorClient() {
     const kw = filterKeyword.trim().toLowerCase();
     const result: Array<{ index: number; ipStr: string }> = [];
 
-    // 若超大網段且未輸入關鍵字，前端頁面僅 DOM 載入前 1,000 筆
     const limit = usableCount > 1000 && !kw ? 1000 : Math.min(usableCount, 100000);
 
     for (let i = 0; i < limit; i++) {
@@ -333,26 +415,24 @@ export default function IpCalculatorClient() {
     return result;
   }, [calcResult, filterKeyword]);
 
-  // 重置與範例
   const handleClear = () => {
     setInputCidr('');
     setInputIp('');
     setFilterKeyword('');
     setErrMessage('');
     setCalcResult(null);
-    showToast('已清空輸入項目');
+    showToast(t.toastCleared);
   };
 
   const loadExample = () => {
     setMode('cidr');
     setInputCidr('192.168.1.50/24');
     setFilterKeyword('');
-    showToast('已載入預設範例 /24');
+    showToast(t.toastExampleLoaded);
   };
 
-  // 一鍵複製文字
   const copyText = (txt: string) => {
-    navigator.clipboard.writeText(txt).then(() => showToast(`已複製: ${txt}`));
+    navigator.clipboard.writeText(txt).then(() => showToast(`${t.toastCopied}: ${txt}`));
   };
 
   const copyAllUsableIps = () => {
@@ -369,17 +449,16 @@ export default function IpCalculatorClient() {
     copyText(list.join('\n'));
   };
 
-  // 全量檔案導出 (分塊 Chunk 處理，避免 UI 卡死)
   const exportFile = (type: 'txt' | 'csv') => {
     if (!calcResult) return;
 
     const { usableCount, firstUsableInt, inputIp: safeIp, cidr } = calcResult;
-    showToast(`正在產生 ${usableCount.toLocaleString()} 筆可用 IP 匯出檔...`);
+    showToast(t.toastExporting.replace('{count}', usableCount.toLocaleString()));
 
     const chunks: string[] = [];
     const chunkSize = 20000;
     if (type === 'csv') {
-      chunks.push('\uFEFFIndex,IP Address\n'); // UTF-8 BOM
+      chunks.push('\uFEFFIndex,IP Address\n');
     }
 
     let renderedCount = 0;
@@ -401,7 +480,7 @@ export default function IpCalculatorClient() {
       renderedCount = end;
 
       if (renderedCount < usableCount) {
-        setTimeout(processChunk, 0); // 讓出主執行緒
+        setTimeout(processChunk, 0);
       } else {
         const mimeType = type === 'csv' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;';
         const blob = new Blob(chunks, { type: mimeType });
@@ -414,14 +493,15 @@ export default function IpCalculatorClient() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast(`全量 ${usableCount.toLocaleString()} 筆 IP 已成功匯出 .${type} 檔案！`);
+        showToast(
+          t.toastExportSuccess.replace('{count}', usableCount.toLocaleString()).replace('{type}', type)
+        );
       }
     };
 
     setTimeout(processChunk, 10);
   };
 
-  // 分頁頁數計算
   const totalItems = filteredUsableIps.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const validCurrentPage = Math.min(currentPage, totalPages);
@@ -431,46 +511,55 @@ export default function IpCalculatorClient() {
 
   return (
     <ToolLayout
-      title="IP 子網段與可用 IP 計算器"
-      subtitle="IPV4 & CIDR SUBNET CALCULATOR"
-      description="專業免費的線上 IP 子網段與可用 IP 計算器！支援 CIDR 標記與標準點分十進制切換，精確計算網路位址、廣播位址、子網遮罩、可用 IP 範圍與百萬級 TXT/CSV 導出。"
+      title={t.title}
+      subtitle={t.subtitle}
+      description={t.description}
       accentColor="#00f0ff"
       accentGlow="rgba(0, 240, 255, 0.6)"
     >
+      {/* 雙語切換開關 */}
+      <div className="flex justify-end mb-6">
+        <Link
+          href={lang === 'en' ? '/ip-calculator/' : '/ip-calculator/en/'}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-all flex items-center gap-1.5"
+        >
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+          </svg>
+          {lang === 'en' ? '繁體中文' : 'English'}
+        </Link>
+      </div>
+
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 控制卡片：輸入網段參數 */}
-        <div className="bg-black/20 border border-white/[.08] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
-          <div className="flex justify-between items-center flex-wrap gap-4 border-b border-white/[.06] pb-4">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#00f0ff]">
+        <div className={styles.cardPanel}>
+          <div className="flex justify-between items-center flex-wrap gap-4 border-b border-border-glass pb-4">
+            <h3 className="text-lg font-bold text-text-main flex items-center gap-2">
+              <svg viewBox="0 0 24 24" className={`w-5 h-5 fill-current ${styles.accentText}`}>
                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
               </svg>
-              輸入網段參數
+              <span>{t.paramsTitle}</span>
             </h3>
 
             {/* 模式分頁 Tabs */}
-            <div className="flex bg-black/40 p-1 rounded-xl border border-white/[.08]">
+            <div className="flex bg-select-bg p-1 rounded-xl border border-border-glass">
               <button
                 type="button"
                 onClick={() => setMode('cidr')}
-                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
-                  mode === 'cidr'
-                    ? 'bg-[#00f0ff]/15 border border-[#00f0ff]/40 text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.2)]'
-                    : 'text-text-sub hover:text-text-main'
+                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all ${
+                  mode === 'cidr' ? styles.toggleBtnActive : styles.toggleBtnInactive
                 }`}
               >
-                CIDR 標記法
+                {t.modeCidr}
               </button>
               <button
                 type="button"
                 onClick={() => setMode('std')}
-                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all font-semibold ${
-                  mode === 'std'
-                    ? 'bg-[#00f0ff]/15 border border-[#00f0ff]/40 text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.2)]'
-                    : 'text-text-sub hover:text-text-main'
+                className={`px-4 py-1.5 text-sm rounded-lg cursor-pointer transition-all ${
+                  mode === 'std' ? styles.toggleBtnActive : styles.toggleBtnInactive
                 }`}
               >
-                標準 IP + 遮罩
+                {t.modeStd}
               </button>
             </div>
           </div>
@@ -479,9 +568,9 @@ export default function IpCalculatorClient() {
           {mode === 'cidr' ? (
             <div className="flex flex-col gap-2">
               <label htmlFor={inputCidrId} className="text-sm font-medium text-text-sub">
-                IP 位址 / CIDR 前綴 (例如: 192.168.1.50/24)
+                {t.labelCidr}
               </label>
-              <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00f0ff]/40 transition-colors">
+              <div className={styles.inputWrapper}>
                 <input
                   id={inputCidrId}
                   type="text"
@@ -490,7 +579,7 @@ export default function IpCalculatorClient() {
                   placeholder="192.168.1.50/24"
                   spellCheck={false}
                   autoComplete="off"
-                  className="w-full bg-transparent border-none outline-none text-white text-base font-mono font-medium placeholder-white/30"
+                  className="w-full bg-transparent border-none outline-none text-text-main text-base font-mono font-medium placeholder-text-sub/50"
                 />
               </div>
             </div>
@@ -499,9 +588,9 @@ export default function IpCalculatorClient() {
             <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
               <div className="flex flex-col gap-2">
                 <label htmlFor={inputIpId} className="text-sm font-medium text-text-sub">
-                  IP 位址 (例如: 192.168.1.50)
+                  {t.labelIp}
                 </label>
-                <div className="bg-black/20 border border-white/15 rounded-xl px-4 py-3 flex items-center focus-within:border-[#00f0ff]/40 transition-colors">
+                <div className={styles.inputWrapper}>
                   <input
                     id={inputIpId}
                     type="text"
@@ -510,14 +599,14 @@ export default function IpCalculatorClient() {
                     placeholder="192.168.1.50"
                     spellCheck={false}
                     autoComplete="off"
-                    className="w-full bg-transparent border-none outline-none text-white text-base font-mono font-medium placeholder-white/30"
+                    className="w-full bg-transparent border-none outline-none text-text-main text-base font-mono font-medium placeholder-text-sub/50"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
                 <label htmlFor={selectMaskId} className="text-sm font-medium text-text-sub">
-                  子網遮罩 Subnet Mask
+                  {t.labelMask}
                 </label>
                 <select
                   id={selectMaskId}
@@ -543,8 +632,11 @@ export default function IpCalculatorClient() {
 
           {/* 錯誤警告訊息 */}
           {errMessage && (
-            <div className="text-red-400 text-xs font-medium bg-red-500/10 border border-red-500/20 px-3.5 py-2 rounded-xl">
-              {errMessage}
+            <div className="text-red-500 dark:text-red-400 text-xs font-medium bg-red-500/10 border border-red-500/20 px-3.5 py-2 rounded-xl flex items-center gap-2">
+              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+              </svg>
+              <span>{errMessage}</span>
             </div>
           )}
 
@@ -553,72 +645,74 @@ export default function IpCalculatorClient() {
             <button
               type="button"
               onClick={handleClear}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-slate-400 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:text-text-main hover:border-slate-400 transition-all cursor-pointer"
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
               </svg>
-              清空重填
+              <span>{t.btnClear}</span>
             </button>
             <button
               type="button"
               onClick={loadExample}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[#00f0ff] bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-xl hover:bg-[#00f0ff]/20 hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] transition-all cursor-pointer"
+              className={styles.exampleBtn}
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                 <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
               </svg>
-              載入範例 (/24)
+              <span>{t.btnExample}</span>
             </button>
           </div>
         </div>
 
         {/* 網段摘要結果 Summary Section */}
         {calcResult && (
-          <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-6 shadow-lg backdrop-blur-md">
-            <h3 className="text-[#00f0ff] text-sm uppercase tracking-[1px] font-semibold border-b border-white/[.06] pb-3">
-              計算摘要 Summary ({calcResult.inputIp}/{calcResult.cidr})
+          <div className={styles.cardPanel}>
+            <h3 className={`text-sm uppercase tracking-[1px] font-semibold border-b border-border-glass pb-3 ${styles.accentText}`}>
+              {t.summaryTitle} ({calcResult.inputIp}/{calcResult.cidr})
             </h3>
 
             <div className="grid grid-cols-4 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1 font-mono text-xs">
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">網路位址 (Network IP)</span>
-                <span className="text-base text-[#00f0ff] font-bold">{calcResult.networkAddress}</span>
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.networkAddr}</span>
+                <span className={`text-base font-bold ${styles.accentText}`}>{calcResult.networkAddress}</span>
               </div>
 
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">廣播位址 (Broadcast IP)</span>
-                <span className="text-base text-[#00f0ff] font-bold">{calcResult.broadcastAddress}</span>
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.broadcastAddr}</span>
+                <span className={`text-base font-bold ${styles.accentText}`}>{calcResult.broadcastAddress}</span>
               </div>
 
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">子網遮罩 (Subnet Mask)</span>
-                <span className="text-base text-white font-bold">{calcResult.subnetMask}</span>
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.subnetMaskLabel}</span>
+                <span className="text-base text-text-main font-bold">{calcResult.subnetMask}</span>
               </div>
 
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">通配符遮罩 (Wildcard Mask)</span>
-                <span className="text-base text-slate-300 font-bold">{calcResult.wildcardMask}</span>
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.wildcardMaskLabel}</span>
+                <span className="text-base text-text-sub font-bold">{calcResult.wildcardMask}</span>
               </div>
 
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">CIDR 標記法</span>
-                <span className="text-base text-white font-bold">/{calcResult.cidr}</span>
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.cidrNotation}</span>
+                <span className="text-base text-text-main font-bold">/{calcResult.cidr}</span>
               </div>
 
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">IP 總數量 (Total IPs)</span>
-                <span className="text-base text-white font-bold">{calcResult.totalIps.toLocaleString()}</span>
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.totalIpsLabel}</span>
+                <span className="text-base text-text-main font-bold">{calcResult.totalIps.toLocaleString()}</span>
               </div>
 
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">可用 IP 總數 (Usable Hosts)</span>
-                <span className="text-base text-[#00ff66] font-bold">{calcResult.usableCount.toLocaleString()} 個</span>
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.usableHostsLabel}</span>
+                <span className={`text-base font-bold ${styles.successText}`}>
+                  {calcResult.usableCount.toLocaleString()} {t.hostsUnit}
+                </span>
               </div>
 
-              <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-sm font-semibold text-text-sub">IP 類別與屬性 (Class & Scope)</span>
-                <div className="flex items-center gap-1 mt-1 text-sm font-bold text-white">
+              <div className={styles.summaryBox}>
+                <span className="text-sm font-semibold text-text-sub">{t.classScopeLabel}</span>
+                <div className="flex items-center gap-1 mt-1 text-sm font-bold text-text-main">
                   <span>{calcResult.scopeInfo.classStr}</span>
                   <span className={calcResult.scopeInfo.badgeClass}>{calcResult.scopeInfo.scope}</span>
                 </div>
@@ -626,9 +720,9 @@ export default function IpCalculatorClient() {
             </div>
 
             {/* 可用 IP 範圍 */}
-            <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex justify-between items-center flex-wrap gap-2 font-mono text-xs">
-              <span className="text-sm font-semibold text-text-sub">可用 IP 範圍 (Usable IP Range)</span>
-              <span className="text-white font-bold text-sm">
+            <div className={`${styles.summaryBox} flex justify-between items-center flex-wrap gap-2 font-mono text-xs`}>
+              <span className="text-sm font-semibold text-text-sub">{t.usableRangeLabel}</span>
+              <span className="text-text-main font-bold text-sm">
                 {calcResult.cidr === 32
                   ? `${calcResult.firstUsableStr} (Single Host)`
                   : `${calcResult.firstUsableStr} ~ ${calcResult.lastUsableStr}`}
@@ -636,8 +730,8 @@ export default function IpCalculatorClient() {
             </div>
 
             {/* 二進制表示 */}
-            <div className="bg-black/40 border border-white/[.05] p-4 rounded-xl flex flex-col gap-2">
-              <span className="text-sm font-semibold text-text-sub">IP 二進制 (Binary Representation)</span>
+            <div className={styles.summaryBox}>
+              <span className="text-sm font-semibold text-text-sub">{t.binaryLabel}</span>
               <code className={styles.binaryCode}>{calcResult.binaryIp}</code>
             </div>
           </div>
@@ -645,54 +739,54 @@ export default function IpCalculatorClient() {
 
         {/* 可用 IP 列表區段 */}
         {calcResult && (
-          <div className="bg-black/30 border border-white/[.08] rounded-2xl p-6 flex flex-col gap-5 shadow-lg backdrop-blur-md">
+          <div className={styles.cardPanel}>
             <div className="flex justify-between items-center flex-wrap gap-4">
               <h3 className="text-sm font-semibold text-text-main flex items-center gap-2">
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-text-sub">
                   <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
                 </svg>
-                可用 IP 位址列表
+                <span>{t.usableListTitle}</span>
               </h3>
 
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={copyAllUsableIps}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                     <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                   </svg>
-                  複製全量
+                  <span>{t.copyAllBtn}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => exportFile('txt')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
                   </svg>
-                  匯出 TXT
+                  <span>{t.exportTxtBtn}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => exportFile('csv')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                 >
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
                   </svg>
-                  匯出 CSV
+                  <span>{t.exportCsvBtn}</span>
                 </button>
               </div>
             </div>
 
             {/* 搜尋與過濾 */}
             <div className="w-full">
-              <div className="bg-black/40 border border-white/[.08] rounded-xl px-4 py-2.5 flex items-center gap-2 focus-within:border-[#00f0ff]/40 transition-colors">
+              <div className={styles.inputWrapper}>
                 <label htmlFor={filterInputId}>
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-text-sub">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-text-sub mr-2">
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
                   </svg>
                 </label>
@@ -704,21 +798,19 @@ export default function IpCalculatorClient() {
                     setFilterKeyword(e.target.value);
                     setCurrentPage(1);
                   }}
-                  placeholder="過濾 IP 位址 (例如 .100)..."
-                  className="w-full bg-transparent border-none outline-none text-white text-xs font-mono font-medium placeholder-white/30"
+                  placeholder={t.filterPlaceholder}
+                  className="w-full bg-transparent border-none outline-none text-text-main text-xs font-mono font-medium placeholder-text-sub/50"
                 />
               </div>
             </div>
 
             {/* 大網段優化提示 */}
             {calcResult.usableCount > 1000 && (
-              <div className="flex gap-2.5 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-xl p-3.5 text-xs text-[#00f0ff] items-center">
+              <div className="flex gap-2.5 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-xl p-3.5 text-xs text-[#00f0ff] dark:text-[#00f0ff] items-center">
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
                   <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
                 </svg>
-                <span>
-                  目前網段包含 {calcResult.usableCount.toLocaleString()} 個可用 IP。畫面上預設呈現前 1,000 筆分頁；完整數據可點擊右上角「匯出 TXT / CSV」極速線上下載。
-                </span>
+                <span>{t.largeNetNotice.replace('{count}', calcResult.usableCount.toLocaleString())}</span>
               </div>
             )}
 
@@ -727,33 +819,33 @@ export default function IpCalculatorClient() {
               <table className={styles.ipTable}>
                 <thead>
                   <tr>
-                    <th className={styles.indexCol}>編號 #</th>
-                    <th>IP 位址</th>
-                    <th className={styles.actionCol}>操作</th>
+                    <th className={styles.indexCol}>{t.colIndex}</th>
+                    <th>{t.colIp}</th>
+                    <th className={styles.actionCol}>{t.colAction}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pageData.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="text-center py-8 text-text-sub text-sm">
-                        查無符合關鍵字 &quot;{filterKeyword}&quot; 的可用 IP
+                        {t.noMatchingIps}
                       </td>
                     </tr>
                   ) : (
                     pageData.map((item) => (
                       <tr key={item.index}>
                         <td className={styles.indexCol}>#{item.index.toLocaleString()}</td>
-                        <td className="font-medium text-white">{item.ipStr}</td>
+                        <td className="font-medium text-text-main">{item.ipStr}</td>
                         <td className={styles.actionCol}>
                           <button
                             type="button"
                             onClick={() => copyText(item.ipStr)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-lg hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-text-main bg-select-bg border border-border-glass rounded-lg hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all cursor-pointer"
                           >
                             <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current">
                               <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                             </svg>
-                            複製
+                            <span>{t.copyBtn}</span>
                           </button>
                         </td>
                       </tr>
@@ -764,9 +856,12 @@ export default function IpCalculatorClient() {
             </div>
 
             {/* 分頁控制條 */}
-            <div className="flex justify-between items-center flex-wrap gap-4 text-sm text-text-sub border-t border-white/[.05] pt-3">
+            <div className="flex justify-between items-center flex-wrap gap-4 text-sm text-text-sub border-t border-border-glass pt-3">
               <div>
-                顯示第 {(startIdx + 1).toLocaleString()} - {endIdx.toLocaleString()} 筆 / 共 {totalItems.toLocaleString()} 筆
+                {t.paginationInfo
+                  .replace('{start}', (startIdx + 1).toLocaleString())
+                  .replace('{end}', endIdx.toLocaleString())
+                  .replace('{total}', totalItems.toLocaleString())}
               </div>
 
               <div className="flex items-center gap-2">
@@ -774,9 +869,9 @@ export default function IpCalculatorClient() {
                   type="button"
                   disabled={validCurrentPage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
                 >
-                  上一頁
+                  {t.prevPage}
                 </button>
                 <span className="font-mono text-text-main">
                   {validCurrentPage} / {totalPages}
@@ -785,9 +880,9 @@ export default function IpCalculatorClient() {
                   type="button"
                   disabled={validCurrentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-white/[0.03] border border-white/[0.08] rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:not-disabled:border-[#00f0ff] hover:not-disabled:text-[#00f0ff] transition-all cursor-pointer"
                 >
-                  下一頁
+                  {t.nextPage}
                 </button>
               </div>
             </div>

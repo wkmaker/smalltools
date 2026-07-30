@@ -14,7 +14,7 @@
 
 ## ✨ 專案特色
 
-* 🎨 **毛玻璃極致 UI 美學 (Glassmorphism & Neon Themes)**：採用現代暗色系純極黑背景（`#030305`），結合半透明毛玻璃容器與各工具專屬的動態霓虹發光色彩，提供視覺絕佳的視覺體驗。
+* 🎨 **亮暗雙主題與毛玻璃 UI 美學 (Light/Dark Mode & Glassmorphism)**：全面支援深色與明亮模式切換（支援手動切換與隨系統自動同步）。深色模式採用質感極致純黑背景（`#030305`）結合霓虹微光；明亮模式提供清爽高對比的極簡毛玻璃視覺，兼具視覺美感與長時閱讀舒適度。
 * 🔒 **零隱私疑慮 (Client-side Privacy First)**：所有運算（含 PDF 壓縮、圖片轉檔處理、密碼產生、憑證轉換與金融計算）100% 於使用者瀏覽器端本地完成，檔案與敏感數據絕不上傳至任何伺服器。
 * ⚡ **靜態超速載入 (Static Export SSG)**：使用 Next.js App Router `output: 'export'` 靜態導出，結合 AWS S3 + CloudFront CDN 全球加速，實現零等待的極速載入。
 * 🔗 **網址參數雙向同步 (URL State Sync)**：輸入資料即時無感同步至 URL Query 參數，方便複製網址隨時分享、備份計算結果或加入書籤。
@@ -25,44 +25,47 @@
 
 ## 🛠️ 收錄工具一覽
 
-### 🧮 金融與理財試算
-* **[信貸試算](https://tools.cjkuo.net/personal-loan/)** (`/personal-loan`) - 提供本息均攤、本金均攤試算，支援二分搜尋法極速求解實質年利率 (APR)。
-* **[房貸試算](https://tools.cjkuo.net/mortgage-loan/)** (`/mortgage-loan`) - 支援寬限期設定、年限試算與完整還款明細導出。
-* **[車貸計算器](https://tools.cjkuo.net/car-loan/)** (`/car-loan`) - 汽車貸款與手續費攤提試算。
-* **[複利計算機](https://tools.cjkuo.net/compound-interest/)** (`/compound-interest`) - 投資複利增長與定期定額模擬。
-* **[股票質押試算](https://tools.cjkuo.net/pledge-calculator/)** (`/pledge-calculator`) - 股票質押貸款利息與維持率試算。
-* **[薪資與扣繳計算器](https://tools.cjkuo.net/my-salary-calculator/)** (`/my-salary-calculator`) - 實收薪資、勞健保及所得稅扣繳金額快速算。
-* **[期貨槓桿計算機](https://tools.cjkuo.net/futures-calculator/)** (`/futures-calculator`) - 期貨保證金、槓桿倍數與損益點位計算。
+### 🏦 金融理財
+* **[複利計算機](https://tools.cjkuo.net/compound-interest/)** (`/compound-interest`) - 支援年/月利率與定期定額，透過動態堆疊圖表呈現財富增長軌跡。
+* **[信貸計算機](https://tools.cjkuo.net/personal-loan/)** (`/personal-loan`) - 支援本息/本金平均攤還與實質年利率 (APR) 估算。
+* **[車貸計算機](https://tools.cjkuo.net/car-loan/)** (`/car-loan`) - 支援車價與自備款成數試算、寬限期設定與月付金分析。
+* **[房貸計算機](https://tools.cjkuo.net/mortgage-loan/)** (`/mortgage-loan`) - 支援自備款連動、寬限期試算與多段式階梯利率設定。
+* **[股票質押與維持率壓力測試器](https://tools.cjkuo.net/pledge-calculator/)** (`/pledge-calculator`) - 支援股價與張數雙向連動、追繳門檻與大跌幅壓力測試模擬。
+* **[台股期貨槓桿與逆風點數估算器](https://tools.cjkuo.net/futures-calculator/)** (`/futures-calculator`) - 即時計算大台/小台/微台實質槓桿倍數，模擬逆風損益與追繳強平臨界點。
+* **[薪資、勞保、健保、預扣稅計算機](https://tools.cjkuo.net/my-salary-calculator/)** (`/my-salary-calculator`) - 查表比對勞健保、勞退與預扣稅金額，呈現員工實領薪資與雇主總營運成本。
 
-### 🌐 網路與安全工具
-* **[IP 計算機](https://tools.cjkuo.net/ip-calculator/)** (`/ip-calculator`) - IPv4 子網路遮罩 (CIDR)、網段範圍與可用 host 試算。
-* **[IP 檢測器](https://tools.cjkuo.net/ip-detector/)** (`/ip-detector`) - 本地與對外 IP 位址、地理位置與 ISP 資訊查詢。
-* **[DNS DIG 查詢](https://tools.cjkuo.net/dns-dig/)** (`/dns-dig`) - 線上 DNS 紀錄 (A, AAAA, CNAME, MX, TXT, NS) 查詢。
-* **[HTTPS DNS 記錄生成器](https://tools.cjkuo.net/https-dns-generator/)** (`/https-dns-generator`) - 生成相容 RFC 9460 的 HTTPS / SVCB DNS 記錄。
-* **[SSL 憑證格式轉換器](https://tools.cjkuo.net/ssl-converter/)** (`/ssl-converter`) - PEM, DER, PFX/P12, PKCS7 憑證互相轉換與憑證鏈修補。
-* **[安全密碼產生器](https://tools.cjkuo.net/password/)** (`/password`) - 高強度強密碼自訂字元集中產生與強度檢測。
+### 💻 開發輔助
+* **[Base64 編碼/解碼](https://tools.cjkuo.net/base64/)** (`/base64`) - 支援文字即時雙向編解碼（UTF-8 不亂碼）、檔案拖曳編碼與多媒體預覽。
+* **[URL 編碼/解碼](https://tools.cjkuo.net/url/)** (`/url`) - 支援 URI/URIComponent 模式，具備 Query 參數表格即時解析與雙向編輯。
+* **[安全密碼生成器](https://tools.cjkuo.net/password/)** (`/password`) - 密碼學安全強隨機數生成工具 (CSPRNG)，支援排除易混淆字元與強度評估。
+* **[JSON 格式化與美化器](https://tools.cjkuo.net/json/)** (`/json`) - 支援即時語法 Lint 驗證定位、多縮排格式美化、樹狀檢視與單行壓縮。
+* **[SSL 憑證格式轉換器](https://tools.cjkuo.net/ssl-converter/)** (`/ssl-converter`) - 支援 PFX/P12, PEM, DER 雙向轉換、金鑰雜湊匹配檢查與到期警示。
 
-### 📄 文件與開發者工具
-* **[PDF 壓縮大師](https://tools.cjkuo.net/pdf-compressor/)** (`/pdf-compressor`) - 純前端 PDF 檔案瘦身壓縮與畫質調整。
-* **[PDF 頁面組合器](https://tools.cjkuo.net/pdf-processor/)** (`/pdf-processor`) - PDF 頁面分割、合併、旋轉與重新排序。
-* **[萬能圖片處理大師](https://tools.cjkuo.net/image-processor/)** (`/image-processor`) - 圖片轉檔 (WebP/PNG/JPG/AVIF)、裁剪、壓縮與浮水印處理。
-* **[QR Code 產生器](https://tools.cjkuo.net/qr-generator/)** (`/qr-generator`) - 自訂顏色、樣式與嵌入 Logo 的高解析度 QR Code 生成。
-* **[Base64 編碼 / 解碼器](https://tools.cjkuo.net/base64/)** (`/base64`) - 文字與檔案之 Base64 雙向轉換。
-* **[JSON 格式化與壓縮器](https://tools.cjkuo.net/json/)** (`/json`) - JSON 美化、壓縮、語法檢查與樹狀檢視。
-* **[文字處理助手](https://tools.cjkuo.net/text-utility/)** (`/text-utility`) - 全半形轉換、字數統計、大小寫轉換與空行清理。
-* **[文件比對 Diff Checker](https://tools.cjkuo.net/diff-checker/)** (`/diff-checker`) - 兩段文本或程式碼差異即時行級比對與亮顯。
+### 🌐 網路工具
+* **[DIG 網路診斷工具](https://tools.cjkuo.net/dns-dig/)** (`/dns-dig`) - 支援 Cloudflare / Google 加密 DoH 切換、即時發送 DIG 請求查詢 A, CNAME, MX, TXT 等記錄。
+* **[IP 檢測助手](https://tools.cjkuo.net/ip-detector/)** (`/ip-detector`) - 支援 IPv4/IPv6 雙棧偵測、Cloudflare / Mullvad 節點查詢與公有雲連線延遲診斷。
+* **[DNS HTTPS 紀錄設定產生器](https://tools.cjkuo.net/https-dns-generator/)** (`/https-dns-generator`) - 線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄產生器與 DNS 代管商填寫對照指南。
+* **[IP 子網段計算器](https://tools.cjkuo.net/ip-calculator/)** (`/ip-calculator`) - 快速計算 IPv4 / CIDR 網段資訊、可用 IP 列表與極速 TXT/CSV 導出。
 
-### ⏱️ 時間與生活實用
-* **[倒數計時與全螢幕時鐘](https://tools.cjkuo.net/time/)** (`/time`) - 全螢幕極簡數位時鐘、倒數計時器與響鈴提醒。
-* **[Epoch 時間戳記轉換器](https://tools.cjkuo.net/epoch/)** (`/epoch`) - Unix Timestamp 與各國時區日期時間雙向轉換。
-* **[幸運轉盤](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 自訂選項隨機抽籤與主題轉盤。
+### ✍️ 文字編輯
+* **[文字處理助手](https://tools.cjkuo.net/text-utility/)** (`/text-utility`) - 支援大小寫轉換、空白字元清理，並即時統計字元數、中英文字數與總行數。
+* **[Designer QR Code 產生器](https://tools.cjkuo.net/qr-generator/)** (`/qr-generator`) - 支援碼體與定位點樣式自訂、漸層色彩設定與置中 Logo 嵌入。
+* **[兩份文件比對工具](https://tools.cjkuo.net/diff-checker/)** (`/diff-checker`) - 純本機文本差異比對工具，支援 Split 雙窗格與 Unified 混合比對模式。
+
+### 🔧 實用小工具
+* **[目標計時器](https://tools.cjkuo.net/time/)** (`/time`) - 全螢幕極簡數位時鐘與目標計時器，支援多種時間格式與主題色設定。
+* **[Epoch 時間戳記轉換](https://tools.cjkuo.net/epoch/)** (`/epoch`) - 支援秒與毫秒自動判定，即時在台北時間、UTC、美西時區之間雙向轉換。
+* **[幸運轉盤抽獎小工具](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 支援自訂獎項、權重與色彩，提供全螢幕舞台、物理動畫與音效。
+* **[光影裁剪 - 萬能圖片處理大師](https://tools.cjkuo.net/image-processor/)** (`/image-processor`) - 支援視覺化裁切、尺寸調整、jSquash WebAssembly 轉檔壓縮與多檔批次打包。
+* **[PDF 頁面組合器](https://tools.cjkuo.net/pdf-processor/)** (`/pdf-processor`) - 純前端 PDF 合併、拖曳頁面排序、單頁 90° 旋轉與頁面刪除。
+* **[PDF 壓縮大師](https://tools.cjkuo.net/pdf-compressor/)** (`/pdf-compressor`) - 針對 PDF 內嵌點陣圖深度壓縮與降採樣，保持向量文字清晰並大幅減少檔案體積。
 
 ---
 
 ## 💻 技術棧 (Tech Stack)
 
 * **核心框架**：[Next.js 16 (App Router)](https://nextjs.org/) + [React 19](https://react.dev/) + [TypeScript 6](https://www.typescriptlang.org/)
-* **樣式與 UI**：[Tailwind CSS v4 (CSS-first 模式)](https://tailwindcss.com/) + Vanilla CSS Custom Tokens
+* **樣式與 UI**：[Tailwind CSS v4 (CSS-first 模式)](https://tailwindcss.com/) + Vanilla CSS Custom Tokens（具備完整的亮暗模式 CSS 變數與主題切換機制）
 * **客戶端運算庫**：`node-forge` (密碼/SSL 憑證處理)、`diff` (文字比對)、`qr-code-styling` (向量 QR 生成)
 * **佈署架構**：AWS S3 + CloudFront CDN + CloudFormation (`template.yml`) + GitHub Actions OIDC 自動化部署 workflow
 

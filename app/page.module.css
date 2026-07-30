@@ -12,7 +12,7 @@
     border-radius: 24px;
     padding: 3.5rem 3rem;
     text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.01);
+    box-shadow: var(--glass-shadow, 0 25px 50px -12px rgba(0, 0, 0, 0.8)), inset 0 0 20px rgba(255,255,255,0.01);
     width: 100%;
     max-width: 90%;
     margin: 0 auto;
@@ -276,7 +276,7 @@
 .toolCard h3 {
     font-size: 1.3rem;
     font-weight: 500;
-    color: #ffffff;
+    color: var(--text-primary);
     margin-bottom: 0.4rem;
     letter-spacing: 1.5px;
     transition: color 0.3s ease, text-shadow 0.3s ease;
@@ -470,3 +470,92 @@
     .toolsGrid { grid-template-columns: 1fr; gap: 1.5rem; }
     .homeTitle { font-size: 1.8rem; }
 }
+
+/* ── 亮色模式專屬組件樣式覆蓋 (Apple Liquid Glass 質感調色盤) ── */
+:global([data-theme='light']) .homeContainer {
+    background: rgba(255, 255, 255, 0.38);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow: 0 30px 70px -15px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+}
+
+:global([data-theme='light']) .searchWrapper {
+    background: rgba(255, 255, 255, 0.45);
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:global([data-theme='light']) .searchWrapper:focus-within {
+    border-color: rgba(2, 132, 199, 0.6);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18), 0 8px 25px rgba(2, 132, 199, 0.1);
+    background: rgba(255, 255, 255, 0.75);
+}
+
+:global([data-theme='light']) .tabBtn {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #334155;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+:global([data-theme='light']) .tabBtn:hover {
+    background: rgba(255, 255, 255, 0.65);
+    color: #0f172a;
+    border-color: rgba(255, 255, 255, 0.85);
+    transform: translateY(-1px);
+}
+
+:global([data-theme='light']) .tabBtn.active {
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    border-color: transparent;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+}
+
+:global([data-theme='light']) .sectionTitle {
+    color: #0f172a;
+    border-bottom-color: rgba(203, 213, 225, 0.6);
+}
+
+:global([data-theme='light']) .toolCard {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+:global([data-theme='light']) .toolCard:hover {
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.14), inset 0 1px 0 #ffffff;
+}
+
+:global([data-theme='light']) .toolCard h3 {
+    color: #0f172a;
+}
+
+:global([data-theme='light']) .toolCard p {
+    color: #334155;
+}
+
+:global([data-theme='light']) .toolCard:hover p {
+    color: #0f172a;
+}
+
+:global([data-theme='light']) .subtitle {
+    color: #64748b;
+}
+
+:global([data-theme='light']) .placeholderCard {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+:global([data-theme='light']) .placeholderCard h3 { color: rgba(71, 85, 105, 0.6); }
+:global([data-theme='light']) .placeholderCard p { color: rgba(100, 116, 139, 0.6); }
+:global([data-theme='light']) .placeholderCard .cardAction { color: rgba(100, 116, 139, 0.6); }
+
+

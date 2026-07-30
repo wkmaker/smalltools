@@ -23,6 +23,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface ToolLayoutProps {
   title: string;
@@ -32,6 +33,8 @@ interface ToolLayoutProps {
   accentGlow: string;    // e.g. 'rgba(0,119,255,0.6)'
   hideHeader?: boolean;  // 若為 true，隱藏上方標題與描述段落
   hideFooter?: boolean;  // 若為 true，隱藏下方頁尾贊助連結
+  containerClassName?: string; // 可選傳入自訂外容器 class
+  extraHeaderControls?: React.ReactNode; // 可選傳入頂欄右側自訂按鈕組
   children: React.ReactNode;
 }
 
@@ -43,11 +46,15 @@ export default function ToolLayout({
   accentGlow,
   hideHeader = false,
   hideFooter = false,
+  containerClassName = '',
+  extraHeaderControls,
   children,
 }: ToolLayoutProps) {
   const pathname = usePathname();
   const cleanPath = pathname ? pathname.replace(/^\/|\/$/g, '') : '';
   const backHref = cleanPath ? `/#tool-${cleanPath}` : '/';
+
+  const isEn = pathname ? pathname.includes('/en/') || pathname.endsWith('/en') : false;
 
   return (
     /*
@@ -57,18 +64,26 @@ export default function ToolLayout({
      * - padding 對應原版 3.5rem 3rem
      */
     <div
-      className="
+      className={`
         tool-layout-container
         relative z-[1] w-full max-w-[90%] mx-auto
         flex flex-col
         bg-surface-glass border border-border-glass rounded-3xl
-        backdrop-blur-[12px] [-webkit-backdrop-filter:blur(12px)]
-        shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]
+        backdrop-blur-[24px] [-webkit-backdrop-filter:blur(24px)]
+        shadow-[var(--glass-shadow)]
         px-12 pt-16 pb-14
         max-sm:px-5 max-sm:pt-12 max-sm:pb-10
         max-[768px]:max-w-[98%]
-      "
+        transition-[max-width,width,padding,margin,border-radius] duration-500 ease-in-out
+        ${containerClassName}
+      `}
     >
+      {/* ── 亮暗模式切換與頂欄右側功能按鈕組 ── */}
+      <div className="absolute top-6 right-6 z-[20] flex items-center gap-2 max-sm:top-4 max-sm:right-4 max-sm:gap-1.5">
+        {extraHeaderControls}
+        <ThemeToggle />
+      </div>
+
       {/* ── 返回按鈕 ── */}
       <Link
         href={backHref}
@@ -92,7 +107,7 @@ export default function ToolLayout({
           hover:shadow-[0_0_15px_var(--tool-glow)]
           hover:-translate-y-0.5
           w-fit self-start
-          max-sm:static max-sm:inline-flex max-sm:mb-6
+          max-sm:top-4 max-sm:left-4 max-sm:px-3 max-sm:py-1.5 max-sm:text-xs
         "
         style={
           {
@@ -105,7 +120,7 @@ export default function ToolLayout({
           className="transition-transform duration-300 group-hover:-translate-x-1">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
         </svg>
-        返回首頁
+        {isEn ? 'Back to Home' : '返回首頁'}
       </Link>
 
       {/* ── 主標題 + 描述 (若 hideHeader 為 false 則渲染) ── */}
@@ -142,7 +157,7 @@ export default function ToolLayout({
       {/* ── 頁尾贊助連結 (可透過 hideFooter 隱藏) ── */}
       {!hideFooter && (
         <div className="tool-layout-footer mt-12 pt-5 border-t border-white/[.06] flex items-center justify-center gap-2 text-xs text-text-sub">
-          <span>喜歡這個小工具嗎？</span>
+          <span>{isEn ? 'Enjoying this tool?' : '喜歡這個小工具嗎？'}</span>
           <a
             href="https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools"
             target="_blank"
@@ -152,7 +167,7 @@ export default function ToolLayout({
             <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
-            贊助支持作者 ☕
+            {isEn ? 'Sponsor the Author ☕' : '贊助支持作者 ☕'}
           </a>
         </div>
       )}

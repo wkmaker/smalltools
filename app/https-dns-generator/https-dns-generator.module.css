@@ -1,8 +1,166 @@
 /* app/https-dns-generator/https-dns-generator.module.css */
 
+.cardPanel {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  min-width: 0;
+}
+
+:global([data-theme='light']) .cardPanel {
+  background-color: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.innerPanel {
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+:global([data-theme='light']) .innerPanel {
+  background-color: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.inputBox {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #ffffff);
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme='light']) .inputBox {
+  background-color: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: var(--text-primary, #0f172a);
+}
+
+.inputBox:focus {
+  border-color: var(--theme-color, #00f0ff);
+  box-shadow: 0 0 15px var(--accent-glow, rgba(0, 240, 255, 0.3));
+}
+
+:global([data-theme='light']) .inputBox:focus {
+  background-color: #ffffff;
+}
+
+.presetBtn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+:global([data-theme='light']) .presetBtn {
+  background-color: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--text-secondary);
+}
+
+.presetBtn:hover {
+  border-color: var(--theme-color, #00f0ff);
+  color: var(--theme-color, #00f0ff);
+}
+
+:global([data-theme='light']) .presetBtn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background-color: rgba(2, 132, 199, 0.08);
+}
+
 .outputCode {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   line-height: 1.6;
-  color: var(--theme-color);
+  color: #00f0ff;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  word-break: break-all;
+}
+
+:global([data-theme='light']) .outputCode {
+  color: #0284c7; /* Sky 600 */
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.accentText {
+  color: #00f0ff;
+}
+
+:global([data-theme='light']) .accentText {
+  color: #0284c7;
+}
+
+.coreCard {
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+:global([data-theme='light']) .coreCard {
+  background-color: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.toggleBtnActive {
+  background-color: rgba(0, 240, 255, 0.15);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: #00f0ff;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+:global([data-theme='light']) .toggleBtnActive {
+  background-color: rgba(2, 132, 199, 0.12);
+  border: 1px solid rgba(2, 132, 199, 0.4);
+  color: #0284c7; /* Sky 600 for WCAG AA contrast */
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.15);
+}
+
+.toggleBtnInactive {
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.toggleBtnInactive:hover {
+  color: var(--text-primary);
+}
+
+:global([data-theme='light']) .toggleBtnInactive:hover {
+  color: #0f172a;
 }
