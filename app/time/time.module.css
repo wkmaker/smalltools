@@ -160,14 +160,128 @@
   box-shadow: 0 0 25px rgba(2, 132, 199, 0.4);
 }
 
+/* 倒數模式專用外框緊湊縮減 (Fit timer content while keeping breathing room) */
+.timerLayoutContainer {
+  width: fit-content !important;
+  min-width: min(380px, 92vw) !important;
+  max-width: 90% !important;
+  padding-top: 4.5rem !important;
+  padding-bottom: 2.75rem !important;
+  padding-left: 3rem !important;
+  padding-right: 3rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+}
+
+@media (max-width: 640px) {
+  .timerLayoutContainer {
+    width: 95% !important;
+    max-width: 95% !important;
+    min-width: unset !important;
+    padding-top: 3.75rem !important;
+    padding-bottom: 2rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+}
+
 .timerDisplay {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2.5rem 3.5rem;
+  display: grid;
+  gap: 2rem 2.5rem;
   justify-content: center;
+  justify-items: center;
   align-items: center;
   margin: 0 auto;
-  width: 100%;
+  width: fit-content;
+}
+
+/* 6 個單位：大螢幕一排 6 個；斷行時嚴格採 3 + 3 雙排均衡 (絕不出現 5+1 或 4+2) */
+.units-6 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+@media (max-width: 960px) {
+  .units-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem 2rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .units-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem 0.75rem;
+  }
+}
+
+/* 5 個單位：大螢幕一排 5 個；斷行時採 3 + 2 完美置中 */
+.units-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 840px) {
+  .units-5 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 2rem 1.5rem;
+  }
+  .units-5 > div:nth-child(1) { grid-column: span 2; }
+  .units-5 > div:nth-child(2) { grid-column: span 2; }
+  .units-5 > div:nth-child(3) { grid-column: span 2; }
+  .units-5 > div:nth-child(4) { grid-column: 2 / span 2; }
+  .units-5 > div:nth-child(5) { grid-column: span 2; }
+}
+
+@media (max-width: 520px) {
+  .units-5 {
+    gap: 1.25rem 0.5rem;
+  }
+}
+
+/* 4 個單位：大螢幕一排 4 個；斷行時嚴格採 2 + 2 均衡 */
+.units-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 680px) {
+  .units-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .units-4 {
+    gap: 1.25rem 1.25rem;
+  }
+}
+
+/* 3 個單位：一排 3 個 */
+.units-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 520px) {
+  .units-3 {
+    gap: 1.25rem 0.75rem;
+  }
+}
+
+/* 2 個單位：一排 2 個 */
+.units-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 480px) {
+  .units-2 {
+    gap: 1.25rem 1.5rem;
+  }
+}
+
+/* 1 個單位：一排 1 個 */
+.units-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
 .timeBlock {
@@ -175,7 +289,7 @@
   flex-direction: column;
   align-items: center;
   flex: 0 1 auto;
-  min-width: 80px;
+  min-width: 70px;
 }
 
 .numberWrapper {
@@ -190,7 +304,7 @@
 .number {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(3.2rem, 8vw, 5.5rem);
+  font-size: clamp(2.4rem, 6.5vw, 5.5rem);
   font-weight: 700;
   line-height: 1;
   color: var(--text-primary, #ffffff);
@@ -290,7 +404,7 @@
 }
 
 .statusContainer {
-  margin-top: 3.5rem;
+  margin-top: 2.5rem;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -343,65 +457,100 @@
   }
 }
 
-/* 右上角控制圖示列 */
+/* 右上角控制圖示列 (精準對齊 ToolLayout 頂欄 ThemeToggle 軸線) */
 .topControls {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  z-index: 30;
+  top: -1.25rem;
+  right: 5.5rem;
+  z-index: 40;
 }
 
 @media (max-width: 640px) {
   .topControls {
-    top: -3.5rem;
-    right: 0;
-    gap: 0.4rem;
-  }
-  .controlsPanel {
-    gap: 0.4rem;
-  }
-  .controlsPanelExpanded {
-    max-width: 160px;
-  }
-  .iconBtn {
-    width: 34px;
-    height: 34px;
+    top: -1.25rem;
+    right: 4.2rem;
   }
 }
 
-.controlsPanel {
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 170px;
+  background: var(--glass-bg, rgba(15, 15, 20, 0.88));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 0.85rem;
+  padding: 0.4rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  z-index: 50;
+}
+
+:global([data-theme='light']) .dropdownMenu {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.dropdownItem {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  overflow: hidden;
-  max-width: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.6rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #cbd5e1);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  text-align: left;
 }
 
-.controlsPanelExpanded {
-  max-width: 240px;
-  opacity: 1;
-  pointer-events: auto;
+.dropdownItem:hover {
+  background: rgba(0, 240, 255, 0.12);
+  color: #00f0ff;
+}
+
+:global([data-theme='light']) .dropdownItem {
+  color: #334155;
+}
+
+:global([data-theme='light']) .dropdownItem:hover {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
 }
 
 .iconBtn {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
+  background: var(--glass-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
   color: var(--text-secondary, #cbd5e1);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  border-radius: 0.75rem;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transition: all 0.3s ease;
   flex-shrink: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@media (max-width: 640px) {
+  .iconBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 0.6rem;
+  }
 }
 
 :global([data-theme='light']) .iconBtn {

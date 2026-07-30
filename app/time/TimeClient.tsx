@@ -157,8 +157,23 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
   const [unitValues, setUnitValues] = useState<Record<string, number>>({});
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // 三點選單收折狀態
+  // 三點選單收折狀態與外點關閉 ref
   const [controlsExpanded, setControlsExpanded] = useState<boolean>(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setControlsExpanded(false);
+      }
+    };
+    if (controlsExpanded) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [controlsExpanded]);
 
   const [toast, setToast] = useState<string>('');
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -380,9 +395,77 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
       accentColor={isPassed ? '#ff3296' : '#00f0ff'}
       accentGlow={isPassed ? 'rgba(255, 50, 150, 0.6)' : 'rgba(0, 240, 255, 0.6)'}
       hideHeader={timerActive}
-      hideFooter={isFullscreen}
+      hideFooter={timerActive}
+      containerClassName={timerActive ? styles.timerLayoutContainer : ''}
+      extraHeaderControls={
+        timerActive ? (
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setControlsExpanded(!controlsExpanded)}
+              className={`${styles.iconBtn} ${controlsExpanded ? styles.iconBtnActive : ''}`}
+              title={t.menuOptions}
+              aria-label={t.menuOptions}
+            >
+              <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+            </button>
+
+            {controlsExpanded && (
+              <div className={`${styles.dropdownMenu} animate-fadeIn`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimerActive(false);
+                    setControlsExpanded(false);
+                  }}
+                  className={styles.dropdownItem}
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.3-.06.63-.06.94s.02.64.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0-.43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z" />
+                  </svg>
+                  <span>{t.modifySettings}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    copyShareLink();
+                    setControlsExpanded(false);
+                  }}
+                  className={styles.dropdownItem}
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z" />
+                  </svg>
+                  <span>{t.copyShareLink}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleFullscreen();
+                    setControlsExpanded(false);
+                  }}
+                  className={styles.dropdownItem}
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    {isFullscreen ? (
+                      <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+                    ) : (
+                      <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                    )}
+                  </svg>
+                  <span>{isFullscreen ? t.exitFullscreen : t.fullscreen}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null
+      }
     >
-      <div className="flex flex-col justify-center items-center w-full min-h-[70vh] my-auto">
+      <div className={`flex flex-col justify-center items-center w-full my-auto transition-all duration-500 ${timerActive ? 'min-h-0' : 'min-h-[60vh]'}`}>
         {!timerActive ? (
           /* 設定視圖 (Setup View) */
           <div className={`${styles.setupCard} flex flex-col gap-6 max-w-4xl md:max-w-5xl mx-auto w-full my-auto animate-fadeIn`}>
@@ -462,67 +545,15 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
           </div>
         ) : (
           /* 計時大看板視圖 (Timer View) */
-          <div className="relative w-full flex flex-col justify-center items-center text-center my-auto py-8 animate-fadeIn">
-            {/* 右上角垂直三點 (⋮ / MoreVertical) 展開選單按鈕 */}
-            <div className={styles.topControls}>
-              {/* 可收折圖示選單 */}
-              <div
-                className={`${styles.controlsPanel} ${
-                  controlsExpanded ? styles.controlsPanelExpanded : ''
-                }`}
-              >
-                {/* 重新設定 (返回設定頁) */}
-                <button
-                  onClick={() => {
-                    setTimerActive(false);
-                    setControlsExpanded(false);
-                  }}
-                  className={styles.iconBtn}
-                  title={t.modifySettings}
-                >
-                  <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.3-.06.63-.06.94s.02.64.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z" />
-                  </svg>
-                </button>
-
-                {/* 複製連結按鈕 */}
-                <button onClick={copyShareLink} className={styles.iconBtn} title={t.copyShareLink}>
-                  <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
-                    <path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z" />
-                  </svg>
-                </button>
-
-                {/* 全螢幕切換按鈕 */}
-                <button onClick={toggleFullscreen} className={styles.iconBtn} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>
-                  <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
-                    {isFullscreen ? (
-                      <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
-                    ) : (
-                      <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
-                    )}
-                  </svg>
-                </button>
-              </div>
-
-              {/* 垂直三點 (⋮ / MoreVertical) 觸發開關 */}
-              <button
-                onClick={() => setControlsExpanded(!controlsExpanded)}
-                className={`${styles.iconBtn} ${controlsExpanded ? styles.iconBtnActive : ''}`}
-                title={t.menuOptions}
-              >
-                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
-                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                </svg>
-              </button>
-            </div>
+          <div className="relative w-full flex flex-col justify-center items-center text-center my-auto py-2 animate-fadeIn">
 
             {/* 中央事件名稱 */}
-            <h1 className="font-light text-2xl max-sm:text-xl tracking-[4px] text-text-sub uppercase mb-12">
+            <h1 className="font-light text-2xl max-sm:text-xl tracking-[4px] text-text-sub uppercase mb-8">
               {eventTitle || t.targetTime}
             </h1>
 
             {/* 核心時間數字看板 */}
-            <div className={styles.timerDisplay}>
+            <div className={`${styles.timerDisplay} ${styles[`units-${selectedUnits.length}`] || ''}`}>
               {selectedUnits.map(unit => {
                 const val = unitValues[unit] ?? 0;
                 const formattedVal = String(val).padStart(2, '0');

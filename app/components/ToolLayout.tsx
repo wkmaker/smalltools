@@ -33,6 +33,8 @@ interface ToolLayoutProps {
   accentGlow: string;    // e.g. 'rgba(0,119,255,0.6)'
   hideHeader?: boolean;  // 若為 true，隱藏上方標題與描述段落
   hideFooter?: boolean;  // 若為 true，隱藏下方頁尾贊助連結
+  containerClassName?: string; // 可選傳入自訂外容器 class
+  extraHeaderControls?: React.ReactNode; // 可選傳入頂欄右側自訂按鈕組
   children: React.ReactNode;
 }
 
@@ -44,6 +46,8 @@ export default function ToolLayout({
   accentGlow,
   hideHeader = false,
   hideFooter = false,
+  containerClassName = '',
+  extraHeaderControls,
   children,
 }: ToolLayoutProps) {
   const pathname = usePathname();
@@ -60,7 +64,7 @@ export default function ToolLayout({
      * - padding 對應原版 3.5rem 3rem
      */
     <div
-      className="
+      className={`
         tool-layout-container
         relative z-[1] w-full max-w-[90%] mx-auto
         flex flex-col
@@ -70,10 +74,13 @@ export default function ToolLayout({
         px-12 pt-16 pb-14
         max-sm:px-5 max-sm:pt-12 max-sm:pb-10
         max-[768px]:max-w-[98%]
-      "
+        transition-[max-width,width,padding,margin,border-radius] duration-500 ease-in-out
+        ${containerClassName}
+      `}
     >
-      {/* ── 亮暗模式切換按鈕 ── */}
-      <div className="absolute top-6 right-6 z-[11] max-sm:top-4 max-sm:right-4">
+      {/* ── 亮暗模式切換與頂欄右側功能按鈕組 ── */}
+      <div className="absolute top-6 right-6 z-[20] flex items-center gap-2 max-sm:top-4 max-sm:right-4 max-sm:gap-1.5">
+        {extraHeaderControls}
         <ThemeToggle />
       </div>
 
