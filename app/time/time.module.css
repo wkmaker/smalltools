@@ -160,13 +160,12 @@
   box-shadow: 0 0 25px rgba(2, 132, 199, 0.4);
 }
 
-/* 倒數模式專用外框緊湊縮減 (Fit timer content while keeping breathing room) */
+/* 倒數模式專用外框 (寬度自由擴展，內部數字保持精緻緊湊與置中) */
 .timerLayoutContainer {
-  width: fit-content !important;
-  min-width: min(380px, 92vw) !important;
-  max-width: 90% !important;
+  width: 100% !important;
+  max-width: min(1100px, 90%) !important;
   padding-top: 4.5rem !important;
-  padding-bottom: 2.75rem !important;
+  padding-bottom: 3rem !important;
   padding-left: 3rem !important;
   padding-right: 3rem !important;
   margin-left: auto !important;
@@ -179,7 +178,6 @@
   .timerLayoutContainer {
     width: 95% !important;
     max-width: 95% !important;
-    min-width: unset !important;
     padding-top: 3.75rem !important;
     padding-bottom: 2rem !important;
     padding-left: 1.25rem !important;

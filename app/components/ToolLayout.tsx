@@ -107,7 +107,7 @@ export default function ToolLayout({
           hover:shadow-[0_0_15px_var(--tool-glow)]
           hover:-translate-y-0.5
           w-fit self-start
-          max-sm:static max-sm:inline-flex max-sm:mb-6
+          max-sm:top-4 max-sm:left-4 max-sm:px-3 max-sm:py-1.5 max-sm:text-xs
         "
         style={
           {
