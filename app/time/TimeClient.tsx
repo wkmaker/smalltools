@@ -42,6 +42,7 @@ const TRANSLATIONS = {
     } as Record<string, { full: string; label: string }>,
     startTimeLabel: '起始時間',
     targetTimeLabel: '目標時間',
+    browserTzLabel: '瀏覽器當前時區',
     switchLangText: 'English',
     switchLangHref: '/time/en/',
   },
@@ -79,12 +80,42 @@ const TRANSLATIONS = {
     } as Record<string, { full: string; label: string }>,
     startTimeLabel: 'Start Time',
     targetTimeLabel: 'Target Time',
+    browserTzLabel: 'Browser Timezone',
     switchLangText: '繁體中文',
     switchLangHref: '/time/',
   },
 };
 
-function formatTargetDateDisplay(dateStr: string, lang: 'zh-TW' | 'en'): string {
+function getCleanTzLabel(date: Date = new Date()): string {
+  try {
+    const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const offsetMinutes = -date.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absMin = Math.abs(offsetMinutes);
+    const hours = Math.floor(absMin / 60);
+    const mins = absMin % 60;
+    const minsStr = mins > 0 ? `:${String(mins).padStart(2, '0')}` : '';
+    const utcOffset = `UTC${sign}${hours}${minsStr}`;
+
+    if (!tzName || tzName.startsWith('Etc/') || tzName.includes('GMT')) {
+      return utcOffset;
+    }
+    return `${utcOffset} ${tzName}`;
+  } catch {
+    return 'UTC+8';
+  }
+}
+
+function dateToLocalIsoString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function formatTargetDateDisplay(dateStr: string, lang: 'zh-TW' | 'en', tzLabel?: string): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
@@ -98,12 +129,14 @@ function formatTargetDateDisplay(dateStr: string, lang: 'zh-TW' | 'en'): string 
   const weekdaysZh = ['日', '一', '二', '三', '四', '五', '六'];
   const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  const tzSuffix = tzLabel ? ` (${tzLabel})` : '';
+
   if (lang === 'zh-TW') {
     const weekday = weekdaysZh[d.getDay()];
-    return `${year}/${month}/${day} (${weekday}) ${hours}:${minutes}`;
+    return `${year}/${month}/${day} (${weekday}) ${hours}:${minutes}${tzSuffix}`;
   } else {
     const weekday = weekdaysEn[d.getDay()];
-    return `${year}-${month}-${day} (${weekday}) ${hours}:${minutes}`;
+    return `${year}-${month}-${day} (${weekday}) ${hours}:${minutes}${tzSuffix}`;
   }
 }
 
@@ -111,8 +144,7 @@ function getTomorrowDefaultIso(): string {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);
-  const tzOffset = tomorrow.getTimezoneOffset() * 60000;
-  return new Date(tomorrow.getTime() - tzOffset).toISOString().slice(0, 16);
+  return dateToLocalIsoString(tomorrow);
 }
 
 interface AnimatedNumberProps {
@@ -177,6 +209,7 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
 
   const [eventTitle, setEventTitle] = useState<string>(t.defaultEventTitle);
   const [targetDateStr, setTargetDateStr] = useState<string>(getTomorrowDefaultIso());
+  const [userTz, setUserTz] = useState<string>('');
   const [selectedUnits, setSelectedUnits] = useState<string[]>(['d', 'h', 'm', 's']);
 
   const [timerActive, setTimerActive] = useState<boolean>(false);
@@ -215,9 +248,11 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
     toastTimerRef.current = setTimeout(() => setToast(''), 2500);
   }, []);
 
-  // 從 URL 載入參數 (若有)
+  // 從 URL 載入參數 (若有) 並取得客戶端時區
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    setUserTz(getCleanTzLabel());
+
     const params = new URLSearchParams(window.location.search);
     const titleParam = params.get('title');
     const tParam = params.get('t') || params.get('date');
@@ -225,7 +260,14 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
 
     if (tParam && !isNaN(Date.parse(tParam))) {
       if (titleParam) setEventTitle(titleParam);
-      setTargetDateStr(tParam.slice(0, 16));
+
+      // 解析 URL 中的 UTC (或其他格式) 時間，轉換為開頁者瀏覽器的當地時間字串
+      const parsedDate = new Date(tParam);
+      if (!isNaN(parsedDate.getTime())) {
+        setTargetDateStr(dateToLocalIsoString(parsedDate));
+      } else {
+        setTargetDateStr(tParam.slice(0, 16));
+      }
 
       if (fParam) {
         const units = fParam.split(',').filter(u => ALL_UNITS.includes(u));
@@ -236,12 +278,17 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
     isMountedRef.current = true;
   }, []);
 
-  // 正向連動 URL (無感 replaceState)
+  // 正向連動 URL (無感 replaceState，將在地設定時間轉成 UTC+0 寫入網址)
   const syncToURL = useCallback((title: string, tStr: string, units: string[]) => {
     if (typeof window === 'undefined' || !isMountedRef.current) return;
     const params = new URLSearchParams();
     if (title.trim()) params.set('title', title.trim());
-    params.set('t', tStr);
+
+    // 將使用者輸入的在地時間字串轉為 Date 物件後輸出成 UTC ISO 字串 (UTC+0)
+    const targetDate = new Date(tStr);
+    const utcParam = !isNaN(targetDate.getTime()) ? targetDate.toISOString() : tStr;
+
+    params.set('t', utcParam);
     params.set('f', units.join(','));
     window.history.replaceState(null, '', '?' + params.toString());
   }, []);
@@ -525,9 +572,16 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
 
             {/* 目標時間 */}
             <div className="flex flex-col gap-2 border-t border-border-glass pt-4">
-              <label htmlFor={dateInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                {t.targetDateLabel}
-              </label>
+              <div className="flex items-center justify-between flex-wrap gap-1">
+                <label htmlFor={dateInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
+                  {t.targetDateLabel}
+                </label>
+                {userTz && (
+                  <span className="text-xs text-text-sub opacity-80 font-mono">
+                    🌐 {t.browserTzLabel}：{userTz}
+                  </span>
+                )}
+              </div>
               <input
                 id={dateInputId}
                 type="datetime-local"
@@ -613,7 +667,7 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z" />
               </svg>
               <span>
-                {isPassed ? t.startTimeLabel : t.targetTimeLabel}：{formatTargetDateDisplay(targetDateStr, lang)}
+                {isPassed ? t.startTimeLabel : t.targetTimeLabel}：{formatTargetDateDisplay(targetDateStr, lang, userTz)}
               </span>
             </div>
           </div>
