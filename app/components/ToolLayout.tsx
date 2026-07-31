@@ -33,6 +33,10 @@ interface ToolLayoutProps {
   accentGlow: string;    // e.g. 'rgba(0,119,255,0.6)'
   hideHeader?: boolean;  // 若為 true，隱藏上方標題與描述段落
   hideFooter?: boolean;  // 若為 true，隱藏下方頁尾贊助連結
+  hideThemeToggle?: boolean; // 若為 true，隱藏右上角獨立 ThemeToggle
+  compactBackBtn?: boolean;  // 若為 true，返回按鈕僅顯示 ICON
+  backTitle?: string;        // 自訂返回按鈕提示字彙 (title / aria-label)
+  onBackClick?: (e: React.MouseEvent) => void; // 自訂點擊返回按鈕事件
   containerClassName?: string; // 可選傳入自訂外容器 class
   extraHeaderControls?: React.ReactNode; // 可選傳入頂欄右側自訂按鈕組
   children: React.ReactNode;
@@ -46,6 +50,10 @@ export default function ToolLayout({
   accentGlow,
   hideHeader = false,
   hideFooter = false,
+  hideThemeToggle = false,
+  compactBackBtn = false,
+  backTitle,
+  onBackClick,
   containerClassName = '',
   extraHeaderControls,
   children,
@@ -81,13 +89,20 @@ export default function ToolLayout({
       {/* ── 亮暗模式切換與頂欄右側功能按鈕組 ── */}
       <div className="absolute top-6 right-6 z-[20] flex items-center gap-2 max-sm:top-4 max-sm:right-4 max-sm:gap-1.5">
         {extraHeaderControls}
-        <ThemeToggle />
+        {!hideThemeToggle && <ThemeToggle />}
       </div>
 
       {/* ── 返回按鈕 ── */}
       <Link
         href={backHref}
-        onClick={() => {
+        title={backTitle || (isEn ? 'Back to Home' : '返回首頁')}
+        aria-label={backTitle || (isEn ? 'Back to Home' : '返回首頁')}
+        onClick={(e) => {
+          if (onBackClick) {
+            e.preventDefault();
+            onBackClick(e);
+            return;
+          }
           if (typeof window !== 'undefined' && pathname) {
             sessionStorage.setItem('lastVisitedTool', pathname);
           }
@@ -95,11 +110,11 @@ export default function ToolLayout({
             document.exitFullscreen().catch(() => {});
           }
         }}
-        className="
+        className={`
           tool-back-btn
           absolute top-6 left-6 z-[11]
           inline-flex items-center gap-2 text-sm font-medium
-          px-4 py-2 rounded-lg
+          ${compactBackBtn ? 'p-2.5 rounded-xl justify-center max-sm:p-2' : 'px-4 py-2 rounded-lg max-sm:px-3 max-sm:py-1.5 max-sm:text-xs'}
           bg-surface-glass-btn border border-border-glass
           text-text-sub no-underline
           transition-all duration-300
@@ -107,8 +122,8 @@ export default function ToolLayout({
           hover:shadow-[0_0_15px_var(--tool-glow)]
           hover:-translate-y-0.5
           w-fit self-start
-          max-sm:top-4 max-sm:left-4 max-sm:px-3 max-sm:py-1.5 max-sm:text-xs
-        "
+          max-sm:top-4 max-sm:left-4
+        `}
         style={
           {
             '--tool-accent': accentColor,
@@ -117,10 +132,10 @@ export default function ToolLayout({
         }
       >
         <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor"
-          className="transition-transform duration-300 group-hover:-translate-x-1">
+          className="transition-transform duration-300 group-hover:-translate-x-1 flex-shrink-0">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
         </svg>
-        {isEn ? 'Back to Home' : '返回首頁'}
+        {!compactBackBtn && <span>{isEn ? 'Back to Home' : '返回首頁'}</span>}
       </Link>
 
       {/* ── 主標題 + 描述 (若 hideHeader 為 false 則渲染) ── */}

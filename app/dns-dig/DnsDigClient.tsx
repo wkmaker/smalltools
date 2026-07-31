@@ -5,12 +5,7 @@ import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './dns-dig.module.css';
 
-interface DnsAnswer {
-  name: string;
-  type: number;
-  TTL: number;
-  data: string;
-}
+import { formatDnsData, DnsAnswer } from './dnsDecoder';
 
 interface DnsResponse {
   Status: number;
@@ -162,149 +157,6 @@ const RECORD_TYPES = [
   'ANY',
 ];
 
-// RFC 9460 / RFC 3597 SVCB/HTTPS (Type 64/65) Hex decoder
-function parseSvcbHttps(bytes: Uint8Array): string | null {
-  if (bytes.length < 3) return null;
-  let offset = 0;
-
-  const priority = (bytes[offset] << 8) | bytes[offset + 1];
-  offset += 2;
-
-  const targetParts: string[] = [];
-  while (offset < bytes.length) {
-    const len = bytes[offset++];
-    if (len === 0) break;
-    if (offset + len > bytes.length) return null;
-    const labelBytes = bytes.subarray(offset, offset + len);
-    targetParts.push(new TextDecoder().decode(labelBytes));
-    offset += len;
-  }
-  const targetName = targetParts.length === 0 ? '.' : targetParts.join('.') + '.';
-
-  const params: string[] = [];
-  const KEY_NAMES: Record<number, string> = {
-    0: 'mandatory',
-    1: 'alpn',
-    2: 'no-default-alpn',
-    3: 'port',
-    4: 'ipv4hint',
-    5: 'ech',
-    6: 'ipv6hint',
-    7: 'dohpath',
-  };
-
-  while (offset + 4 <= bytes.length) {
-    const key = (bytes[offset] << 8) | bytes[offset + 1];
-    const valLen = (bytes[offset + 2] << 8) | bytes[offset + 3];
-    offset += 4;
-
-    if (offset + valLen > bytes.length) break;
-    const valBytes = bytes.subarray(offset, offset + valLen);
-    offset += valLen;
-
-    const keyName = KEY_NAMES[key] || `key${key}`;
-    let valStr = '';
-
-    if (key === 1) {
-      const alpnList: string[] = [];
-      let aOffset = 0;
-      while (aOffset < valBytes.length) {
-        const aLen = valBytes[aOffset++];
-        if (aOffset + aLen > valBytes.length) break;
-        alpnList.push(new TextDecoder().decode(valBytes.subarray(aOffset, aOffset + aLen)));
-        aOffset += aLen;
-      }
-      valStr = alpnList.join(',');
-    } else if (key === 3) {
-      if (valBytes.length === 2) {
-        valStr = ((valBytes[0] << 8) | valBytes[1]).toString();
-      }
-    } else if (key === 4) {
-      const ips: string[] = [];
-      for (let i = 0; i + 4 <= valBytes.length; i += 4) {
-        ips.push(`${valBytes[i]}.${valBytes[i + 1]}.${valBytes[i + 2]}.${valBytes[i + 3]}`);
-      }
-      valStr = ips.join(',');
-    } else if (key === 6) {
-      const ips: string[] = [];
-      for (let i = 0; i + 16 <= valBytes.length; i += 16) {
-        const groups: string[] = [];
-        for (let j = 0; j < 16; j += 2) {
-          groups.push(((valBytes[i + j] << 8) | valBytes[i + j + 1]).toString(16));
-        }
-        ips.push(groups.join(':'));
-      }
-      valStr = ips.join(',');
-    } else if (key === 2) {
-      valStr = '';
-    } else {
-      valStr = new TextDecoder().decode(valBytes);
-    }
-
-    if (key === 2 && !valStr) {
-      params.push(keyName);
-    } else {
-      params.push(`${keyName}=${valStr}`);
-    }
-  }
-
-  let result = `${priority} ${targetName}`;
-  if (params.length > 0) {
-    result += ` ${params.join(' ')}`;
-  }
-  return result;
-}
-
-// RFC 6844 CAA Record Hex decoder
-function parseCaa(bytes: Uint8Array): string | null {
-  if (bytes.length < 2) return null;
-  const flags = bytes[0];
-  const tagLen = bytes[1];
-  if (bytes.length < 2 + tagLen) return null;
-
-  const tag = new TextDecoder().decode(bytes.subarray(2, 2 + tagLen));
-  const valueBytes = bytes.subarray(2 + tagLen);
-  const value = new TextDecoder().decode(valueBytes);
-
-  return `${flags} ${tag} "${value}"`;
-}
-
-function parseRfc3597(dataStr: string, recordType: number): string | null {
-  try {
-    const cleaned = dataStr.replace(/^\\?\#\s*/, '').trim();
-    const tokens = cleaned.split(/\s+/);
-    if (tokens.length < 2) return null;
-
-    const rawHex = tokens.slice(1).join('');
-    if (rawHex.length % 2 !== 0) return null;
-    const bytes = new Uint8Array(rawHex.length / 2);
-    for (let i = 0; i < rawHex.length; i += 2) {
-      bytes[i / 2] = parseInt(rawHex.substring(i, i + 2), 16);
-    }
-
-    if (recordType === 65 || recordType === 64) {
-      return parseSvcbHttps(bytes);
-    }
-    if (recordType === 257) {
-      return parseCaa(bytes);
-    }
-  } catch {
-    // Silent catch
-  }
-  return null;
-}
-
-function formatDnsData(ans: DnsAnswer): string {
-  if (!ans || !ans.data) return '';
-  const rawData = String(ans.data);
-
-  if (/^\\?\#\s*/.test(rawData)) {
-    const parsed = parseRfc3597(rawData, ans.type);
-    if (parsed) return parsed;
-  }
-  return rawData;
-}
-
 function cleanDomainInput(raw: string): string {
   let cleaned = raw.trim();
   if (!cleaned) return '';
@@ -345,6 +197,7 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
   const [queryDuration, setQueryDuration] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [toast, setToast] = useState<string>('');
+  const [isRawJsonOpen, setIsRawJsonOpen] = useState<boolean>(false);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -644,7 +497,7 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
               {/* 答覆紀錄 Answer Table */}
               <div className="flex flex-col gap-2">
                 <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px]">
-                  {t.answerTitle} {result.Answer ? `(${result.Answer.length})` : '(0)'}
+                  {t.answerTitle} {result.Answer && result.Answer.length > 0 ? `(${result.Answer.length})` : '(0)'}
                 </span>
                 <div className={styles.tableContainer}>
                   <table className="w-full text-sm font-mono text-left">
@@ -696,26 +549,43 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
               </div>
 
               {/* Raw JSON 展示 */}
-              <details className="bg-select-bg border border-border-glass rounded-xl p-4 text-xs">
-                <summary className="cursor-pointer text-text-sub font-medium hover:text-text-main flex justify-between items-center">
-                  <span>{t.rawJsonTitle}</span>
+              <div className={styles.rawJsonPanel}>
+                <div
+                  className={styles.rawJsonHeader}
+                  onClick={() => setIsRawJsonOpen(!isRawJsonOpen)}
+                >
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        isRawJsonOpen ? 'rotate-90' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span>{t.rawJsonTitle}</span>
+                  </div>
                   <button
                     type="button"
                     onClick={e => {
-                      e.preventDefault();
+                      e.stopPropagation();
                       navigator.clipboard
                         .writeText(JSON.stringify(result, null, 2))
                         .then(() => showToast(t.copyJsonToast));
                     }}
-                    className="px-2.5 py-1 text-sm font-medium bg-white/[.05] border border-border-glass text-text-sub rounded hover:text-text-main cursor-pointer"
+                    className={styles.copyJsonBtn}
                   >
                     {t.copyJsonBtn}
                   </button>
-                </summary>
-                <pre className={`mt-3 p-3 bg-black/40 dark:bg-black/60 rounded-lg ${styles.rawJson}`}>
-                  {JSON.stringify(result, null, 2)}
-                </pre>
-              </details>
+                </div>
+                {isRawJsonOpen && (
+                  <pre className={styles.rawJson}>
+                    {JSON.stringify(result, null, 2)}
+                  </pre>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -723,7 +593,7 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
 
       {/* Toast 提示條 */}
       {toast && (
-        <div className="fixed bottom-8 right-8 px-6 py-3 text-sm rounded-lg bg-[#8b5cf6]/20 border border-[#8b5cf6]/40 text-[#8b5cf6] backdrop-blur-md shadow-lg z-[100]">
+        <div className={styles.toast}>
           {toast}
         </div>
       )}

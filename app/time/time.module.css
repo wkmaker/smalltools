@@ -1,13 +1,17 @@
 /* app/time/time.module.css */
 
 .setupCard {
-  background-color: var(--glass-bg, rgba(15, 15, 20, 0.6));
+  background-color: rgba(15, 17, 26, 0.85);
   border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 1rem;
   padding: 1.5rem;
   box-shadow: var(--glass-shadow);
+}
+
+:global([data-theme='light']) .setupCard {
+  background-color: rgba(255, 255, 255, 0.55);
 }
 
 @media (min-width: 640px) {
@@ -462,7 +466,7 @@
   gap: 0.5rem;
   padding: 0.45rem 1.1rem;
   border-radius: 0.85rem;
-  background: var(--glass-bg, rgba(255, 255, 255, 0.04));
+  background: rgba(15, 17, 26, 0.6);
   border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 15px rgba(0, 0, 0, 0.2);
   color: var(--text-secondary, #94a3b8);
@@ -493,6 +497,26 @@
   color: #0284c7;
 }
 
+.badgeIcon {
+  color: var(--theme-color, #00f0ff);
+  transition: color 0.5s ease;
+  flex-shrink: 0;
+}
+
+.badgeIconElapsed {
+  color: #ff3296;
+  transition: color 0.5s ease;
+  flex-shrink: 0;
+}
+
+:global([data-theme='light']) .badgeIcon {
+  color: #0284c7;
+}
+
+:global([data-theme='light']) .badgeIconElapsed {
+  color: #c026d3;
+}
+
 /* 右上角控制圖示列 (精準對齊 ToolLayout 頂欄 ThemeToggle 軸線) */
 .topControls {
   position: absolute;
@@ -513,13 +537,13 @@
   top: calc(100% + 0.5rem);
   right: 0;
   min-width: 180px;
-  background: var(--glass-bg, rgba(15, 17, 26, 0.75));
+  background: rgba(15, 17, 26, 0.92);
   border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 0.85rem;
   padding: 0.45rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 20px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 20px 40px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -528,9 +552,9 @@
 }
 
 :global([data-theme='light']) .dropdownMenu {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.92);
   border-color: rgba(0, 0, 0, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 .dropdownItem {
@@ -570,7 +594,7 @@
 }
 
 .iconBtn {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.04));
+  background: rgba(15, 17, 26, 0.6);
   border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   color: var(--text-secondary, #cbd5e1);
