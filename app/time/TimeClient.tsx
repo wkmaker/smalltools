@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import { useTheme } from '@/components/ThemeProvider';
 import styles from './time.module.css';
 
 const ALL_UNITS = ['y', 'M', 'd', 'h', 'm', 's'];
@@ -28,6 +29,8 @@ const TRANSLATIONS = {
     copyShareLink: '複製分享連結',
     fullscreen: '全螢幕展示',
     exitFullscreen: '退出全螢幕',
+    switchToDark: '切換暗色主題',
+    switchToLight: '切換亮色主題',
     menuOptions: '選單選項',
     toastCopied: '已複製計時器分享連結',
     toastSelectUnit: '請至少選擇一種時間顯示單位！',
@@ -66,6 +69,8 @@ const TRANSLATIONS = {
     copyShareLink: 'Copy Share Link',
     fullscreen: 'Fullscreen Display',
     exitFullscreen: 'Exit Fullscreen',
+    switchToDark: 'Switch to Dark Mode',
+    switchToLight: 'Switch to Light Mode',
     menuOptions: 'Menu Options',
     toastCopied: 'Timer share link copied to clipboard',
     toastSelectUnit: 'Please select at least one time unit!',
@@ -201,11 +206,12 @@ function AnimatedNumber({ value, isCountUp }: AnimatedNumberProps) {
 }
 
 interface TimeClientProps {
-  lang?: 'zh-TW' | 'en';
+lang?: 'zh-TW' | 'en';
 }
 
 export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
-  const t = TRANSLATIONS[lang];
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
+  const { theme, toggleTheme } = useTheme();
 
   const [eventTitle, setEventTitle] = useState<string>(t.defaultEventTitle);
   const [targetDateStr, setTargetDateStr] = useState<string>(getTomorrowDefaultIso());
@@ -470,6 +476,10 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
       accentGlow={isPassed ? 'rgba(255, 50, 150, 0.6)' : 'rgba(0, 240, 255, 0.6)'}
       hideHeader={timerActive}
       hideFooter={timerActive}
+      hideThemeToggle={timerActive}
+      compactBackBtn={timerActive}
+      backTitle={timerActive ? t.modifySettings : undefined}
+      onBackClick={timerActive ? () => setTimerActive(false) : undefined}
       containerClassName={timerActive ? styles.timerLayoutContainer : ''}
       extraHeaderControls={
         timerActive ? (
@@ -532,6 +542,27 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
                     )}
                   </svg>
                   <span>{isFullscreen ? t.exitFullscreen : t.fullscreen}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleTheme();
+                    setControlsExpanded(false);
+                  }}
+                  className={styles.dropdownItem}
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {theme === 'light' ? (
+                      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                    ) : (
+                      <>
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                      </>
+                    )}
+                  </svg>
+                  <span>{theme === 'light' ? t.switchToDark : t.switchToLight}</span>
                 </button>
               </div>
             )}
@@ -663,7 +694,7 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
 
             {/* 呼吸燈正下方：精確目標/起始日期時間標籤 */}
             <div className={styles.targetDateBadge}>
-              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="text-[var(--theme-color)] transition-colors duration-500 flex-shrink-0">
+              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className={isPassed ? styles.badgeIconElapsed : styles.badgeIcon}>
                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z" />
               </svg>
               <span>

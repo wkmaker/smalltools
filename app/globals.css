@@ -291,11 +291,16 @@ input[type='date'] {
   text-align: center;
 }
 
-/* ── 全螢幕展示模式隱藏頁尾贊助與無關裝飾 ── */
+/* ── 全螢幕展示模式隱藏頁尾贊助、返回按鈕與無關裝飾 ── */
 body.is-fullscreen .tool-layout-footer,
+body.is-fullscreen .tool-back-btn,
 :fullscreen .tool-layout-footer,
+:fullscreen .tool-back-btn,
 :-webkit-full-screen .tool-layout-footer,
+:-webkit-full-screen .tool-back-btn,
 :-moz-full-screen .tool-layout-footer,
-:-ms-fullscreen .tool-layout-footer {
+:-moz-full-screen .tool-back-btn,
+:-ms-fullscreen .tool-layout-footer,
+:-ms-fullscreen .tool-back-btn {
   display: none !important;
 }
