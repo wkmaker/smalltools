@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/my-salary-calculator/',
       en: 'https://tools.cjkuo.net/my-salary-calculator/en/',
+      'x-default': 'https://tools.cjkuo.net/my-salary-calculator/en/',
     },
   },
   openGraph: {

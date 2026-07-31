@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/ip-detector/',
       en: 'https://tools.cjkuo.net/ip-detector/en/',
+      'x-default': 'https://tools.cjkuo.net/ip-detector/en/',
     },
   },
   openGraph: {

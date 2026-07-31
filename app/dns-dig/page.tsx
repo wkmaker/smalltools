@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/dns-dig/',
       en: 'https://tools.cjkuo.net/dns-dig/en/',
+      'x-default': 'https://tools.cjkuo.net/dns-dig/en/',
     },
   },
   openGraph: {

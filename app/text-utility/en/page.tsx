@@ -8,10 +8,11 @@ export const metadata: Metadata = {
   keywords:
     'word count, character counter, case converter, text utility, text formatter, remove duplicate lines, remove space, online text tool',
   alternates: {
-    canonical: 'https://tools.cjkuo.net/text-utility/',
+    canonical: 'https://tools.cjkuo.net/text-utility/en/',
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/text-utility/',
       en: 'https://tools.cjkuo.net/text-utility/en/',
+      'x-default': 'https://tools.cjkuo.net/text-utility/en/',
     },
   },
   openGraph: {

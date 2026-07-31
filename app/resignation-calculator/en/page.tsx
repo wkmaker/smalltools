@@ -7,10 +7,11 @@ export const metadata: Metadata = {
     'Calculate official notice periods, last working days, resignation effective dates, and unused annual leave payouts based on Article 16 of the Taiwan Labor Standards Act.',
   keywords: 'resignation calculator, notice period Taiwan, Labor Standards Act Article 16, last working day, effective resignation date, annual leave payout',
   alternates: {
-    canonical: 'https://tools.cjkuo.net/resignation-calculator/',
+    canonical: 'https://tools.cjkuo.net/resignation-calculator/en/',
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/resignation-calculator/',
       en: 'https://tools.cjkuo.net/resignation-calculator/en/',
+      'x-default': 'https://tools.cjkuo.net/resignation-calculator/en/',
     },
   },
   openGraph: {

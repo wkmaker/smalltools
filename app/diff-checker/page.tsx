@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/diff-checker/',
       en: 'https://tools.cjkuo.net/diff-checker/en/',
+      'x-default': 'https://tools.cjkuo.net/diff-checker/en/',
     },
   },
   openGraph: {
