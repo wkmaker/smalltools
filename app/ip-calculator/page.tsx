@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/ip-calculator/',
       en: 'https://tools.cjkuo.net/ip-calculator/en/',
+      'x-default': 'https://tools.cjkuo.net/ip-calculator/en/',
     },
   },
   openGraph: {

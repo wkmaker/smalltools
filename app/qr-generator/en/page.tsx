@@ -8,10 +8,11 @@ export const metadata: Metadata = {
   keywords:
     'QR Code Generator, Designer QR Code, Art QR Code, QR Code with Logo, Vector QR Code, SVG QR Code, Free QR Code',
   alternates: {
-    canonical: 'https://tools.cjkuo.net/qr-generator/',
+    canonical: 'https://tools.cjkuo.net/qr-generator/en/',
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/qr-generator/',
       en: 'https://tools.cjkuo.net/qr-generator/en/',
+      'x-default': 'https://tools.cjkuo.net/qr-generator/en/',
     },
   },
   openGraph: {

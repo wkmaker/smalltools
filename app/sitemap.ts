@@ -56,6 +56,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/https-dns-generator/en/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/ip-calculator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/ip-calculator/en/', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/resignation-calculator/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/resignation-calculator/en/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   return pages.map((page) => ({

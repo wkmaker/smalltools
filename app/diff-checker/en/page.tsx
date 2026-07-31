@@ -8,10 +8,11 @@ export const metadata: Metadata = {
   keywords:
     'document diff, text comparison, diff checker, code comparison, text diff, diff analysis, online diff tool',
   alternates: {
-    canonical: 'https://tools.cjkuo.net/diff-checker/',
+    canonical: 'https://tools.cjkuo.net/diff-checker/en/',
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/diff-checker/',
       en: 'https://tools.cjkuo.net/diff-checker/en/',
+      'x-default': 'https://tools.cjkuo.net/diff-checker/en/',
     },
   },
   openGraph: {

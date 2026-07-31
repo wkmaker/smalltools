@@ -1,0 +1,301 @@
+/* resignation-calculator.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.gridSection {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .gridSection {
+    grid-template-columns: 380px 1fr;
+  }
+}
+
+/* 玻璃卡片 */
+.glassCard {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--card-border);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.25s ease;
+}
+
+:global([data-theme='light']) .glassCard {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+/* 按鈕風格 */
+.accentBtn {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.4);
+  color: #00f5a0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.accentBtn:hover {
+  background: rgba(0, 245, 160, 0.25);
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.4);
+}
+
+:global([data-theme='light']) .accentBtn {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: rgba(5, 150, 105, 0.35);
+  color: #059669;
+}
+
+:global([data-theme='light']) .accentBtn:hover {
+  background: rgba(5, 150, 105, 0.2);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+.secondaryBtn {
+  background: var(--select-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  color: var(--text-primary);
+  border-color: rgba(0, 245, 160, 0.4);
+}
+
+:global([data-theme='light']) .secondaryBtn:hover {
+  border-color: rgba(5, 150, 105, 0.4);
+}
+
+/* 主題發光文字與數字 */
+.accentText {
+  color: #00f5a0;
+}
+
+:global([data-theme='light']) .accentText {
+  color: #059669;
+}
+
+/* 告警 Banner */
+.warningBanner {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+:global([data-theme='light']) .warningBanner {
+  background: rgba(254, 242, 242, 0.9);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #dc2626;
+}
+
+.successBanner {
+  background: rgba(0, 245, 160, 0.12);
+  border: 1px solid rgba(0, 245, 160, 0.35);
+  color: #00f5a0;
+  padding: 0.875rem 1.25rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+:global([data-theme='light']) .successBanner {
+  background: rgba(236, 253, 245, 0.9);
+  border-color: rgba(5, 150, 105, 0.35);
+  color: #059669;
+}
+
+/* 時間軸樣式 */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  padding-left: 2rem;
+  margin-top: 1rem;
+}
+
+/* 貫穿軸線 */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:global([data-theme='light']) .timeline::before {
+  background: rgba(148, 163, 184, 0.4); /* Slate 400 輕度高對比灰色貫穿線 */
+}
+
+.timelineItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* 時間軸圓點 Base */
+.timelineNode {
+  position: absolute;
+  left: -2rem;
+  top: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #12121a;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme='light']) .timelineNode {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.6); /* 明顯之深灰色邊框 */
+  color: #475569;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 激活狀態綠點 */
+.timelineNodeActive {
+  background: #00f5a0 !important;
+  border-color: #00f5a0 !important;
+  color: #030305 !important;
+  box-shadow: 0 0 10px rgba(0, 245, 160, 0.6) !important;
+}
+
+:global([data-theme='light']) .timelineNodeActive {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.3) !important;
+}
+
+/* 警告/過期狀態紅點 */
+.timelineNodeRed {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6) !important;
+}
+
+:global([data-theme='light']) .timelineNodeRed {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.3) !important;
+}
+
+.timelineLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.timelineDate {
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.timelineDateRed {
+  color: #f87171 !important;
+}
+
+:global([data-theme='light']) .timelineDateRed {
+  color: #dc2626 !important;
+}
+
+.timelineDesc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Toast 提示彈窗 */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 50;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(0, 245, 160, 0.2);
+  border: 1px solid rgba(0, 245, 160, 0.4);
+  color: #ffffff;
+}
+
+:global([data-theme='light']) .toast {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(5, 150, 105, 0.4);
+  color: #059669;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

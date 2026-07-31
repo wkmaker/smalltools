@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/qr-generator/',
       en: 'https://tools.cjkuo.net/qr-generator/en/',
+      'x-default': 'https://tools.cjkuo.net/qr-generator/en/',
     },
   },
   openGraph: {

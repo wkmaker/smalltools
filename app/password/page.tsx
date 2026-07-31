@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     languages: {
       'zh-TW': 'https://tools.cjkuo.net/password/',
       en: 'https://tools.cjkuo.net/password/en/',
+      'x-default': 'https://tools.cjkuo.net/password/en/',
     },
   },
   openGraph: {
