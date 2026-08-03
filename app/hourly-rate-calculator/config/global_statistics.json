@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "currency": "TWD",
+  "usd_to_twd_rate": 32.0,
+  "source": "World Inequality Database (WID) & World Bank Global Income Distribution",
+  "official_percentiles": [
+    { "pr": 10, "annual_salary_twd": 30000, "label": "全球 P10 (年薪約 $930 USD)" },
+    { "pr": 30, "annual_salary_twd": 60000, "label": "全球 P30 (年薪約 $1,875 USD)" },
+    { "pr": 50, "annual_salary_twd": 110000, "label": "全球 P50 中位數 (年薪約 $3,430 USD)" },
+    { "pr": 70, "annual_salary_twd": 250000, "label": "全球 P70 (年薪約 $7,800 USD)" },
+    { "pr": 80, "annual_salary_twd": 420000, "label": "全球 P80 (年薪約 $13,100 USD)" },
+    { "pr": 85, "annual_salary_twd": 570000, "label": "全球 P85 (年薪約 $17,800 USD)" },
+    { "pr": 90, "annual_salary_twd": 850000, "label": "全球 P90 (年薪約 $26,500 USD)" },
+    { "pr": 95, "annual_salary_twd": 1350000, "label": "全球 P95 (年薪約 $42,000 USD)" },
+    { "pr": 98, "annual_salary_twd": 2400000, "label": "全球 P98 (年薪約 $75,000 USD)" },
+    { "pr": 99, "annual_salary_twd": 3500000, "label": "全球 P99 Top 1% (年薪約 $109,000 USD)" }
+  ]
+}

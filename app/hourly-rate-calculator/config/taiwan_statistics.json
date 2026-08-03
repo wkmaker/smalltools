@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "available_years": [2026, 2025],
+  "statistics": {
+    "2026": {
+      "year": 2026,
+      "minimum_wage": {
+        "hourly": 196,
+        "monthly": 29500
+      },
+      "default_working_hours": {
+        "hours_per_month": 174,
+        "hours_per_year": 2086
+      },
+      "official_percentiles": [
+        { "pr": 5, "annual_salary": 320000, "label": "P5" },
+        { "pr": 10, "annual_salary": 365000, "label": "D1 (第1十分位數)" },
+        { "pr": 20, "annual_salary": 410000, "label": "D2 (第2十分位數)" },
+        { "pr": 25, "annual_salary": 435000, "label": "P25 (第1四分位數)" },
+        { "pr": 30, "annual_salary": 470000, "label": "D3 (第3十分位數)" },
+        { "pr": 40, "annual_salary": 525000, "label": "D4 (第4十分位數)" },
+        { "pr": 50, "annual_salary": 568000, "label": "D5 (中位數)" },
+        { "pr": 60, "annual_salary": 640000, "label": "D6 (第6十分位數)" },
+        { "pr": 70, "annual_salary": 745000, "label": "D7 (第7十分位數)" },
+        { "pr": 80, "annual_salary": 930000, "label": "D8 (第8十分位數)" },
+        { "pr": 90, "annual_salary": 1290000, "label": "D9 (第9十分位數)" },
+        { "pr": 95, "annual_salary": 1720000, "label": "P95 (頂層5%)" },
+        { "pr": 99, "annual_salary": 2850000, "label": "P99 (頂層1%)" }
+      ]
+    },
+    "2025": {
+      "year": 2025,
+      "minimum_wage": {
+        "hourly": 190,
+        "monthly": 28590
+      },
+      "default_working_hours": {
+        "hours_per_month": 174,
+        "hours_per_year": 2086
+      },
+      "official_percentiles": [
+        { "pr": 5, "annual_salary": 312000, "label": "P5" },
+        { "pr": 10, "annual_salary": 362000, "label": "D1 (第1十分位數)" },
+        { "pr": 20, "annual_salary": 405000, "label": "D2 (第2十分位數)" },
+        { "pr": 25, "annual_salary": 428000, "label": "P25 (第1四分位數)" },
+        { "pr": 30, "annual_salary": 462000, "label": "D3 (第3十分位數)" },
+        { "pr": 40, "annual_salary": 515000, "label": "D4 (第4十分位數)" },
+        { "pr": 50, "annual_salary": 556000, "label": "D5 (中位數)" },
+        { "pr": 60, "annual_salary": 628000, "label": "D6 (第6十分位數)" },
+        { "pr": 70, "annual_salary": 731000, "label": "D7 (第7十分位數)" },
+        { "pr": 80, "annual_salary": 912000, "label": "D8 (第8十分位數)" },
+        { "pr": 90, "annual_salary": 1261000, "label": "D9 (第9十分位數)" },
+        { "pr": 95, "annual_salary": 1680000, "label": "P95 (頂層5%)" },
+        { "pr": 99, "annual_salary": 2800000, "label": "P99 (頂層1%)" }
+      ]
+    }
+  }
+}
