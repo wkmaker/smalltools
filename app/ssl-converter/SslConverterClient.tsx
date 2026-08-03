@@ -168,14 +168,20 @@ function generateCertFilename(domainName: string | undefined, typeName: string, 
   return `${safeCN}_${typeName}.${cleanExt}`;
 }
 
+async function readFileAsBinaryString(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  return forge.util.binary.raw.encode(bytes);
+}
+
 function parseDistinguishedName(dnObj: forge.pki.Certificate['subject']): string {
   if (!dnObj || !dnObj.attributes) return '未知';
-  const attributes: Record<string, string> = {};
-  dnObj.attributes.forEach(attr => {
-    const key = attr.name || attr.type;
-    if (key) attributes[key] = attr.value as string;
-  });
-  return attributes.CN || attributes.commonName || '無通用名稱';
+  for (const attr of dnObj.attributes) {
+    if (attr.shortName === 'CN' || attr.name === 'commonName' || attr.type === '2.5.4.3') {
+      if (attr.value) return attr.value as string;
+    }
+  }
+  return '無通用名稱';
 }
 
 function formatValidityDate(date?: Date): string {
@@ -186,7 +192,7 @@ function formatValidityDate(date?: Date): string {
 function getDnString(dnObj?: forge.pki.Certificate['subject']): string {
   if (!dnObj || !dnObj.attributes) return '';
   return dnObj.attributes
-    .map(attr => `${attr.type}=${attr.value}`)
+    .map(attr => `${attr.shortName || attr.name || attr.type}=${attr.value}`)
     .sort()
     .join(',');
 }
@@ -261,9 +267,40 @@ function extractAiaUrl(certObj: forge.pki.Certificate): string | null {
     return null;
   }
 
-  const aiaRegex = /http:\/\/[A-Za-z0-9\-\.\/]+\.(cer|crt|p7b)/i;
+  const aiaRegex = /https?:\/\/[A-Za-z0-9\-\.\/_~%]+\.(cer|crt|p7b)/i;
   const match = derStr.match(aiaRegex);
   return match ? match[0] : null;
+}
+
+function getCertKeyAlgorithm(certObj: forge.pki.Certificate): string {
+  try {
+    const certRSA = certObj.publicKey as forge.pki.rsa.PublicKey;
+    if (certRSA && certRSA.n) {
+      const bitLength = certRSA.n.bitLength();
+      return `RSA (${bitLength}-bit)`;
+    }
+  } catch {}
+
+  try {
+    const asn1Cert = forge.pki.certificateToAsn1(certObj);
+    const tbsCert = asn1Cert.value[0] as forge.asn1.Asn1;
+    const derStr = forge.asn1.toDer(tbsCert).getBytes();
+
+    if (derStr.includes(forge.asn1.oidToDer('1.2.840.10045.2.1').getBytes())) {
+      if (derStr.includes(forge.asn1.oidToDer('1.2.840.10045.3.1.7').getBytes())) {
+        return 'ECDSA (prime256v1 / P-256)';
+      }
+      if (derStr.includes(forge.asn1.oidToDer('1.3.132.0.34').getBytes())) {
+        return 'ECDSA (secp384r1 / P-384)';
+      }
+      if (derStr.includes(forge.asn1.oidToDer('1.3.132.0.35').getBytes())) {
+        return 'ECDSA (secp521r1 / P-521)';
+      }
+      return 'ECDSA (Elliptic Curve / ECC)';
+    }
+  } catch {}
+
+  return 'X.509 (通用憑證)';
 }
 
 export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
@@ -379,12 +416,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     try {
       let pemText = '';
       if (cerFile) {
-        const arrayBuffer = await cerFile.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        let binaryStr = '';
-        for (let i = 0; i < bytes.length; i++) {
-          binaryStr += String.fromCharCode(bytes[i]);
-        }
+        const binaryStr = await readFileAsBinaryString(cerFile);
 
         if (binaryStr.includes('-----BEGIN CERTIFICATE-----')) {
           pemText = binaryStr;
@@ -468,8 +500,11 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const isExpired = new Date() > endEntityCert.validity.notAfter;
       const isNotYetValid = new Date() < endEntityCert.validity.notBefore;
 
+      const certAlgo = getCertKeyAlgorithm(endEntityCert);
+
       const metaList: MetaItem[] = [
         { label: '域名主機 (CN)', value: cn },
+        { label: '金鑰與簽章演算法', value: certAlgo, className: 'text-[var(--theme-color,#00ffaa)] font-semibold' },
         { label: '發行機構 (Issuer)', value: parseDistinguishedName(endEntityCert.issuer) },
         { label: '生效時間 (Not Before)', value: formatValidityDate(endEntityCert.validity.notBefore) },
         {
@@ -529,13 +564,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     if (!file) return;
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binaryStr = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binaryStr += String.fromCharCode(bytes[i]);
-      }
-
+      const binaryStr = await readFileAsBinaryString(file);
       let newCertPem = '';
       if (binaryStr.includes('-----BEGIN CERTIFICATE-----')) {
         newCertPem = binaryStr;
@@ -625,13 +654,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     }
 
     try {
-      const arrayBuffer = await pfxFile.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binaryStr = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binaryStr += String.fromCharCode(bytes[i]);
-      }
-
+      const binaryStr = await readFileAsBinaryString(pfxFile);
       const p12Asn1 = forge.asn1.fromDer(binaryStr);
       const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, pfxPassword);
 
@@ -652,6 +675,13 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
               } catch {
                 privateKeyPemPkcs8 = privateKeyPemPkcs1;
               }
+            } else if (bag.asn1) {
+              try {
+                const keyDer = forge.asn1.toDer(bag.asn1 as forge.asn1.Asn1).getBytes();
+                const b64 = forge.util.encode64(keyDer);
+                privateKeyPemPkcs8 = `-----BEGIN PRIVATE KEY-----\n${b64.match(/.{1,64}/g)?.join('\n')}\n-----END PRIVATE KEY-----`;
+                privateKeyPemPkcs1 = privateKeyPemPkcs8;
+              } catch {}
             }
           }
           if (bag.type === forge.pki.oids.certBag) {
@@ -701,11 +731,20 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         }
       }
 
+      let certAlgo = '未知演算法';
+      if (certPems.length > 0) {
+        try {
+          const c = forge.pki.certificateFromPem(certPems[0]);
+          certAlgo = getCertKeyAlgorithm(c);
+        } catch {}
+      }
+
       setResultData({
         meta: [
           { label: '解密主機名稱 (CN)', value: cn },
+          { label: '金鑰與簽章演算法', value: certAlgo, className: 'text-[var(--theme-color,#00ffaa)] font-semibold' },
           { label: '解密憑證張數', value: `${certPems.length} 張` },
-          { label: '私鑰匯出狀態', value: privateKeyPemPkcs8 ? '已包含 RSA 私鑰' : '無私鑰' },
+          { label: '私鑰匯出狀態', value: privateKeyPemPkcs8 ? '已包含私鑰 (RSA / ECC)' : '無私鑰' },
         ],
         outputs: outputsList,
         cnName: cn,
@@ -732,8 +771,16 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const keyObj = forge.pki.privateKeyFromPem(pemKey.trim());
       const certObj = forge.pki.certificateFromPem(pemCert.trim());
 
-      const certModulus = (certObj.publicKey as forge.pki.rsa.PublicKey).n.toString(16);
-      const keyModulus = keyObj.n.toString(16);
+      const keyRSA = keyObj as forge.pki.rsa.PrivateKey;
+      const certRSA = certObj.publicKey as forge.pki.rsa.PublicKey;
+
+      if (!keyRSA.n || !certRSA.n) {
+        showAlertMsg('目前僅支援具有 Modulus 雜湊之 RSA 金鑰與憑證組合。', 'warning');
+        return;
+      }
+
+      const certModulus = certRSA.n.toString(16);
+      const keyModulus = keyRSA.n.toString(16);
 
       const mdCert = forge.md.md5.create();
       mdCert.update(certModulus);
@@ -803,13 +850,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     }
 
     try {
-      const arrayBuffer = await derFile.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binaryStr = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binaryStr += String.fromCharCode(bytes[i]);
-      }
-
+      const binaryStr = await readFileAsBinaryString(derFile);
       let pemResult = '';
       let fileTypeLabel = '';
       let cnName = 'ssl-cert';
