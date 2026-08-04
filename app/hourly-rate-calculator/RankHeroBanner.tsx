@@ -152,12 +152,15 @@ export interface RankHeroBannerProps {
   taiwanAnchors: PercentileAnchor[];
   globalAnchors: PercentileAnchor[];
   realHourlyRate: number;
+  annualIncome: number;
+  taiwanPR: number;
   globalPR: number;
   hoursPerYear: number;
   milestones: Milestone[];
   minHourlyWage: number;
   queryParamsString: string;
   handleShare: (overrideText?: string) => Promise<void>;
+  hasCustomParams?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -168,42 +171,30 @@ export default function RankHeroBanner({
   taiwanAnchors,
   globalAnchors,
   realHourlyRate,
+  annualIncome,
+  taiwanPR,
   globalPR,
   hoursPerYear,
   milestones,
   minHourlyWage,
   queryParamsString,
   handleShare,
+  hasCustomParams = false,
 }: RankHeroBannerProps) {
   // selectedExploreCountry 從 parent 移入此元件，避免 parent 因探索互動而整頁 re-render
   const [selectedExploreCountry, setSelectedExploreCountry] = useState<string>('Japan');
   const exploreCountryId = useId();
-
-  // ─── 讀取 URL Params 顯示值 ──────────────────────────────────────────────
-  // mounted 確保 SSR 安全（Client Component 已保證，但 heroMilestone 可能在 SSR 時渲染）
-  const searchObj = mounted ? new URLSearchParams(window.location.search) : null;
-  const qPr = searchObj?.get('pr') ?? null;
-  const qRate = searchObj?.get('rate') ?? null;
-  const qGpr = searchObj?.get('gpr') ?? null;
-  const hasCustomParams = Boolean(qPr || qRate || qGpr);
 
   // ─── 預設顯示值（基於里程碑 PR）────────────────────────────────────────
   const defaultAnnualIncome = getSalaryForPR(heroMilestone.pr, taiwanAnchors);
   const defaultMonthlyIncome = Math.round(defaultAnnualIncome / 12);
   const defaultHourlyRate = Math.max(1, Math.round(defaultMonthlyIncome / 176));
 
-  const displayPR = qPr && !isNaN(Number(qPr)) ? Number(qPr) : heroMilestone.pr;
-  const displayHourlyRate =
-    qRate && !isNaN(Number(qRate))
-      ? Math.round(Number(qRate))
-      : hasCustomParams && realHourlyRate > 0
-        ? Math.round(realHourlyRate)
-        : defaultHourlyRate;
+  const isCustomMode = Boolean(hasCustomParams && realHourlyRate > 0);
 
-  const displayAnnualIncome =
-    hasCustomParams && realHourlyRate > 0
-      ? Math.round(displayHourlyRate * hoursPerYear)
-      : defaultAnnualIncome;
+  const displayPR = isCustomMode ? Number(taiwanPR.toFixed(1)) : heroMilestone.pr;
+  const displayHourlyRate = isCustomMode ? Math.round(realHourlyRate) : defaultHourlyRate;
+  const displayAnnualIncome = isCustomMode ? Math.round(annualIncome) : defaultAnnualIncome;
   const displayMonthlyIncome = Math.round(displayAnnualIncome / 12);
   const displayMinuteValue = (displayHourlyRate / 60).toFixed(2);
   const displayWageMultiplier = (displayHourlyRate / minHourlyWage).toFixed(2);
@@ -213,14 +204,10 @@ export default function RankHeroBanner({
     Math.max(calculatePiecewisePR(defaultAnnualIncome, globalAnchors, true), 1.0),
     99.9
   ).toFixed(1);
-  const displayGlobalPR =
-    qGpr && !isNaN(Number(qGpr))
-      ? Number(qGpr).toFixed(1)
-      : hasCustomParams
-        ? globalPR.toFixed(1)
-        : defaultGlobalPR;
+  const displayGlobalPR = isCustomMode ? globalPR.toFixed(1) : defaultGlobalPR;
   const displayGlobalBeatenPeople = ((Number(displayGlobalPR) / 100) * 80).toFixed(1);
   const displayTaiwanRank = Math.round((1 - displayPR / 100) * 8_400_000).toLocaleString('zh-TW');
+
 
   // ─── 星等評級 ─────────────────────────────────────────────────────────────
   const starCount =

@@ -92,6 +92,10 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
     }, 3000);
   };
 
+  // Fix #3 & URL Parsing Bug: 記錄是否完成 URL Hydration 讀取
+  const isHydratedRef = useRef(false);
+  const [hasCustomParams, setHasCustomParams] = useState(false);
+
   // ─── Hydrate from URL query parameters ───────────────────────────────────
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -102,16 +106,24 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
     const qOvertime = searchParams.get('overtime');
     const qCommute = searchParams.get('commute');
     const qExpenses = searchParams.get('expenses');
+    const qPr = searchParams.get('pr');
+    const qRate = searchParams.get('rate');
 
-    // Fix #5: 使用 SUPPORTED_YEARS 常數統一驗證年份，防止兩處各自 hardcoded
+    if (qSalary !== null || qWorkHours !== null || qPr !== null || qRate !== null) {
+      setHasCustomParams(true);
+    }
+
     if (qYear && (SUPPORTED_YEARS as readonly number[]).includes(Number(qYear))) {
       setSelectedYear(parseInt(qYear, 10));
     }
     if (qMode === 'monthly' || qMode === 'project') {
       setCalcMode(qMode as 'monthly' | 'project');
     }
+
+    const currentMode = qMode === 'project' ? 'project' : 'monthly';
+
     if (qSalary !== null && !isNaN(Number(qSalary))) {
-      if (qMode === 'project') {
+      if (currentMode === 'project') {
         setProjectFee(Number(qSalary));
       } else {
         setMonthlySalary(Number(qSalary));
@@ -127,7 +139,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
       }
     }
     if (qWorkHours !== null && !isNaN(Number(qWorkHours))) {
-      if (qMode === 'project') {
+      if (currentMode === 'project') {
         setProjectHours(Number(qWorkHours));
       } else {
         setMonthlyHours(Number(qWorkHours));
@@ -140,16 +152,19 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
       setCommuteHours(Number(qCommute));
     }
     if (qExpenses !== null && !isNaN(Number(qExpenses))) {
-      if (qMode === 'project') {
+      if (currentMode === 'project') {
         setProjectExpenses(Number(qExpenses));
       } else {
         setMonthlyExpenses(Number(qExpenses));
       }
     }
 
-    // Fix #3: 統一用 isMountedRef 標記 hydration 完成
-    isMountedRef.current = true;
+    // 延遲一微微秒設定 hydration 標記，確保 React 完成首次 state 更新渲染後才允許 replaceState
+    setTimeout(() => {
+      isHydratedRef.current = true;
+    }, 50);
   }, [initialSlug, initialPr]);
+
 
   // ─── 靜態資料衍生值 ───────────────────────────────────────────────────────
   const yearKey = String(selectedYear) as keyof typeof taiwanStatsData.statistics;
@@ -253,12 +268,16 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
     taiwanPR, globalPR, realHourlyRate,
   ]);
 
-  // Fix #3: URL sync 改用 isMountedRef.current，不再依賴 isHydrated state
-  // 依賴陣列只需 queryParamsString — 當任何相關 state 改變時自動觸發
+  // Fix #3: URL sync 改用 isHydratedRef.current，防止初始載入時誤蓋 URL
   useEffect(() => {
-    if (!isMountedRef.current) return;
+    if (!isHydratedRef.current) return;
     window.history.replaceState(null, '', `${window.location.pathname}?${queryParamsString}`);
   }, [queryParamsString]);
+
+  // 控制 Rank 頁面下是否展開計算器表單
+  const [toggleCalculator, setToggleCalculator] = useState(false);
+  const shouldShowCalculator = showCalculator || hasCustomParams || toggleCalculator;
+
 
   // ─── 分享處理器 ───────────────────────────────────────────────────────────
   const handleShare = async (overrideText?: string) => {
@@ -321,27 +340,50 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
             taiwanAnchors={taiwanAnchors}
             globalAnchors={globalAnchors}
             realHourlyRate={realHourlyRate}
+            annualIncome={annualIncome}
+            taiwanPR={taiwanPR}
             globalPR={globalPR}
             hoursPerYear={currentTaiwanStat.default_working_hours.hours_per_year}
             milestones={milestones}
             minHourlyWage={minHourlyWage}
             queryParamsString={queryParamsString}
             handleShare={handleShare}
+            hasCustomParams={hasCustomParams}
           />
         )}
 
-        {/* Header Intro Banner */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-text-main mb-3 tracking-tight">
-            揭開實質時薪的面紗，解鎖 <span className={styles.themeAccentText}>全球生活圈與 PR 排行</span>
-          </h1>
-          <p className="text-base text-text-sub max-w-2xl mx-auto">
-            扣除加班耗損、通勤工時與隱性費用支出，精準計算您的生命時薪並分析最適移居國家。
-          </p>
-        </div>
+        {/* 於 Rank 專屬卡片頁面提供切換按鈕 */}
+        {heroMilestone && !hasCustomParams && (
+          <div className="text-center mb-6">
+            <button
+              type="button"
+              onClick={() => setToggleCalculator((prev) => !prev)}
+              className="px-4 py-2 text-xs font-semibold rounded-lg bg-surface-glass border border-border-glass text-text-main hover:border-[var(--theme-color)] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {toggleCalculator ? '隱藏客製化試算表單 ▲' : '展開客製化試算表單 (自訂薪資與通勤) ▼'}
+            </button>
+          </div>
+        )}
+
+        {/* Header Intro Banner (僅在非 Rank 靜態頁或有自訂參數時顯著) */}
+        {!heroMilestone && (
+          <div className="text-center mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-text-main mb-3 tracking-tight">
+              揭開實質時薪的面紗，解鎖 <span className={styles.themeAccentText}>全球生活圈與 PR 排行</span>
+            </h1>
+            <p className="text-base text-text-sub max-w-2xl mx-auto">
+              扣除加班耗損、通勤工時與隱性費用支出，精準計算您的生命時薪並分析最適移居國家。
+            </p>
+          </div>
+        )}
 
         {/* Main Grid: Left Controls, Right Results */}
-        {showCalculator && (
+        {shouldShowCalculator && (
+
           <div id="calculator-section" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
           {/* Controls Card */}
           <div className={`lg:col-span-6 p-6 ${styles.calcCard}`}>
