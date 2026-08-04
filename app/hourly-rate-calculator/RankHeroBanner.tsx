@@ -179,8 +179,6 @@ export default function RankHeroBanner({
   const [selectedExploreCountry, setSelectedExploreCountry] = useState<string>('Japan');
   const exploreCountryId = useId();
 
-  const countryMatches: CountryMatch[] = countrySuitabilityData;
-
   // ─── 讀取 URL Params 顯示值 ──────────────────────────────────────────────
   // mounted 確保 SSR 安全（Client Component 已保證，但 heroMilestone 可能在 SSR 時渲染）
   const searchObj = mounted ? new URLSearchParams(window.location.search) : null;
@@ -253,15 +251,14 @@ export default function RankHeroBanner({
 
   // ─── 國家適配 ─────────────────────────────────────────────────────────────
   const heroCountry =
-    countryMatches.find(
+    countrySuitabilityData.find(
       (c) => displayHourlyRate >= c.min_hourly_twd && displayHourlyRate < c.max_hourly_twd
-    ) || countryMatches[countryMatches.length - 1];
+    ) || countrySuitabilityData[countrySuitabilityData.length - 1];
 
   // ─── Numbeo 洞察（memoized：只在 displayHourlyRate 變動時重算 152 國）────
+  // countrySuitabilityData 為 module-level import，引用穩定，無需加入 deps
   const numbeoInsights = useMemo(
-    () => getNumbeoInsights(displayHourlyRate, countryMatches),
-    // countryMatches 是 module-level import，引用穩定，不需加入 deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () => getNumbeoInsights(displayHourlyRate, countrySuitabilityData),
     [displayHourlyRate]
   );
 

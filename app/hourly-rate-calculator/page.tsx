@@ -10,10 +10,11 @@ export const metadata: Metadata = {
     canonical: 'https://tools.cjkuo.net/hourly-rate-calculator/',
   },
   openGraph: {
+    type: 'website',
     title: '真實時薪計算器 - 扣除通勤與隱形加班，全台打工人 PR 排行榜',
     description: '扣除通勤時間、無酬加班與額外支出，幫您精準計算每小時生命的真實淨收益，並對照全台薪資 PR 排行。',
     url: 'https://tools.cjkuo.net/hourly-rate-calculator/',
-    images: [{ url: '/support.svg' }],
+    images: [{ url: '/support.svg', width: 1200, height: 630, alt: '真實時薪計算器 - 全台打工人 PR 排行榜' }],
   },
   twitter: {
     card: 'summary_large_image',

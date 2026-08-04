@@ -361,17 +361,6 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04) !important;
 }
 
-.milestoneBadge {
-  background: rgba(0, 245, 160, 0.15);
-  border: 1px solid rgba(0, 245, 160, 0.4);
-  color: #00f5a0;
-}
-
-:global([data-theme='light']) .milestoneBadge {
-  background: rgba(5, 150, 105, 0.12) !important;
-  border: 1px solid rgba(5, 150, 105, 0.4) !important;
-  color: #059669 !important;
-}
 
 .milestoneCardCTA {
   display: flex;
