@@ -35,7 +35,9 @@ interface ToolLayoutProps {
   hideFooter?: boolean;  // 若為 true，隱藏下方頁尾贊助連結
   hideThemeToggle?: boolean; // 若為 true，隱藏右上角獨立 ThemeToggle
   compactBackBtn?: boolean;  // 若為 true，返回按鈕僅顯示 ICON
+  backHref?: string;         // 自訂返回按鈕連結 (例如 '/hourly-rate-calculator/')
   backTitle?: string;        // 自訂返回按鈕提示字彙 (title / aria-label)
+  backText?: string;         // 自訂返回按鈕顯示文案
   onBackClick?: (e: React.MouseEvent) => void; // 自訂點擊返回按鈕事件
   containerClassName?: string; // 可選傳入自訂外容器 class
   extraHeaderControls?: React.ReactNode; // 可選傳入頂欄右側自訂按鈕組
@@ -52,7 +54,9 @@ export default function ToolLayout({
   hideFooter = false,
   hideThemeToggle = false,
   compactBackBtn = false,
+  backHref: customBackHref,
   backTitle,
+  backText,
   onBackClick,
   containerClassName = '',
   extraHeaderControls,
@@ -60,7 +64,8 @@ export default function ToolLayout({
 }: ToolLayoutProps) {
   const pathname = usePathname();
   const cleanPath = pathname ? pathname.replace(/^\/|\/$/g, '') : '';
-  const backHref = cleanPath ? `/#tool-${cleanPath}` : '/';
+  const defaultBackHref = cleanPath ? `/#tool-${cleanPath}` : '/';
+  const targetBackHref = customBackHref || defaultBackHref;
 
   const isEn = pathname ? pathname.includes('/en/') || pathname.endsWith('/en') : false;
 
@@ -94,9 +99,9 @@ export default function ToolLayout({
 
       {/* ── 返回按鈕 ── */}
       <Link
-        href={backHref}
-        title={backTitle || (isEn ? 'Back to Home' : '返回首頁')}
-        aria-label={backTitle || (isEn ? 'Back to Home' : '返回首頁')}
+        href={targetBackHref}
+        title={backTitle || backText || (isEn ? 'Back to Home' : '返回首頁')}
+        aria-label={backTitle || backText || (isEn ? 'Back to Home' : '返回首頁')}
         onClick={(e) => {
           if (onBackClick) {
             e.preventDefault();
@@ -135,7 +140,7 @@ export default function ToolLayout({
           className="transition-transform duration-300 group-hover:-translate-x-1 flex-shrink-0">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
         </svg>
-        {!compactBackBtn && <span>{isEn ? 'Back to Home' : '返回首頁'}</span>}
+        {!compactBackBtn && <span>{backText || (isEn ? 'Back to Home' : '返回首頁')}</span>}
       </Link>
 
       {/* ── 主標題 + 描述 (若 hideHeader 為 false 則渲染) ── */}

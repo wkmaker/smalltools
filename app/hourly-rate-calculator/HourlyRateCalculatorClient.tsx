@@ -134,11 +134,13 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
   const projectHoursId = useId();
   const extraHoursId = useId();
   const projectExpensesId = useId();
+  const exploreCountryId = useId();
 
   // States
   const [showCalculator, setShowCalculator] = useState<boolean>(!initialSlug && initialPr === undefined);
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [calcMode, setCalcMode] = useState<'monthly' | 'project'>('monthly');
+  const [selectedExploreCountry, setSelectedExploreCountry] = useState<string>('Japan');
 
   // Monthly State
   const [monthlySalary, setMonthlySalary] = useState<number | ''>(50000);
@@ -385,6 +387,9 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
       description="扣除通勤時間、隱形加班與額外開銷支出，計算每小時生命的真實收益與全球生活圈適配度分析。"
       accentColor="#00f5a0"
       accentGlow="rgba(0, 245, 160, 0.6)"
+      backHref={heroMilestone ? `/hourly-rate-calculator/?${getQueryParamsString()}` : undefined}
+      backText={heroMilestone ? '返回時薪計算器' : undefined}
+      backTitle={heroMilestone ? '返回時薪計算器首頁' : undefined}
     >
       <div className={styles.container}>
         {/* Dedicated Rank Showcase Card if landing on specific rank page */}
@@ -452,12 +457,14 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
             const twBase = numbeoCostOfLivingData.base_indexes;
             const twCostPlusRent = twBase.cost_of_living_plus_rent_index;
             const twRest = twBase.restaurant_price_index;
+            const twRent = twBase.rent_index;
 
             const countries = numbeoCostOfLivingData.countries;
 
             const evaluated = countries.map((c) => {
               const multiplier = twCostPlusRent / c.cost_of_living_plus_rent_index;
               const restSavings = Math.round((1 - c.restaurant_price_index / twRest) * 100);
+              const rentSavings = Math.round((1 - c.rent_index / twRent) * 100);
               const costDiffPercent = Math.round((1 - c.cost_of_living_plus_rent_index / twCostPlusRent) * 100);
               const costDiffText = costDiffPercent > 0
                 ? `開銷比台灣便宜 ${costDiffPercent}%`
@@ -465,28 +472,73 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                   ? `開銷比台灣高 ${Math.abs(costDiffPercent)}%`
                   : '開銷與台灣相當';
               const localEffectiveRate = Math.round(rate * multiplier);
+
+              // 匹配 country_suitability.json 的專屬生活圈資料
+              const matchedSuitability = countryMatches.find((cm) =>
+                cm.countries.some((name) => name.includes(c.name_zh) || name.includes(c.country))
+              ) || countryMatches.find((cm) => localEffectiveRate >= cm.min_hourly_twd && localEffectiveRate < cm.max_hourly_twd)
+                || countryMatches[0];
+
+              // 生活體感實例 (Tangible Lifestyle Perk)
+              let lifestylePerk = '';
+              if (costDiffPercent >= 40) {
+                lifestylePerk = '泳池景觀公寓住到爽 + 外食SPA按摩自由';
+              } else if (costDiffPercent >= 20) {
+                lifestylePerk = '質感電梯大樓套房 + 外食手搖加蛋無負擔';
+              } else if (costDiffPercent >= -10) {
+                lifestylePerk = '居酒屋燒肉自由 + 暢享高品質都會人文體驗';
+              } else if (costDiffPercent >= -40) {
+                lifestylePerk = '異國歐式風情體驗，外食租金開銷需稍微精算';
+              } else {
+                lifestylePerk = '全球頂尖高薪富豪圈，適合強大資產配置與精英身價';
+              }
+
               return {
                 ...c,
                 multiplier,
                 multiplierStr: multiplier.toFixed(2),
                 restSavings,
+                rentSavings,
+                costDiffPercent,
                 costDiffText,
                 localEffectiveRate,
+                suitabilityTag: matchedSuitability.tag,
+                suitabilityName: matchedSuitability.name,
+                suitabilityDesc: matchedSuitability.description,
+                lifestylePerk,
               };
             });
 
-            const popularArbitrageList = ['Thailand', 'Malaysia', 'Indonesia', 'Vietnam', 'Poland', 'Portugal', 'Czech Republic'];
-            const arbitrageTop3 = evaluated
-              .filter((c) => popularArbitrageList.includes(c.country))
+            // Dynamic Tier-based Selection from countryMatches (country_suitability.json) as single source of truth
+            const currentTier = countryMatches.find((cm) => rate >= cm.min_hourly_twd && rate < cm.max_hourly_twd) || countryMatches[0];
+
+            const tierTitle = `【${currentTier.tag}】適合時薪 $${rate}/hr 的${currentTier.name}`;
+            const tierDesc = currentTier.description;
+
+            // 優先匹配當前適配圈中的國家
+            let candidateList = evaluated.filter((c) =>
+              currentTier.countries.some((name) => name.includes(c.name_zh) || name.includes(c.country))
+            );
+
+            if (candidateList.length < 3) {
+              const extraCandidates = evaluated
+                .filter((c) => c.country !== 'Taiwan' && !candidateList.some((item) => item.country === c.country))
+                .sort((a, b) => b.multiplier - a.multiplier);
+              candidateList = [...candidateList, ...extraCandidates];
+            }
+
+            const arbitrageTop3 = candidateList
               .sort((a, b) => b.multiplier - a.multiplier)
               .slice(0, 3);
 
-            const popularEquivalentList = ['Japan', 'South Korea', 'Spain', 'Croatia', 'Estonia'];
+            // 幸福感與生活品質高熱門國家 (High Happiness & Desirable Destinations)
+            const highHappinessList = ['Japan', 'South Korea', 'Spain', 'Portugal', 'Czech Republic', 'Croatia', 'Estonia', 'Italy', 'Greece'];
             const equivalentPicks = evaluated
-              .filter((c) => popularEquivalentList.includes(c.country))
-              .slice(0, 3);
+              .filter((c) => highHappinessList.includes(c.country) && !arbitrageTop3.some((a) => a.country === c.country))
+              .sort((a, b) => Math.abs(a.multiplier - 1.0) - Math.abs(b.multiplier - 1.0))
+              .slice(0, 4);
 
-            return { arbitrageTop3, equivalentPicks };
+            return { tierTitle, tierDesc, arbitrageTop3, equivalentPicks, evaluated };
           };
 
           const numbeoInsights = getNumbeoInsights(displayHourlyRate);
@@ -520,15 +572,6 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                     【{heroMilestone.label}】
                   </h1>
                 </div>
-                <Link
-                  href={`/hourly-rate-calculator/?${getQueryParamsString()}`}
-                  className={`text-xs font-semibold text-text-sub hover:${styles.themeAccentText} transition-colors flex items-center gap-1 bg-surface-glass border border-border-glass px-3 py-1.5 rounded-lg`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  前往時薪計算器首頁
-                </Link>
               </div>
 
               {/* 階級性格金句 */}
@@ -704,18 +747,23 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                     </span>
                   </div>
 
-                  {/* 地理套利降維打擊 Top 3 */}
+                  {/* 地理套利降維打擊 與 時薪階層動態推薦 Top 3 */}
                   {numbeoInsights && numbeoInsights.arbitrageTop3.length > 0 && (
-                    <div>
-                      <div className="text-xs font-bold text-text-main mb-2.5 flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          <span>移居降維打擊首選 (購買力倍增 Top 3)</span>
-                        </span>
-                        <span className="text-xs font-medium text-text-sub border border-border-glass bg-surface-glass px-2.5 py-0.5 rounded-full">
-                          152 國 Numbeo 指數精算
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-glass/40 pb-2">
+                        <div>
+                          <div className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                            <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <span>{numbeoInsights.tierTitle}</span>
+                          </div>
+                          <p className="text-xs text-text-sub mt-0.5">
+                            {numbeoInsights.tierDesc}
+                          </p>
+                        </div>
+                        <span className="text-xs font-medium text-text-sub border border-border-glass bg-surface-glass px-2.5 py-0.5 rounded-full shrink-0">
+                          時薪階層動態精算
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -732,11 +780,14 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                                 </svg>
                               </span>
                             </div>
+                            <div className={`text-xs font-bold ${styles.themeAccentText}`}>
+                              【{item.suitabilityTag}】
+                            </div>
                             <div className="text-xs text-text-sub font-mono">
-                              相當於當地時薪 <span className="font-bold text-text-main">${item.localEffectiveRate.toLocaleString('zh-TW')} NTD</span> 購買力
+                              體感：<span className="font-semibold text-text-main">{item.lifestylePerk}</span>
                             </div>
                             <div className="text-xs text-text-sub flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-border-glass/40 font-mono">
-                              <span>外食 {item.restSavings > 0 ? `省 ${item.restSavings}%` : '物價相近'}</span>
+                              <span>外食 {item.restSavings > 0 ? `省 ${item.restSavings}%` : item.restSavings < 0 ? `高 ${Math.abs(item.restSavings)}%` : '物價相近'}</span>
                               <span>•</span>
                               <span>{item.costDiffText}</span>
                             </div>
@@ -753,7 +804,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                         <svg className="w-4 h-4 text-text-sub inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                         </svg>
-                        <span>購買力 1:1 對等生活圈：</span>
+                        <span>同等時薪幸福感與質感升級圈：</span>
                       </span>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {numbeoInsights.equivalentPicks.map((item) => (
@@ -765,15 +816,123 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                     </div>
                   )}
 
-                  {/* 原有精闢評語 */}
-                  <div className="pt-2 border-t border-border-glass/50">
-                    <div className={`text-xs font-extrabold ${styles.themeAccentText} mb-1`}>
-                      【{heroCountry.tag}】
-                    </div>
-                    <p className="text-xs text-text-sub leading-relaxed">
-                      {heroCountry.description}
-                    </p>
-                  </div>
+                  {/* 全球 152 國互動購買力試算與探索選單 */}
+                  {numbeoInsights && numbeoInsights.evaluated.length > 0 && (() => {
+                    const exploreTarget = numbeoInsights.evaluated.find(
+                      (c) => c.country === selectedExploreCountry || c.name_zh === selectedExploreCountry
+                    ) || numbeoInsights.evaluated.find((c) => c.country === 'Japan') || numbeoInsights.evaluated[0];
+
+                    const mult = exploreTarget.multiplier;
+                    const costDiff = exploreTarget.costDiffPercent;
+                    const targetName = exploreTarget.name_zh;
+                    const localRate = exploreTarget.localEffectiveRate;
+
+                    let statusBadge = '';
+                    let statusBadgeStyle = '';
+                    let feelComment = '';
+                    let comparisonVerdict = '';
+
+                    if (mult >= 1.25) {
+                      statusBadge = '降維打擊！生活品質爽度倍增';
+                      statusBadgeStyle = 'bg-surface-glass border border-border-glass font-bold text-text-main';
+                      feelComment = `以你目前 $${displayHourlyRate}/hr 的時薪移居${targetName}，購買力直接放大至 ${exploreTarget.multiplierStr}x 倍！相當於在當地享有 $${localRate.toLocaleString('zh-TW')} NTD/hr 的高可支配薪資。入住無邊際泳池公寓、外食美饌與 SPA 按摩完全不傷錢包！`;
+                      comparisonVerdict = `【降維打擊】生活體驗評估：比在台灣生活輕鬆 ${costDiff}%，可用更低的生活負擔快速累積資產兼享度假生活！`;
+                    } else if (mult >= 0.85) {
+                      statusBadge = '無縫切換！與台灣生活品質對等';
+                      statusBadgeStyle = 'bg-surface-glass border border-border-glass font-bold text-text-main';
+                      feelComment = `以你目前 $${displayHourlyRate}/hr 的時薪移居${targetName}，購買力與台灣維持 1:1 高度相當！日常外食與居住開銷平穩，能用同樣的努力輕鬆體驗異國文化與高品質都會生活步調。`;
+                      comparisonVerdict = `【無痛切換】生活體驗評估：開銷與台灣極為接近，能無痛切換生活圈，暢享當地文化與頂級環境品質！`;
+                    } else if (mult >= 0.60) {
+                      statusBadge = '環境極佳，外食租金需精算';
+                      statusBadgeStyle = 'bg-surface-glass border border-border-glass font-bold text-text-main';
+                      const targetComfortableRate = Math.round(displayHourlyRate / mult);
+                      feelComment = `以你目前 $${displayHourlyRate}/hr 的時薪移居${targetName}，能享受極高的治安與人文環境，但外食與租金比台灣高出 ${Math.abs(costDiff)}%，日常需適度分配預算。`;
+                      comparisonVerdict = `【建議試算】爽過建議：在${targetName}要過得十分寬裕，建議目標時薪拉升至 $${targetComfortableRate.toLocaleString('zh-TW')} NTD/hr！`;
+                    } else {
+                      statusBadge = '高物價大都市，考驗預算能力';
+                      statusBadgeStyle = 'bg-surface-glass border border-border-glass font-bold text-text-main';
+                      const targetComfortableRate = Math.round(displayHourlyRate / mult);
+                      feelComment = `以你目前 $${displayHourlyRate}/hr 的時薪移居${targetName}，外食與房租開銷比台灣高出 ${Math.abs(costDiff)}%！外食大餐與精華區房租壓力較大，需精打細算。`;
+                      comparisonVerdict = `【目標指引】爽過建議：當地開銷高昂，若要在${targetName}無憂無慮爽過，目標時薪建議拉升至 $${targetComfortableRate.toLocaleString('zh-TW')} NTD/hr (約當前的 ${(1 / mult).toFixed(1)} 倍)！`;
+                    }
+
+                    return (
+                      <div className="pt-3 border-t border-border-glass/50 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <label htmlFor={exploreCountryId} className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                            <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span>探索全球 152 國時薪購買力與你的人生移居體感：</span>
+                          </label>
+                          <select
+                            id={exploreCountryId}
+                            value={exploreTarget.country}
+                            onChange={(e) => setSelectedExploreCountry(e.target.value)}
+                            className="bg-select-bg border border-border-glass rounded-lg px-3 py-1 text-xs font-semibold text-text-main outline-none focus:border-[var(--theme-color)] transition-colors cursor-pointer"
+                          >
+                            {numbeoInsights.evaluated
+                              .slice()
+                              .sort((a, b) => a.name_zh.localeCompare(b.name_zh, 'zh-TW'))
+                              .map((c) => (
+                                <option key={c.country} value={c.country}>
+                                  {c.flag} {c.name_zh} ({c.country}) - 購買力 {c.multiplierStr}x
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        {/* 探索目標國家詳細卡片 */}
+                        <div className="p-4 rounded-xl bg-surface-glass-btn border border-border-glass space-y-3">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border-glass/40 pb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-3xl">{exploreTarget.flag}</span>
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-base font-bold text-text-main">{exploreTarget.name_zh}</span>
+                                  <span className="text-xs text-text-sub font-mono">({exploreTarget.country})</span>
+                                  <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full border ${statusBadgeStyle}`}>
+                                    {statusBadge}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-text-sub font-mono mt-1">
+                                  對應適配圈：<span className="font-bold text-text-main">{exploreTarget.suitabilityName}</span> 【{exploreTarget.suitabilityTag}】
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-mono shrink-0 max-sm:w-full max-sm:pt-2">
+                              <span className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-text-main">
+                                折算當地購買力：${exploreTarget.localEffectiveRate.toLocaleString('zh-TW')} NTD/hr
+                              </span>
+                              <span className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-text-main">
+                                外食：{exploreTarget.restSavings > 0 ? `省 ${exploreTarget.restSavings}%` : exploreTarget.restSavings < 0 ? `高 ${Math.abs(exploreTarget.restSavings)}%` : '與台灣相近'}
+                              </span>
+                              <span className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-text-main">
+                                租金：{exploreTarget.rentSavings > 0 ? `省 ${exploreTarget.rentSavings}%` : exploreTarget.rentSavings < 0 ? `高 ${Math.abs(exploreTarget.rentSavings)}%` : '與台灣相近'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 rounded-lg bg-surface-glass border border-border-glass/50 text-xs text-text-sub space-y-2">
+                            <div className="font-bold text-text-main text-sm flex items-center gap-1.5">
+                              <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>以你目前時薪 ${displayHourlyRate}/hr 在{targetName}的生活體感評估：</span>
+                            </div>
+                            <p className="text-text-main font-medium leading-relaxed">
+                              {feelComment}
+                            </p>
+                            <div className={`p-2.5 rounded-md border border-border-glass bg-surface-glass text-xs font-semibold ${styles.themeAccentText}`}>
+                              {comparisonVerdict}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                 </div>
               </div>
 
