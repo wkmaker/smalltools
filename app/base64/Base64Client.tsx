@@ -235,7 +235,7 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
     const ex =
       lang === 'en'
         ? `Hello World! This is a beautiful & premium Base64 Encoder / Decoder.\n0123456789 +-=/`
-        : `哈囉，世界！這是一個美麗、精緻的 Base64 編碼/解碼工具。🚀\nHello World! This is a beautiful & premium Base64 Encoder / Decoder.\n0123456789 +-=/`;
+        : `哈囉，世界！這是一個美麗、精緻的 Base64 編碼/解碼工具。\nHello World! This is a beautiful & premium Base64 Encoder / Decoder.\n0123456789 +-=/`;
     setPlainText(ex);
     encodeText(ex, encoding, urlSafe, rfc2045);
   };

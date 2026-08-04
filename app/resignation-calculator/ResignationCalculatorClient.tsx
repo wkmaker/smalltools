@@ -1038,8 +1038,9 @@ Sincerely,
                     ? (lang === 'zh-TW' ? '最後在職日當天到辦 (特休分散請)' : 'On last working day (Leave spread out)')
                     : (lang === 'zh-TW' ? '使用者自訂最後出勤日' : 'User custom office date')}
                   {isWeekend(actualOfficeDate) && (
-                    <span className="text-amber-500 block font-medium mt-0.5">
-                      {lang === 'zh-TW' ? '⚠️ 此日期為週末例假日' : '⚠️ Falling on weekend'}
+                    <span className="text-amber-500 block font-medium mt-0.5 inline-flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.99L20.53 19H3.47L12 5.99zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+                      {lang === 'zh-TW' ? '此日期為週末例假日' : 'Falling on weekend'}
                     </span>
                   )}
                 </div>
@@ -1193,8 +1194,9 @@ Sincerely,
                       <div className={styles.timelineLabel}>
                         {t.actualOfficeNode}
                         {isWeekendOffice && (
-                          <span className="text-xs text-amber-500 ml-1.5 font-normal">
-                            ({lang === 'zh-TW' ? '⚠️ 週末例假日' : '⚠️ Weekend'})
+                          <span className="text-xs text-amber-500 ml-1.5 font-normal inline-flex items-center gap-0.5">
+                            <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.99L20.53 19H3.47L12 5.99zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+                            ({lang === 'zh-TW' ? '週末例假日' : 'Weekend'})
                           </span>
                         )}
                       </div>

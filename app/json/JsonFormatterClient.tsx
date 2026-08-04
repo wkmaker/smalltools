@@ -55,10 +55,11 @@ function TreeNode({ data, isLast, name }: { data: any; isLast: boolean; name?: s
       <div className="font-mono text-sm leading-6">
         <span
           onClick={() => setCollapsed(!collapsed)}
-          className="cursor-pointer select-none text-xs text-text-sub hover:text-[var(--theme-color,#ff00aa)] mr-1 inline-block transition-transform duration-200"
-          style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)' }}
+          className="cursor-pointer select-none text-xs text-text-sub hover:text-[var(--theme-color,#ff00aa)] mr-1 inline-flex items-center transition-transform duration-200"
         >
-          ▶
+          <svg className="w-3 h-3 fill-current transition-transform duration-200" style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)' }} viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
         </span>
         {name && <span className={styles.treeKey}>{name}: </span>}
         <span className={styles.treeBracket}>[</span>
@@ -83,10 +84,11 @@ function TreeNode({ data, isLast, name }: { data: any; isLast: boolean; name?: s
       <div className="font-mono text-sm leading-6">
         <span
           onClick={() => setCollapsed(!collapsed)}
-          className="cursor-pointer select-none text-xs text-text-sub hover:text-[var(--theme-color,#ff00aa)] mr-1 inline-block transition-transform duration-200"
-          style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)' }}
+          className="cursor-pointer select-none text-xs text-text-sub hover:text-[var(--theme-color,#ff00aa)] mr-1 inline-flex items-center transition-transform duration-200"
         >
-          ▶
+          <svg className="w-3 h-3 fill-current transition-transform duration-200" style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)' }} viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
         </span>
         {name && <span className={styles.treeKey}>{name}: </span>}
         <span className={styles.treeBracket}>&#123;</span>

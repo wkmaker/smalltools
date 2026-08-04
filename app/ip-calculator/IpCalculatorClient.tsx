@@ -173,6 +173,32 @@ function cidrToMaskInt(cidr: number): number {
   return (~0 << (32 - cidr)) >>> 0;
 }
 
+interface IpRangeRuleV4 {
+  scope: string;
+  baseInt: number;
+  maskInt: number;
+  badgeClass: string;
+}
+
+const RFC_RESERVED_RANGES_V4: IpRangeRuleV4[] = [
+  // RFC 1918 - Private Networks
+  { scope: 'Private', baseInt: ipToInt('10.0.0.0')!, maskInt: cidrToMaskInt(8), badgeClass: styles.badgePrivate },
+  { scope: 'Private', baseInt: ipToInt('172.16.0.0')!, maskInt: cidrToMaskInt(12), badgeClass: styles.badgePrivate },
+  { scope: 'Private', baseInt: ipToInt('192.168.0.0')!, maskInt: cidrToMaskInt(16), badgeClass: styles.badgePrivate },
+
+  // RFC 1122 - Loopback
+  { scope: 'Loopback', baseInt: ipToInt('127.0.0.0')!, maskInt: cidrToMaskInt(8), badgeClass: styles.badgeSpecial },
+
+  // RFC 6598 - CGNAT (Shared Address Space)
+  { scope: 'CGNAT', baseInt: ipToInt('100.64.0.0')!, maskInt: cidrToMaskInt(10), badgeClass: styles.badgeSpecial },
+
+  // RFC 3927 - Link-Local / APIPA
+  { scope: 'Link-Local', baseInt: ipToInt('169.254.0.0')!, maskInt: cidrToMaskInt(16), badgeClass: styles.badgeSpecial },
+
+  // RFC 5771 / Class D & E Multicast & Experimental
+  { scope: 'Reserved', baseInt: ipToInt('224.0.0.0')!, maskInt: cidrToMaskInt(4), badgeClass: styles.badgeSpecial },
+];
+
 function getIpScopeInfo(ipInt: number) {
   const firstOctet = (ipInt >>> 24) & 255;
   let ipClass = 'C';
@@ -182,23 +208,50 @@ function getIpScopeInfo(ipInt: number) {
   else if (firstOctet <= 239) ipClass = 'D (Multicast)';
   else ipClass = 'E (Experimental)';
 
-  if ((ipInt >>> 24) === 10)
-    return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: styles.badgePrivate };
-  if ((ipInt >>> 20) === ((ipToInt('172.16.0.0') ?? 0) >>> 20))
-    return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: styles.badgePrivate };
-  if ((ipInt >>> 16) === ((ipToInt('192.168.0.0') ?? 0) >>> 16))
-    return { classStr: `${ipClass} Class`, scope: 'Private', badgeClass: styles.badgePrivate };
-  if (firstOctet === 127)
-    return { classStr: `${ipClass} Class`, scope: 'Loopback', badgeClass: styles.badgeSpecial };
-  if ((ipInt >>> 22) === ((ipToInt('100.64.0.0') ?? 0) >>> 22))
-    return { classStr: `${ipClass} Class`, scope: 'CGNAT', badgeClass: styles.badgeSpecial };
-  if ((ipInt >>> 16) === ((ipToInt('169.254.0.0') ?? 0) >>> 16))
-    return { classStr: `${ipClass} Class`, scope: 'Link-Local', badgeClass: styles.badgeSpecial };
+  // 宣告式 RFC 對照表位元遮罩查表 (Bitwise Subnet Check)
+  const matchedRule = RFC_RESERVED_RANGES_V4.find(
+    (rule) => (ipInt & rule.maskInt) === (rule.baseInt & rule.maskInt)
+  );
 
-  if (firstOctet >= 224)
-    return { classStr: `${ipClass} Class`, scope: 'Reserved', badgeClass: styles.badgeSpecial };
+  if (matchedRule) {
+    return { classStr: `${ipClass} Class`, scope: matchedRule.scope, badgeClass: matchedRule.badgeClass };
+  }
 
   return { classStr: `${ipClass} Class`, scope: 'Public', badgeClass: styles.badgePublic };
+}
+
+/**
+ * IPv6 屬性與 Scope 判斷 (RFC 4193 / RFC 4291 / RFC 6890)
+ */
+export function getIpv6ScopeInfo(ipv6Str: string) {
+  const normalized = ipv6Str.trim().toLowerCase();
+  if (normalized === '::1' || normalized === '0:0:0:0:0:0:0:1') {
+    return { scope: 'Loopback', type: '::1/128' };
+  }
+
+  const firstBlockHex = normalized.split(':')[0] || '0';
+  const firstVal = parseInt(firstBlockHex, 16);
+
+  if (isNaN(firstVal)) return { scope: 'Invalid', type: 'Unknown' };
+
+  // fc00::/7 -> Unique Local Address (私有 IPv6)
+  if ((firstVal & 0xfe00) === 0xfc00) {
+    return { scope: 'Private (ULA)', type: 'fc00::/7' };
+  }
+  // fe80::/10 -> Link-Local
+  if ((firstVal & 0xffc0) === 0xfe80) {
+    return { scope: 'Link-Local', type: 'fe80::/10' };
+  }
+  // ff00::/8 -> Multicast
+  if ((firstVal & 0xff00) === 0xff00) {
+    return { scope: 'Multicast', type: 'ff00::/8' };
+  }
+  // 2000::/3 -> Global Unicast (公網 IP)
+  if ((firstVal & 0xe000) === 0x2000) {
+    return { scope: 'Public', type: 'Global Unicast (2000::/3)' };
+  }
+
+  return { scope: 'Reserved', type: 'RFC Reserved' };
 }
 
 export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClientProps) {

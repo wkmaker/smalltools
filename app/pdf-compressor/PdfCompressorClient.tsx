@@ -816,11 +816,12 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                           <span className="text-xs font-mono text-text-sub">
                             {formatBytes(item.size)}
                           </span>
-                          {item.status === 'need_password' && (
-                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.encryptedTag}`}>
-                              🔒 {t.passwordProtectedTag}
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.encryptedTag} inline-flex items-center gap-1`}>
+                              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                              </svg>
+                              {t.passwordProtectedTag}
                             </span>
-                          )}
                           {item.inspectData && (
                             <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.accentTag}`}>
                               {t.inspectTag(item.inspectData.totalImages, item.inspectData.estRatio)}
@@ -969,7 +970,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
 
                   {/* 完成與下載列 */}
                   {item.status === 'done' && item.compressedBlob && (
-                    <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs flex-wrap gap-2">
+                    <div className="flex items-center justify-between p-3 bg-surface-glass border border-border-glass rounded-xl text-xs flex-wrap gap-2">
                       <div className={`flex items-center gap-2 font-medium ${styles.doneBadge}`}>
                         <span>{t.original} {formatBytes(item.size)}</span>
                         <span>➔</span>
@@ -984,7 +985,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                       <a
                         href={URL.createObjectURL(item.compressedBlob)}
                         download={`${item.name.replace(/\.pdf$/i, '')}_compressed.pdf`}
-                        className="px-4 py-1.5 bg-emerald-500 text-black font-bold text-xs rounded-lg hover:bg-emerald-400 transition-all flex items-center gap-1.5"
+                        className={`${styles.actionBtn} text-xs flex items-center gap-1.5`}
                       >
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />

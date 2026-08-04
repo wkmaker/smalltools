@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import milestoneData from './hourly-rate-calculator/config/percentile_milestones.json';
 
 export const dynamic = 'force-static';
 
@@ -58,7 +59,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/ip-calculator/en/', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/resignation-calculator/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/resignation-calculator/en/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/hourly-rate-calculator/', lastModified: '2026-08-01', changeFrequency: 'monthly', priority: 0.8 },
   ];
+
+  milestoneData.forEach((m) => {
+    const prCode = `pr${m.pr < 10 ? '0' + m.pr : m.pr}`;
+    pages.push({
+      url: `/hourly-rate-calculator/rank/${prCode}/`,
+      lastModified: '2026-08-02',
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    });
+  });
 
   return pages.map((page) => ({
     url: `${baseUrl}${page.url}`,

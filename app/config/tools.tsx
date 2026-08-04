@@ -113,6 +113,20 @@ export const CATEGORIES: CategorySection[] = [
         ),
       },
       {
+        name: '真實時薪計算器',
+        subtitle: 'REAL HOURLY RATE CALCULATOR',
+        description: '扣除通勤時間、無酬加班與額外支出，幫您精準計算每小時生命的真實淨收益，並對照全台打工人薪資 PR 排行榜。',
+        href: '/hourly-rate-calculator/',
+        cardClass: 'hourlyRateCard',
+        category: 'finance',
+        keywords: '真實時薪計算器 hourly rate calculator 時薪 最低時薪 PR 排行 通勤 加班',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
+            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z" />
+          </svg>
+        ),
+      },
+      {
         name: '薪資、勞保、健保、預扣稅計算機',
         subtitle: 'SALARY & INSURANCES CALCULATOR',
         description: '精準且唯美的台灣薪資與保費試算工具。一鍵查表比對勞保、健保、勞退與預扣稅金額，清晰呈現員工薪資扣項明細與雇主總勞務營運成本。',

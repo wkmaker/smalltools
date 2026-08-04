@@ -1,0 +1,178 @@
+[
+  {
+    "id": "southeast_asia_basic",
+    "name": "東南亞基層生活圈",
+    "flag": "🇻🇳 🇮🇳 🇵🇭",
+    "countries": ["越南 (平民城鎮)", "印度 (班加羅爾)", "菲律賓 (宿霧)"],
+    "min_hourly_twd": 0,
+    "max_hourly_twd": 150,
+    "numbeo_cost_index_range": "11.6 - 19.1",
+    "tag": "在地平民體驗",
+    "description": "移居東南亞新興城市或平價城鎮能維持基本生活，感受蓬勃發展的在地街邊美食與平價生活消費。"
+  },
+  {
+    "id": "south_asia_capitals",
+    "name": "南亞與東南亞平價首都圈",
+    "flag": "🇱🇰 🇮🇩 🇰🇭",
+    "countries": ["斯里蘭卡 (科倫坡)", "印尼 (雅加達)", "柬埔寨 (金邊)"],
+    "min_hourly_twd": 150,
+    "max_hourly_twd": 196,
+    "numbeo_cost_index_range": "17.0 - 23.5",
+    "tag": "平價首都步調",
+    "description": "即便低於台灣最低時薪，在南亞或東南亞首都城市依然能應對日常生活，體驗多元文化與步調。"
+  },
+  {
+    "id": "digital_nomad_paradise",
+    "name": "東南亞遊牧聖地（基本版）",
+    "flag": "🇹🇭 🇮🇩 🇲🇾",
+    "countries": ["泰國 (清邁)", "印尼 (峇里島)", "馬來西亞 (檳城)"],
+    "min_hourly_twd": 196,
+    "max_hourly_twd": 260,
+    "numbeo_cost_index_range": "17.0 - 25.8",
+    "tag": "帝王級降維打擊",
+    "description": "到達 2026 台灣最低時薪門檻！清邁與峇里島數位遊牧天堂，開銷比台灣便宜 40~50%，天天泰奶與按摩無壓力。"
+  },
+  {
+    "id": "southeast_asia_capitals_luxury",
+    "name": "東南亞熱門首都輕奢圈",
+    "flag": "🇹🇭 🇲🇾 🇻🇳",
+    "countries": ["泰國 (曼谷)", "馬來西亞 (吉隆坡)", "越南 (胡志明市)"],
+    "min_hourly_twd": 260,
+    "max_hourly_twd": 340,
+    "numbeo_cost_index_range": "22.4 - 25.8",
+    "tag": "外食與按摩自由",
+    "description": "能在曼谷或吉隆坡精華區入住泳池公寓，餐餐大嗑百貨公司美饌與泰式外食，享盡高 CP 值繁華都會生活。"
+  },
+  {
+    "id": "taiwan_regional_latin_america",
+    "name": "台灣中南部 & 拉美小資圈",
+    "flag": "🇹🇼 🇲🇽 🇨🇴",
+    "countries": ["台灣 (台中/台南/高雄)", "墨西哥 (墨西哥城)", "哥倫比亞 (麥德林)"],
+    "min_hourly_twd": 340,
+    "max_hourly_twd": 420,
+    "numbeo_cost_index_range": "24.6 - 31.9",
+    "tag": "手搖飲加蛋自由",
+    "description": "在台灣中南部過得相當愜意！享有手搖飲加蛋自由、便利超商與頂級治安，或是探索拉美文化古城。"
+  },
+  {
+    "id": "taipei_eastern_europe_romantic",
+    "name": "大台北 & 東歐浪漫小鎮",
+    "flag": "🇹🇼 🇵🇱 🇭🇺",
+    "countries": ["台灣 (大台北生活圈)", "波蘭 (華沙)", "匈牙利 (布達佩斯)"],
+    "min_hourly_twd": 420,
+    "max_hourly_twd": 520,
+    "numbeo_cost_index_range": "32.6 - 33.6",
+    "tag": "首都便利與東歐浪漫",
+    "description": "輕鬆應對大台北日常開銷，或是移居波蘭、匈牙利等中東歐古都，物價指數與台灣極為接近，享受歐式人文生活。"
+  },
+  {
+    "id": "japan_korea_regional_prague",
+    "name": "日韓地方關西 & 捷克古都圈",
+    "flag": "🇯🇵 🇰🇷 🇨🇿",
+    "countries": ["日本 (福岡/關西)", "韓國 (釜山)", "捷克 (布拉格)"],
+    "min_hourly_twd": 520,
+    "max_hourly_twd": 640,
+    "numbeo_cost_index_range": "32.1 - 37.0",
+    "tag": "日圓優惠與關西輕奢",
+    "description": "受益於日圓優惠匯率，日本關西與福岡負擔指數降至 32.1！能輕鬆暢享燒肉居酒屋與捷克布拉格浪漫街景。"
+  },
+  {
+    "id": "tokyo_southern_europe",
+    "name": "東京都心 & 南歐太陽海岸圈",
+    "flag": "🇯🇵 🇵🇹 🇪🇸",
+    "countries": ["日本 (東京都心)", "葡萄牙 (里斯本)", "西班牙 (巴塞隆納)"],
+    "min_hourly_twd": 640,
+    "max_hourly_twd": 780,
+    "numbeo_cost_index_range": "37.1 - 38.1",
+    "tag": "地中海陽光與東京潮流",
+    "description": "可在東京港區/新宿愜意生活，或移居西班牙、葡萄牙享受地中海陽光、高品質紅酒與歐洲漫長假期。"
+  },
+  {
+    "id": "italy_greece_mediterranean",
+    "name": "義大利藝術古都 & 希臘海島圈",
+    "flag": "🇮🇹 🇬🇷 🇨🇾",
+    "countries": ["義大利 (羅馬/米蘭)", "希臘 (雅典)", "賽普勒斯"],
+    "min_hourly_twd": 780,
+    "max_hourly_twd": 950,
+    "numbeo_cost_index_range": "41.9 - 42.4",
+    "tag": "義式咖啡與南歐海島",
+    "description": "遨遊義大利文藝復興名城，或在希臘愛琴海島嶼享受濃郁義式濃縮咖啡與漫長陽光海岸假期。"
+  },
+  {
+    "id": "western_europe_core",
+    "name": "西歐質感核心圈",
+    "flag": "🇩🇪 🇫🇷 🇬🇧",
+    "countries": ["德國 (柏林/慕尼黑)", "法國 (里昂)", "英國 (曼徹斯特)"],
+    "min_hourly_twd": 950,
+    "max_hourly_twd": 1150,
+    "numbeo_cost_index_range": "45.7 - 50.8",
+    "tag": "西歐人文與強大購買力",
+    "description": "完全能輕鬆應對德法英高物價！享有完善社會福利、豐富藝文展覽與頻繁跨國旅行的尊榮體驗。"
+  },
+  {
+    "id": "nordic_ireland_tech",
+    "name": "北歐高福利 & 愛爾蘭科技圈",
+    "flag": "🇸🇪 🇫🇮 🇮🇪",
+    "countries": ["瑞典 (斯德哥爾摩)", "芬蘭 (赫爾辛基)", "愛爾蘭 (都柏林)"],
+    "min_hourly_twd": 1150,
+    "max_hourly_twd": 1400,
+    "numbeo_cost_index_range": "44.7 - 57.4",
+    "tag": "北歐極光與科技高福利",
+    "description": "沉浸在瑞典與芬蘭的高幸福感社會福利，或在都柏林科技重鎮發揮影響力，享受極致生活品質。"
+  },
+  {
+    "id": "oceania_canada_nature",
+    "name": "紐澳大自然 & 加拿大質感圈",
+    "flag": "🇦🇺 🇳🇿 🇨🇦",
+    "countries": ["澳洲 (雪梨/墨爾本)", "紐西蘭 (奧克蘭)", "加拿大 (多倫多)"],
+    "min_hourly_twd": 1400,
+    "max_hourly_twd": 1700,
+    "numbeo_cost_index_range": "43.9 - 53.9",
+    "tag": "藍天大海與紐澳自然",
+    "description": "可在雪梨、墨爾本享受戶外大自然與藍天大海，或在加拿大城市愜意生活，生活節奏與收入達黃金平衡。"
+  },
+  {
+    "id": "singapore_hongkong_finance",
+    "name": "頂尖金融精英圈",
+    "flag": "🇸🇬 🇭🇰",
+    "countries": ["新加坡 (金融中心)", "香港 (中環)"],
+    "min_hourly_twd": 1700,
+    "max_hourly_twd": 2200,
+    "numbeo_cost_index_range": "68.5 - 80.5",
+    "tag": "頂尖金融精英圈",
+    "description": "遊刃有餘應對新加坡與香港的高昂租金，於全球頂尖金融與商業重鎮優雅悠遊，彰顯精英身價。"
+  },
+  {
+    "id": "north_america_tech_ceiling",
+    "name": "北美科技與金融天花板",
+    "flag": "🇺🇸 🇨🇦",
+    "countries": ["美國 (加州矽谷/紐約曼哈頓)", "加拿大 (溫哥華)"],
+    "min_hourly_twd": 2200,
+    "max_hourly_twd": 3000,
+    "numbeo_cost_index_range": "46.6 - 54.8",
+    "tag": "全球高薪天花板",
+    "description": "即便面對矽谷、曼哈頓的高昂房租與外食小費也能游刃有餘，財富累積速度飛快，快速邁向財富自由。"
+  },
+  {
+    "id": "switzerland_luxury",
+    "name": "瑞士阿爾卑斯奢華圈",
+    "flag": "🇨🇭 🇮🇸",
+    "countries": ["瑞士 (蘇黎世/日內瓦)", "冰島 (雷克雅維克)"],
+    "min_hourly_twd": 3000,
+    "max_hourly_twd": 4200,
+    "numbeo_cost_index_range": "74.8 - 81.5",
+    "tag": "雪山湖畔頂級品質",
+    "description": "瑞士阿爾卑斯山腳下的頂級奢華生活！漫步於蘇黎世湖畔與日內瓦靜謐街區，享受全球最高規格治安與環境。"
+  },
+  {
+    "id": "dubai_monaco_billionaire",
+    "name": "杜拜與摩納哥 神仙資本家圈",
+    "flag": "🇦🇪 🇲🇨",
+    "countries": ["阿聯酋 (杜拜)", "摩納哥 (港灣)"],
+    "min_hourly_twd": 4200,
+    "max_hourly_twd": 999999,
+    "numbeo_cost_index_range": "46.8 (零所得稅)",
+    "tag": "零所得稅富豪殿堂",
+    "description": "零所得稅天堂杜拜與摩納哥遊艇港灣任您悠遊，全球頂尖富豪、創業家與資本家的夢幻殿堂。"
+  }
+]

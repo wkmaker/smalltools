@@ -1,0 +1,477 @@
+/* app/hourly-rate-calculator/hourly-rate-calculator.module.css */
+
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.themeAccentText {
+  color: var(--theme-color, #00f5a0);
+}
+
+:global([data-theme='light']) .themeAccentText {
+  color: #059669 !important;
+}
+
+.globalPrText {
+  color: #00d2ff;
+}
+
+:global([data-theme='light']) .globalPrText {
+  color: #0284c7 !important;
+}
+
+.themeAccentBg {
+  background-color: var(--theme-color, #00f5a0);
+}
+
+:global([data-theme='light']) .themeAccentBg {
+  background-color: #059669 !important;
+}
+
+.themeBorder {
+  border-color: var(--theme-color, #00f5a0);
+}
+
+:global([data-theme='light']) .themeBorder {
+  border-color: rgba(5, 150, 105, 0.4) !important;
+}
+
+/* Card Styling with Glassmorphism */
+.calcCard {
+  background: var(--glass-bg, rgba(15, 23, 42, 0.65));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+  box-shadow: var(--glass-shadow, 0 8px 32px 0 rgba(0, 0, 0, 0.37));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global([data-theme='light']) .calcCard {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Primary Action Button */
+.actionBtn {
+  background: linear-gradient(135deg, rgba(0, 245, 160, 0.2), rgba(0, 245, 160, 0.4));
+  border: 1px solid rgba(0, 245, 160, 0.6);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.25);
+  cursor: pointer;
+}
+
+.actionBtn:hover {
+  background: linear-gradient(135deg, rgba(0, 245, 160, 0.35), rgba(0, 245, 160, 0.6));
+  box-shadow: 0 0 25px rgba(0, 245, 160, 0.5);
+  transform: translateY(-1px);
+}
+
+:global([data-theme='light']) .actionBtn {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  border: 1px solid #047857 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+}
+
+:global([data-theme='light']) .actionBtn:hover {
+  background: linear-gradient(135deg, #047857, #065f46) !important;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4) !important;
+}
+
+/* Secondary Button / Share Button */
+.shareBtn {
+  background: rgba(0, 245, 160, 0.1);
+  border: 1px solid rgba(0, 245, 160, 0.3);
+  color: #00f5a0;
+  font-weight: 600;
+  border-radius: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shareBtn:hover {
+  background: rgba(0, 245, 160, 0.2);
+  border-color: rgba(0, 245, 160, 0.5);
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.3);
+}
+
+:global([data-theme='light']) .shareBtn {
+  background: rgba(5, 150, 105, 0.08) !important;
+  border: 1px solid rgba(5, 150, 105, 0.3) !important;
+  color: #059669 !important;
+}
+
+:global([data-theme='light']) .shareBtn:hover {
+  background: rgba(5, 150, 105, 0.16) !important;
+  border-color: rgba(5, 150, 105, 0.5) !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Toggle Tabs */
+.tabBtn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.tabBtnActive {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.4);
+  color: #00f5a0;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(0, 245, 160, 0.2);
+}
+
+:global([data-theme='light']) .tabBtnActive {
+  background: rgba(5, 150, 105, 0.12) !important;
+  border: 1px solid rgba(5, 150, 105, 0.4) !important;
+  color: #059669 !important;
+  box-shadow: none !important;
+}
+
+/* Input Fields */
+.inputField {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  background: var(--select-bg, rgba(15, 23, 42, 0.6));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+  border-radius: 0.75rem;
+  color: var(--text-primary, #ffffff);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.inputField:focus {
+  border-color: var(--theme-color, #00f5a0);
+  box-shadow: 0 0 12px rgba(0, 245, 160, 0.3);
+}
+
+:global([data-theme='light']) .inputField {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: #0f172a !important;
+}
+
+:global([data-theme='light']) .inputField:focus {
+  background: #ffffff !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 10px rgba(5, 150, 105, 0.25) !important;
+}
+
+/* Progress bar container */
+.progressBarTrack {
+  width: 100%;
+  height: 0.875rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+:global([data-theme='light']) .progressBarTrack {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #00f5a0 0%, #00d2ff 100%);
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 12px rgba(0, 245, 160, 0.6);
+}
+
+:global([data-theme='light']) .progressBarFill {
+  background: linear-gradient(90deg, #059669 0%, #0284c7 100%) !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3) !important;
+}
+
+.globalProgressBarFill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(90deg, #00d2ff 0%, #3b82f6 100%);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.5);
+}
+
+:global([data-theme='light']) .globalProgressBarFill {
+  background: linear-gradient(90deg, #0284c7 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3) !important;
+}
+
+/* Badges */
+.passBadge {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.4);
+  color: #00f5a0;
+}
+
+:global([data-theme='light']) .passBadge {
+  background: rgba(5, 150, 105, 0.12) !important;
+  border: 1px solid rgba(5, 150, 105, 0.4) !important;
+  color: #059669 !important;
+}
+
+.failBadge {
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid rgba(255, 59, 48, 0.4);
+  color: #ff3b30;
+}
+
+:global([data-theme='light']) .failBadge {
+  background: rgba(220, 38, 38, 0.12) !important;
+  border: 1px solid rgba(220, 38, 38, 0.4) !important;
+  color: #dc2626 !important;
+}
+
+.countryBadge {
+  background: rgba(255, 184, 0, 0.15);
+  border: 1px solid rgba(255, 184, 0, 0.4);
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .countryBadge {
+  background: rgba(217, 119, 6, 0.12) !important;
+  border: 1px solid rgba(217, 119, 6, 0.4) !important;
+  color: #d97706 !important;
+}
+
+.milestoneBadge {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.4);
+  color: #00f5a0;
+}
+
+:global([data-theme='light']) .milestoneBadge {
+  background: rgba(5, 150, 105, 0.12) !important;
+  border: 1px solid rgba(5, 150, 105, 0.4) !important;
+  color: #059669 !important;
+}
+
+.targetBadge {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.4);
+  color: #00f5a0;
+}
+
+:global([data-theme='light']) .targetBadge {
+  background: rgba(5, 150, 105, 0.12) !important;
+  border: 1px solid rgba(5, 150, 105, 0.4) !important;
+  color: #059669 !important;
+}
+
+
+
+/* Rank Milestone Grid & Tiles */
+.milestoneTile {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.milestoneTile:hover {
+  background: rgba(0, 245, 160, 0.08);
+  border-color: rgba(0, 245, 160, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 245, 160, 0.15);
+}
+
+:global([data-theme='light']) .milestoneTile {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+:global([data-theme='light']) .milestoneTile:hover {
+  background: rgba(5, 150, 105, 0.08) !important;
+  border-color: rgba(5, 150, 105, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12) !important;
+}
+
+.milestoneTileActive {
+  background: rgba(0, 245, 160, 0.15) !important;
+  border: 1px solid rgba(0, 245, 160, 0.6) !important;
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.25) !important;
+}
+
+:global([data-theme='light']) .milestoneTileActive {
+  background: rgba(5, 150, 105, 0.12) !important;
+  border: 1px solid rgba(5, 150, 105, 0.6) !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2) !important;
+}
+
+/* Rank Hero Banner */
+.rankHeroBanner {
+  background: linear-gradient(135deg, rgba(0, 245, 160, 0.12), rgba(0, 210, 255, 0.08));
+  border: 1px solid rgba(0, 245, 160, 0.35);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 245, 160, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+:global([data-theme='light']) .rankHeroBanner {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.08), rgba(2, 132, 199, 0.06)) !important;
+  border: 1px solid rgba(5, 150, 105, 0.3) !important;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.08) !important;
+}
+
+/* Exclusive Milestone Showcase Card & CTA */
+.exclusiveMilestoneCard {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(0, 245, 160, 0.1), rgba(15, 23, 42, 0.6));
+  border: 1px solid rgba(0, 245, 160, 0.3);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+:global([data-theme='light']) .exclusiveMilestoneCard {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.08), rgba(255, 255, 255, 0.6)) !important;
+  border: 1px solid rgba(5, 150, 105, 0.3) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+
+.milestoneCardCTA {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(0, 245, 160, 0.25), rgba(0, 245, 160, 0.45));
+  border: 1px solid rgba(0, 245, 160, 0.6);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.3);
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.milestoneCardCTA:hover {
+  background: linear-gradient(135deg, rgba(0, 245, 160, 0.4), rgba(0, 245, 160, 0.65));
+  box-shadow: 0 0 25px rgba(0, 245, 160, 0.5);
+  transform: translateY(-1px);
+}
+
+:global([data-theme='light']) .milestoneCardCTA {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  border: 1px solid #047857 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
+}
+
+
+/* Toast 提示彈窗 - 懸浮於當前螢幕右下角 */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 245, 160, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: toastSlideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(0, 245, 160, 0.6);
+  color: #00f5a0;
+  pointer-events: auto;
+}
+
+@keyframes toastSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:global([data-theme='light']) .toast {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(5, 150, 105, 0.5);
+  color: #059669;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12), 0 0 15px rgba(5, 150, 105, 0.15);
+}
+
+@media (max-width: 640px) {
+  .toast {
+    bottom: 1.25rem;
+    right: 1.25rem;
+    font-size: 0.8125rem;
+    padding: 0.625rem 1rem;
+  }
+}
+
+/* Tooltip Container */
+.tooltipContainer {
+  background: var(--glass-bg, rgba(15, 23, 42, 0.95));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.15));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:global([data-theme='light']) .tooltipContainer {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+
+
+
