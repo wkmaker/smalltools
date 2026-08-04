@@ -858,18 +858,18 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
 
                     return (
                       <div className="pt-3 border-t border-border-glass/50 space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <label htmlFor={exploreCountryId} className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                          <label htmlFor={exploreCountryId} className="text-xs font-bold text-text-main flex items-center gap-1.5 shrink-0">
                             <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <span>探索全球 152 國時薪購買力與你的人生移居體感：</span>
+                            <span>探索全球 152 國時薪購買力與體感：</span>
                           </label>
                           <select
                             id={exploreCountryId}
                             value={exploreTarget.country}
                             onChange={(e) => setSelectedExploreCountry(e.target.value)}
-                            className="bg-select-bg border border-border-glass rounded-lg px-3 py-1 text-xs font-semibold text-text-main outline-none focus:border-[var(--theme-color)] transition-colors cursor-pointer"
+                            className="w-full sm:w-auto max-w-full bg-select-bg border border-border-glass rounded-lg px-3 py-1.5 text-xs font-semibold text-text-main outline-none focus:border-[var(--theme-color)] transition-colors cursor-pointer truncate"
                           >
                             {numbeoInsights.evaluated
                               .slice()
