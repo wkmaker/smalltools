@@ -278,43 +278,7 @@
   color: #059669 !important;
 }
 
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 50;
-  padding: 0.75rem 1.25rem;
-  border-radius: 0.875rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  animation: fadeIn 0.25s ease-out;
 
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(0, 245, 160, 0.4);
-  color: #ffffff;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 245, 160, 0.3);
-}
-
-:global([data-theme='light']) .toast {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid rgba(5, 150, 105, 0.4) !important;
-  color: #047857 !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(5, 150, 105, 0.2) !important;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* Rank Milestone Grid & Tiles */
 .milestoneTile {
@@ -441,15 +405,14 @@
 }
 
 
-/* Toast 提示彈窗 - 視窗底部居中懸浮 */
+/* Toast 提示彈窗 - 懸浮於當前螢幕右下角 */
 .toast {
   position: fixed;
-  bottom: 2.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 2rem;
+  right: 2rem;
   z-index: 9999;
-  padding: 0.75rem 1.5rem;
-  border-radius: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.875rem;
   font-size: 0.875rem;
   font-weight: 600;
   white-space: nowrap;
@@ -459,20 +422,21 @@
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 245, 160, 0.25);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: toastSlideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   background: rgba(15, 23, 42, 0.92);
   border: 1px solid rgba(0, 245, 160, 0.6);
   color: #00f5a0;
+  pointer-events: auto;
 }
 
-@keyframes toastSlideUp {
+@keyframes toastSlideInRight {
   from {
     opacity: 0;
-    transform: translate(-50%, 1rem);
+    transform: translateY(0.75rem);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 }
 
@@ -481,6 +445,15 @@
   border: 1px solid rgba(5, 150, 105, 0.5);
   color: #059669;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12), 0 0 15px rgba(5, 150, 105, 0.15);
+}
+
+@media (max-width: 640px) {
+  .toast {
+    bottom: 1.25rem;
+    right: 1.25rem;
+    font-size: 0.8125rem;
+    padding: 0.625rem 1rem;
+  }
 }
 
 

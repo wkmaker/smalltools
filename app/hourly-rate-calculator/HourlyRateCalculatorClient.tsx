@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useId } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import ToolLayout from '@/app/components/ToolLayout';
 import taiwanStatsData from './config/taiwan_statistics.json';
@@ -1515,7 +1516,15 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
       </div>
 
       {/* Toast Notification */}
-      {toastMessage && <div className={styles.toast}>{toastMessage}</div>}
+      {mounted && toastMessage && createPortal(
+        <div className={styles.toast}>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="flex-shrink-0">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          <span>{toastMessage}</span>
+        </div>,
+        document.body
+      )}
     </ToolLayout>
   );
 }
