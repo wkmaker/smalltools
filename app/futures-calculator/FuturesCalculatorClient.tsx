@@ -215,7 +215,7 @@ export default function FuturesCalculatorClient() {
                   onClick={() => setPosition('short')}
                   className={`py-2 text-sm rounded-lg cursor-pointer transition-all border ${
                     position === 'short'
-                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-600 font-semibold'
+                      ? `${styles.tabBtnActive}`
                       : 'border-transparent text-text-sub hover:text-text-main'
                   }`}
                 >

@@ -66,7 +66,7 @@ export default function NotFound() {
             </span>
             <span className="text-text-sub text-xs inline-flex items-center gap-1">
               小工具運作正常
-              <svg className="w-3.5 h-3.5 text-emerald-500 fill-current" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-text-sub fill-current" viewBox="0 0 24 24">
                 <path d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </span>

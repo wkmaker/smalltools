@@ -970,7 +970,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
 
                   {/* 完成與下載列 */}
                   {item.status === 'done' && item.compressedBlob && (
-                    <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs flex-wrap gap-2">
+                    <div className="flex items-center justify-between p-3 bg-surface-glass border border-border-glass rounded-xl text-xs flex-wrap gap-2">
                       <div className={`flex items-center gap-2 font-medium ${styles.doneBadge}`}>
                         <span>{t.original} {formatBytes(item.size)}</span>
                         <span>➔</span>
@@ -985,7 +985,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                       <a
                         href={URL.createObjectURL(item.compressedBlob)}
                         download={`${item.name.replace(/\.pdf$/i, '')}_compressed.pdf`}
-                        className="px-4 py-1.5 bg-emerald-500 text-black font-bold text-xs rounded-lg hover:bg-emerald-400 transition-all flex items-center gap-1.5"
+                        className={`${styles.actionBtn} text-xs flex items-center gap-1.5`}
                       >
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />

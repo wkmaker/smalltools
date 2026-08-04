@@ -825,7 +825,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       setResultData({
         meta: [
           { label: '域名主機 (CN)', value: cn },
-          { label: 'Modulus MD5 雜湊配對', value: `${certHash.substring(0, 8)}... (100% 吻合)`, className: 'text-emerald-400 font-bold' },
+          { label: 'Modulus MD5 雜湊配對', value: `${certHash.substring(0, 8)}... (100% 吻合)`, className: 'font-bold text-text-main' },
           { label: '打包中繼憑證數量', value: `${caCertObjs.length} 張` },
         ],
         outputs: [],
@@ -972,7 +972,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
                   ? 'bg-red-500/10 border-red-500/30 text-red-400'
                   : alert.type === 'warning'
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  : 'bg-surface-glass border-border-glass text-text-main'
               }`}
             >
               <span>{alert.message}</span>

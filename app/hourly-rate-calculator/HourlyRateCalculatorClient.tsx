@@ -7,6 +7,7 @@ import taiwanStatsData from './config/taiwan_statistics.json';
 import globalStatsData from './config/global_statistics.json';
 import milestoneData from './config/percentile_milestones.json';
 import countrySuitabilityData from './config/country_suitability.json';
+import numbeoCostOfLivingData from './config/global_cost_of_living.json';
 import styles from './hourly-rate-calculator.module.css';
 
 interface Milestone {
@@ -174,7 +175,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
       const qCommute = searchParams.get('commute');
       const qExpenses = searchParams.get('expenses');
 
-      if (qYear && (qYear === '2026' || qYear === '2025')) {
+      if (qYear && ['2026', '2025', '2024', '2023', '2022', '2021', '2020'].includes(qYear)) {
         setSelectedYear(parseInt(qYear, 10));
       }
       if (qMode === 'monthly' || qMode === 'project') {
@@ -223,7 +224,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
   }, [initialSlug, initialPr]);
 
   // Benchmarks for current year
-  const yearKey = String(selectedYear) as '2026' | '2025';
+  const yearKey = String(selectedYear) as keyof typeof taiwanStatsData.statistics;
   const currentTaiwanStat = taiwanStatsData.statistics[yearKey] || taiwanStatsData.statistics['2026'];
   const minHourlyWage = currentTaiwanStat.minimum_wage.hourly;
   const milestones: Milestone[] = milestoneData;
@@ -446,6 +447,50 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
           // Country Match
           const heroCountry = countryMatches.find((c) => displayHourlyRate >= c.min_hourly_twd && displayHourlyRate < c.max_hourly_twd) || matchedCountry;
 
+          // Numbeo 152-country Purchasing Power Insights
+          const getNumbeoInsights = (rate: number) => {
+            const twBase = numbeoCostOfLivingData.base_indexes;
+            const twCostPlusRent = twBase.cost_of_living_plus_rent_index;
+            const twRest = twBase.restaurant_price_index;
+
+            const countries = numbeoCostOfLivingData.countries;
+
+            const evaluated = countries.map((c) => {
+              const multiplier = twCostPlusRent / c.cost_of_living_plus_rent_index;
+              const restSavings = Math.round((1 - c.restaurant_price_index / twRest) * 100);
+              const costDiffPercent = Math.round((1 - c.cost_of_living_plus_rent_index / twCostPlusRent) * 100);
+              const costDiffText = costDiffPercent > 0
+                ? `開銷比台灣便宜 ${costDiffPercent}%`
+                : costDiffPercent < 0
+                  ? `開銷比台灣高 ${Math.abs(costDiffPercent)}%`
+                  : '開銷與台灣相當';
+              const localEffectiveRate = Math.round(rate * multiplier);
+              return {
+                ...c,
+                multiplier,
+                multiplierStr: multiplier.toFixed(2),
+                restSavings,
+                costDiffText,
+                localEffectiveRate,
+              };
+            });
+
+            const popularArbitrageList = ['Thailand', 'Malaysia', 'Indonesia', 'Vietnam', 'Poland', 'Portugal', 'Czech Republic'];
+            const arbitrageTop3 = evaluated
+              .filter((c) => popularArbitrageList.includes(c.country))
+              .sort((a, b) => b.multiplier - a.multiplier)
+              .slice(0, 3);
+
+            const popularEquivalentList = ['Japan', 'South Korea', 'Spain', 'Croatia', 'Estonia'];
+            const equivalentPicks = evaluated
+              .filter((c) => popularEquivalentList.includes(c.country))
+              .slice(0, 3);
+
+            return { arbitrageTop3, equivalentPicks };
+          };
+
+          const numbeoInsights = getNumbeoInsights(displayHourlyRate);
+
           const handleCopySocialText = async () => {
             const shareUrl = `${window.location.origin}/hourly-rate-calculator/rank/pr${heroMilestone.pr < 10 ? '0' + heroMilestone.pr : heroMilestone.pr}/?${getQueryParamsString()}`;
             const text = `【全台打工人 PR 評定卡片 💳】\n評定等級：PR ${displayPR}【${heroMilestone.label}】 ${stars}\n💬 特質語錄：「${heroMilestone.desc}」\n⚡ 實質生命時薪：$${displayHourlyRate}/hr (每分鐘價值 $${displayMinuteValue} 元)\n🥤 珍奶自由度：工作 1 小時可換 ${bobaCount} 杯珍奶\n🏆 全台名次：840 萬打工人中約第 ${displayTaiwanRank} 名！\n🌍 最適移居生活圈：${heroCountry.flag} ${heroCountry.name}\n\n測測你是在賺薪水，還是在幫老闆付法拉利車貸 ➔ ${shareUrl}`;
@@ -562,7 +607,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                   <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-text-sub inline-flex items-center gap-1">
-                        <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         全球人口勝出率
@@ -603,35 +648,35 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                     <svg className={`w-5 h-5 mb-1 mx-auto ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.605 15.13a2 2 0 00-1.806.547M8 4h8l-1 5H9L8 4z" />
                     </svg>
-                    <span className="text-[11px] text-text-sub block mb-0.5">珍珠奶茶自由</span>
+                    <span className="text-xs text-text-sub block mb-0.5">珍珠奶茶自由</span>
                     <span className="text-xs font-bold text-text-main font-mono">1小時 = {bobaCount} 杯</span>
                   </div>
                   <div className="p-3 rounded-xl bg-surface-glass border border-border-glass text-center">
                     <svg className={`w-5 h-5 mb-1 mx-auto ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V3m0 0l-4 4m4-4l4 4M4 11h16M4 15h16M4 19h16" />
                     </svg>
-                    <span className="text-[11px] text-text-sub block mb-0.5">排骨便當自由</span>
+                    <span className="text-xs text-text-sub block mb-0.5">排骨便當自由</span>
                     <span className="text-xs font-bold text-text-main font-mono">1小時 = {bentoCount} 個</span>
                   </div>
                   <div className="p-3 rounded-xl bg-surface-glass border border-border-glass text-center">
                     <svg className={`w-5 h-5 mb-1 mx-auto ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3" />
                     </svg>
-                    <span className="text-[11px] text-text-sub block mb-0.5">星巴克拿鐵自由</span>
+                    <span className="text-xs text-text-sub block mb-0.5">星巴克拿鐵自由</span>
                     <span className="text-xs font-bold text-text-main font-mono">1小時 = {latteCount} 杯</span>
                   </div>
                   <div className="p-3 rounded-xl bg-surface-glass border border-border-glass text-center">
                     <svg className={`w-5 h-5 mb-1 mx-auto ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                     </svg>
-                    <span className="text-[11px] text-text-sub block mb-0.5">威秀電影票自由</span>
+                    <span className="text-xs text-text-sub block mb-0.5">威秀電影票自由</span>
                     <span className="text-xs font-bold text-text-main font-mono">幹活 {movieHours} 小時換1張</span>
                   </div>
                   <div className="p-3 rounded-xl bg-surface-glass border border-border-glass text-center">
                     <svg className={`w-5 h-5 mb-1 mx-auto ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
-                    <span className="text-[11px] text-text-sub block mb-0.5">iPhone 17 Pro 256G</span>
+                    <span className="text-xs text-text-sub block mb-0.5">iPhone 17 Pro 256G</span>
                     <span className="text-xs font-bold text-text-main font-mono">需幹活 {iphoneHours} 小時</span>
                   </div>
                 </div>
@@ -645,24 +690,90 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                   </svg>
                   全球生活圈與移居品質適配 (Global Lifestyle Compatibility)
                 </h3>
-                <div className="p-4 rounded-xl bg-surface-glass border border-border-glass space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 rounded-xl bg-surface-glass border border-border-glass space-y-4">
+                  {/* 最適移居圈標題與當前實質時薪 */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-glass pb-3">
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${styles.countryBadge} flex items-center gap-1`}>
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      最適移居生活圈評估
+                      基本適配圈：{heroCountry.flag} {heroCountry.name}
                     </span>
-                    <span className="text-sm font-bold text-text-main">
-                      {heroCountry.flag} {heroCountry.name}
+                    <span className="text-xs text-text-sub font-mono">
+                      折算時薪：<span className={`font-bold ${styles.themeAccentText}`}>${displayHourlyRate} NTD/hr</span>
                     </span>
                   </div>
-                  <div className={`text-sm font-extrabold ${styles.themeAccentText}`}>
-                    【{heroCountry.tag}】
+
+                  {/* 地理套利降維打擊 Top 3 */}
+                  {numbeoInsights && numbeoInsights.arbitrageTop3.length > 0 && (
+                    <div>
+                      <div className="text-xs font-bold text-text-main mb-2.5 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span>移居降維打擊首選 (購買力倍增 Top 3)</span>
+                        </span>
+                        <span className="text-xs font-medium text-text-sub border border-border-glass bg-surface-glass px-2.5 py-0.5 rounded-full">
+                          152 國 Numbeo 指數精算
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {numbeoInsights.arbitrageTop3.map((item) => (
+                          <div key={item.country} className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col justify-between space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-bold text-text-main">
+                                {item.flag} {item.name_zh}
+                              </span>
+                              <span className={`text-sm font-black font-mono ${styles.themeAccentText} flex items-center gap-0.5`}>
+                                {item.multiplierStr}x
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.57l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.57l7-10a1 1 0 011.12-.384z" clipRule="evenodd" />
+                                </svg>
+                              </span>
+                            </div>
+                            <div className="text-xs text-text-sub font-mono">
+                              相當於當地時薪 <span className="font-bold text-text-main">${item.localEffectiveRate.toLocaleString('zh-TW')} NTD</span> 購買力
+                            </div>
+                            <div className="text-xs text-text-sub flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-border-glass/40 font-mono">
+                              <span>外食 {item.restSavings > 0 ? `省 ${item.restSavings}%` : '物價相近'}</span>
+                              <span>•</span>
+                              <span>{item.costDiffText}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 購買力相當的對等國家 */}
+                  {numbeoInsights && numbeoInsights.equivalentPicks.length > 0 && (
+                    <div className="pt-2 border-t border-border-glass/50 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className="text-text-sub font-medium flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-text-sub inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                        </svg>
+                        <span>購買力 1:1 對等生活圈：</span>
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {numbeoInsights.equivalentPicks.map((item) => (
+                          <span key={item.country} className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-xs font-semibold text-text-main">
+                            {item.flag} {item.name_zh}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 原有精闢評語 */}
+                  <div className="pt-2 border-t border-border-glass/50">
+                    <div className={`text-xs font-extrabold ${styles.themeAccentText} mb-1`}>
+                      【{heroCountry.tag}】
+                    </div>
+                    <p className="text-xs text-text-sub leading-relaxed">
+                      {heroCountry.description}
+                    </p>
                   </div>
-                  <p className="text-sm text-text-sub leading-relaxed">
-                    {heroCountry.description}
-                  </p>
                 </div>
               </div>
 
@@ -756,6 +867,11 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                 >
                   <option value={2026}>2026 年 (最低時薪 $196)</option>
                   <option value={2025}>2025 年 (最低時薪 $190)</option>
+                  <option value={2024}>2024 年 (最低時薪 $183)</option>
+                  <option value={2023}>2023 年 (最低時薪 $176)</option>
+                  <option value={2022}>2022 年 (最低時薪 $168)</option>
+                  <option value={2021}>2021 年 (最低時薪 $160)</option>
+                  <option value={2020}>2020 年 (最低時薪 $158)</option>
                 </select>
               </div>
             </div>
@@ -1009,7 +1125,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                     style={{ width: `${Math.max(3, Math.min(100, taiwanPR))}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[11px] text-text-sub mt-1 font-mono">
+                <div className="flex justify-between text-xs text-text-sub mt-1 font-mono">
                   <span>PR 10 (36.5萬)</span>
                   <span>PR 50 中位數 (56.8萬)</span>
                   <span>PR 90 (129萬)</span>
@@ -1020,7 +1136,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
               <div className="pt-3 border-t border-border-glass">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-text-main flex items-center gap-1.5">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     全世界人口 PR
@@ -1035,7 +1151,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
                     style={{ width: `${Math.max(3, Math.min(100, globalPR))}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[11px] text-text-sub mt-1 font-mono">
+                <div className="flex justify-between text-xs text-text-sub mt-1 font-mono">
                   <span>P50 中位數 ($3,430 USD)</span>
                   <span>P90 ($26,500 USD)</span>
                   <span>P99 Top 1% ($109,000 USD)</span>
@@ -1193,7 +1309,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
               </li>
               <li>
                 <strong className="text-text-main inline-flex items-center gap-1">
-                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   全球人口所得數據
@@ -1210,7 +1326,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
               </li>
               <li>
                 <strong className="text-text-main inline-flex items-center gap-1">
-                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m0 0l-3 9m3-9l3 2m0 0l-3 9m3-9l3 9m-6-9l6 2m0 0l-3 9m3-9l3 9" />
                   </svg>
                   全球生活圈購買力 (PPP) 物價指標
