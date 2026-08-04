@@ -33,6 +33,7 @@
 * **[股票質押與維持率壓力測試器](https://tools.cjkuo.net/pledge-calculator/)** (`/pledge-calculator`) - 支援股價與張數雙向連動、追繳門檻與大跌幅壓力測試模擬。
 * **[台股期貨槓桿與逆風點數估算器](https://tools.cjkuo.net/futures-calculator/)** (`/futures-calculator`) - 即時計算大台/小台/微台實質槓桿倍數，模擬逆風損益與追繳強平臨界點。
 * **[薪資、勞保、健保、預扣稅計算機](https://tools.cjkuo.net/my-salary-calculator/)** (`/my-salary-calculator`) - 查表比對勞健保、勞退與預扣稅金額，呈現員工實領薪資與雇主總營運成本。
+* **[真實時薪計算器](https://tools.cjkuo.net/hourly-rate-calculator/)** (`/hourly-rate-calculator`) - 扣除通勤時間、無酬加班與額外支出，精準計算每小時生命真實淨收益並對照全台薪資 PR 排行。
 * **[離職時間與預告期計算機](https://tools.cjkuo.net/resignation-calculator/)** (`/resignation-calculator`) - 依台灣勞基法第 16 條與 38 條精準計算法定預告天數、離職生效日、最後在職日與特休排休/折現代金試算，並一鍵產生離職預告範本。
 
 ### 💻 開發輔助
