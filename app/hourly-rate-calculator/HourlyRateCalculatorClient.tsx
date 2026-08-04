@@ -75,6 +75,8 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
 
   // Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  // Tooltip
+  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
 
   // Fix #6: Cleanup timer on unmount
   useEffect(() => {
@@ -593,28 +595,62 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
             <div className={`p-6 ${styles.calcCard} relative overflow-hidden`}>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-semibold text-text-sub">真實時薪 (Real Hourly Rate)</span>
-                {/* Legality Badge */}
-                <span
-                  className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                    isLegal ? styles.passBadge : styles.failBadge
-                  }`}
-                >
-                  {isLegal ? (
-                    <>
-                      <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                {/* Legality Badge & Tooltip Container */}
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
+                      isLegal ? styles.passBadge : styles.failBadge
+                    }`}
+                  >
+                    {isLegal ? (
+                      <>
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        實質時薪達標 (高於時薪基準 {diffPercent.toFixed(1)}%)
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        實質體感時薪偏低 (低於時薪基準 {diffPercent.toFixed(1)}%)
+                      </>
+                    )}
+                  </span>
+
+                  {/* Info Tooltip Button */}
+                  <div className="relative inline-block">
+                    <button
+                      type="button"
+                      onClick={() => setShowInfoTooltip((prev) => !prev)}
+                      onMouseEnter={() => setShowInfoTooltip(true)}
+                      onMouseLeave={() => setShowInfoTooltip(false)}
+                      aria-label="時薪計算機制說明"
+                      className="p-1 rounded-full text-text-sub hover:text-text-main hover:bg-white/10 transition-colors focus:outline-none flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      Pass (高於法定最低時薪 {diffPercent.toFixed(1)}%)
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      Fail (低於法定最低時薪 {diffPercent.toFixed(1)}%)
-                    </>
-                  )}
-                </span>
+                    </button>
+
+                    {showInfoTooltip && (
+                      <div className={`absolute right-0 top-full mt-2 w-72 sm:w-80 p-3.5 z-20 text-xs rounded-xl shadow-xl ${styles.tooltipContainer}`}>
+                        <p className="font-bold mb-1.5 text-text-main flex items-center gap-1.5">
+                          <svg className="w-4 h-4 text-themeAccentText" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 01-2 2h-4a2 2 0 01-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          計算機制與合規說明
+                        </p>
+                        <p className="text-text-sub leading-relaxed">
+                          本工具「真實時薪」已扣除<strong>通勤時間、無酬加班與工作自費開銷</strong>。
+                          <br />
+                          依勞基法規定，月薪制勞工合規判定以「<code className="bg-white/10 px-1 py-0.5 rounded">月薪 ÷ 240小時</code>」為準，因此真實時薪低於法定時薪<strong>不代表僱主違法</strong>，而是反映扣除隱形成本後的個人時間淨收益。
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-baseline gap-2 mb-6">
