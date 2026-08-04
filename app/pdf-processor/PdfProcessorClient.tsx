@@ -46,8 +46,8 @@ const TRANSLATIONS = {
     rotate90: '旋轉 90°',
     close: '關閉 (ESC)',
     renderingHighRes: '正在使用 PDF.js 即時渲染 300 DPI 超高清圖像...',
-    prevPage: '◀ 上一頁',
-    nextPage: '下一頁 ▶',
+    prevPage: '上一頁',
+    nextPage: '下一頁',
     shortcutsHint: '按鍵 Esc 關閉 ｜ ◄ ► 方向鍵切換頁面',
     toastValidOnly: '請選擇有效的 PDF 或 PNG/JPG/WebP 圖片檔案',
     toastParsedDone: '多檔解析與預覽處理完成！',
@@ -101,8 +101,8 @@ const TRANSLATIONS = {
     rotate90: 'Rotate 90°',
     close: 'Close (ESC)',
     renderingHighRes: 'Rendering 300 DPI high-res page with PDF.js...',
-    prevPage: '◀ Previous',
-    nextPage: 'Next ▶',
+    prevPage: 'Previous',
+    nextPage: 'Next',
     shortcutsHint: 'ESC to close | ◄ ► Arrow keys to navigate',
     toastValidOnly: 'Please select valid PDF or PNG/JPG/WebP files',
     toastParsedDone: 'Files parsed and loaded successfully!',
@@ -716,7 +716,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
                         className="flex-1 py-1.5 text-xs font-bold text-text-sub hover:text-text-main disabled:opacity-20 cursor-pointer flex items-center justify-center"
                         title="Move Left"
                       >
-                        ◀
+                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
                       </button>
                       <button
                         type="button"
@@ -747,7 +747,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
                         className="flex-1 py-1.5 text-xs font-bold text-text-sub hover:text-text-main disabled:opacity-20 cursor-pointer flex items-center justify-center"
                         title="Move Right"
                       >
-                        ▶
+                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                       </button>
                     </div>
                   </div>

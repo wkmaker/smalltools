@@ -276,7 +276,7 @@ export default function PersonalLoanClient() {
             <button
               type="button"
               onClick={copyShareLink}
-              className="flex items-center gap-1.5 text-xs text-text-sub hover:text-[var(--theme-color)] transition-colors cursor-pointer px-2.5 py-1 rounded-lg border border-border-glass bg-surface-glass"
+              className="flex items-center gap-1.5 text-xs text-text-sub hover:text-text-main transition-colors cursor-pointer px-2.5 py-1 rounded-lg border border-border-glass bg-surface-glass"
               title="複製分享連結"
             >
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">

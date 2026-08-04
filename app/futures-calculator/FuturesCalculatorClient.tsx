@@ -469,9 +469,19 @@ export default function FuturesCalculatorClient() {
             }`}>
               <h3 className="text-xs uppercase tracking-[1px] font-semibold flex items-center gap-2">
                 {isBelowInit ? (
-                  <span className="text-[#ef4444]">⚠️ 模擬權益數已低於總原始保證金，回補至 100% 原始保證金水位：</span>
+                  <span className="text-[#ef4444] inline-flex items-center gap-1">
+                    <svg className="w-4 h-4 text-[#ef4444] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    模擬權益數已低於總原始保證金，回補至 100% 原始保證金水位：
+                  </span>
                 ) : (
-                  <span className="text-[#10b981]">🟢 權益數高於原始保證金，無須補繳</span>
+                  <span className="text-[#10b981] inline-flex items-center gap-1">
+                    <svg className="w-4 h-4 text-[#10b981] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    權益數高於原始保證金，無須補繳
+                  </span>
                 )}
               </h3>
 

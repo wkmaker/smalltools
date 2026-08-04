@@ -816,11 +816,12 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                           <span className="text-xs font-mono text-text-sub">
                             {formatBytes(item.size)}
                           </span>
-                          {item.status === 'need_password' && (
-                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.encryptedTag}`}>
-                              🔒 {t.passwordProtectedTag}
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.encryptedTag} inline-flex items-center gap-1`}>
+                              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                              </svg>
+                              {t.passwordProtectedTag}
                             </span>
-                          )}
                           {item.inspectData && (
                             <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${styles.accentTag}`}>
                               {t.inspectTag(item.inspectData.totalImages, item.inspectData.estRatio)}

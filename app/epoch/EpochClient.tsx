@@ -34,8 +34,8 @@ const TRANSLATIONS = {
     liveMsTitle: '當前時間戳記 (毫秒)',
     liveLocalTitle: '當前當地時間',
     copy: '複製',
-    resumeClock: '▶ 繼續',
-    pauseClock: '⏸ 暫停',
+    resumeClock: '繼續',
+    pauseClock: '暫停',
     sectionTsToDate: '時間戳記 ➜ 日期時間 (Timestamp ➜ Date)',
     labelTsInput: 'Unix 時間戳記 (Epoch)',
     placeholderTsInput: '請輸入 10 位 (秒) 或 13 位 (毫秒) 數字',
@@ -80,8 +80,8 @@ const TRANSLATIONS = {
     toastLoadedDt: '已載入日期時間:',
     toastFilledTsNow: '已帶入現在時間戳記',
     toastFilledDtNow: '已帶入現在日期時間',
-    typeLabelTs2Date: '🔢 Epoch ➜ 日期',
-    typeLabelDate2Ts: '📅 日期 ➜ Epoch',
+    typeLabelTs2Date: 'Epoch ➜ 日期',
+    typeLabelDate2Ts: '日期 ➜ Epoch',
     weekDays: [
       '星期日 (Sunday)',
       '星期一 (Monday)',
@@ -102,8 +102,8 @@ const TRANSLATIONS = {
     liveMsTitle: 'Current Timestamp (ms)',
     liveLocalTitle: 'Current Local Time',
     copy: 'Copy',
-    resumeClock: '▶ Resume',
-    pauseClock: '⏸ Pause',
+    resumeClock: 'Resume',
+    pauseClock: 'Pause',
     sectionTsToDate: 'Timestamp ➜ Date',
     labelTsInput: 'Unix Timestamp (Epoch)',
     placeholderTsInput: 'Enter 10-digit (sec) or 13-digit (ms) number',
@@ -148,8 +148,8 @@ const TRANSLATIONS = {
     toastLoadedDt: 'Loaded date:',
     toastFilledTsNow: 'Filled current timestamp',
     toastFilledDtNow: 'Filled current date & time',
-    typeLabelTs2Date: '🔢 Epoch ➜ Date',
-    typeLabelDate2Ts: '📅 Date ➜ Epoch',
+    typeLabelTs2Date: 'Epoch ➜ Date',
+    typeLabelDate2Ts: 'Date ➜ Epoch',
     weekDays: [
       'Sunday',
       'Monday',
@@ -964,41 +964,41 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
                 onChange={(e) => setDtTzOffset(parseFloat(e.target.value))}
                 className={`${styles.selectInput} w-full`}
               >
-                <option value="-12">🌐 UTC -12:00</option>
-                <option value="-11">🌐 UTC -11:00</option>
-                <option value="-10">🌐 UTC -10:00</option>
-                <option value="-9">🌐 UTC -09:00</option>
-                <option value="-8">🇺🇸 UTC -08:00 (PST)</option>
-                <option value="-7">🇺🇸 UTC -07:00 (PDT)</option>
-                <option value="-6">🌐 UTC -06:00</option>
-                <option value="-5">🇺🇸 UTC -05:00 (EST)</option>
-                <option value="-4">🇺🇸 UTC -04:00 (EDT)</option>
-                <option value="-3">🌐 UTC -03:00</option>
-                <option value="-2">🌐 UTC -02:00</option>
-                <option value="-1">🌐 UTC -01:00</option>
-                <option value="0">🌐 UTC +00:00 (GMT/UTC)</option>
-                <option value="1">🇪🇺 UTC +01:00 (CET)</option>
-                <option value="2">🇪🇺 UTC +02:00 (EET)</option>
-                <option value="3">🌐 UTC +03:00</option>
-                <option value="3.5">🌐 UTC +03:30</option>
-                <option value="4">🌐 UTC +04:00</option>
-                <option value="4.5">🌐 UTC +04:30</option>
-                <option value="5">🌐 UTC +05:00</option>
-                <option value="5.5">🇮🇳 UTC +05:30 (IST)</option>
-                <option value="5.75">🇳🇵 UTC +05:45</option>
-                <option value="6">🌐 UTC +06:00</option>
-                <option value="6.5">🌐 UTC +06:30</option>
-                <option value="7">🌐 UTC +07:00</option>
-                <option value="8">🇹🇼 UTC +08:00 (Taipei/Beijing)</option>
-                <option value="9">🇯🇵 UTC +09:00 (Tokyo/Seoul)</option>
-                <option value="9.5">🇦🇺 UTC +09:30</option>
-                <option value="10">🇦🇺 UTC +10:00 (AEST)</option>
-                <option value="10.5">🇦🇺 UTC +10:30</option>
-                <option value="11">🇦🇺 UTC +11:00 (AEDT)</option>
-                <option value="11.5">🌐 UTC +11.5</option>
-                <option value="12">🌐 UTC +12:00</option>
-                <option value="13">🌐 UTC +13:00</option>
-                <option value="14">🌐 UTC +14:00</option>
+                <option value="-12">UTC -12:00</option>
+                <option value="-11">UTC -11:00</option>
+                <option value="-10">UTC -10:00</option>
+                <option value="-9">UTC -09:00</option>
+                <option value="-8">UTC -08:00 (PST)</option>
+                <option value="-7">UTC -07:00 (PDT)</option>
+                <option value="-6">UTC -06:00</option>
+                <option value="-5">UTC -05:00 (EST)</option>
+                <option value="-4">UTC -04:00 (EDT)</option>
+                <option value="-3">UTC -03:00</option>
+                <option value="-2">UTC -02:00</option>
+                <option value="-1">UTC -01:00</option>
+                <option value="0">UTC +00:00 (GMT/UTC)</option>
+                <option value="1">UTC +01:00 (CET)</option>
+                <option value="2">UTC +02:00 (EET)</option>
+                <option value="3">UTC +03:00</option>
+                <option value="3.5">UTC +03:30</option>
+                <option value="4">UTC +04:00</option>
+                <option value="4.5">UTC +04:30</option>
+                <option value="5">UTC +05:00</option>
+                <option value="5.5">UTC +05:30 (IST)</option>
+                <option value="5.75">UTC +05:45</option>
+                <option value="6">UTC +06:00</option>
+                <option value="6.5">UTC +06:30</option>
+                <option value="7">UTC +07:00</option>
+                <option value="8">UTC +08:00 (Taipei/Beijing)</option>
+                <option value="9">UTC +09:00 (Tokyo/Seoul)</option>
+                <option value="9.5">UTC +09:30</option>
+                <option value="10">UTC +10:00 (AEST)</option>
+                <option value="10.5">UTC +10:30</option>
+                <option value="11">UTC +11:00 (AEDT)</option>
+                <option value="11.5">UTC +11.5</option>
+                <option value="12">UTC +12:00</option>
+                <option value="13">UTC +13:00</option>
+                <option value="14">UTC +14:00</option>
               </select>
             </div>
 
