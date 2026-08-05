@@ -276,9 +276,8 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
     window.history.replaceState(null, '', `${window.location.pathname}?${queryParamsString}`);
   }, [queryParamsString]);
 
-  // 控制 Rank 頁面下是否展開計算器表單
-  const [toggleCalculator, setToggleCalculator] = useState(false);
-  const shouldShowCalculator = showCalculator || hasCustomParams || toggleCalculator;
+  // 計算器表單僅在非 Rank 頁面展示（Rank 卡片頁保持乾淨純淨，點擊下方「試算我的時薪與 PR」即可跳轉試算）
+  const shouldShowCalculator = !heroMilestone;
 
 
   // ─── 分享處理器 ───────────────────────────────────────────────────────────
@@ -354,24 +353,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
           />
         )}
 
-        {/* 於 Rank 專屬卡片頁面提供切換按鈕 */}
-        {heroMilestone && !hasCustomParams && (
-          <div className="text-center mb-6">
-            <button
-              type="button"
-              onClick={() => setToggleCalculator((prev) => !prev)}
-              className="px-4 py-2 text-xs font-semibold rounded-lg bg-surface-glass border border-border-glass text-text-main hover:border-[var(--theme-color)] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              {toggleCalculator ? '隱藏客製化試算表單 ▲' : '展開客製化試算表單 (自訂薪資與通勤) ▼'}
-            </button>
-          </div>
-        )}
-
-        {/* Header Intro Banner (僅在非 Rank 靜態頁或有自訂參數時顯著) */}
+        {/* Header Intro Banner (僅在主計算器頁面顯示) */}
         {!heroMilestone && (
           <div className="text-center mb-8">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-text-main mb-3 tracking-tight">
