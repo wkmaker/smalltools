@@ -42,7 +42,7 @@ interface Translations {
 const TRANSLATIONS: Record<'zh-TW' | 'en', Translations> = {
   'zh-TW': {
     title: '吹牛骰子搖骰器',
-    subtitle: 'LIAR\'S DICE ROLLER & ANTI-CHEAT TIMER',
+    subtitle: 'LIAR\'S DICE ROLLER',
     description: '專為派對酒吧吹牛遊戲打造！具備防作弊計時器（精確顯示距離上次搖骰過了多久）與歷史 5 次紀錄，支援搖骰音效與杯蓋遮擋。',
     antiCheatTitle: '防作弊防重複搖骰看板',
     lastRollTime: '最後搖骰時間',
@@ -68,7 +68,7 @@ const TRANSLATIONS: Record<'zh-TW' | 'en', Translations> = {
   },
   en: {
     title: 'Liar\'s Dice Roller',
-    subtitle: 'LIAR\'S DICE ROLLER & ANTI-CHEAT TIMER',
+    subtitle: 'LIAR\'S DICE ROLLER',
     description: 'Designed for Liar\'s Dice party games! Features an anti-cheat timer (displays time elapsed since last roll) and logs top 5 history records.',
     antiCheatTitle: 'Anti-Cheat Timer Banner',
     lastRollTime: 'Last Roll Time',
@@ -220,15 +220,32 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
     return () => clearInterval(timerId);
   }, [lastRollTimestamp]);
 
-  // 全域 Web Audio Context 復用 ref (避免連續點擊創設過多 AudioContext 被瀏覽器封鎖)
+  // 全域 Web Audio Context 與 Master Volume Ref (徹底防止多重音訊重疊引發削波雜音)
   const audioCtxRef = React.useRef<AudioContext | null>(null);
+  const masterGainRef = React.useRef<GainNode | null>(null);
 
   const getAudioContext = () => {
     if (typeof window === 'undefined') return null;
     if (!audioCtxRef.current) {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
-        audioCtxRef.current = new AudioCtx();
+        const ctx = new AudioCtx();
+        // 建立主控防削波動態壓縮器 (Master Dynamics Compressor)
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-14, ctx.currentTime);
+        compressor.knee.setValueAtTime(25, ctx.currentTime);
+        compressor.ratio.setValueAtTime(10, ctx.currentTime);
+        compressor.attack.setValueAtTime(0.003, ctx.currentTime);
+        compressor.release.setValueAtTime(0.15, ctx.currentTime);
+
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(0.55, ctx.currentTime); // 主音量安全上限，防爆音雜音
+
+        masterGain.connect(compressor);
+        compressor.connect(ctx.destination);
+
+        audioCtxRef.current = ctx;
+        masterGainRef.current = masterGain;
       }
     }
     const ctx = audioCtxRef.current;
@@ -238,11 +255,12 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
     return ctx;
   };
 
-  // Web Audio 專業動態 0.9s 手甩物理搖骰音效 (Dynamic Organic Hand Shake Audio Engine)
+  // Web Audio 高保真擬真 0.9s 手甩物理搖骰音效 (HD Noise-Free Audio Engine)
   const playShakeSound = () => {
     try {
       const ctx = getAudioContext();
-      if (!ctx) return;
+      const masterNode = masterGainRef.current;
+      if (!ctx || !masterNode) return;
       const now = ctx.currentTime;
 
       // 產生 1.2 秒白噪音 Buffer 用於模擬實體撞擊
@@ -254,77 +272,76 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
       }
 
       // 每次甩動隨機決定手甩特徵 (力道、總時長、起手相位與頻率基底)
-      const hitCount = Math.floor(18 + Math.random() * 7); // 18 ~ 24 次動態碰撞
-      const totalDuration = 0.84 + Math.random() * 0.1; // 0.84s ~ 0.94s 總時長 (約 0.9 秒)
-      const intensity = 0.9 + Math.random() * 0.35; // 手甩力道增益
-      const cupToneBase = 130 + Math.random() * 50; // 杯壁低頻共振基準值
-      const phaseOffset = Math.random() * Math.PI * 2; // 隨機相位偏移 (防止規律起手)
+      const hitCount = Math.floor(16 + Math.random() * 6); // 16 ~ 22 次極致顆粒清脆動態碰撞
+      const totalDuration = 0.84 + Math.random() * 0.08; // 0.84s ~ 0.92s 總時長 (約 0.9 秒)
+      const intensity = 0.85 + Math.random() * 0.3; // 手甩力道增益
+      const cupToneBase = 140 + Math.random() * 40; // 杯壁低頻共振基準值
+      const phaseOffset = Math.random() * Math.PI * 2; // 隨機相位偏移
 
-      // 1. 第一聲手甩起手爆發強撞擊 (Initial Impact Break - 解決第一聲偏小聲的問題)
+      // 1. 第一聲手甩起手爆發強撞擊 (Initial Crisp Break)
       const initTime = now + 0.01;
       const initNoise = ctx.createBufferSource();
       initNoise.buffer = noiseBuffer;
 
       const initFilter = ctx.createBiquadFilter();
       initFilter.type = 'bandpass';
-      initFilter.frequency.setValueAtTime(2400 + Math.random() * 1200, initTime);
-      initFilter.Q.setValueAtTime(3, initTime);
+      initFilter.frequency.setValueAtTime(2600 + Math.random() * 1000, initTime);
+      initFilter.Q.setValueAtTime(4, initTime);
 
       const initGain = ctx.createGain();
-      const initVol = (0.45 + Math.random() * 0.25) * intensity; // 第一聲音量充足
+      const initVol = (0.35 + Math.random() * 0.2) * intensity;
       initGain.gain.setValueAtTime(initVol, initTime);
-      initGain.gain.exponentialRampToValueAtTime(0.001, initTime + 0.03);
+      initGain.gain.exponentialRampToValueAtTime(0.001, initTime + 0.025);
 
       initNoise.connect(initFilter);
       initFilter.connect(initGain);
-      initGain.connect(ctx.destination);
+      initGain.connect(masterNode);
 
       initNoise.start(initTime);
-      initNoise.stop(initTime + 0.04);
+      initNoise.stop(initTime + 0.03);
 
-      // 2. 模擬 18 ~ 24 次高速滾動與離散碰撞 (Double-Swish Rhythm)
+      // 2. 模擬 16 ~ 22 次高速滾動與顆粒碰撞 (Double-Swish Rhythm)
       for (let i = 0; i < hitCount; i++) {
         const progress = i / hitCount;
         
-        // 帶隨機相位的波浪加速曲線 (模擬手甩來回加速度)
-        const waveRhythm = Math.sin(progress * Math.PI * 3 + phaseOffset) * 0.05;
-        const hitTime = now + 0.02 + progress * totalDuration + waveRhythm + (Math.random() - 0.5) * 0.025;
-        const hitDuration = 0.015 + Math.random() * 0.02;
+        // 帶隨機相位的波浪加速曲線
+        const waveRhythm = Math.sin(progress * Math.PI * 3 + phaseOffset) * 0.04;
+        const hitTime = now + 0.02 + progress * totalDuration + waveRhythm + (Math.random() - 0.5) * 0.02;
+        const hitDuration = 0.012 + Math.random() * 0.015;
 
-        // 白噪音切片 (每次撞擊位置不同，高低頻率與 Q 值動態浮動)
+        // 清爽白噪音切片 (聚焦高 Q 值 2200Hz ~ 4000Hz 塑料點擊頻率，防雜音)
         const noiseSrc = ctx.createBufferSource();
         noiseSrc.buffer = noiseBuffer;
 
         const bandpass = ctx.createBiquadFilter();
         bandpass.type = 'bandpass';
-        bandpass.frequency.setValueAtTime(1700 + Math.random() * 2600, hitTime);
-        bandpass.Q.setValueAtTime(2.5 + Math.random() * 3, hitTime);
+        bandpass.frequency.setValueAtTime(2200 + Math.random() * 1800, hitTime);
+        bandpass.Q.setValueAtTime(3.5 + Math.random() * 2, hitTime);
 
         const noiseGain = ctx.createGain();
-        // 隨機動態混和音量 (非線性分佈，避免音量規律性)
-        const hitVol = (0.2 + Math.pow(Math.random(), 0.7) * 0.35) * intensity;
+        const hitVol = (0.15 + Math.pow(Math.random(), 0.7) * 0.25) * intensity;
         noiseGain.gain.setValueAtTime(hitVol, hitTime);
         noiseGain.gain.exponentialRampToValueAtTime(0.001, hitTime + hitDuration);
 
         noiseSrc.connect(bandpass);
         bandpass.connect(noiseGain);
-        noiseGain.connect(ctx.destination);
+        noiseGain.connect(masterNode);
 
         noiseSrc.start(hitTime);
         noiseSrc.stop(hitTime + hitDuration + 0.01);
 
-        // 低頻杯壁與底座撞擊共振 (Cup Wall Resonance)
+        // 低頻杯壁撞擊共振 (Subtle Thud)
         const thudOsc = ctx.createOscillator();
         const thudGain = ctx.createGain();
         thudOsc.type = 'sine';
-        thudOsc.frequency.setValueAtTime(cupToneBase + Math.random() * 40, hitTime);
-        thudOsc.frequency.exponentialRampToValueAtTime(50, hitTime + hitDuration);
+        thudOsc.frequency.setValueAtTime(cupToneBase + Math.random() * 30, hitTime);
+        thudOsc.frequency.exponentialRampToValueAtTime(55, hitTime + hitDuration);
 
-        thudGain.gain.setValueAtTime(0.2 * intensity, hitTime);
-        thudGain.gain.exponentialRampToValueAtTime(0.003, hitTime + hitDuration);
+        thudGain.gain.setValueAtTime(0.12 * intensity, hitTime);
+        thudGain.gain.exponentialRampToValueAtTime(0.002, hitTime + hitDuration);
 
         thudOsc.connect(thudGain);
-        thudGain.connect(ctx.destination);
+        thudGain.connect(masterNode);
 
         thudOsc.start(hitTime);
         thudOsc.stop(hitTime + hitDuration);
@@ -346,7 +363,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
 
       finalNoise.connect(finalFilter);
       finalFilter.connect(finalGain);
-      finalGain.connect(ctx.destination);
+      finalGain.connect(masterNode);
 
       finalNoise.start(finalTime);
       finalNoise.stop(finalTime + 0.07);
@@ -368,7 +385,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
 
         bounceNoise.connect(bounceFilter);
         bounceFilter.connect(bounceGain);
-        bounceGain.connect(ctx.destination);
+        bounceGain.connect(masterNode);
 
         bounceNoise.start(bounceTime);
         bounceNoise.stop(bounceTime + 0.04);
