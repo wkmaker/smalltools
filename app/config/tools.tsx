@@ -434,6 +434,20 @@ export const CATEGORIES: CategorySection[] = [
           </svg>
         ),
       },
+      {
+        name: '吹牛骰子搖骰器',
+        subtitle: "LIAR'S DICE ROLLER",
+        description: '專為派對酒吧吹牛遊戲打造！具備防作弊計時器（精確顯示距離上次搖骰過了多久）與歷史 5 次紀錄，支援搖骰音效與杯蓋遮擋。',
+        href: '/liars-dice/',
+        cardClass: 'interestCard',
+        category: 'utility',
+        keywords: '吹牛骰子 搖骰器 吹牛 骰子 防作弊 計時器 酒吧遊戲 派對遊戲 liars dice anti cheat timer',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ffb800]">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5S17.33 9 16.5 9z" />
+          </svg>
+        ),
+      },
     ],
   },
 ];

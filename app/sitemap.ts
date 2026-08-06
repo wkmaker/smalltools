@@ -60,6 +60,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/resignation-calculator/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/resignation-calculator/en/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/hourly-rate-calculator/', lastModified: '2026-08-01', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/liars-dice/', lastModified: '2026-08-06', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/liars-dice/en/', lastModified: '2026-08-06', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   milestoneData.forEach((m) => {
