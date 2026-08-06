@@ -28,6 +28,9 @@ export interface CountryMatch {
   max_hourly_twd: number;
   tag: string;
   description: string;
+  travel_difficulty?: string;
+  local_avg_hourly_twd?: number;
+  travel_badge?: string;
 }
 
 /**
@@ -126,3 +129,95 @@ export function getSalaryForPR(targetPR: number, anchors: PercentileAnchor[]): n
 
   return 568_000;
 }
+
+/**
+ * 根據使用者輸入的時薪與國家適配資料，計算旅遊難易度與當地薪資位階洞察
+ */
+export function getTravelAndLocalRankInsights(
+  displayHourlyRate: number,
+  match: CountryMatch
+) {
+  const travelDifficulty = match.travel_difficulty || '一般';
+  const localAvgHourly = match.local_avg_hourly_twd || 100;
+
+  // 計算使用者時薪相當於該區域/國家平均薪資的倍數
+  const wageRatio = Number((displayHourlyRate / localAvgHourly).toFixed(1));
+
+  // 估算當地位階 (Estimated Local Percentile / PR)
+  let estimatedLocalPR: number;
+  if (wageRatio <= 0.5) {
+    estimatedLocalPR = Math.max(5, Math.round(wageRatio * 40));
+  } else if (wageRatio <= 1.0) {
+    estimatedLocalPR = Math.round(20 + (wageRatio - 0.5) * 60);
+  } else if (wageRatio <= 2.0) {
+    estimatedLocalPR = Math.min(92, Math.round(50 + (wageRatio - 1.0) * 35));
+  } else if (wageRatio <= 4.0) {
+    estimatedLocalPR = Math.min(98, Math.round(85 + (wageRatio - 2.0) * 6.5));
+  } else {
+    estimatedLocalPR = 99;
+  }
+
+  return {
+    travelDifficulty,
+    localAvgHourly,
+    wageRatio,
+    estimatedLocalPR,
+  };
+}
+
+export interface TravelTier {
+  difficulty: '簡單' | '一般' | '困難';
+  title: string;
+  badgeStyle: string;
+  destinations: string[];
+  description: string;
+}
+
+import countrySuitabilityData from './config/country_suitability.json';
+
+/**
+ * 根據使用者時薪，動態劃分旅遊「簡單」、「一般」、「困難」三個地點與體驗說明
+ * 數據直接讀取自 config/country_suitability.json 中的 travel_tier_rules 欄位
+ */
+export function getTravelTiers(displayHourlyRate: number): {
+  easy: TravelTier;
+  medium: TravelTier;
+  hard: TravelTier;
+} {
+  const rules = countrySuitabilityData.travel_tier_rules;
+  let selectedRule = rules.standard;
+
+  if (displayHourlyRate <= 0) {
+    selectedRule = rules.zero_rate;
+  } else if (displayHourlyRate >= 1000) {
+    selectedRule = rules.top_tier;
+  } else if (displayHourlyRate >= 450) {
+    selectedRule = rules.mid_tier;
+  }
+
+  return {
+    easy: {
+      difficulty: '簡單',
+      title: '簡單 (輕鬆無壓力)',
+      badgeStyle: 'text-text-main bg-surface-glass border border-border-glass font-bold',
+      destinations: selectedRule.easy.destinations,
+      description: selectedRule.easy.description,
+    },
+    medium: {
+      difficulty: '一般',
+      title: '一般 (小資愜意行)',
+      badgeStyle: 'text-text-main bg-surface-glass border border-border-glass font-bold',
+      destinations: selectedRule.medium.destinations,
+      description: selectedRule.medium.description,
+    },
+    hard: {
+      difficulty: '困難',
+      title: '困難 (預算精算行)',
+      badgeStyle: 'text-text-main bg-surface-glass border border-border-glass font-bold',
+      destinations: selectedRule.hard.destinations,
+      description: selectedRule.hard.description,
+    },
+  };
+}
+
+

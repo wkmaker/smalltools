@@ -12,6 +12,8 @@ import {
   getSalaryForPR,
   calculatePiecewisePR,
   formatPrCode,
+  getTravelAndLocalRankInsights,
+  getTravelTiers,
 } from './utils';
 
 // ─── 型別 ─────────────────────────────────────────────────────────────────────
@@ -190,7 +192,7 @@ export default function RankHeroBanner({
   const defaultMonthlyIncome = Math.round(defaultAnnualIncome / 12);
   const defaultHourlyRate = Math.max(1, Math.round(defaultMonthlyIncome / 176));
 
-  const isCustomMode = Boolean(hasCustomParams && realHourlyRate > 0);
+  const isCustomMode = Boolean(hasCustomParams);
 
   const displayPR = isCustomMode ? Number(taiwanPR.toFixed(1)) : heroMilestone.pr;
   const displayHourlyRate = isCustomMode ? Math.round(realHourlyRate) : defaultHourlyRate;
@@ -206,20 +208,21 @@ export default function RankHeroBanner({
   ).toFixed(1);
   const displayGlobalPR = isCustomMode ? globalPR.toFixed(1) : defaultGlobalPR;
   const displayGlobalBeatenPeople = ((Number(displayGlobalPR) / 100) * 80).toFixed(1);
-  const displayTaiwanRank = Math.round((1 - displayPR / 100) * 8_400_000).toLocaleString('zh-TW');
-
+  const displayTaiwanRank = displayPR === 0
+    ? '8,400,000 (宇宙級純愛義工)'
+    : Math.round((1 - displayPR / 100) * 8_400_000).toLocaleString('zh-TW');
 
   // ─── 星等評級 ─────────────────────────────────────────────────────────────
   const starCount =
-    displayPR < 20 ? 1 : displayPR < 40 ? 2 : displayPR < 65 ? 3 : displayPR < 85 ? 4 : 5;
-  const stars = '★'.repeat(starCount); // 用於分享文字
+    displayPR === 0 ? 0 : displayPR < 20 ? 1 : displayPR < 40 ? 2 : displayPR < 65 ? 3 : displayPR < 85 ? 4 : 5;
+  const stars = starCount === 0 ? '[無星級]' : '★'.repeat(starCount); // 用於分享文字
 
   // ─── 購買力指標 ───────────────────────────────────────────────────────────
-  const bobaCount = (displayHourlyRate / 65).toFixed(1);
-  const bentoCount = (displayHourlyRate / 100).toFixed(1);
-  const latteCount = (displayHourlyRate / 150).toFixed(1);
-  const movieHours = (330 / displayHourlyRate).toFixed(1);
-  const iphoneHours = Math.round(46900 / displayHourlyRate);
+  const bobaCount = displayHourlyRate <= 0 ? '0 (抓空氣喝)' : (displayHourlyRate / 65).toFixed(1);
+  const bentoCount = displayHourlyRate <= 0 ? '0 (扒朋友白飯)' : (displayHourlyRate / 100).toFixed(1);
+  const latteCount = displayHourlyRate <= 0 ? '0 (白開水喝飽)' : (displayHourlyRate / 150).toFixed(1);
+  const movieHours = displayHourlyRate <= 0 ? '∞ (下輩子再看)' : (330 / displayHourlyRate).toFixed(1);
+  const iphoneHours = displayHourlyRate <= 0 ? '∞ (做夢比較快)' : Math.round(46900 / displayHourlyRate).toString();
 
   // ─── 下一個里程碑 ─────────────────────────────────────────────────────────
   const nextMilestone = milestones.find((m) => m.pr > displayPR) || null;
@@ -236,17 +239,28 @@ export default function RankHeroBanner({
         ? rawHourlyGap.toFixed(2).replace(/\.?0+$/, '')
         : Math.round(rawHourlyGap).toString();
 
-  // ─── 國家適配 ─────────────────────────────────────────────────────────────
+  // ─── 國家適配與旅遊/當地位階洞察 ──────────────────────────────────────────
+  const countryMatches = countrySuitabilityData.tiers;
   const heroCountry =
-    countrySuitabilityData.find(
+    countryMatches.find(
       (c) => displayHourlyRate >= c.min_hourly_twd && displayHourlyRate < c.max_hourly_twd
-    ) || countrySuitabilityData[countrySuitabilityData.length - 1];
+    ) || countryMatches[countryMatches.length - 1];
+
+  const heroCountryInsights = useMemo(
+    () => getTravelAndLocalRankInsights(displayHourlyRate, heroCountry as CountryMatch),
+    [displayHourlyRate, heroCountry]
+  );
+
+  const travelTiers = useMemo(
+    () => getTravelTiers(displayHourlyRate),
+    [displayHourlyRate]
+  );
 
   // ─── Numbeo 洞察（memoized：只在 displayHourlyRate 變動時重算 152 國）────
   // countrySuitabilityData 為 module-level import，引用穩定，無需加入 deps
   const numbeoInsights = useMemo(
-    () => getNumbeoInsights(displayHourlyRate, countrySuitabilityData),
-    [displayHourlyRate]
+    () => getNumbeoInsights(displayHourlyRate, countryMatches),
+    [displayHourlyRate, countryMatches]
   );
 
   // ─── 探索選單衍生值（原 inner IIFE，移至 component body）───────────────
@@ -267,7 +281,12 @@ export default function RankHeroBanner({
   let feelComment: string;
   let comparisonVerdict: string;
 
-  if (mult >= 1.25) {
+  if (displayHourlyRate <= 0) {
+    statusBadge = '0 元躺平！全球 152 國共通真理';
+    statusBadgeStyle = 'bg-surface-glass border border-border-glass font-bold text-text-main';
+    feelComment = `以你目前的 $0/hr 時薪移居${targetName}，不管當地外食多便宜或房租多划算，因為基礎薪資是 0，乘以任何倍數都還是 0 元！強烈建議先去夢裡躺平或快去尋找工作！`;
+    comparisonVerdict = `【0 元體驗評估】去哪裡都是極致挑戰！不如待在家裡吹免費冷氣，夢裡要啥有啥！`;
+  } else if (mult >= 1.25) {
     statusBadge = '降維打擊！生活品質爽度倍增';
     statusBadgeStyle = 'bg-surface-glass border border-border-glass font-bold text-text-main';
     feelComment = `以你目前 $${displayHourlyRate}/hr 的時薪移居${targetName}，購買力直接放大至 ${exploreTarget.multiplierStr}x 倍！相當於在當地享有 $${localRate.toLocaleString('zh-TW')} NTD/hr 的高可支配薪資。入住無邊際泳池公寓、外食美饌與 SPA 按摩完全不傷錢包！`;
@@ -306,8 +325,13 @@ export default function RankHeroBanner({
       {/* 壹、 階級頭部與身份象徵 (Rank Identity & Header) */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-glass pb-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`px-3 py-1 text-xs font-bold rounded-full ${styles.milestoneBadge}`}>
-            全台薪資評定 PR {displayPR}
+          <span className={`px-3 py-1 text-xs font-bold rounded-full ${styles.milestoneBadge} flex items-center gap-1`}>
+            {displayPR === 0 && (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            )}
+            <span>{displayPR === 0 ? '隱藏彩蛋解鎖 PR 0.0' : `全台薪資評定 PR ${displayPR}`}</span>
           </span>
           <div className="flex items-center gap-0.5 px-2.5 py-1 rounded-md bg-surface-glass border border-border-glass">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -326,17 +350,20 @@ export default function RankHeroBanner({
         </div>
       </div>
 
-      {/* 階級性格金句 */}
-      <div className="p-4 rounded-xl bg-surface-glass border border-border-glass">
-        <span className={`text-xs font-bold ${styles.themeAccentText} flex items-center gap-1 mb-1`}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          階級特質語錄
-        </span>
-        <p className="text-base text-text-main font-medium leading-relaxed italic">
-          「{heroMilestone.desc}」
-        </p>
+      {/* 階級性格金句與配對國家 */}
+      <div className="p-4 rounded-xl bg-surface-glass border border-border-glass space-y-3">
+        <div>
+          <span className={`text-xs font-bold ${styles.themeAccentText} flex items-center gap-1 mb-1`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            階級特質語錄
+          </span>
+          <p className="text-base text-text-main font-medium leading-relaxed italic">
+            「{heroMilestone.desc}」
+          </p>
+        </div>
+
       </div>
 
       {/* 貳、 核心財務與時薪數據看板 (Core Financial Metrics) */}
@@ -486,81 +513,110 @@ export default function RankHeroBanner({
           全球生活圈與移居品質適配 (Global Lifestyle Compatibility)
         </h3>
         <div className="p-4 rounded-xl bg-surface-glass border border-border-glass space-y-4">
-          {/* 最適移居圈標題與當前實質時薪 */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-glass pb-3">
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${styles.countryBadge} flex items-center gap-1`}>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              基本適配圈：{heroCountry.flag} {heroCountry.name}
-            </span>
-            <span className="text-xs text-text-sub font-mono">
-              折算時薪：<span className={`font-bold ${styles.themeAccentText}`}>${displayHourlyRate} NTD/hr</span>
-            </span>
+          {/* 旅遊去哪裡玩 (簡單 / 一般 / 困難 3 大目的地評估) */}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-glass pb-3">
+              <div className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>旅遊去哪裡玩 (難易度地點推薦)</span>
+              </div>
+              <span className="text-xs text-text-sub font-mono">
+                折算時薪：<span className={`font-bold ${styles.themeAccentText}`}>${displayHourlyRate} NTD/hr</span>
+              </span>
+            </div>
+
+
+
+            {/* 簡單 / 一般 / 困難 3 大地點卡片 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* 簡單 */}
+              <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col justify-between space-y-2">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-extrabold text-text-main flex items-center gap-1">
+                      <svg className={`w-3.5 h-3.5 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>{travelTiers.easy.title}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-xs font-bold border bg-surface-glass text-text-main border-border-glass">
+                      簡單
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-sub leading-relaxed mb-2">
+                    {travelTiers.easy.description}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border-glass/40">
+                  {travelTiers.easy.destinations.map((dst) => (
+                    <span key={dst} className="px-2 py-1 rounded bg-surface-glass-btn border border-border-glass text-xs font-semibold text-text-main">
+                      {dst}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* 一般 */}
+              <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col justify-between space-y-2">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-extrabold text-text-main flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{travelTiers.medium.title}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-xs font-bold border bg-surface-glass text-text-main border-border-glass">
+                      一般
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-sub leading-relaxed mb-2">
+                    {travelTiers.medium.description}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border-glass/40">
+                  {travelTiers.medium.destinations.map((dst) => (
+                    <span key={dst} className="px-2 py-1 rounded bg-surface-glass-btn border border-border-glass text-xs font-semibold text-text-main">
+                      {dst}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* 困難 */}
+              <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col justify-between space-y-2">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-extrabold text-text-main flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span>{travelTiers.hard.title}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-xs font-bold border bg-surface-glass text-text-main border-border-glass">
+                      困難
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-sub leading-relaxed mb-2">
+                    {travelTiers.hard.description}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border-glass/40">
+                  {travelTiers.hard.destinations.map((dst) => (
+                    <span key={dst} className="px-2 py-1 rounded bg-surface-glass-btn border border-border-glass text-xs font-semibold text-text-main">
+                      {dst}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* 地理套利降維打擊 與 時薪階層動態推薦 Top 3 */}
-          {numbeoInsights.arbitrageTop3.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-glass/40 pb-2">
-                <div>
-                  <div className="text-xs font-bold text-text-main flex items-center gap-1.5">
-                    <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span>{numbeoInsights.tierTitle}</span>
-                  </div>
-                  <p className="text-xs text-text-sub mt-0.5">{numbeoInsights.tierDesc}</p>
-                </div>
-                <span className="text-xs font-medium text-text-sub border border-border-glass bg-surface-glass px-2.5 py-0.5 rounded-full shrink-0">
-                  時薪階層動態精算
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {numbeoInsights.arbitrageTop3.map((item) => (
-                  <div key={item.country} className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col justify-between space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-text-main">{item.flag} {item.name_zh}</span>
-                      <span className={`text-sm font-black font-mono ${styles.themeAccentText} flex items-center gap-0.5`}>
-                        {item.multiplierStr}x
-                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.57l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.57l7-10a1 1 0 011.12-.384z" clipRule="evenodd" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div className={`text-xs font-bold ${styles.themeAccentText}`}>【{item.suitabilityTag}】</div>
-                    <div className="text-xs text-text-sub font-mono">
-                      體感：<span className="font-semibold text-text-main">{item.lifestylePerk}</span>
-                    </div>
-                    <div className="text-xs text-text-sub flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-border-glass/40 font-mono">
-                      <span>外食 {item.restSavings > 0 ? `省 ${item.restSavings}%` : item.restSavings < 0 ? `高 ${Math.abs(item.restSavings)}%` : '物價相近'}</span>
-                      <span>•</span>
-                      <span>{item.costDiffText}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* 購買力相當的對等國家 */}
-          {numbeoInsights.equivalentPicks.length > 0 && (
-            <div className="pt-2 border-t border-border-glass/50 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="text-text-sub font-medium flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-text-sub inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                </svg>
-                <span>同等時薪幸福感與質感升級圈：</span>
-              </span>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {numbeoInsights.equivalentPicks.map((item) => (
-                  <span key={item.country} className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-xs font-semibold text-text-main">
-                    {item.flag} {item.name_zh}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+
+
 
           {/* 全球 152 國互動購買力試算與探索選單 */}
           {numbeoInsights.evaluated.length > 0 && (

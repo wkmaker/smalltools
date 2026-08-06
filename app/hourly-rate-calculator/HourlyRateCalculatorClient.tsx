@@ -175,7 +175,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
   const milestones: Milestone[] = milestoneData;
   const taiwanAnchors = currentTaiwanStat.official_percentiles;
   const globalAnchors = globalStatsData.official_percentiles;
-  const countryMatches: CountryMatch[] = countrySuitabilityData;
+  const countryMatches: CountryMatch[] = countrySuitabilityData.tiers;
 
   // Fix #2 + Low Priority: 計算結果整體 useMemo，避免每次 render 重跑
   const { totalHours, netIncome, realHourlyRate, annualIncome, taiwanPR, globalPR } = useMemo(() => {
@@ -201,8 +201,8 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
 
     const realHourlyRate = totalHours > 0 ? Math.max(0, netIncome / totalHours) : 0;
     const annualIncome = realHourlyRate * currentTaiwanStat.default_working_hours.hours_per_year;
-    const taiwanPR = Math.min(Math.max(calculatePiecewisePR(annualIncome, taiwanAnchors, false), 1.0), 99.9);
-    const globalPR = Math.min(Math.max(calculatePiecewisePR(annualIncome, globalAnchors, true), 1.0), 99.9);
+    const taiwanPR = realHourlyRate <= 0 ? 0.0 : Math.min(Math.max(calculatePiecewisePR(annualIncome, taiwanAnchors, false), 1.0), 99.9);
+    const globalPR = realHourlyRate <= 0 ? 0.0 : Math.min(Math.max(calculatePiecewisePR(annualIncome, globalAnchors, true), 1.0), 99.9);
 
     return { totalHours, netIncome, realHourlyRate, annualIncome, taiwanPR, globalPR };
   }, [
@@ -219,11 +219,15 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
 
   // ─── 已達成的最高 PR 里程碑 ───────────────────────────────────────────────
   let matchedMilestone = milestones[0];
-  for (const m of milestones) {
-    if (m.pr <= taiwanPR) {
-      matchedMilestone = m;
-    } else {
-      break;
+  if (realHourlyRate <= 0) {
+    matchedMilestone = milestones.find((m) => m.pr === 0) || milestones[0];
+  } else {
+    for (const m of milestones) {
+      if (m.pr <= taiwanPR && m.pr > 0) {
+        matchedMilestone = m;
+      } else if (m.pr > taiwanPR) {
+        break;
+      }
     }
   }
 
