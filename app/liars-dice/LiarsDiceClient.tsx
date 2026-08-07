@@ -578,6 +578,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
         {isCovered && (
           <div
             className={`${styles.cupCover} ${isPeeking ? styles.cupCoverPeeking : ''} select-none touch-none cursor-pointer`}
+            onContextMenu={(e) => e.preventDefault()}
             onPointerDown={(e) => {
               e.preventDefault();
               try {
