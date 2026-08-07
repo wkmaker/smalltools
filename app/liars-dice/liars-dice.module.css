@@ -1,0 +1,475 @@
+/* app/liars-dice/liars-dice.module.css */
+
+.container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 全螢幕沉浸式大舞台 */
+.fullscreenStage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+  background: #05050a !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 1.5rem 1rem !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  box-sizing: border-box !important;
+}
+
+:global([data-theme='light']) .fullscreenStage {
+  background: #f8fafc !important;
+}
+
+.fullscreenInner {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 2rem;
+}
+
+.fullscreenStage .timerBanner {
+  margin-bottom: 0 !important;
+  padding: 1.25rem !important;
+}
+
+.fullscreenStage .timerDigit {
+  font-size: 3rem !important;
+}
+
+.fullscreenStage .cupArea {
+  min-height: 300px !important;
+}
+
+.fullscreenStage .diceCard {
+  width: 80px !important;
+  height: 80px !important;
+}
+
+/* 主面板 */
+.mainCard {
+  background: var(--glass-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 防作弊計時器看板 */
+.timerBanner {
+  background: rgba(255, 184, 0, 0.08);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  border-radius: 1rem;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+:global([data-theme='light']) .timerBanner {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+.timerDigit {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffb800;
+  text-shadow: 0 0 12px rgba(255, 184, 0, 0.4);
+}
+
+:global([data-theme='light']) .timerDigit {
+  color: #d97706;
+  text-shadow: none;
+}
+
+/* 骰杯 / 骰子區域 */
+.cupArea {
+  position: relative;
+  min-height: 220px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px dashed var(--card-border);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+:global([data-theme='light']) .cupArea {
+  background: rgba(241, 245, 249, 0.6);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+/* 窺視高亮邊框 */
+.cupAreaPeeking {
+  border-style: solid !important;
+  border-color: #ffb800 !important;
+  box-shadow: 0 0 25px rgba(255, 184, 0, 0.45), inset 0 0 20px rgba(255, 184, 0, 0.15) !important;
+}
+
+:global([data-theme='light']) .cupAreaPeeking {
+  border-color: #d97706 !important;
+  box-shadow: 0 0 25px rgba(217, 119, 6, 0.35), inset 0 0 20px rgba(217, 119, 6, 0.1) !important;
+}
+
+/* 窺視 HUD 頂部提示條 */
+.peekHud {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #ffb800;
+  color: #ffb800;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(255, 184, 0, 0.4);
+  z-index: 30;
+  pointer-events: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: fadeIn 0.15s ease-out;
+}
+
+:global([data-theme='light']) .peekHud {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #d97706;
+  color: #d97706;
+  box-shadow: 0 2px 10px rgba(217, 119, 6, 0.25);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -5px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 搖骰震動動畫 */
+.shaking {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(0deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+/* 遮蓋蓋子 (Cup Cover) - 100% 完全不透明防偷看遮罩 */
+.cupCover {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(20, 20, 32, 1) 0%, rgba(10, 10, 18, 1) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.1rem;
+  color: var(--text-primary);
+  opacity: 1;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.cupCover * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* 窺視隱形蓋子狀態 (保持 pointer-events 允許持續捕獲 PointerUp / PointerCancel，避免手機閃爍) */
+.cupCoverPeeking {
+  opacity: 0 !important;
+  backdrop-filter: blur(0px) !important;
+  -webkit-backdrop-filter: blur(0px) !important;
+}
+
+:global([data-theme='light']) .cupCover {
+  background: linear-gradient(135deg, rgba(241, 245, 249, 1) 0%, rgba(226, 232, 240, 1) 100%);
+}
+
+.cupCoverIcon {
+  width: 4rem;
+  height: 4rem;
+  color: #ffb800;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 0 10px rgba(255, 184, 0, 0.4));
+}
+
+:global([data-theme='light']) .cupCoverIcon {
+  color: #d97706;
+  filter: none;
+}
+
+/* 骰子網格 */
+.diceGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* 窺視狀態下骰子高亮放大 */
+.diceCardPeeking {
+  transform: scale(1.08) !important;
+  box-shadow: 0 8px 24px rgba(255, 184, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.95) !important;
+}
+
+:global([data-theme='light']) .diceCardPeeking {
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.95) !important;
+}
+
+/* 單顆骰子卡片 */
+.diceCard {
+  width: 68px;
+  height: 68px;
+  background: linear-gradient(145deg, #ffffff, #e6e6e6);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.diceCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 184, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+.diceCardLocked {
+  border: 3px solid #ffb800;
+  box-shadow: 0 0 16px rgba(255, 184, 0, 0.7);
+}
+
+:global([data-theme='light']) .diceCardLocked {
+  border-color: #d97706;
+  box-shadow: 0 0 16px rgba(217, 119, 6, 0.4);
+}
+
+/* 點數統計卡片 */
+.summaryBox {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+:global([data-theme='light']) .summaryBox {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.summaryBadge {
+  background: rgba(255, 184, 0, 0.12);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  color: #ffb800;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+:global([data-theme='light']) .summaryBadge {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #d97706;
+}
+
+/* 按鈕專用 */
+.actionBtnGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.actionBtnPrimary {
+  background: linear-gradient(135deg, #ffb800 0%, #ff7300 100%);
+  color: #000000;
+  font-weight: 700;
+  font-size: 1.125rem;
+  padding: 0.875rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(255, 184, 0, 0.4);
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.actionBtnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255, 184, 0, 0.6);
+}
+
+.actionBtnPrimary:active {
+  transform: translateY(0);
+}
+
+.actionBtnSecondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.actionBtnSecondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #ffb800;
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .actionBtnSecondary {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+:global([data-theme='light']) .actionBtnSecondary:hover {
+  border-color: #d97706;
+  color: #d97706;
+}
+
+@media (max-width: 640px) {
+  .mainCard {
+    padding: 1rem;
+  }
+  .actionBtnGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .actionBtnPrimary,
+  .actionBtnSecondary {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9375rem;
+    width: 100%;
+    white-space: nowrap;
+  }
+}
+
+/* 歷史紀錄列表 */
+.historyCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--card-border);
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+:global([data-theme='light']) .historyCard {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.historyTime {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+/* 歷史紀錄 Toggle 膠囊按鈕 */
+.historyToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background-color: var(--select-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.historyToggleBtn:hover {
+  border-color: #ffb800;
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .historyToggleBtn:hover {
+  border-color: #d97706;
+  color: #d97706;
+}
+
+.historyBadge {
+  padding: 0.1rem 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background-color: rgba(255, 184, 0, 0.2);
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .historyBadge {
+  background-color: rgba(217, 119, 6, 0.15);
+  color: #d97706;
+}

@@ -58,6 +58,7 @@
 * **[目標計時器](https://tools.cjkuo.net/time/)** (`/time`) - 全螢幕極簡數位時鐘與目標計時器，支援多種時間格式與主題色設定。
 * **[Epoch 時間戳記轉換](https://tools.cjkuo.net/epoch/)** (`/epoch`) - 支援秒與毫秒自動判定，即時在台北時間、UTC、美西時區之間雙向轉換。
 * **[幸運轉盤抽獎小工具](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 支援自訂獎項、權重與色彩，提供全螢幕舞台、物理動畫與音效。
+* **[吹牛骰子搖骰器](https://tools.cjkuo.net/liars-dice/)** (`/liars-dice`) - 專為酒吧派對吹牛遊戲打造！具備防作弊計時器、中央手勢窺視、歷史 5 次紀錄、全螢幕舞台、擬真物理音效與手機觸覺震動。
 * **[光影裁剪 - 萬能圖片處理大師](https://tools.cjkuo.net/image-processor/)** (`/image-processor`) - 支援視覺化裁切、尺寸調整、jSquash WebAssembly 轉檔壓縮與多檔批次打包。
 * **[PDF 頁面組合器](https://tools.cjkuo.net/pdf-processor/)** (`/pdf-processor`) - 純前端 PDF 合併、拖曳頁面排序、單頁 90° 旋轉與頁面刪除。
 * **[PDF 壓縮大師](https://tools.cjkuo.net/pdf-compressor/)** (`/pdf-compressor`) - 針對 PDF 內嵌點陣圖深度壓縮與降採樣，保持向量文字清晰並大幅減少檔案體積。
