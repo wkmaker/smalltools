@@ -327,6 +327,14 @@
 }
 
 /* 按鈕專用 */
+.actionBtnGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
 .actionBtnPrimary {
   background: linear-gradient(135deg, #ffb800 0%, #ff7300 100%);
   color: #000000;
@@ -364,6 +372,7 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
 }
 
@@ -380,6 +389,24 @@
 :global([data-theme='light']) .actionBtnSecondary:hover {
   border-color: #d97706;
   color: #d97706;
+}
+
+@media (max-width: 640px) {
+  .mainCard {
+    padding: 1rem;
+  }
+  .actionBtnGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .actionBtnPrimary,
+  .actionBtnSecondary {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9375rem;
+    width: 100%;
+    white-space: nowrap;
+  }
 }
 
 /* 歷史紀錄列表 */
