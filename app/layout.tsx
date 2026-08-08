@@ -29,6 +29,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
+  alternates: {
+    canonical: 'https://tools.cjkuo.net/',
+  },
   title: {
     default: '工具庫 | 免費線上工具集 - 房貸/信貸/JSON/圖片/密碼/SSL 計算機',
     template: '%s | 工具庫 - tools.cjkuo.net',
