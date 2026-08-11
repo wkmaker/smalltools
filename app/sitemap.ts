@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/time/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/time/en/', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/compound-interest/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/compound-interest/en/', lastModified: '2026-08-11', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/personal-loan/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/car-loan/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/car-loan/en/', lastModified: '2026-08-11', changeFrequency: 'monthly', priority: 0.8 },

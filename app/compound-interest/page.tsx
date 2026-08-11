@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   keywords: '複利試算器,定期定額計算機,投資複利,年化報酬率,資產翻倍,複利效應,理財計算機',
   alternates: {
     canonical: 'https://tools.cjkuo.net/compound-interest/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/compound-interest/',
+      en: 'https://tools.cjkuo.net/compound-interest/en/',
+      'x-default': 'https://tools.cjkuo.net/compound-interest/en/',
+    },
   },
   openGraph: {
     title: '複利試算器 - 免費線上定期定額與投資複利計算機',
