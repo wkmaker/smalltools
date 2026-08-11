@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './pledge-calculator.module.css';
 
@@ -9,7 +10,92 @@ function formatNumber(val: number): string {
   return Math.round(val).toLocaleString('zh-TW');
 }
 
-export default function PledgeCalculatorClient() {
+interface Props {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '股票質押維持率計算機',
+    subtitle: 'STOCK PLEDGE & MARGIN CALCULATOR',
+    description:
+      '專業免費的線上股票質押與維持率壓力測試計算機！支援張/股單位切換、自訂 130%/160% 門檻、動態 SVG 儀表板、0%-60% 大跌模擬與保證金回補金額試算。',
+    langToggleLabel: 'English',
+    langToggleUrl: '/pledge-calculator/en/',
+    assetSettingTitle: '質押資產設定',
+    stockPriceLabel: '目前個股單價 (元)',
+    stockQtyLabel: '持股數量',
+    unitShares: '股',
+    unitLots: '張',
+    marketValueLabel: '目前股票總市值',
+    loanAmountLabel: '借款本金 (元)',
+    maxLoan60: '60% 上限',
+    loanBtn60: '帶入 60% 借款 (成數上限)',
+    loanBtn50: '帶入 50% 借款 (安全防線)',
+    warnRateLabel: '追繳維持率門檻 (%)',
+    safeRateLabel: '目標安全維持率 (%)',
+    copyShareBtn: '複製質押試算分享連結',
+    dashboardTitle: '質押維持率風險儀表板',
+    statusNoLoan: '無借款安全區',
+    statusSafe: '安全健康',
+    statusWarning: '低於安全線 (警示)',
+    statusDanger: '低於門檻 (追繳被斷頭)',
+    stressTestTitle: '模擬大盤 / 股價大跌壓力測試',
+    simPriceLabel: '模擬股價',
+    simValueLabel: '模擬總市值',
+    warnPriceTitle: (rate: number) => `觸發追繳臨界價 (${rate}%)`,
+    safePriceTitle: (rate: number) => `維持安全線臨界價 (${rate}%)`,
+    allowDrop: '容許跌幅',
+    replenishAlertBelow: (rate: number) => `已低於目標安全維持率 ${rate}%，補繳方案試算：`,
+    replenishAlertSafe: '模擬維持率處於安全區，無須補繳',
+    planA: '方案 A：償還借款本金',
+    planB: '方案 B：補繳現金擔保',
+    toastCopied: '已複製質押維持率試算分享連結',
+    currencyUnit: '元',
+  },
+  en: {
+    title: 'Stock Margin & Pledge Calculator',
+    subtitle: 'STOCK PLEDGE & MARGIN CALCULATOR',
+    description:
+      'Free online stock pledge & margin ratio calculator! Supports shares/lots toggle, customizable 130%/160% thresholds, SVG risk gauge, 0%-60% market crash stress test, and cash replenishment simulation.',
+    langToggleLabel: '繁體中文',
+    langToggleUrl: '/pledge-calculator/',
+    assetSettingTitle: 'Pledged Asset Settings',
+    stockPriceLabel: 'Current Stock Price ($)',
+    stockQtyLabel: 'Share Quantity',
+    unitShares: 'Shares',
+    unitLots: 'Lots (1,000)',
+    marketValueLabel: 'Total Market Value',
+    loanAmountLabel: 'Loan Principal ($)',
+    maxLoan60: '60% Cap',
+    loanBtn60: '60% Loan Cap',
+    loanBtn50: '50% Safe Limit',
+    warnRateLabel: 'Margin Call Threshold (%)',
+    safeRateLabel: 'Target Safe Margin (%)',
+    copyShareBtn: 'Copy Shareable Link',
+    dashboardTitle: 'Margin Ratio Risk Gauge',
+    statusNoLoan: 'No Loan (Safe Zone)',
+    statusSafe: 'Safe & Healthy',
+    statusWarning: 'Below Target Safe Margin',
+    statusDanger: 'Margin Call Triggered!',
+    stressTestTitle: 'Market Crash Stress Test Simulation',
+    simPriceLabel: 'Simulated Stock Price',
+    simValueLabel: 'Simulated Market Value',
+    warnPriceTitle: (rate: number) => `Margin Call Trigger Price (${rate}%)`,
+    safePriceTitle: (rate: number) => `Target Safe Price (${rate}%)`,
+    allowDrop: 'Max Allowed Drop',
+    replenishAlertBelow: (rate: number) => `Below target safe margin (${rate}%). Replenishment required:`,
+    replenishAlertSafe: 'Margin ratio is within safe zone. No cash required.',
+    planA: 'Plan A: Repay Loan Principal',
+    planB: 'Plan B: Deposit Cash Guarantee',
+    toastCopied: 'Shareable link copied to clipboard',
+    currencyUnit: '$',
+  },
+};
+
+export default function PledgeCalculatorClient({ lang = 'zh-TW' }: Props) {
+  const t = TRANSLATIONS[lang];
+
   // 輸入欄位狀態 (單位：元 / 張 / %)
   const [stockPrice, setStockPrice] = useState<number | ''>(200);
   const [stockQty, setStockQty] = useState<number | ''>(50);
@@ -23,6 +109,7 @@ export default function PledgeCalculatorClient() {
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef<boolean>(false);
 
   const priceInputId = useId();
   const qtyInputId = useId();
@@ -33,7 +120,7 @@ export default function PledgeCalculatorClient() {
   const showToast = useCallback((msg: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ msg, show: true });
-    toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
+    toastTimerRef.current = setTimeout(() => setToast(st => ({ ...st, show: false })), 2500);
   }, []);
 
   // 設定全頁背景主題色 (金黃色)
@@ -41,6 +128,41 @@ export default function PledgeCalculatorClient() {
     document.documentElement.style.setProperty('--theme-color', '#ffb800');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 184, 0, 0.6)');
   }, []);
+
+  // 初次掛載：讀取 URL Query 參數進行狀態同步
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const pP = params.get('p');
+    const pQ = params.get('q');
+    const pU = params.get('u');
+    const pL = params.get('l');
+    const pW = params.get('w');
+    const pS = params.get('s');
+
+    if (pP && !isNaN(Number(pP))) setStockPrice(Math.max(0, Number(pP)));
+    if (pQ && !isNaN(Number(pQ))) setStockQty(Math.max(0, Number(pQ)));
+    if (pU && (Number(pU) === 1000 || Number(pU) === 1)) setQtyUnit(Number(pU));
+    if (pL && !isNaN(Number(pL))) setLoanAmount(Math.max(0, Number(pL)));
+    if (pW && !isNaN(Number(pW))) setThresholdWarn(Math.max(0, Number(pW)));
+    if (pS && !isNaN(Number(pS))) setThresholdSafe(Math.max(0, Number(pS)));
+
+    isMountedRef.current = true;
+  }, []);
+
+  // 狀態變更時更新網址 (URL replaceState)
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    const params = new URLSearchParams({
+      p: stockPrice.toString(),
+      q: stockQty.toString(),
+      u: qtyUnit.toString(),
+      l: loanAmount.toString(),
+      w: thresholdWarn.toString(),
+      s: thresholdSafe.toString(),
+    });
+    window.history.replaceState(null, '', `?${params.toString()}`);
+  }, [stockPrice, stockQty, qtyUnit, loanAmount, thresholdWarn, thresholdSafe]);
 
   // 計算股數與總市值
   const numPrice = stockPrice === '' ? 0 : stockPrice;
@@ -118,48 +240,60 @@ export default function PledgeCalculatorClient() {
       s: numSafeRate.toString(),
     });
     const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(url).then(() => showToast('已複製質押維持率試算分享連結'));
+    navigator.clipboard.writeText(url).then(() => showToast(t.toastCopied));
   };
 
   return (
     <>
       <ToolLayout
-        title="股票質押維持率計算機"
-        subtitle="STOCK PLEDGE & MARGIN CALCULATOR"
-        description="專業免費的線上股票質押與維持率壓力測試計算機！支援張/股單位切換、自訂 130%/160% 門檻、動態 SVG 儀表板、0%-60% 大跌模擬與保證金回補金額試算。"
+        title={t.title}
+        subtitle={t.subtitle}
+        description={t.description}
         accentColor="#ffb800"
         accentGlow="rgba(255, 184, 0, 0.6)"
       >
+        <div className="flex justify-end mb-6">
+          <Link
+            href={t.langToggleUrl}
+            className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#ffb800)] transition-all no-underline"
+          >
+            {t.langToggleLabel}
+          </Link>
+        </div>
+
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：質押資產設定面板 */}
           <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
             <h3 className={`text-sm ${styles.accentText} uppercase tracking-[1px] font-semibold border-b border-border-glass pb-3`}>
-              質押資產設定
+              {t.assetSettingTitle}
             </h3>
 
             {/* 個股單價與持股數量 */}
             <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
               <div className="flex flex-col gap-2">
-                <label htmlFor={priceInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">目前個股單價 (元)</label>
+                <label htmlFor={priceInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.stockPriceLabel}</label>
                 <input
                   id={priceInputId}
                   type="number"
                   step="0.1"
-                  placeholder="例如：200"
+                  placeholder="200"
                   value={stockPrice}
-                  onChange={e => setStockPrice(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setStockPrice(val === '' ? '' : parseFloat(val));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={qtyInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">持股數量</label>
+                <label htmlFor={qtyInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.stockQtyLabel}</label>
                 <div className="relative flex items-center">
                   <input
                     id={qtyInputId}
                     type="text"
                     inputMode="numeric"
-                    placeholder="例如：50"
+                    placeholder="50"
                     value={stockQty === '' ? '' : stockQty.toLocaleString('zh-TW')}
                     onChange={e => {
                       const raw = e.target.value.replace(/[^\d]/g, '');
@@ -172,8 +306,8 @@ export default function PledgeCalculatorClient() {
                     onChange={e => setQtyUnit(parseInt(e.target.value))}
                     className={`absolute right-1 top-1 bottom-1 bg-select-bg border border-border-glass ${styles.accentText} text-xs px-2 rounded-xl outline-none cursor-pointer font-mono font-medium`}
                   >
-                    <option value={1000}>張</option>
-                    <option value={1}>股</option>
+                    <option value={1000}>{t.unitLots}</option>
+                    <option value={1}>{t.unitShares}</option>
                   </select>
                 </div>
               </div>
@@ -181,25 +315,25 @@ export default function PledgeCalculatorClient() {
 
             {/* 股票總市值 */}
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">目前股票總市值</span>
+              <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.marketValueLabel}</span>
               <div className={`bg-surface-glass border border-border-glass ${styles.accentText} px-4 py-3 rounded-xl text-lg font-bold font-mono`}>
-                ${formatNumber(marketValue)} 元
+                ${formatNumber(marketValue)} {t.currencyUnit}
               </div>
             </div>
 
             {/* 借款本金與快捷帶入按鈕 */}
             <div className={`flex flex-col gap-3 ${styles.divider} pt-5`}>
               <div className="flex justify-between items-center text-xs">
-                <label htmlFor={loanInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">借款本金 (元)</label>
+                <label htmlFor={loanInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.loanAmountLabel}</label>
                 <span className={`${styles.accentText} font-mono text-[0.75rem]`}>
-                  60% 上限：${formatNumber(maxLoan60)}
+                  {t.maxLoan60}：${formatNumber(maxLoan60)}
                 </span>
               </div>
               <input
                 id={loanInputId}
                 type="text"
                 inputMode="numeric"
-                placeholder="例如：6,000,000"
+                placeholder="6,000,000"
                 value={loanAmount === '' ? '' : loanAmount.toLocaleString('zh-TW')}
                 onChange={e => {
                   const raw = e.target.value.replace(/[^\d]/g, '');
@@ -214,14 +348,14 @@ export default function PledgeCalculatorClient() {
                   onClick={() => setLoanPercent(0.6)}
                   className={`py-2 px-2 text-xs ${styles.activeScheme} rounded-xl transition-all cursor-pointer font-mono font-medium`}
                 >
-                  帶入 60% 借款 (成數上限)
+                  {t.loanBtn60}
                 </button>
                 <button
                   type="button"
                   onClick={() => setLoanPercent(0.5)}
                   className="py-2 px-2 text-xs bg-surface-glass border border-border-glass text-text-sub rounded-xl hover:text-text-main transition-all cursor-pointer font-mono font-medium"
                 >
-                  帶入 50% 借款 (安全防線)
+                  {t.loanBtn50}
                 </button>
               </div>
             </div>
@@ -229,23 +363,29 @@ export default function PledgeCalculatorClient() {
             {/* 追繳與安全門檻設定 */}
             <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor={warnInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">追繳維持率門檻 (%)</label>
+                <label htmlFor={warnInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.warnRateLabel}</label>
                 <input
                   id={warnInputId}
                   type="number"
                   value={thresholdWarn}
-                  onChange={e => setThresholdWarn(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setThresholdWarn(val === '' ? '' : parseFloat(val));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={safeInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">目標安全維持率 (%)</label>
+                <label htmlFor={safeInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.safeRateLabel}</label>
                 <input
                   id={safeInputId}
                   type="number"
                   value={thresholdSafe}
-                  onChange={e => setThresholdSafe(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setThresholdSafe(val === '' ? '' : parseFloat(val));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
                 />
               </div>
@@ -258,7 +398,7 @@ export default function PledgeCalculatorClient() {
               className={`mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
                 ${styles.activeScheme} rounded-xl transition-all duration-300 cursor-pointer`}
             >
-              複製質押試算分享連結
+              {t.copyShareBtn}
             </button>
           </div>
 
@@ -267,7 +407,7 @@ export default function PledgeCalculatorClient() {
             {/* 1. SVG 儀表板 */}
             <div className={`${styles.glassCard} p-6 flex flex-col items-center justify-center shadow-lg relative`}>
               <h3 className="text-sm text-text-main uppercase tracking-[1px] font-semibold mb-4 self-start">
-                質押維持率風險儀表板
+                {t.dashboardTitle}
               </h3>
 
               <div className="relative w-full max-w-[320px] flex flex-col items-center">
@@ -309,12 +449,12 @@ export default function PledgeCalculatorClient() {
                     : 'bg-[#ef4444]/15 border-[#ef4444]/40 text-[#ef4444] animate-pulse'
                 }`}>
                   {numLoan === 0 && simMarketVal > 0
-                    ? '無借款安全區'
+                    ? t.statusNoLoan
                     : ratio >= numSafeRate
-                    ? '安全健康'
+                    ? t.statusSafe
                     : ratio >= numWarnRate
-                    ? '低於安全線 (警示)'
-                    : '低於門檻 (追繳被斷頭)'}
+                    ? t.statusWarning
+                    : t.statusDanger}
                 </div>
               </div>
             </div>
@@ -322,7 +462,7 @@ export default function PledgeCalculatorClient() {
             {/* 2. 大跌壓力測試滑桿 */}
             <div className={`${styles.glassCard} p-6 flex flex-col gap-4 shadow-lg`}>
               <div className="flex justify-between items-center text-sm font-semibold">
-                <span className="text-text-sub uppercase tracking-[1px]">模擬大盤 / 股價大跌壓力測試</span>
+                <span className="text-text-sub uppercase tracking-[1px]">{t.stressTestTitle}</span>
                 <span className={`font-mono text-base ${styles.accentText} font-bold`}>{stressDropPct}%</span>
               </div>
 
@@ -332,18 +472,18 @@ export default function PledgeCalculatorClient() {
                 max="60"
                 step="1"
                 value={stressDropPct}
-                onChange={e => setStressDropPct(parseInt(e.target.value) || 0)}
+                onChange={e => setStressDropPct(parseInt(e.target.value, 10) || 0)}
                 className={styles.rangeSlider}
               />
 
               <div className="grid grid-cols-2 gap-4 font-mono text-xs max-sm:grid-cols-1">
                 <div className="bg-surface-glass border border-border-glass p-3 rounded-xl flex flex-col gap-1">
-                  <span className="text-text-sub font-medium">模擬股價</span>
-                  <span className="text-base text-text-main font-bold">${simPrice.toFixed(2)} 元</span>
+                  <span className="text-text-sub font-medium">{t.simPriceLabel}</span>
+                  <span className="text-base text-text-main font-bold">${simPrice.toFixed(2)} {t.currencyUnit}</span>
                 </div>
                 <div className="bg-surface-glass border border-border-glass p-3 rounded-xl flex flex-col gap-1">
-                  <span className="text-text-sub font-medium">模擬總市值</span>
-                  <span className="text-base text-text-main font-bold">${formatNumber(simMarketVal)} 元</span>
+                  <span className="text-text-sub font-medium">{t.simValueLabel}</span>
+                  <span className="text-base text-text-main font-bold">${formatNumber(simMarketVal)} {t.currencyUnit}</span>
                 </div>
               </div>
             </div>
@@ -351,18 +491,18 @@ export default function PledgeCalculatorClient() {
             {/* 3. 臨界點資訊卡片 */}
             <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
               <div className={styles.statCard}>
-                <span className="text-sm font-semibold text-text-sub">觸發追繳臨界價 ({numWarnRate}%)</span>
-                <span className="text-xl font-bold text-[#ef4444] font-mono">${warnPrice.toFixed(2)} 元</span>
+                <span className="text-sm font-semibold text-text-sub">{t.warnPriceTitle(numWarnRate)}</span>
+                <span className="text-xl font-bold text-[#ef4444] font-mono">${warnPrice.toFixed(2)} {t.currencyUnit}</span>
                 <span className="text-xs text-text-sub font-mono">
-                  容許跌幅：<strong className="text-[#ef4444]">{warnDrop.toFixed(2)}%</strong>
+                  {t.allowDrop}：<strong className="text-[#ef4444]">{warnDrop.toFixed(2)}%</strong>
                 </span>
               </div>
 
               <div className={styles.statCard}>
-                <span className="text-sm font-semibold text-text-sub">維持安全線臨界價 ({numSafeRate}%)</span>
-                <span className={`text-xl font-bold font-mono ${styles.aprText}`}>${safePrice.toFixed(2)} 元</span>
+                <span className="text-sm font-semibold text-text-sub">{t.safePriceTitle(numSafeRate)}</span>
+                <span className={`text-xl font-bold font-mono ${styles.aprText}`}>${safePrice.toFixed(2)} {t.currencyUnit}</span>
                 <span className="text-xs text-text-sub font-mono">
-                  容許跌幅：<strong className={styles.aprText}>{safeDrop.toFixed(2)}%</strong>
+                  {t.allowDrop}：<strong className={styles.aprText}>{safeDrop.toFixed(2)}%</strong>
                 </span>
               </div>
             </div>
@@ -379,29 +519,29 @@ export default function PledgeCalculatorClient() {
                     <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                       <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2v-4h2v4z" />
                     </svg>
-                    已低於目標安全維持率 {numSafeRate}%，補繳方案試算：
+                    {t.replenishAlertBelow(numSafeRate)}
                   </span>
                 ) : (
                   <span className={`flex items-center gap-1.5 ${styles.aprText}`}>
                     <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
-                    模擬維持率處於安全區，無須補繳
+                    {t.replenishAlertSafe}
                   </span>
                 )}
               </h3>
 
               <div className="grid grid-cols-2 gap-4 font-mono text-xs max-sm:grid-cols-1">
                 <div className="bg-surface-glass border border-border-glass p-4 rounded-xl flex flex-col gap-1">
-                  <span className="text-text-sub font-medium">方案 A：償還借款本金</span>
+                  <span className="text-text-sub font-medium">{t.planA}</span>
                   <span className={`text-base font-bold ${isBelowSafe ? 'text-[#ef4444]' : 'text-text-main'}`}>
-                    ${formatNumber(repayAmt)} 元
+                    ${formatNumber(repayAmt)} {t.currencyUnit}
                   </span>
                 </div>
                 <div className="bg-surface-glass border border-border-glass p-4 rounded-xl flex flex-col gap-1">
-                  <span className="text-text-sub font-medium">方案 B：補繳現金擔保</span>
+                  <span className="text-text-sub font-medium">{t.planB}</span>
                   <span className={`text-base font-bold ${isBelowSafe ? 'text-[#ef4444]' : 'text-text-main'}`}>
-                    ${formatNumber(cashAmt)} 元
+                    ${formatNumber(cashAmt)} {t.currencyUnit}
                   </span>
                 </div>
               </div>

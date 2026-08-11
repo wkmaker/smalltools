@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './mortgage-loan.module.css';
 
@@ -23,6 +24,31 @@ interface CombinedDetailRow extends SingleLoanDetailRow {
   detail1?: SingleLoanDetailRow;
   detail2?: SingleLoanDetailRow;
 }
+
+interface Props {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '房屋貸款試算器',
+    subtitle: 'MORTGAGE LOAN CALCULATOR',
+    description:
+      '專業免費的線上房貸計算機！支援自備款與貸款成數雙向連動、單一與雙貸款組合模式 (如新青安+一般房貸)、多段式階梯利率、開辦費與 APR 實質年率試算。',
+    langToggleLabel: 'English',
+    langToggleUrl: '/mortgage-loan/en/',
+    toastCopied: '已複製房貸試算分享連結到剪貼簿',
+  },
+  en: {
+    title: 'Mortgage Loan Calculator',
+    subtitle: 'MORTGAGE LOAN CALCULATOR',
+    description:
+      'Free online mortgage loan calculator! Supports property price down payment sync, single and combined loan modes, grace periods, stepped rates, and APR solver.',
+    langToggleLabel: '繁體中文',
+    langToggleUrl: '/mortgage-loan/',
+    toastCopied: 'Shareable link copied to clipboard',
+  },
+};
 
 function calculateAPR(loanAmount: number, fee: number, payments: number[]): number {
   const netAmount = loanAmount - fee;
@@ -168,7 +194,8 @@ function calculateSingleLoanDetail(
   };
 }
 
-export default function MortgageLoanClient() {
+export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
+  const t = TRANSLATIONS[lang];
   // 基礎連動參數 (單位：萬元)
   const [housePrice, setHousePrice] = useState<number | ''>(1500);
   const [downPaymentPercent, setDownPaymentPercent] = useState<number | ''>(20);
@@ -252,11 +279,60 @@ export default function MortgageLoanClient() {
     toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   }, []);
 
+  const isMountedRef = useRef<boolean>(false);
+
   // 全頁背景 Theme 設定
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#00f5a0');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 245, 160, 0.6)');
   }, []);
+
+  // 初次掛載：讀取 URL Query 參數進行狀態同步
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const pHp = params.get('hp') || params.get('p');
+    const pDp = params.get('dp');
+    const pDa = params.get('da');
+    const pM = params.get('m');
+    const pSp = params.get('sp');
+    const pSg = params.get('sg');
+    const pSr = params.get('sr');
+    const pSf = params.get('sf');
+
+    if (pHp !== null && !isNaN(Number(pHp))) setHousePrice(Math.max(0, Number(pHp)));
+    if (pDp !== null && !isNaN(Number(pDp))) setDownPaymentPercent(Math.max(0, Number(pDp)));
+    if (pDa !== null && !isNaN(Number(pDa))) setDownPaymentAmount(Math.max(0, Number(pDa)));
+    if (pM === 'single' || pM === 'combined') setLoanMode(pM);
+    if (pSp !== null && !isNaN(Number(pSp))) setSinglePeriodVal(Math.max(1, Number(pSp)));
+    if (pSg !== null && !isNaN(Number(pSg))) setSingleGraceVal(Math.max(0, Number(pSg)));
+    if (pSr !== null && !isNaN(Number(pSr))) setSingleRate(Math.max(0, Number(pSr)));
+    if (pSf !== null && !isNaN(Number(pSf))) setSingleFee(Math.max(0, Number(pSf)));
+
+    isMountedRef.current = true;
+  }, []);
+
+  // 狀態變更時更新網址 (URL replaceState)
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    const timer = setTimeout(() => {
+      if (typeof window === 'undefined') return;
+      const params = new URLSearchParams();
+      if (housePrice !== '') params.set('hp', housePrice.toString());
+      if (downPaymentPercent !== '') params.set('dp', downPaymentPercent.toString());
+      if (downPaymentAmount !== '') params.set('da', downPaymentAmount.toString());
+      params.set('m', loanMode);
+      if (singlePeriodVal !== '') params.set('sp', singlePeriodVal.toString());
+      if (singleGraceVal !== '') params.set('sg', singleGraceVal.toString());
+      if (singleRate !== '') params.set('sr', singleRate.toString());
+      if (singleFee !== '') params.set('sf', singleFee.toString());
+
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [housePrice, downPaymentPercent, downPaymentAmount, loanMode, singlePeriodVal, singleGraceVal, singleRate, singleFee]);
 
   // 房屋總價變更處理
   const handlePriceChange = (valStr: string) => {
@@ -655,15 +731,8 @@ export default function MortgageLoanClient() {
 
   // 複製試算分享連結
   const copyShareLink = () => {
-    const params = new URLSearchParams({
-      p: housePrice.toString(),
-      dp: downPaymentPercent.toString(),
-      m: loanMode,
-      sp: singlePeriodVal.toString(),
-      sr: singleRate.toString(),
-    });
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(url).then(() => showToast('已複製房貸試算分享連結'));
+    if (typeof window === 'undefined') return;
+    navigator.clipboard.writeText(window.location.href).then(() => showToast(t.toastCopied));
   };
 
   const visibleSchedule = showAllRows ? schedule : schedule.slice(0, 121);
@@ -671,12 +740,21 @@ export default function MortgageLoanClient() {
   return (
     <>
       <ToolLayout
-        title="房屋貸款試算器"
-        subtitle="MORTGAGE LOAN CALCULATOR"
-        description="專業免費的線上房貸計算機！支援自備款與貸款成數雙向連動、單一與雙貸款組合模式 (如新青安+一般房貸)、多段式階梯利率、開辦費與 APR 實質年率試算。"
+        title={t.title}
+        subtitle={t.subtitle}
+        description={t.description}
         accentColor="#00f5a0"
         accentGlow="rgba(0, 245, 160, 0.6)"
       >
+        <div className="flex justify-end mb-6">
+          <Link
+            href={t.langToggleUrl}
+            className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#00f5a0)] transition-all no-underline"
+          >
+            {t.langToggleLabel}
+          </Link>
+        </div>
+
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：表單設定區 */}
           <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>

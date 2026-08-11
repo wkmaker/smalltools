@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './personal-loan.module.css';
 
@@ -39,7 +40,78 @@ function calculateAPR(loanAmount: number, fee: number, payments: number[]): numb
   return parseFloat((mid * 12 * 100).toFixed(2));
 }
 
-export default function PersonalLoanClient() {
+interface Props {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '個人信貸試算器',
+    subtitle: 'PERSONAL LOAN CALCULATOR',
+    description:
+      '專業免費的線上個人信貸計算機！支援本息均攤、本金均攤、開辦費/手續費攤提與 APR 實質總費用年率試算，即時提供月還款額與歷期攤還明細表。',
+    langToggleLabel: 'English',
+    langToggleUrl: '/personal-loan/en/',
+    settingTitle: '貸款條件設定',
+    shareBtn: '分享連結',
+    amountLabel: '貸款金額 (萬元)',
+    yearsLabel: '貸款期限 (年)',
+    rateLabel: '申貸利率 (%)',
+    feeLabel: '開辦手續費 (元)',
+    repayMethodLabel: '還款方式',
+    repayEqualPayment: '本息平均攤還',
+    repayEqualPrincipal: '本金平均攤還',
+    firstMonthPayment: '首期月付金額',
+    aprRateLabel: 'APR 總費用年率',
+    totalInterestLabel: '總利息支出',
+    trendTitle: '賸餘本金遞減趨勢圖',
+    legendRemaining: '賸餘本金餘額',
+    scheduleTitle: '信貸還款明細表',
+    colPeriod: '期數',
+    colPayment: '月付金額',
+    colPrincipal: '償還本金',
+    colInterest: '償還利息',
+    colRemaining: '剩餘本金',
+    initialPeriod: '初始',
+    periodText: (m: number) => `第 ${m} 期`,
+    toastCopied: '已複製試算分享連結到剪貼簿',
+  },
+  en: {
+    title: 'Personal Loan Calculator',
+    subtitle: 'PERSONAL LOAN CALCULATOR',
+    description:
+      'Professional free online personal loan calculator! Supports equal payment, equal principal, fee amortization, APR solver, and detailed repayment schedule.',
+    langToggleLabel: '繁體中文',
+    langToggleUrl: '/personal-loan/',
+    settingTitle: 'Loan Terms',
+    shareBtn: 'Share Link',
+    amountLabel: 'Loan Amount (10k TWD / $10,000)',
+    yearsLabel: 'Loan Term (Years)',
+    rateLabel: 'Interest Rate (%)',
+    feeLabel: 'Origination Fee ($)',
+    repayMethodLabel: 'Repayment Method',
+    repayEqualPayment: 'Equal Principal & Interest',
+    repayEqualPrincipal: 'Equal Principal',
+    firstMonthPayment: 'First Month Payment',
+    aprRateLabel: 'Effective APR Rate',
+    totalInterestLabel: 'Total Interest',
+    trendTitle: 'Remaining Balance Trend',
+    legendRemaining: 'Remaining Balance',
+    scheduleTitle: 'Repayment Schedule',
+    colPeriod: 'Period',
+    colPayment: 'Payment',
+    colPrincipal: 'Principal',
+    colInterest: 'Interest',
+    colRemaining: 'Remaining',
+    initialPeriod: 'Initial',
+    periodText: (m: number) => `Month ${m}`,
+    toastCopied: 'Shareable link copied to clipboard',
+  },
+};
+
+export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
+  const t = TRANSLATIONS[lang];
+
   const [loanAmount, setLoanAmount] = useState<number | ''>(50); // 萬
   const [loanYears, setLoanYears] = useState<number | ''>(7);
   const [annualRate, setAnnualRate] = useState<number | ''>(3.25); // %
@@ -54,6 +126,7 @@ export default function PersonalLoanClient() {
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isMountedRef = useRef<boolean>(false);
 
   const amountInputId = useId();
   const yearsInputId = useId();
@@ -63,7 +136,7 @@ export default function PersonalLoanClient() {
   const showToast = useCallback((msg: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ msg, show: true });
-    toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
+    toastTimerRef.current = setTimeout(() => setToast(st => ({ ...st, show: false })), 2500);
   }, []);
 
   // 設定全頁背景主題發光色
@@ -87,10 +160,13 @@ export default function PersonalLoanClient() {
     if (r !== null && !isNaN(Number(r))) setAnnualRate(Math.max(0, Number(r)));
     if (f !== null && !isNaN(Number(f))) setFee(Math.max(0, Number(f)));
     if (m === 'equal-principal' || m === 'equal-payment') setMethod(m);
+
+    isMountedRef.current = true;
   }, []);
 
-  // 網址參數雙向連動 (300ms 防抖無感更新)
+  // 網址參數雙向連動 (isMountedRef 鎖定防護)
   useEffect(() => {
+    if (!isMountedRef.current) return;
     const timer = setTimeout(() => {
       if (typeof window === 'undefined') return;
       const params = new URLSearchParams();
@@ -248,31 +324,40 @@ export default function PersonalLoanClient() {
 
     ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
     ctx.font = '11px sans-serif';
-    ctx.fillText('初始', 35, height - 12);
-    ctx.fillText(`第 ${schedule.length} 期`, width - 45, height - 12);
+    ctx.fillText(t.initialPeriod, 35, height - 12);
+    ctx.fillText(t.periodText(schedule.length), width - 45, height - 12);
     ctx.fillText(`$${Math.round(maxVal).toLocaleString('zh-TW')}`, 5, 20);
-  }, [schedule, loanAmount]);
+  }, [schedule, loanAmount, t]);
 
   const copyShareLink = () => {
     if (typeof window === 'undefined') return;
     navigator.clipboard.writeText(window.location.href).then(() => {
-      showToast('已複製試算分享連結');
+      showToast(t.toastCopied);
     });
   };
 
   return (
     <ToolLayout
-      title="個人信貸試算器"
-      subtitle="PERSONAL LOAN CALCULATOR"
-      description="專業免費的線上個人信貸計算機！支援本息均攤、本金均攤、開辦費/手續費攤提與 APR 實質總費用年率試算，即時提供月還款額與歷期攤還明細表。"
+      title={t.title}
+      subtitle={t.subtitle}
+      description={t.description}
       accentColor="#00f5a0"
       accentGlow="rgba(0, 245, 160, 0.6)"
     >
+      <div className="flex justify-end mb-6">
+        <Link
+          href={t.langToggleUrl}
+          className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#00f5a0)] transition-all no-underline"
+        >
+          {t.langToggleLabel}
+        </Link>
+      </div>
+
       <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
         {/* 左欄：輸入選項區塊 */}
         <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
           <div className="flex justify-between items-center pb-2 border-b border-border-glass">
-            <h2 className="text-base font-semibold text-text-main">貸款條件設定</h2>
+            <h2 className="text-base font-semibold text-text-main">{t.settingTitle}</h2>
             <button
               type="button"
               onClick={copyShareLink}
@@ -282,19 +367,22 @@ export default function PersonalLoanClient() {
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                 <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
               </svg>
-              <span>分享連結</span>
+              <span>{t.shareBtn}</span>
             </button>
           </div>
 
           <div className="flex flex-col gap-2">
             <label htmlFor={amountInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-              貸款金額 (萬元)
+              {t.amountLabel}
             </label>
             <input
               id={amountInputId}
               type="number"
               value={loanAmount}
-              onChange={e => setLoanAmount(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+              onChange={e => {
+                const val = e.target.value;
+                setLoanAmount(val === '' ? '' : parseFloat(val));
+              }}
               className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
             />
           </div>
@@ -302,27 +390,33 @@ export default function PersonalLoanClient() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label htmlFor={yearsInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                貸款期限 (年)
+                {t.yearsLabel}
               </label>
               <input
                 id={yearsInputId}
                 type="number"
                 value={loanYears}
-                onChange={e => setLoanYears(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                onChange={e => {
+                  const val = e.target.value;
+                  setLoanYears(val === '' ? '' : parseInt(val, 10));
+                }}
                 className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
               />
             </div>
 
             <div className="flex flex-col gap-2">
               <label htmlFor={rateInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                申貸利率 (%)
+                {t.rateLabel}
               </label>
               <input
                 id={rateInputId}
                 type="number"
                 step="0.01"
                 value={annualRate}
-                onChange={e => setAnnualRate(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                onChange={e => {
+                  const val = e.target.value;
+                  setAnnualRate(val === '' ? '' : parseFloat(val));
+                }}
                 className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
               />
             </div>
@@ -330,7 +424,7 @@ export default function PersonalLoanClient() {
 
           <div className={`flex flex-col gap-2 ${styles.divider} pt-4`}>
             <label htmlFor={feeInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-              開辦手續費 (元)
+              {t.feeLabel}
             </label>
             <input
               id={feeInputId}
@@ -347,7 +441,7 @@ export default function PersonalLoanClient() {
 
           {/* 還款方式 */}
           <div className={`flex flex-col gap-2 ${styles.divider} pt-4`}>
-            <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">還款方式</span>
+            <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.repayMethodLabel}</span>
             <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
               <button
                 type="button"
@@ -358,7 +452,7 @@ export default function PersonalLoanClient() {
                     : 'border-transparent text-text-sub hover:text-text-main'
                 }`}
               >
-                本息平均攤還
+                {t.repayEqualPayment}
               </button>
               <button
                 type="button"
@@ -369,7 +463,7 @@ export default function PersonalLoanClient() {
                     : 'border-transparent text-text-sub hover:text-text-main'
                 }`}
               >
-                本金平均攤還
+                {t.repayEqualPrincipal}
               </button>
             </div>
           </div>
@@ -379,21 +473,21 @@ export default function PersonalLoanClient() {
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-3 gap-4 max-sm:grid-cols-1">
             <div className={styles.statCard}>
-              <span className="text-sm font-semibold text-text-sub">首期月付金額</span>
+              <span className="text-sm font-semibold text-text-sub">{t.firstMonthPayment}</span>
               <span className={`text-xl font-bold font-mono ${styles.accentText}`}>
                 ${monthlyPayment.toLocaleString('zh-TW')}
               </span>
             </div>
 
             <div className={styles.statCard}>
-              <span className="text-sm font-semibold text-text-sub">APR 總費用年率</span>
+              <span className="text-sm font-semibold text-text-sub">{t.aprRateLabel}</span>
               <span className={`text-xl font-bold font-mono ${styles.aprText}`}>
                 {aprRate}%
               </span>
             </div>
 
             <div className={styles.statCard}>
-              <span className="text-sm font-semibold text-text-sub">總利息支出</span>
+              <span className="text-sm font-semibold text-text-sub">{t.totalInterestLabel}</span>
               <span className={`text-xl font-bold font-mono ${styles.interestText}`}>
                 ${totalInterest.toLocaleString('zh-TW')}
               </span>
@@ -403,11 +497,11 @@ export default function PersonalLoanClient() {
           {/* 賸餘本金遞減趨勢圖 */}
           <div className={`${styles.glassCard} p-5 flex flex-col gap-3 shadow-lg`}>
             <div className="flex justify-between items-center text-sm text-text-sub font-semibold uppercase tracking-[1px]">
-              <span>賸餘本金遞減趨勢圖</span>
+              <span>{t.trendTitle}</span>
               <div className="flex gap-4">
                 <span className="flex items-center gap-1.5">
                   <span className={`w-2.5 h-2.5 rounded-full ${styles.dotBg}`} />
-                  賸餘本金餘額
+                  {t.legendRemaining}
                 </span>
               </div>
             </div>
@@ -418,22 +512,22 @@ export default function PersonalLoanClient() {
 
           {/* 還款明細表 */}
           <div className={`${styles.glassCard} p-6 flex flex-col gap-4 shadow-lg`}>
-            <h3 className="text-sm font-semibold text-text-main uppercase tracking-[1px]">信貸還款明細表</h3>
+            <h3 className="text-sm font-semibold text-text-main uppercase tracking-[1px]">{t.scheduleTitle}</h3>
             <div className={styles.tableWrapper}>
               <table className="w-full text-right text-sm font-mono">
                 <thead>
                   <tr className="border-b border-border-glass text-text-sub text-sm font-semibold">
-                    <th className={`text-left p-3 ${styles.stickyPeriod}`}>期數</th>
-                    <th className="p-3">月付金額</th>
-                    <th className="p-3">償還本金</th>
-                    <th className="p-3">償還利息</th>
-                    <th className="p-3">剩餘本金</th>
+                    <th className={`text-left p-3 ${styles.stickyPeriod}`}>{t.colPeriod}</th>
+                    <th className="p-3">{t.colPayment}</th>
+                    <th className="p-3">{t.colPrincipal}</th>
+                    <th className="p-3">{t.colInterest}</th>
+                    <th className="p-3">{t.colRemaining}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-glass">
                   {schedule.map(row => (
                     <tr key={row.month} className="hover:bg-white/[.04] text-text-main transition-colors">
-                      <td className={`text-left p-3 font-mono ${styles.stickyPeriod}`}>第 {row.month} 期</td>
+                      <td className={`text-left p-3 font-mono ${styles.stickyPeriod}`}>{t.periodText(row.month)}</td>
                       <td className={`p-3 font-semibold ${styles.accentText}`}>${row.payment.toLocaleString('zh-TW')}</td>
                       <td className="p-3 text-text-main">${row.principal.toLocaleString('zh-TW')}</td>
                       <td className={`p-3 ${styles.interestText}`}>${row.interest.toLocaleString('zh-TW')}</td>
