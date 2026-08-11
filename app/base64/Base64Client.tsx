@@ -552,7 +552,7 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
                         {t.dataPreview}
                       </span>
                       {fileState.previewType === 'text' && fileState.file && fileState.file.size > 3000 && (
-                        <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium">
+                        <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium">
                           <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                           </svg>

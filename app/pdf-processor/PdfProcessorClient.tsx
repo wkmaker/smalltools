@@ -821,7 +821,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
                     type="button"
                     onClick={() => setZoomScale(1)}
                     disabled={zoomScale === 1}
-                    className="px-2.5 py-1 text-[11px] font-semibold text-red-500 hover:underline cursor-pointer border-l border-border-glass disabled:opacity-30 disabled:text-text-sub"
+                    className="px-2.5 py-1 text-xs font-semibold text-red-500 hover:underline cursor-pointer border-l border-border-glass disabled:opacity-30 disabled:text-text-sub"
                     title="Reset 100%"
                   >
                     {t.resetZoom}
