@@ -18,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/compound-interest/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/personal-loan/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/car-loan/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/car-loan/en/', lastModified: '2026-08-11', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/mortgage-loan/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/base64/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/base64/en/', lastModified: '2026-07-29', changeFrequency: 'monthly', priority: 0.8 },

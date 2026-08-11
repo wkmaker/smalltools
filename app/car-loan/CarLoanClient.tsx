@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './car-loan.module.css';
 
@@ -43,7 +44,134 @@ function calculateAPR(loanAmount: number, fee: number, payments: number[]): numb
   return mid * 12 * 100;
 }
 
-export default function CarLoanClient() {
+interface Props {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '汽車貸款試算器',
+    subtitle: 'CAR LOAN CALCULATOR',
+    description:
+      '專業免費的線上汽車貸款計算機！支援車價與自備款成數連動、新車/中古車貸款、寬限期、階梯式低月付、氣球貸尾款與 APR 實質年利率評估。',
+    langToggleLabel: 'English',
+    langToggleUrl: '/car-loan/en/',
+    schemeModeLabel: '還款方案模式',
+    schemeStandard: '一般攤還',
+    schemeGrace: '寬限期方案',
+    schemeStepped: '階梯低月付',
+    schemeBalloon: '氣球貸尾款',
+    carPriceLabel: '新車/中古車 車價 (元)',
+    downPaymentPctLabel: '頭期自備 (%)',
+    downPaymentAmtLabel: '自備金額 (元)',
+    loanAmountLabel: '申貸總額 (元)',
+    interestRateLabel: '年利率 (%)',
+    loanPeriodLabel: '貸款期限',
+    yearUnit: '年',
+    monthUnit: '月',
+    repayMethodLabel: '攤還方式',
+    repayEqualTotal: '本息均攤',
+    repayEqualPrincipal: '本金均攤',
+    feeLabel: '設定規費/手續費',
+    gracePeriodLabel: '寬限期月數 (前息後本)',
+    stepPaymentLabel: '前期超低月付金額 (元)',
+    stepPeriodsLabel: '低月付期數 (月)',
+    balloonAmountLabel: '氣球貸尾款保留金額 (元)',
+    copyShareBtn: '複製試算分享連結',
+    firstMonthPayment: '首期月付額',
+    afterGracePayment: (amt: string) => `期滿後約 $${amt}`,
+    aprLabel: '實質年利率 (APR)',
+    aprSub: '含手續費攤提真實年利率',
+    totalInterestLabel: '總利息支出',
+    totalInterestSub: '車貸期間利息總和',
+    totalPaymentLabel: '總還款金額',
+    totalPaymentSub: '含本金、利息與規費',
+    balanceTrendTitle: '車貸本金剩餘趨勢',
+    scheduleTitle: '車貸還款明細表',
+    colPeriod: '期數',
+    colStartBal: '期初餘額',
+    colPrincipal: '當期本金',
+    colInterest: '當期利息',
+    colTotal: '當期本息',
+    colEndBal: '期末餘額',
+    initialPeriod: '初始',
+    periodText: (p: number) => `第 ${p} 期`,
+    tagGrace: '寬限期',
+    tagAmort: '攤還期',
+    tagStep: '低月付期',
+    tagNormal: '正常攤還',
+    tagBalloon: '含尾款',
+    toastCopied: '已複製試算分享連結到剪貼簿',
+    negAmortWarning: '警告：前期月付金額低於每月利息，導致本金不減反增！',
+    showingLimit: '僅展示前 120 期資料',
+    unitY: '年',
+    unitM: '月',
+    unitCurrency: '元',
+  },
+  en: {
+    title: 'Car Loan Calculator',
+    subtitle: 'CAR LOAN CALCULATOR',
+    description:
+      'Professional free online auto loan calculator. Supports down payment link, new/used car loan, grace periods, stepped low payments, balloon payments, and APR solver.',
+    langToggleLabel: '繁體中文',
+    langToggleUrl: '/car-loan/',
+    schemeModeLabel: 'Repayment Scheme',
+    schemeStandard: 'Standard Amortization',
+    schemeGrace: 'Grace Period',
+    schemeStepped: 'Stepped Payments',
+    schemeBalloon: 'Balloon Payment',
+    carPriceLabel: 'Car Price ($)',
+    downPaymentPctLabel: 'Down Payment (%)',
+    downPaymentAmtLabel: 'Down Payment Amount ($)',
+    loanAmountLabel: 'Loan Amount ($)',
+    interestRateLabel: 'Annual Interest Rate (%)',
+    loanPeriodLabel: 'Loan Term',
+    yearUnit: 'Years',
+    monthUnit: 'Months',
+    repayMethodLabel: 'Repayment Method',
+    repayEqualTotal: 'Equal Principal & Interest',
+    repayEqualPrincipal: 'Equal Principal',
+    feeLabel: 'Loan / Admin Fee ($)',
+    gracePeriodLabel: 'Grace Period (Months)',
+    stepPaymentLabel: 'Initial Low Monthly Payment ($)',
+    stepPeriodsLabel: 'Low Payment Duration (Months)',
+    balloonAmountLabel: 'Balloon Payment Amount ($)',
+    copyShareBtn: 'Copy Shareable Link',
+    firstMonthPayment: 'First Month Payment',
+    afterGracePayment: (amt: string) => `After grace: $${amt}`,
+    aprLabel: 'Effective APR',
+    aprSub: 'True annual rate including fees',
+    totalInterestLabel: 'Total Interest',
+    totalInterestSub: 'Total interest over loan term',
+    totalPaymentLabel: 'Total Payment',
+    totalPaymentSub: 'Principal + Interest + Fees',
+    balanceTrendTitle: 'Loan Balance Trend',
+    scheduleTitle: 'Amortization Schedule',
+    colPeriod: 'Period',
+    colStartBal: 'Start Balance',
+    colPrincipal: 'Principal',
+    colInterest: 'Interest',
+    colTotal: 'Payment',
+    colEndBal: 'End Balance',
+    initialPeriod: 'Initial',
+    periodText: (p: number) => `Month ${p}`,
+    tagGrace: 'Grace',
+    tagAmort: 'Amortizing',
+    tagStep: 'Low Pay',
+    tagNormal: 'Normal',
+    tagBalloon: 'Balloon',
+    toastCopied: 'Shareable link copied to clipboard',
+    negAmortWarning: 'Warning: Initial payment is lower than monthly interest. Loan balance will increase!',
+    showingLimit: 'Showing first 120 periods',
+    unitY: 'yr',
+    unitM: 'mo',
+    unitCurrency: '$',
+  },
+};
+
+export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
+  const t = TRANSLATIONS[lang];
+
   const [carPrice, setCarPrice] = useState<number | ''>(1000000);
   const [downPaymentPercent, setDownPaymentPercent] = useState<number | ''>(20);
   const [downPaymentAmount, setDownPaymentAmount] = useState<number | ''>(200000);
@@ -67,10 +195,12 @@ export default function CarLoanClient() {
   const [totalInterest, setTotalInterest] = useState<number>(0);
   const [totalPayment, setTotalPayment] = useState<number>(0);
   const [apr, setApr] = useState<number>(0);
+  const [isNegAmort, setIsNegAmort] = useState<boolean>(false);
   const [schedule, setSchedule] = useState<LoanRow[]>([]);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isMountedRef = useRef<boolean>(false);
 
   const carPriceInputId = useId();
   const downPaymentPercentInputId = useId();
@@ -87,7 +217,7 @@ export default function CarLoanClient() {
   const showToast = useCallback((msg: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ msg, show: true });
-    toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
+    toastTimerRef.current = setTimeout(() => setToast(st => ({ ...st, show: false })), 2500);
   }, []);
 
   // 設定全頁背景主題色
@@ -96,14 +226,105 @@ export default function CarLoanClient() {
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 85, 0.6)');
   }, []);
 
-  // 車價與自備款連動
+  // 初次掛載：讀取 URL Query 參數進行狀態同步
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const pPrice = searchParams.get('price');
+    const pDpPct = searchParams.get('dpPct');
+    const pDpAmt = searchParams.get('dpAmt');
+    const pLoan = searchParams.get('loan');
+    const pRate = searchParams.get('rate');
+    const pPeriod = searchParams.get('period');
+    const pUnit = searchParams.get('unit');
+    const pScheme = searchParams.get('scheme');
+    const pRepay = searchParams.get('repay');
+    const pFee = searchParams.get('fee');
+    const pGrace = searchParams.get('grace');
+    const pStepPmt = searchParams.get('stepPmt');
+    const pStepPer = searchParams.get('stepPer');
+    const pBalloon = searchParams.get('balloon');
+
+    if (pPrice && !isNaN(Number(pPrice))) {
+      const priceVal = Number(pPrice);
+      setCarPrice(priceVal);
+      if (pDpAmt && !isNaN(Number(pDpAmt))) {
+        setDownPaymentAmount(Number(pDpAmt));
+      } else if (pDpPct && !isNaN(Number(pDpPct))) {
+        const pct = Number(pDpPct);
+        setDownPaymentPercent(pct);
+        setDownPaymentAmount(Math.round(priceVal * (pct / 100)));
+      }
+      if (pLoan && !isNaN(Number(pLoan))) {
+        setLoanAmount(Number(pLoan));
+      }
+    }
+    if (pRate && !isNaN(Number(pRate))) setInterestRate(Number(pRate));
+    if (pPeriod && !isNaN(Number(pPeriod))) setPeriodVal(Number(pPeriod));
+    if (pUnit && (pUnit === 'year' || pUnit === 'month')) setPeriodUnit(pUnit);
+    if (pScheme && ['standard', 'grace', 'stepped', 'balloon'].includes(pScheme)) setLoanScheme(pScheme as any);
+    if (pRepay && (pRepay === 'equal-total' || pRepay === 'equal-principal')) setRepayType(pRepay as any);
+    if (pFee && !isNaN(Number(pFee))) setFee(Number(pFee));
+    if (pGrace && !isNaN(Number(pGrace))) setGracePeriod(Number(pGrace));
+    if (pStepPmt && !isNaN(Number(pStepPmt))) setStepPayment(Number(pStepPmt));
+    if (pStepPer && !isNaN(Number(pStepPer))) setStepPeriods(Number(pStepPer));
+    if (pBalloon && !isNaN(Number(pBalloon))) setBalloonAmount(Number(pBalloon));
+
+    isMountedRef.current = true;
+  }, []);
+
+  // 狀態變更時更新網址 (URL replaceState)
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    const params = new URLSearchParams({
+      price: carPrice.toString(),
+      dpPct: downPaymentPercent.toString(),
+      dpAmt: downPaymentAmount.toString(),
+      loan: loanAmount.toString(),
+      rate: interestRate.toString(),
+      period: periodVal.toString(),
+      unit: periodUnit,
+      scheme: loanScheme,
+      repay: repayType,
+      fee: fee.toString(),
+    });
+    if (loanScheme === 'grace') params.set('grace', gracePeriod.toString());
+    if (loanScheme === 'stepped') {
+      params.set('stepPmt', stepPayment.toString());
+      params.set('stepPer', stepPeriods.toString());
+    }
+    if (loanScheme === 'balloon') params.set('balloon', balloonAmount.toString());
+
+    window.history.replaceState(null, '', `?${params.toString()}`);
+  }, [
+    carPrice,
+    downPaymentPercent,
+    downPaymentAmount,
+    loanAmount,
+    interestRate,
+    periodVal,
+    periodUnit,
+    loanScheme,
+    repayType,
+    fee,
+    gracePeriod,
+    stepPayment,
+    stepPeriods,
+    balloonAmount,
+  ]);
+
+  // 車價與自備款連動處理
   const handleCarPriceChange = (val: number | '') => {
     setCarPrice(val);
-    const numVal = val === '' ? 0 : val;
+    if (val === '') {
+      setDownPaymentAmount('');
+      setLoanAmount('');
+      return;
+    }
     const numPct = downPaymentPercent === '' ? 0 : downPaymentPercent;
-    const newDpAmount = Math.round(numVal * (numPct / 100));
+    const newDpAmount = Math.round(val * (numPct / 100));
     setDownPaymentAmount(newDpAmount);
-    setLoanAmount(Math.max(0, numVal - newDpAmount));
+    setLoanAmount(Math.max(0, val - newDpAmount));
   };
 
   const handleDownPercentChange = (pct: number | '') => {
@@ -121,18 +342,24 @@ export default function CarLoanClient() {
 
   const handleDownAmountChange = (amt: number | '') => {
     setDownPaymentAmount(amt);
-    const numAmt = amt === '' ? 0 : amt;
+    if (amt === '') {
+      setDownPaymentPercent('');
+      return;
+    }
     const numCar = carPrice === '' ? 0 : carPrice;
-    const newPct = numCar > 0 ? (numAmt / numCar) * 100 : 0;
+    const newPct = numCar > 0 ? (amt / numCar) * 100 : 0;
     setDownPaymentPercent(parseFloat(newPct.toFixed(1)));
-    setLoanAmount(Math.max(0, numCar - numAmt));
+    setLoanAmount(Math.max(0, numCar - amt));
   };
 
   const handleLoanAmountChange = (amt: number | '') => {
     setLoanAmount(amt);
-    const numAmt = amt === '' ? 0 : amt;
+    if (amt === '') {
+      setDownPaymentAmount('');
+      return;
+    }
     const numCar = carPrice === '' ? 0 : carPrice;
-    const newDpAmount = Math.max(0, numCar - numAmt);
+    const newDpAmount = Math.max(0, numCar - amt);
     setDownPaymentAmount(newDpAmount);
     const newPct = numCar > 0 ? (newDpAmount / numCar) * 100 : 0;
     setDownPaymentPercent(parseFloat(newPct.toFixed(1)));
@@ -147,7 +374,6 @@ export default function CarLoanClient() {
     const numStepPayment = stepPayment === '' ? 0 : stepPayment;
     const numStepPeriods = stepPeriods === '' ? 0 : stepPeriods;
     const numBalloonAmount = balloonAmount === '' ? 0 : balloonAmount;
-
     const numFee = fee === '' ? 0 : fee;
 
     const totalMonths = Math.max(0, periodUnit === 'year' ? numPeriodVal * 12 : numPeriodVal);
@@ -157,6 +383,7 @@ export default function CarLoanClient() {
       setTotalInterest(0);
       setTotalPayment(0);
       setApr(0);
+      setIsNegAmort(false);
       setSchedule([]);
       return;
     }
@@ -168,6 +395,7 @@ export default function CarLoanClient() {
     let interestSum = 0;
     let firstPay = 0;
     let afterPay = 0;
+    let negAmortFlag = false;
 
     rows.push({
       period: 0,
@@ -232,7 +460,7 @@ export default function CarLoanClient() {
         }
       }
     } else if (loanScheme === 'grace') {
-      const validGrace = Math.min(numGracePeriod, totalMonths - 1);
+      const validGrace = totalMonths > 0 ? Math.max(0, Math.min(numGracePeriod, totalMonths - 1)) : 0;
       const remMonths = totalMonths - validGrace;
 
       for (let m = 1; m <= validGrace; m++) {
@@ -247,7 +475,7 @@ export default function CarLoanClient() {
           interestPaid: interest,
           totalPayment: interest,
           endBalance: remBalance,
-          statusTag: '寬限期',
+          statusTag: t.tagGrace,
         });
       }
 
@@ -292,12 +520,17 @@ export default function CarLoanClient() {
           interestPaid: interest,
           totalPayment: pmt,
           endBalance: Math.max(0, remBalance),
-          statusTag: '攤還期',
+          statusTag: t.tagAmort,
         });
       }
     } else if (loanScheme === 'stepped') {
-      const validStepMonths = Math.min(numStepPeriods, totalMonths - 1);
+      const validStepMonths = totalMonths > 0 ? Math.max(0, Math.min(numStepPeriods, totalMonths - 1)) : 0;
       const remMonths = totalMonths - validStepMonths;
+
+      const firstMonthInterest = numLoanAmount * monthlyRate;
+      if (numStepPayment < firstMonthInterest && validStepMonths > 0) {
+        negAmortFlag = true;
+      }
 
       for (let m = 1; m <= validStepMonths; m++) {
         const start = remBalance;
@@ -314,7 +547,7 @@ export default function CarLoanClient() {
           interestPaid: interest,
           totalPayment: pmt,
           endBalance: Math.max(0, remBalance),
-          statusTag: '低月付期',
+          statusTag: t.tagStep,
         });
       }
 
@@ -359,7 +592,7 @@ export default function CarLoanClient() {
           interestPaid: interest,
           totalPayment: pmt,
           endBalance: Math.max(0, remBalance),
-          statusTag: '正常攤還',
+          statusTag: t.tagNormal,
         });
       }
     } else if (loanScheme === 'balloon') {
@@ -409,7 +642,7 @@ export default function CarLoanClient() {
           interestPaid: interest,
           totalPayment: curPmt,
           endBalance: Math.max(0, remBalance),
-          statusTag: m === totalMonths ? '含尾款' : '',
+          statusTag: m === totalMonths ? t.tagBalloon : '',
         });
       }
     }
@@ -418,11 +651,12 @@ export default function CarLoanClient() {
     setAfterSpecialPayment(afterPay);
     setTotalInterest(interestSum);
     setTotalPayment(numLoanAmount + interestSum + numFee);
+    setIsNegAmort(negAmortFlag);
     setSchedule(rows);
 
     const calculatedApr = calculateAPR(numLoanAmount, numFee, paymentArray);
     setApr(calculatedApr);
-  }, [carPrice, loanAmount, interestRate, periodVal, periodUnit, repayType, loanScheme, fee, gracePeriod, stepPayment, stepPeriods, balloonAmount]);
+  }, [carPrice, loanAmount, interestRate, periodVal, periodUnit, repayType, loanScheme, fee, gracePeriod, stepPayment, stepPeriods, balloonAmount, t]);
 
   useEffect(() => {
     runCalculation();
@@ -447,7 +681,7 @@ export default function CarLoanClient() {
     const height = rect.height;
     ctx.clearRect(0, 0, width, height);
 
-    const maxBal = schedule[0]?.endBalance || 1;
+    const maxBal = Math.max(...schedule.map(r => r.endBalance), schedule[0]?.endBalance || 1);
     const points = schedule.map((row, idx) => ({
       x: (idx / (schedule.length - 1)) * (width - 60) + 40,
       y: height - 30 - (row.endBalance / maxBal) * (height - 60),
@@ -494,47 +728,79 @@ export default function CarLoanClient() {
 
     ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
     ctx.font = '11px sans-serif';
-    ctx.fillText('0期', 35, height - 12);
-    ctx.fillText(`${schedule.length - 1}期`, width - 45, height - 12);
+    ctx.fillText('0', 35, height - 12);
+    ctx.fillText(`${schedule.length - 1}`, width - 45, height - 12);
     ctx.fillText(`$${formatNumber(maxBal)}`, 5, 20);
   }, [schedule]);
 
   const copyShareLink = () => {
     const params = new URLSearchParams({
       price: carPrice.toString(),
+      dpPct: downPaymentPercent.toString(),
+      dpAmt: downPaymentAmount.toString(),
+      loan: loanAmount.toString(),
       rate: interestRate.toString(),
       period: periodVal.toString(),
       unit: periodUnit,
       scheme: loanScheme,
+      repay: repayType,
+      fee: fee.toString(),
     });
+    if (loanScheme === 'grace') params.set('grace', gracePeriod.toString());
+    if (loanScheme === 'stepped') {
+      params.set('stepPmt', stepPayment.toString());
+      params.set('stepPer', stepPeriods.toString());
+    }
+    if (loanScheme === 'balloon') params.set('balloon', balloonAmount.toString());
+
     const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(url).then(() => showToast('已複製試算分享連結'));
+    navigator.clipboard.writeText(url).then(() => showToast(t.toastCopied));
   };
 
   return (
     <>
       <ToolLayout
-        title="汽車貸款試算器"
-        subtitle="CAR LOAN CALCULATOR"
-        description="專業免費的線上汽車貸款計算機！支援車價與自備款成數連動、新車/中古車貸款、寬限期、階梯式低月付、氣球貸尾款與 APR 實質年利率評估。"
+        title={t.title}
+        subtitle={t.subtitle}
+        description={t.description}
         accentColor="#ff0055"
         accentGlow="rgba(255,0,85,0.6)"
       >
+        <div className="flex justify-end mb-6">
+          <Link
+            href={t.langToggleUrl}
+            className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#ff0055)] transition-all no-underline"
+          >
+            {t.langToggleLabel}
+          </Link>
+        </div>
+
+        {/* 負攤還警示 Banner */}
+        {isNegAmort && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm font-medium flex items-center gap-2">
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            </svg>
+            <span>{t.negAmortWarning}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：表單設定區 */}
           <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
             {/* 還款方案切換 */}
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">還款方案模式</span>
+              <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">{t.schemeModeLabel}</span>
               <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
                 {([
-                  { id: 'standard', label: '一般攤還' },
-                  { id: 'grace',    label: '寬限期方案' },
-                  { id: 'stepped',  label: '階梯低月付' },
-                  { id: 'balloon',  label: '氣球貸尾款' },
+                  { id: 'standard', label: t.schemeStandard },
+                  { id: 'grace', label: t.schemeGrace },
+                  { id: 'stepped', label: t.schemeStepped },
+                  { id: 'balloon', label: t.schemeBalloon },
                 ] as const).map(s => (
                   <button
                     key={s.id}
+                    type="button"
                     onClick={() => setLoanScheme(s.id)}
                     className={`py-2.5 px-3 text-sm font-medium rounded-lg transition-all cursor-pointer border ${
                       loanScheme === s.id
@@ -551,7 +817,9 @@ export default function CarLoanClient() {
             {/* 車價與自備款 */}
             <div className={`flex flex-col gap-5 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor={carPriceInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">新車/中古車 車價 (元)</label>
+                <label htmlFor={carPriceInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
+                  {t.carPriceLabel}
+                </label>
                 <div className="relative flex items-center">
                   <input
                     id={carPriceInputId}
@@ -560,31 +828,38 @@ export default function CarLoanClient() {
                     value={carPrice === '' ? '' : carPrice.toLocaleString('zh-TW')}
                     onChange={e => {
                       const raw = e.target.value.replace(/[^\d]/g, '');
-                      handleCarPriceChange(raw === '' ? 0 : parseInt(raw, 10));
+                      handleCarPriceChange(raw === '' ? '' : parseInt(raw, 10));
                     }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none transition-all font-mono`}
                   />
-                  <span className="absolute right-4 text-xs text-text-sub">元</span>
+                  <span className="absolute right-4 text-xs text-text-sub">{t.unitCurrency}</span>
                 </div>
               </div>
 
               {/* 自備款 (成數 + 金額) */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={downPaymentPercentInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">頭期自備 (%)</label>
+                  <label htmlFor={downPaymentPercentInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
+                    {t.downPaymentPctLabel}
+                  </label>
                   <div className="relative flex items-center">
                     <input
                       id={downPaymentPercentInputId}
                       type="number"
                       value={downPaymentPercent}
-                      onChange={e => handleDownPercentChange(parseFloat(e.target.value) || 0)}
+                      onChange={e => {
+                        const val = e.target.value;
+                        handleDownPercentChange(val === '' ? '' : parseFloat(val));
+                      }}
                       className={`w-full ${styles.inputField} px-4 py-3 pr-10 rounded-xl text-base outline-none transition-all font-mono`}
                     />
                     <span className="absolute right-4 text-xs text-text-sub">%</span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={downPaymentAmountInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">自備金額 (元)</label>
+                  <label htmlFor={downPaymentAmountInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
+                    {t.downPaymentAmtLabel}
+                  </label>
                   <div className="relative flex items-center">
                     <input
                       id={downPaymentAmountInputId}
@@ -593,18 +868,20 @@ export default function CarLoanClient() {
                       value={downPaymentAmount === '' ? '' : downPaymentAmount.toLocaleString('zh-TW')}
                       onChange={e => {
                         const raw = e.target.value.replace(/[^\d]/g, '');
-                        handleDownAmountChange(raw === '' ? 0 : parseInt(raw, 10));
+                        handleDownAmountChange(raw === '' ? '' : parseInt(raw, 10));
                       }}
                       className={`w-full ${styles.inputField} px-4 py-3 pr-10 rounded-xl text-base outline-none transition-all font-mono`}
                     />
-                    <span className="absolute right-4 text-xs text-text-sub">元</span>
+                    <span className="absolute right-4 text-xs text-text-sub">{t.unitCurrency}</span>
                   </div>
                 </div>
               </div>
 
               {/* 實際貸款金額 */}
               <div className="flex flex-col gap-2">
-                <label htmlFor={loanAmountInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">申貸總額 (元)</label>
+                <label htmlFor={loanAmountInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
+                  {t.loanAmountLabel}
+                </label>
                 <div className="relative flex items-center">
                   <input
                     id={loanAmountInputId}
@@ -613,11 +890,11 @@ export default function CarLoanClient() {
                     value={loanAmount === '' ? '' : loanAmount.toLocaleString('zh-TW')}
                     onChange={e => {
                       const raw = e.target.value.replace(/[^\d]/g, '');
-                      handleLoanAmountChange(raw === '' ? 0 : parseInt(raw, 10));
+                      handleLoanAmountChange(raw === '' ? '' : parseInt(raw, 10));
                     }}
                     className={`w-full ${styles.inputField} ${styles.accentText} font-bold px-4 py-3 pr-12 rounded-xl text-lg outline-none transition-all font-mono`}
                   />
-                  <span className={`absolute right-4 text-xs ${styles.accentText}`}>元</span>
+                  <span className={`absolute right-4 text-xs ${styles.accentText}`}>{t.unitCurrency}</span>
                 </div>
               </div>
             </div>
@@ -625,14 +902,19 @@ export default function CarLoanClient() {
             {/* 利率與年期 */}
             <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor={interestRateInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">年利率 (%)</label>
+                <label htmlFor={interestRateInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
+                  {t.interestRateLabel}
+                </label>
                 <div className="relative flex items-center">
                   <input
                     id={interestRateInputId}
                     type="number"
                     step="0.1"
                     value={interestRate}
-                    onChange={e => setInterestRate(parseFloat(e.target.value) || 0)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setInterestRate(val === '' ? '' : parseFloat(val));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-10 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                   <span className="absolute right-4 text-xs text-text-sub">%</span>
@@ -640,27 +922,34 @@ export default function CarLoanClient() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={periodValInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">貸款期限</label>
+                <label htmlFor={periodValInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
+                  {t.loanPeriodLabel}
+                </label>
                 <div className="relative flex items-center">
                   <input
                     id={periodValInputId}
                     type="number"
                     value={periodVal}
-                    onChange={e => setPeriodVal(parseFloat(e.target.value) || 0)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setPeriodVal(val === '' ? '' : parseFloat(val));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-16 rounded-xl text-base outline-none transition-all font-mono`}
                   />
                   <div className="absolute right-1 top-1 bottom-1 flex rounded-lg overflow-hidden border border-border-glass bg-surface-glass">
                     <button
+                      type="button"
                       onClick={() => setPeriodUnit('year')}
                       className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'year' ? styles.accentText + ' font-semibold' : 'text-text-sub'}`}
                     >
-                      年
+                      {t.unitY}
                     </button>
                     <button
+                      type="button"
                       onClick={() => setPeriodUnit('month')}
                       className={`px-2 text-xs border-none cursor-pointer transition-colors ${periodUnit === 'month' ? styles.accentText + ' font-semibold' : 'text-text-sub'}`}
                     >
-                      月
+                      {t.unitM}
                     </button>
                   </div>
                 </div>
@@ -670,29 +959,33 @@ export default function CarLoanClient() {
             {/* 本息/本金攤還模式與開辦費 */}
             <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-5`}>
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">攤還方式</span>
+                <span className="text-sm font-medium text-text-sub uppercase tracking-[1px]">{t.repayMethodLabel}</span>
                 <div className={`grid grid-cols-2 gap-1 ${styles.segmentGroup} p-1 rounded-xl`}>
                   <button
+                    type="button"
                     onClick={() => setRepayType('equal-total')}
                     className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
                       repayType === 'equal-total' ? styles.activeScheme : 'border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
-                    本息均攤
+                    {t.repayEqualTotal}
                   </button>
                   <button
+                    type="button"
                     onClick={() => setRepayType('equal-principal')}
                     className={`py-2 text-sm font-medium rounded-lg cursor-pointer border ${
                       repayType === 'equal-principal' ? styles.activeScheme : 'border-transparent text-text-sub hover:text-text-main'
                     }`}
                   >
-                    本金均攤
+                    {t.repayEqualPrincipal}
                   </button>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={feeInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">設定規費/手續費</label>
+                <label htmlFor={feeInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">
+                  {t.feeLabel}
+                </label>
                 <div className="relative flex items-center">
                   <input
                     id={feeInputId}
@@ -701,11 +994,11 @@ export default function CarLoanClient() {
                     value={fee === '' ? '' : fee.toLocaleString('zh-TW')}
                     onChange={e => {
                       const raw = e.target.value.replace(/[^\d]/g, '');
-                      setFee(raw === '' ? 0 : parseInt(raw, 10));
+                      setFee(raw === '' ? '' : parseInt(raw, 10));
                     }}
                     className={`w-full ${styles.inputField} px-4 py-3 pr-12 rounded-xl text-base outline-none transition-all font-mono`}
                   />
-                  <span className="absolute right-4 text-xs text-text-sub">元</span>
+                  <span className="absolute right-4 text-xs text-text-sub">{t.unitCurrency}</span>
                 </div>
               </div>
             </div>
@@ -713,12 +1006,17 @@ export default function CarLoanClient() {
             {/* 條件式方案延伸欄位 */}
             {loanScheme === 'grace' && (
               <div className="border-l-2 border-[var(--theme-color)] pl-4 flex flex-col gap-2 py-1">
-                <label htmlFor={gracePeriodInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>寬限期月數 (前息後本)</label>
+                <label htmlFor={gracePeriodInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>
+                  {t.gracePeriodLabel}
+                </label>
                 <input
                   id={gracePeriodInputId}
                   type="number"
                   value={gracePeriod}
-                  onChange={e => setGracePeriod(parseInt(e.target.value) || 0)}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setGracePeriod(val === '' ? '' : parseInt(val, 10));
+                  }}
                   className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                 />
               </div>
@@ -727,7 +1025,9 @@ export default function CarLoanClient() {
             {loanScheme === 'stepped' && (
               <div className="border-l-2 border-[var(--theme-color)] pl-4 flex flex-col gap-3 py-1">
                 <div className="flex flex-col gap-1">
-                  <label htmlFor={stepPaymentInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>前期超低月付金額 (元)</label>
+                  <label htmlFor={stepPaymentInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>
+                    {t.stepPaymentLabel}
+                  </label>
                   <input
                     id={stepPaymentInputId}
                     type="text"
@@ -735,18 +1035,23 @@ export default function CarLoanClient() {
                     value={stepPayment === '' ? '' : stepPayment.toLocaleString('zh-TW')}
                     onChange={e => {
                       const raw = e.target.value.replace(/[^\d]/g, '');
-                      setStepPayment(raw === '' ? 0 : parseInt(raw, 10));
+                      setStepPayment(raw === '' ? '' : parseInt(raw, 10));
                     }}
                     className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label htmlFor={stepPeriodsInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>低月付期數 (月)</label>
+                  <label htmlFor={stepPeriodsInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>
+                    {t.stepPeriodsLabel}
+                  </label>
                   <input
                     id={stepPeriodsInputId}
                     type="number"
                     value={stepPeriods}
-                    onChange={e => setStepPeriods(parseInt(e.target.value) || 0)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setStepPeriods(val === '' ? '' : parseInt(val, 10));
+                    }}
                     className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                   />
                 </div>
@@ -756,7 +1061,7 @@ export default function CarLoanClient() {
             {loanScheme === 'balloon' && (
               <div className="border-l-2 border-[var(--theme-color)] pl-4 flex flex-col gap-2 py-1">
                 <label htmlFor={balloonAmountInputId} className={`text-sm font-medium ${styles.accentText} uppercase tracking-[1px]`}>
-                  氣球貸尾款保留金額 (元) <span className="text-[0.75rem] text-text-sub">({((((balloonAmount === '' ? 0 : balloonAmount) / ((loanAmount === '' ? 0 : loanAmount) || 1))) * 100).toFixed(1)}%)</span>
+                  {t.balloonAmountLabel} <span className="text-[0.75rem] text-text-sub">({((((balloonAmount === '' ? 0 : balloonAmount) / ((loanAmount === '' ? 0 : loanAmount) || 1))) * 100).toFixed(1)}%)</span>
                 </label>
                 <input
                   id={balloonAmountInputId}
@@ -765,7 +1070,7 @@ export default function CarLoanClient() {
                   value={balloonAmount === '' ? '' : balloonAmount.toLocaleString('zh-TW')}
                   onChange={e => {
                     const raw = e.target.value.replace(/[^\d]/g, '');
-                    setBalloonAmount(raw === '' ? 0 : parseInt(raw, 10));
+                    setBalloonAmount(raw === '' ? '' : parseInt(raw, 10));
                   }}
                   className={`w-full ${styles.inputField} px-4 py-2.5 rounded-xl text-base outline-none`}
                 />
@@ -773,11 +1078,12 @@ export default function CarLoanClient() {
             )}
 
             <button
+              type="button"
               onClick={copyShareLink}
               className={`mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
                 ${styles.activeScheme} rounded-xl transition-all duration-300 cursor-pointer`}
             >
-              複製試算分享連結
+              {t.copyShareBtn}
             </button>
           </div>
 
@@ -786,43 +1092,43 @@ export default function CarLoanClient() {
             {/* 四大指標看板 */}
             <div className="grid grid-cols-2 gap-4">
               <div className={styles.statCard}>
-                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">首期月付額</span>
+                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">{t.firstMonthPayment}</span>
                 <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
                   ${formatNumber(monthlyPayment)}
                 </span>
                 {loanScheme === 'grace' && (
-                  <span className="text-xs text-text-sub mt-1">期滿後約 ${formatNumber(afterSpecialPayment)}</span>
+                  <span className="text-xs text-text-sub mt-1">{t.afterGracePayment(formatNumber(afterSpecialPayment))}</span>
                 )}
               </div>
 
               <div className={styles.statCard}>
-                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">實質年利率 (APR)</span>
+                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">{t.aprLabel}</span>
                 <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
                   {apr.toFixed(2)} %
                 </span>
-                <span className="text-xs text-text-sub mt-1">含手續費攤提真實年利率</span>
+                <span className="text-xs text-text-sub mt-1">{t.aprSub}</span>
               </div>
 
               <div className={styles.statCard}>
-                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">總利息支出</span>
+                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">{t.totalInterestLabel}</span>
                 <span className={`font-mono text-xl font-bold ${styles.interestText}`}>
                   ${formatNumber(totalInterest)}
                 </span>
-                <span className="text-xs text-text-sub mt-1">車貸期間利息總和</span>
+                <span className="text-xs text-text-sub mt-1">{t.totalInterestSub}</span>
               </div>
 
               <div className={styles.statCard}>
-                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">總還款金額</span>
+                <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">{t.totalPaymentLabel}</span>
                 <span className="font-mono text-xl font-bold text-text-main">
                   ${formatNumber(totalPayment)}
                 </span>
-                <span className="text-xs text-text-sub mt-1">含本金、利息與規費</span>
+                <span className="text-xs text-text-sub mt-1">{t.totalPaymentSub}</span>
               </div>
             </div>
 
             {/* 本金剩餘趨勢圖表 (Canvas) */}
             <div className={`${styles.glassCard} p-5 flex flex-col gap-3`}>
-              <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px]">車貸本金剩餘趨勢</span>
+              <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px]">{t.balanceTrendTitle}</span>
               <div className="relative w-full h-[220px]">
                 <canvas ref={canvasRef} className="w-full h-full block" />
               </div>
@@ -830,23 +1136,23 @@ export default function CarLoanClient() {
 
             {/* 攤還明細表格 (Sticky Column) */}
             <div className={styles.tableContainer}>
-              <h3 className="text-sm font-semibold text-text-main uppercase tracking-[1px] mb-4">車貸還款明細表</h3>
+              <h3 className="text-sm font-semibold text-text-main uppercase tracking-[1px] mb-4">{t.scheduleTitle}</h3>
               <table className="w-full text-right text-sm">
                 <thead>
                   <tr className="border-b border-border-glass text-text-sub text-sm font-semibold">
-                    <th className={`text-left p-2.5 ${styles.stickyPeriod}`}>期數</th>
-                    <th className="p-2.5">期初餘額</th>
-                    <th className="p-2.5">當期本金</th>
-                    <th className="p-2.5">當期利息</th>
-                    <th className="p-2.5">當期本息</th>
-                    <th className="p-2.5">期末餘額</th>
+                    <th className={`text-left p-2.5 ${styles.stickyPeriod}`}>{t.colPeriod}</th>
+                    <th className="p-2.5">{t.colStartBal}</th>
+                    <th className="p-2.5">{t.colPrincipal}</th>
+                    <th className="p-2.5">{t.colInterest}</th>
+                    <th className="p-2.5">{t.colTotal}</th>
+                    <th className="p-2.5">{t.colEndBal}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-glass">
                   {schedule.slice(0, 120).map(row => (
                     <tr key={row.period} className="hover:bg-white/[.03] text-text-main transition-colors">
                       <td className={`text-left p-2.5 font-mono ${styles.stickyPeriod}`}>
-                        {row.period === 0 ? '初始' : `第 ${row.period} 期`}
+                        {row.period === 0 ? t.initialPeriod : t.periodText(row.period)}
                         {row.statusTag && (
                           <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded ${styles.activeScheme} font-sans font-medium`}>
                             {row.statusTag}
@@ -863,7 +1169,7 @@ export default function CarLoanClient() {
                 </tbody>
               </table>
               {schedule.length > 120 && (
-                <div className="text-center text-xs text-text-sub mt-3">僅展示前 120 期資料</div>
+                <div className="text-center text-xs text-text-sub mt-3">{t.showingLimit}</div>
               )}
             </div>
           </div>
