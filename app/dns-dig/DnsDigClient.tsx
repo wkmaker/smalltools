@@ -201,6 +201,7 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeAbortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef<boolean>(false);
 
   const domainInputId = useId();
@@ -234,6 +235,14 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
 
     syncToURL(cleaned, targetProvider, targetType);
 
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    activeAbortControllerRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     setLoading(true);
     setErrorMsg('');
     setResult(null);
@@ -254,7 +263,9 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
         url = `https://dns.alidns.com/resolve?name=${encodeURIComponent(cleaned)}&type=${targetType}`;
       }
 
-      const res = await fetch(url, { headers });
+      const res = await fetch(url, { headers, signal: controller.signal });
+      clearTimeout(timeoutId);
+
       const duration = Math.round(performance.now() - startTime);
       setQueryDuration(duration);
 
@@ -263,9 +274,10 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
       const data: DnsResponse = await res.json();
       setResult(data);
     } catch (err: unknown) {
-      const error = err as Error;
-      setErrorMsg(error.message || t.queryErrorMsg);
+      if ((err as Error).name === 'AbortError') return;
+      setErrorMsg((err as Error).message || t.queryErrorMsg);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [syncToURL, t.queryErrorMsg]);
