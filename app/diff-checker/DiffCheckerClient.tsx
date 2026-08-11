@@ -70,6 +70,7 @@ const TRANSLATIONS = {
     copiedResultToast: '✓ 已複製合併結果至剪貼簿！',
     copyFailedToast: '複製失敗，請手動複製文字框內容。',
     unifiedPlaceholder: '（Unified 模式比對後，可在此取得動態合併結果）',
+    toastFileTooLarge: '檔案過大，請選擇小於 10MB 的文字檔案',
     langSwitchLabel: 'English',
     langSwitchHref: '/diff-checker/en/',
   },
@@ -111,6 +112,7 @@ const TRANSLATIONS = {
     copiedResultToast: '✓ Merged result copied to clipboard!',
     copyFailedToast: 'Copy failed. Please manually copy from text area.',
     unifiedPlaceholder: '(Merged result will appear here after unified diff analysis)',
+    toastFileTooLarge: 'File is too large. Please select a text file under 10MB',
     langSwitchLabel: '繁體中文',
     langSwitchHref: '/diff-checker/',
   },
@@ -154,15 +156,14 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
   const isSyncingRight = useRef<boolean>(false);
   const mergeTextareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const activeLeftReaderRef = useRef<FileReader | null>(null);
+  const activeRightReaderRef = useRef<FileReader | null>(null);
+
   const adjustMergeTextareaHeight = useCallback(() => {
     const el = mergeTextareaRef.current;
     if (!el) return;
-
-    const currentScrollY = window.scrollY;
     el.style.height = 'auto';
-    const newHeight = Math.max(80, el.scrollHeight);
-    el.style.height = `${newHeight}px`;
-    window.scrollTo(window.scrollX, currentScrollY);
+    el.style.height = `${Math.max(100, el.scrollHeight)}px`;
   }, []);
 
   // 初始化主題顏色
@@ -197,8 +198,11 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
 
   // 核心比對處理
   const runDiff = useCallback(() => {
-    const oldStr = normalizeNewlines(originalText);
-    const newStr = normalizeNewlines(modifiedText);
+    const safeOldStr = originalText.length > 3000000 ? originalText.substring(0, 3000000) : originalText;
+    const safeNewStr = modifiedText.length > 3000000 ? modifiedText.substring(0, 3000000) : modifiedText;
+
+    const oldStr = normalizeNewlines(safeOldStr);
+    const newStr = normalizeNewlines(safeNewStr);
 
     const diffParts = (Diff.diffLines as any)(oldStr, newStr, { ignoreCase });
 
@@ -357,8 +361,21 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
   };
 
   const handleDropFile = (file: File, target: 'left' | 'right') => {
+    if (file.size > 10 * 1024 * 1024) {
+      showToast(t.toastFileTooLarge);
+      return;
+    }
+
+    const readerRef = target === 'left' ? activeLeftReaderRef : activeRightReaderRef;
+    if (readerRef.current) {
+      readerRef.current.abort();
+    }
+
     const reader = new FileReader();
+    readerRef.current = reader;
+
     reader.onload = (e) => {
+      if (readerRef.current !== reader) return;
       const content = (e.target?.result as string) || '';
       if (target === 'left') {
         setOriginalText(content);
