@@ -78,6 +78,9 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
    * **呼吸留白 (Breathing Room)**：容器寬度維持 `max-w-[90%]`（電腦版），標題下方自帶發光橫線與漸層。
 
+   * **工具主體內容區寬度規範（Full-Width Responsive Rule）**：工具主體內容（如左右雙欄 Grid、輸入面板、結果看板）必須讓寬度隨螢幕自然延伸，
+     **嚴禁在主體 `<div>` 上加寫死 `max-w-xxx` 或固定寬度**，應改以 `w-full` + 斷點 Grid 響應式排版（如 `grid-cols-[1.1fr_1.9fr] max-[1024px]:grid-cols-1`），確保在任何寬度螢幕上都能充分利用畫面空間。
+
 
 
 4. **背景晶體幾何連線星網與動態主題連動 (Constellation Network & Particle Canvas)**
@@ -297,7 +300,47 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
      - 返回首頁按鈕 ➔ **`Back to Home`**
      - 頁尾贊助疑問句 ➔ **`Enjoying this tool?`**
      - 頁尾贊助按鈕 ➔ **`Sponsor the Author ☕`**
-     繁體中文版面則自動維持 `返回首頁`、`喜歡這個小工具嗎？` 及 `贊助支持作者 ☕`。
+      繁體中文版面則自動維持 `返回首頁`、`喜歡這個小工具嗎？` 及 `贊助支持作者 ☕`。
+
+   * **語系切換按鈕統一放置規範（extraHeaderControls）**：
+
+     全站所有具備多語系版本（含 `/en/` 子路由）的工具，語系切換按鈕必須統一放置於 `ToolLayout` 的 **`extraHeaderControls`** prop 中，使其固定顯示於 Header 右側控制區（與深色/淺色模式切換按鈕同排）。
+
+     **嚴禁**將語系切換按鈕以 inline `<div>` 形式放置於頁面主要內容區頂部（如 `<div className="flex justify-end mb-4">` 或 `<div className="flex justify-between items-center">`）。
+
+     標準用法如下：
+
+     ```tsx
+     <ToolLayout
+       title={t.title}
+       subtitle={t.subtitle}
+       description={t.description}
+       accentColor="#00f5a0"
+       accentGlow="rgba(0, 245, 160, 0.6)"
+       extraHeaderControls={
+         <Link
+           href={t.langToggleUrl}
+           className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+         >
+           {t.langToggleLabel}
+         </Link>
+       }
+     >
+     ```
+
+     **特殊情境**：若同一 `extraHeaderControls` 位置需要放多個控制項（如倒數計時工具在計時啟動時顯示設定選單，平時顯示語系切換），可使用條件三元運算式：
+
+     ```tsx
+     extraHeaderControls={
+       timerActive ? (
+         <button ...>{/* 設定選單 */}</button>
+       ) : (
+         <Link href={t.switchLangHref} className="...">{t.switchLangText}</Link>
+       )
+     }
+     ```
+
+     **工具列內附加動作按鈕**：若工具有其他功能按鈕原本與語系切換同排（如全螢幕按鈕、複製連結按鈕），語系切換移出後，剩餘按鈕保留在工具內容區自行排列（`flex justify-end`）；`extraHeaderControls` 只放語系切換按鈕本身，不包含其他功能按鈕。
 
 
 

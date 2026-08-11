@@ -1031,6 +1031,14 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       description={t.description}
       accentColor="#f59e0b"
       accentGlow="rgba(245, 158, 11, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={lang === 'en' ? '/lucky-wheel/' : '/lucky-wheel/en/'}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {lang === 'en' ? '繁體中文' : 'English'}
+        </Link>
+      }
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 頂部雙語切換與最新中獎動態公告列 */}
@@ -1049,16 +1057,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3 min-w-0">
-            {/* 雙語切換鈕 */}
-            <Link
-              href={lang === 'en' ? '/lucky-wheel/' : '/lucky-wheel/en/'}
-              className="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium bg-select-bg border border-border-glass text-text-sub hover:text-text-main rounded-xl transition-colors flex items-center justify-center shrink-0 min-w-0 shadow-sm"
-              title={lang === 'en' ? '切換至繁體中文' : 'Switch to English'}
-            >
-              {lang === 'en' ? '繁體中文' : 'English'}
-            </Link>
-
+          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setShowHistoryModal(true)}

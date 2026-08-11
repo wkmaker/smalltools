@@ -572,6 +572,14 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
       description={t.description}
       accentColor="#eab308"
       accentGlow="rgba(234, 179, 8, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.switchLangHref}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {t.switchLangText}
+        </Link>
+      }
     >
       <div
         onDragOver={handleDragOver}
@@ -607,13 +615,6 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <Link
-              href={t.switchLangHref}
-              className="px-3 py-1.5 text-sm rounded-xl border bg-select-bg border-border-glass text-text-sub hover:text-text-main transition-colors font-medium"
-            >
-              {t.switchLangText}
-            </Link>
-
             <input
               id={fileInputId}
               type="file"

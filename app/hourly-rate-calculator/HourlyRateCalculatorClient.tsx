@@ -289,7 +289,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
   // ─── 分享處理器 ───────────────────────────────────────────────────────────
   const handleShare = async (overrideText?: string) => {
     const prCode = formatPrCode(matchedMilestone.pr);
-    const targetPath = `/hourly-rate-calculator/rank/${prCode}/`;
+    const targetPath = `/hourly-rate-calculator/${isEn ? 'en/' : ''}rank/${prCode}/`;
     const shareUrl = `${window.location.origin}${targetPath}?${queryParamsString}`;
 
     const defaultText = `【全台打工人 PR 評定卡片 💳】\n評定等級：PR ${taiwanPR.toFixed(1)}【${matchedMilestone.label}】\n💬 特質語錄：「${matchedMilestone.desc}」\n⚡ 實質生命時薪：$${Math.round(realHourlyRate)}/hr (每分鐘價值 $${(realHourlyRate / 60).toFixed(2)} 元)\n🥤 珍奶自由度：工作 1 小時可換 ${(realHourlyRate / 65).toFixed(1)} 杯珍奶\n🏆 全台名次：840 萬打工人中約第 ${Math.round((1 - taiwanPR / 100) * 8400000).toLocaleString('zh-TW')} 名！\n🌍 最適移居生活圈：${matchedCountry ? matchedCountry.flag + ' ' + matchedCountry.name : ''}\n\n測測你是在賺薪水，還是在幫老闆付法拉利車貸 ➔ ${shareUrl}`;
@@ -334,12 +334,16 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
       description={isEn ? "Deduct commute time, unpaid overtime, and work expenses to accurately calculate your true net hourly earnings." : "扣除通勤時間、隱形加班與額外開銷支出，計算每小時生命的真實收益與全球生活圈適配度分析。"}
       accentColor="#00f5a0"
       accentGlow="rgba(0, 245, 160, 0.6)"
-      backHref={heroMilestone ? `/hourly-rate-calculator/?${queryParamsString}` : undefined}
+      backHref={heroMilestone ? `/hourly-rate-calculator/${isEn ? 'en/' : ''}?${queryParamsString}` : undefined}
       backText={heroMilestone ? (isEn ? 'Back to Calculator' : '返回時薪計算器') : undefined}
       backTitle={heroMilestone ? (isEn ? 'Back to Calculator Home' : '返回時薪計算器首頁') : undefined}
       extraHeaderControls={
         <Link
-          href={isEn ? '/hourly-rate-calculator/' : '/hourly-rate-calculator/en/'}
+          href={
+            initialSlug
+              ? `${isEn ? `/hourly-rate-calculator/rank/${initialSlug}/` : `/hourly-rate-calculator/en/rank/${initialSlug}/`}${queryParamsString ? `?${queryParamsString}` : ''}`
+              : `${isEn ? '/hourly-rate-calculator/' : '/hourly-rate-calculator/en/'}${queryParamsString ? `?${queryParamsString}` : ''}`
+          }
           className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
         >
           {isEn ? '繁體中文' : 'English'}
@@ -365,6 +369,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
             queryParamsString={queryParamsString}
             handleShare={handleShare}
             hasCustomParams={hasCustomParams}
+            lang={lang}
           />
         )}
 
@@ -372,10 +377,16 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
         {!heroMilestone && (
           <div className="text-center mb-8">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-text-main mb-3 tracking-tight">
-              揭開實質時薪的面紗，解鎖 <span className={styles.themeAccentText}>全球生活圈與 PR 排行</span>
+              {isEn ? (
+                <>Unveil Your Real Hourly Rate & Unlock <span className={styles.themeAccentText}>Global Spheres & PR Ranking</span></>
+              ) : (
+                <>揭開實質時薪的面紗，解鎖 <span className={styles.themeAccentText}>全球生活圈與 PR 排行</span></>
+              )}
             </h1>
             <p className="text-base text-text-sub max-w-2xl mx-auto">
-              扣除加班耗損、通勤工時與隱性費用支出，精準計算您的生命時薪並分析最適移居國家。
+              {isEn
+                ? 'Deduct unpaid overtime, commute hours, and work expenses to accurately calculate your true hourly earnings and ideal migration matches.'
+                : '扣除加班耗損、通勤工時與隱性費用支出，精準計算您的生命時薪並分析最適移居國家。'}
             </p>
           </div>
         )}
@@ -391,13 +402,13 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                 <svg className={`w-5 h-5 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
-                試算條件設定
+                {isEn ? 'Calculation Settings' : '試算條件設定'}
               </h2>
 
               {/* Fix #5: 年份選單動態由 SUPPORTED_YEARS 渲染，與 URL 驗證邏輯共用同一來源 */}
               <div className="flex items-center gap-2">
                 <label htmlFor={yearSelectId} className="text-xs font-semibold text-text-sub">
-                  適用年份
+                  {isEn ? 'Applicable Year' : '適用年份'}
                 </label>
                 <select
                   id={yearSelectId}
@@ -409,7 +420,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                     const stat = taiwanStatsData.statistics[String(year) as keyof typeof taiwanStatsData.statistics];
                     return (
                       <option key={year} value={year}>
-                        {year} 年 (最低時薪 ${stat.minimum_wage.hourly})
+                        {year} {isEn ? `(Min Wage $${stat.minimum_wage.hourly})` : `年 (最低時薪 $${stat.minimum_wage.hourly})`}
                       </option>
                     );
                   })}
@@ -420,7 +431,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
             {/* Mode Switcher */}
             <div className="mb-6">
               <legend id={calcModeSelectId} className="text-sm font-medium text-text-sub mb-2 block">
-                計算模式
+                {isEn ? 'Calculation Mode' : '計算模式'}
               </legend>
               <div className="grid grid-cols-2 gap-2 bg-surface-glass p-1.5 rounded-xl border border-border-glass">
                 <button
@@ -428,14 +439,14 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   onClick={() => setCalcMode('monthly')}
                   className={`${styles.tabBtn} ${calcMode === 'monthly' ? styles.tabBtnActive : ''}`}
                 >
-                  全職 / 月薪模式
+                  {isEn ? 'Full-Time / Monthly' : '全職 / 月薪模式'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setCalcMode('project')}
                   className={`${styles.tabBtn} ${calcMode === 'project' ? styles.tabBtnActive : ''}`}
                 >
-                  專案 / 接案模式
+                  {isEn ? 'Freelance / Project' : '專案 / 接案模式'}
                 </button>
               </div>
             </div>
@@ -445,23 +456,23 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
               <div className="space-y-4">
                 <div>
                   <label htmlFor={monthlySalaryId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                    名目月薪 (NTD)
+                    {isEn ? 'Nominal Monthly Salary (TWD)' : '名目月薪 (NTD)'}
                   </label>
                   <input
                     id={monthlySalaryId}
                     type="text"
                     inputMode="numeric"
-                    value={monthlySalary === '' ? '' : monthlySalary.toLocaleString('zh-TW')}
+                    value={monthlySalary === '' ? '' : monthlySalary.toLocaleString(isEn ? 'en-US' : 'zh-TW')}
                     onChange={(e) => handleNumberInput(e, setMonthlySalary)}
                     className={styles.inputField}
-                    placeholder="例如：50,000"
+                    placeholder={isEn ? 'e.g. 50,000' : '例如：50,000'}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor={monthlyHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      合約常態月工時 (小時)
+                      {isEn ? 'Contract Monthly Hours' : '合約常態月工時 (小時)'}
                     </label>
                     <input
                       id={monthlyHoursId}
@@ -470,12 +481,12 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                       value={monthlyHours === '' ? '' : monthlyHours}
                       onChange={(e) => handleNumberInput(e, setMonthlyHours)}
                       className={styles.inputField}
-                      placeholder="預設 174 小時"
+                      placeholder={isEn ? 'Default 174 hrs' : '預設 174 小時'}
                     />
                   </div>
                   <div>
                     <label htmlFor={overtimeHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      隱形加班 / 待命 (小時/月)
+                      {isEn ? 'Unpaid Overtime (hrs/mo)' : '隱形加班 / 待命 (小時/月)'}
                     </label>
                     <input
                       id={overtimeHoursId}
@@ -484,7 +495,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                       value={overtimeHours === '' ? '' : overtimeHours}
                       onChange={(e) => handleNumberInput(e, setOvertimeHours)}
                       className={styles.inputField}
-                      placeholder="如：10"
+                      placeholder={isEn ? 'e.g. 10' : '如：10'}
                     />
                   </div>
                 </div>
@@ -492,7 +503,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor={commuteHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      總通勤時間 (小時/月)
+                      {isEn ? 'Total Commute (hrs/mo)' : '總通勤時間 (小時/月)'}
                     </label>
                     <input
                       id={commuteHoursId}
@@ -501,21 +512,21 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                       value={commuteHours === '' ? '' : commuteHours}
                       onChange={(e) => handleNumberInput(e, setCommuteHours)}
                       className={styles.inputField}
-                      placeholder="如：20"
+                      placeholder={isEn ? 'e.g. 20' : '如：20'}
                     />
                   </div>
                   <div>
                     <label htmlFor={monthlyExpensesId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      額外通勤/工具耗損 (元/月)
+                      {isEn ? 'Work Expenses (TWD/mo)' : '額外通勤/工具耗損 (元/月)'}
                     </label>
                     <input
                       id={monthlyExpensesId}
                       type="text"
                       inputMode="numeric"
-                      value={monthlyExpenses === '' ? '' : monthlyExpenses.toLocaleString('zh-TW')}
+                      value={monthlyExpenses === '' ? '' : monthlyExpenses.toLocaleString(isEn ? 'en-US' : 'zh-TW')}
                       onChange={(e) => handleNumberInput(e, setMonthlyExpenses)}
                       className={styles.inputField}
-                      placeholder="如：2,000"
+                      placeholder={isEn ? 'e.g. 2,000' : '如：2,000'}
                     />
                   </div>
                 </div>
@@ -524,23 +535,23 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
               <div className="space-y-4">
                 <div>
                   <label htmlFor={projectFeeId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                    專案總報酬 (NTD)
+                    {isEn ? 'Project Fee (TWD)' : '專案總報酬 (NTD)'}
                   </label>
                   <input
                     id={projectFeeId}
                     type="text"
                     inputMode="numeric"
-                    value={projectFee === '' ? '' : projectFee.toLocaleString('zh-TW')}
+                    value={projectFee === '' ? '' : projectFee.toLocaleString(isEn ? 'en-US' : 'zh-TW')}
                     onChange={(e) => handleNumberInput(e, setProjectFee)}
                     className={styles.inputField}
-                    placeholder="例如：60,000"
+                    placeholder={isEn ? 'e.g. 60,000' : '例如：60,000'}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor={projectHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      預計總執行工時 (小時)
+                      {isEn ? 'Estimated Hours' : '預計總執行工時 (小時)'}
                     </label>
                     <input
                       id={projectHoursId}
@@ -549,12 +560,12 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                       value={projectHours === '' ? '' : projectHours}
                       onChange={(e) => handleNumberInput(e, setProjectHours)}
                       className={styles.inputField}
-                      placeholder="如：100"
+                      placeholder={isEn ? 'e.g. 100' : '如：100'}
                     />
                   </div>
                   <div>
                     <label htmlFor={extraHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      隱性修改/開會溝通 (小時)
+                      {isEn ? 'Revision/Meeting Hours' : '隱性修改/開會溝通 (小時)'}
                     </label>
                     <input
                       id={extraHoursId}
@@ -563,23 +574,23 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                       value={extraHours === '' ? '' : extraHours}
                       onChange={(e) => handleNumberInput(e, setExtraHours)}
                       className={styles.inputField}
-                      placeholder="如：20"
+                      placeholder={isEn ? 'e.g. 20' : '如：20'}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor={projectExpensesId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                    專案直接成本/工具採購 (元)
+                    {isEn ? 'Direct Costs/Resource Fee (TWD)' : '專案直接成本/工具採購 (元)'}
                   </label>
                   <input
                     id={projectExpensesId}
                     type="text"
                     inputMode="numeric"
-                    value={projectExpenses === '' ? '' : projectExpenses.toLocaleString('zh-TW')}
+                    value={projectExpenses === '' ? '' : projectExpenses.toLocaleString(isEn ? 'en-US' : 'zh-TW')}
                     onChange={(e) => handleNumberInput(e, setProjectExpenses)}
                     className={styles.inputField}
-                    placeholder="如：3,000"
+                    placeholder={isEn ? 'e.g. 3,000' : '如：3,000'}
                   />
                 </div>
               </div>
@@ -591,7 +602,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
             {/* Real Hourly Rate Highlight */}
             <div className={`p-6 ${styles.calcCard} relative overflow-hidden`}>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-semibold text-text-sub">真實時薪 (Real Hourly Rate)</span>
+                <span className="text-sm font-semibold text-text-sub">{isEn ? 'Real Hourly Rate' : '真實時薪 (Real Hourly Rate)'}</span>
                 {/* Legality Badge & Tooltip Container */}
                 <div className="flex items-center gap-1.5">
                   <span
@@ -604,14 +615,14 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                         <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        實質時薪達標 (高於時薪基準 {diffPercent.toFixed(1)}%)
+                        {isEn ? `Rate Target Met (+${diffPercent.toFixed(1)}% above base)` : `實質時薪達標 (高於時薪基準 ${diffPercent.toFixed(1)}%)`}
                       </>
                     ) : (
                       <>
                         <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
-                        實質體感時薪偏低 (低於時薪基準 {diffPercent.toFixed(1)}%)
+                        {isEn ? `Below Rate Base (-${diffPercent.toFixed(1)}% below base)` : `實質體感時薪偏低 (低於時薪基準 ${diffPercent.toFixed(1)}%)`}
                       </>
                     )}
                   </span>
@@ -623,7 +634,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                       onClick={() => setShowInfoTooltip((prev) => !prev)}
                       onMouseEnter={() => setShowInfoTooltip(true)}
                       onMouseLeave={() => setShowInfoTooltip(false)}
-                      aria-label="時薪計算機制說明"
+                      aria-label={isEn ? 'Calculation Logic Info' : '時薪計算機制說明'}
                       className="p-1 rounded-full text-text-sub hover:text-text-main hover:bg-white/10 transition-colors focus:outline-none flex items-center justify-center"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -637,12 +648,22 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                           <svg className="w-4 h-4 text-themeAccentText" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 01-2 2h-4a2 2 0 01-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                           </svg>
-                          計算機制與合規說明
+                          {isEn ? 'Calculation & Compliance Explanation' : '計算機制與合規說明'}
                         </p>
                         <p className="text-text-sub leading-relaxed">
-                          本工具「真實時薪」已扣除<strong>通勤時間、無酬加班與工作自費開銷</strong>。
-                          <br />
-                          依勞基法規定，月薪制勞工合規判定以「<code className="bg-white/10 px-1 py-0.5 rounded">月薪 ÷ 240小時</code>」為準，因此真實時薪低於法定時薪<strong>不代表僱主違法</strong>，而是反映扣除隱形成本後的個人時間淨收益。
+                          {isEn ? (
+                            <>
+                              This tool deducts <strong>commute time, unpaid overtime, and work expenses</strong>.
+                              <br />
+                              Under Taiwan Labor Law, monthly salary compliance is determined by <code className="bg-white/10 px-1 py-0.5 rounded">Monthly Salary ÷ 240 hrs</code>. A lower real hourly rate reflects net time earnings rather than an employer violation.
+                            </>
+                          ) : (
+                            <>
+                              本工具「真實時薪」已扣除<strong>通勤時間、無酬加班與工作自費開銷</strong>。
+                              <br />
+                              依勞基法規定，月薪制勞工合規判定以「<code className="bg-white/10 px-1 py-0.5 rounded">月薪 ÷ 240小時</code>」為準，因此真實時薪低於法定時薪<strong>不代表僱主違法</strong>，而是反映扣除隱形成本後的個人時間淨收益。
+                            </>
+                          )}
                         </p>
                       </div>
                     )}
@@ -652,7 +673,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
 
               <div className="flex items-baseline gap-2 mb-6">
                 <span className="text-4xl sm:text-5xl font-black text-text-main font-mono tracking-tight">
-                  ${Math.round(realHourlyRate).toLocaleString('zh-TW')}
+                  ${Math.round(realHourlyRate).toLocaleString(isEn ? 'en-US' : 'zh-TW')}
                 </span>
                 <span className="text-base font-semibold text-text-sub">/ hr</span>
               </div>
@@ -660,13 +681,13 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
               {/* Work Breakdown Stats */}
               <div className="grid grid-cols-2 gap-4 border-t border-border-glass pt-4">
                 <div>
-                  <span className="text-xs text-text-sub block mb-1">實際月總投入時間</span>
-                  <span className="text-sm font-semibold text-text-main font-mono">{totalHours} 小時</span>
+                  <span className="text-xs text-text-sub block mb-1">{isEn ? 'Total Monthly Hours Invested' : '實際月總投入時間'}</span>
+                  <span className="text-sm font-semibold text-text-main font-mono">{totalHours} {isEn ? 'hrs' : '小時'}</span>
                 </div>
                 <div>
-                  <span className="text-xs text-text-sub block mb-1">扣除成本實領淨額</span>
+                  <span className="text-xs text-text-sub block mb-1">{isEn ? 'Net Income After Costs' : '扣除成本實領淨額'}</span>
                   <span className="text-sm font-semibold text-text-main font-mono">
-                    ${Math.max(0, netIncome).toLocaleString('zh-TW')} 元
+                    ${Math.max(0, netIncome).toLocaleString(isEn ? 'en-US' : 'zh-TW')} {isEn ? 'TWD' : '元'}
                   </span>
                 </div>
               </div>
@@ -679,7 +700,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   <svg className={`w-5 h-5 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
-                  薪資 Percentile 排行榜
+                  {isEn ? 'Salary Percentile Leaderboard' : '薪資 Percentile 排行榜'}
                 </h3>
               </div>
 
@@ -687,8 +708,8 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-text-main flex items-center gap-1.5">
-                    <svg className="w-4 h-4" viewBox="0 0 48 48"><path fill="#f0f0f0" d="M44 36c0 4.418-3.582 8-8 8H12c-4.418 0-8-3.582-8-8V12c0-4.418 3.582-8 8-8h24c4.418 0 8 3.582 8 8v24z"/><path fill="#d52b1e" d="M4 12v24c0 4.418 3.582 8 8 8h24c4.418 0 8-3.582 8-8V12c0-4.418-3.582-8-8-8H12c-4.418 0-8 3.582-8 8z"/><path fill="#fff" d="M24 8l-4 8h8l-4 8 4 8h-8l4 8M12 4l12 12 12-12M12 44l12-12 12 12"/></svg>
-                    全台打工人 PR
+                    <svg className="w-4 h-4" viewBox="0 0 48 48"><path fill="#f0f0f0" d="M44 36c0 4.418-3.582 8-8 8H12c-4.418 0-8-3.582-8-8V12c0-4.418 3.582-8 8-8h24c4.418 0 8 3.582 8 8v24z"/><path fill="#d52b1e" d="M4 12v24c0 4.418 3.582 8 8 8h24c4.418 0 8-3.582-8-8V12c0-4.418-3.582-8-8-8H12c-4.418 0-8 3.582-8 8z"/><path fill="#fff" d="M24 8l-4 8h8l-4 8 4 8h-8l4 8M12 4l12 12 12-12M12 44l12-12 12 12"/></svg>
+                    {isEn ? 'Taiwan Worker PR' : '全台打工人 PR'}
                   </span>
                   <span className={`text-base font-extrabold font-mono ${styles.themeAccentText}`}>
                     PR {taiwanPR.toFixed(1)}
@@ -701,9 +722,9 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   />
                 </div>
                 <div className="flex justify-between text-xs text-text-sub mt-1 font-mono">
-                  <span>PR 10 (36.5萬)</span>
-                  <span>PR 50 中位數 (56.8萬)</span>
-                  <span>PR 90 (129萬)</span>
+                  <span>PR 10 {isEn ? '(365k)' : '(36.5萬)'}</span>
+                  <span>PR 50 {isEn ? 'Median (568k)' : '中位數 (56.8萬)'}</span>
+                  <span>PR 90 {isEn ? '(1.29M)' : '(129萬)'}</span>
                 </div>
               </div>
 
@@ -714,7 +735,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                     <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    全世界人口 PR
+                    {isEn ? 'Global Population PR' : '全世界人口 PR'}
                   </span>
                   <span className={`text-base font-extrabold font-mono ${styles.globalPrText}`}>
                     PR {globalPR.toFixed(1)}
@@ -727,7 +748,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   />
                 </div>
                 <div className="flex justify-between text-xs text-text-sub mt-1 font-mono">
-                  <span>P50 中位數 ($3,430 USD)</span>
+                  <span>P50 {isEn ? 'Median ($3,430)' : '中位數 ($3,430 USD)'}</span>
                   <span>P90 ($26,500 USD)</span>
                   <span>P99 Top 1% ($109,000 USD)</span>
                 </div>
@@ -735,7 +756,11 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   <svg className={`w-3.5 h-3.5 ${styles.themeAccentText} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
-                  您的收入擊敗了全球 <span className="font-bold text-text-main">{globalPR.toFixed(1)}%</span> 的人口！ (資料源：WID 全球所得分佈)
+                  {isEn ? (
+                    <>Your income outperforms <span className="font-bold text-text-main">{globalPR.toFixed(1)}%</span> of the global population! (Source: WID Global Income Distribution)</>
+                  ) : (
+                    <>您的收入擊敗了全球 <span className="font-bold text-text-main">{globalPR.toFixed(1)}%</span> 的人口！ (資料源：WID 全球所得分佈)</>
+                  )}
                 </p>
               </div>
 
@@ -748,17 +773,17 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        最適生活圈評估
+                        {isEn ? 'Best Migration Match' : '最適生活圈評估'}
                       </span>
                       <span className="text-sm font-bold text-text-main">
-                        {matchedCountry.flag} {matchedCountry.name}
+                        {matchedCountry.flag} {isEn && matchedCountry.name_en ? matchedCountry.name_en : matchedCountry.name}
                       </span>
                     </div>
                     <div className={`text-sm font-extrabold ${styles.themeAccentText}`}>
-                      【{matchedCountry.tag}】
+                      【{isEn && matchedCountry.tag_en ? matchedCountry.tag_en : matchedCountry.tag}】
                     </div>
                     <p className="text-sm text-text-sub leading-relaxed">
-                      {matchedCountry.description}
+                      {isEn && matchedCountry.description_en ? matchedCountry.description_en : matchedCountry.description}
                     </p>
                   </div>
                 </div>
@@ -772,33 +797,33 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                       </svg>
-                      專屬打工人評定解鎖
+                      {isEn ? 'Worker Persona Unlocked' : '專屬打工人評定解鎖'}
                     </span>
                     <span className="text-xs font-mono text-text-sub font-bold">
-                      全台 PR {taiwanPR.toFixed(1)}
+                      {isEn ? 'Taiwan PR' : '全台 PR'} {taiwanPR.toFixed(1)}
                     </span>
                   </div>
 
                   <div>
                     <h4 className="text-xl font-black text-text-main flex items-center gap-2 mb-1">
-                      【{matchedMilestone.label}】
+                      【{isEn && matchedMilestone.label_en ? matchedMilestone.label_en : matchedMilestone.label}】
                     </h4>
                     <p className="text-sm text-text-sub leading-relaxed">
-                      {matchedMilestone.desc}
+                      {isEn && matchedMilestone.desc_en ? matchedMilestone.desc_en : matchedMilestone.desc}
                     </p>
                   </div>
 
                   {/* Shiny CTA Button to open the dedicated PRXX page */}
                   <div className="pt-2">
                     <Link
-                      href={`/hourly-rate-calculator/rank/${formatPrCode(matchedMilestone.pr)}/?${queryParamsString}`}
+                      href={`/hourly-rate-calculator/${isEn ? 'en/' : ''}rank/${formatPrCode(matchedMilestone.pr)}/?${queryParamsString}`}
                       className={styles.milestoneCardCTA}
                     >
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                         <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                         <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                       </svg>
-                      查看你的專屬卡片 ({formatPrCode(matchedMilestone.pr).toUpperCase()}) ➔
+                      {isEn ? `View Exclusive Card (${formatPrCode(matchedMilestone.pr).toUpperCase()}) ➔` : `查看你的專屬卡片 (${formatPrCode(matchedMilestone.pr).toUpperCase()}) ➔`}
                     </Link>
                   </div>
                 </div>
@@ -814,55 +839,19 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  分享專屬卡片
+                  {isEn ? 'Share Card' : '分享專屬卡片'}
                 </button>
               </div>
             </div>
           </div>
         </div>
         )}
-
-        {/* Informational Section for SEO, Formula & Reference Sources */}
-        <div className={`mt-12 p-8 ${styles.calcCard} space-y-6`}>
-          <h2 className="text-xl font-bold text-text-main border-b border-border-glass pb-3">
-            真實時薪、全台/全球 PR 與權威資料來源說明
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-text-sub">
-            <div>
-              <h3 className="font-semibold text-text-main mb-2 text-base">1. 真實時薪 (Real Hourly Rate)</h3>
-              <p className="mb-2">
-                許多人僅以名目月薪除以標準工時，忽略了每日通勤時間、無酬加班及開銷支出。公式為：
-              </p>
-              <div className="p-3 rounded-lg bg-surface-glass border border-border-glass font-mono text-xs text-text-main mb-2">
-                總工時 = 常態工作時間 + 隱形加班時間 + 通勤時間
-                <br />
-                淨收入 = 名目薪資/報酬 - 額外交通與工具支出
-                <br />
-                真實時薪 = 淨收入 / 總工時
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-text-main mb-2 text-base">2. 全台與全球 PR 分段線性插值</h3>
-              <p className="mb-2">
-                對照行政院主計總處 D1~D9 分位數統計，以及 WID 全球個人所得分佈數據，於相鄰分位數 [Pᵢ, Pᵢ₊₁] 進行精確分段線性插值。
-              </p>
-              <div className="p-3 rounded-lg bg-surface-glass border border-border-glass font-mono text-xs text-text-main mb-2">
-                推估年薪 A = 真實時薪 × 2086 小時
-                <br />
-                PR = PRᵢ + [(A - Sᵢ) / (Sᵢ₊₁ - Sᵢ)] × (PRᵢ₊₁ - PRᵢ)
-              </div>
-            </div>
-          </div>
-
-          {/* Reference Data Sources Disclosure */}
           <div className="border-t border-border-glass pt-6 mt-4">
             <h3 className="font-semibold text-text-main mb-3 text-base flex items-center gap-2">
               <svg className={`w-5 h-5 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              權威資料來源與依據說明 (Reference Data Sources)
+              {isEn ? 'Reference Data Sources' : '權威資料來源與依據說明 (Reference Data Sources)'}
             </h3>
             <ul className="space-y-2 text-xs text-text-sub list-disc list-inside leading-relaxed">
               <li>
@@ -870,65 +859,121 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  台灣薪資與工時數據
+                  {isEn ? 'Taiwan Salary & Hours Data' : '台灣薪資與工時數據'}
                 </strong>：
-                <a
-                  href="https://www.dgbas.gov.tw/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                >
-                  行政院主計總處
-                </a>
-                《受僱員工全年總薪資中位數及分位數統計表》與勞動部《法定最低工資發布公告》。
+                {isEn ? (
+                  <>
+                    <a
+                      href="https://www.dgbas.gov.tw/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      DGBAS Executive Yuan
+                    </a>
+                    "Employee Annual Earnings Distribution & Percentile Statistics" & Ministry of Labor Minimum Wage Announcements.
+                  </>
+                ) : (
+                  <>
+                    <a
+                      href="https://www.dgbas.gov.tw/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      行政院主計總處
+                    </a>
+                    《受僱員工全年總薪資中位數及分位數統計表》與勞動部《法定最低工資發布公告》。
+                  </>
+                )}
               </li>
               <li>
                 <strong className="text-text-main inline-flex items-center gap-1">
                   <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  全球人口所得數據
+                  {isEn ? 'Global Population Income Data' : '全球人口所得數據'}
                 </strong>：
-                <a
-                  href="https://wid.world/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                >
-                  World Inequality Database (WID 全球不平等資料庫)
-                </a>
-                與 World Bank (世界銀行全球個人所得分佈報告)。
+                {isEn ? (
+                  <>
+                    <a
+                      href="https://wid.world/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      World Inequality Database (WID)
+                    </a>
+                    & World Bank Global Income Distribution Reports.
+                  </>
+                ) : (
+                  <>
+                    <a
+                      href="https://wid.world/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      World Inequality Database (WID 全球不平等資料庫)
+                    </a>
+                    與 World Bank (世界銀行全球個人所得分佈報告)。
+                  </>
+                )}
               </li>
               <li>
                 <strong className="text-text-main inline-flex items-center gap-1">
                   <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m0 0l-3 9m3-9l3 2m0 0l-3 9m3-9l3 9m-6-9l6 2m0 0l-3 9m3-9l3 9" />
                   </svg>
-                  全球生活圈購買力 (PPP) 物價指標
+                  {isEn ? 'Global Living Purchasing Power (PPP) Index' : '全球生活圈購買力 (PPP) 物價指標'}
                 </strong>：
-                <a
-                  href="https://www.oecd.org/en/data/datasets/purchasing-power-parities.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                >
-                  OECD Purchasing Power Parities
-                </a>
-                與
-                <a
-                  href="http://numbeo.com/cost-of-living/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                >
-                  Numbeo Global Cost of Living Index
-                </a>
-                。
+                {isEn ? (
+                  <>
+                    <a
+                      href="https://www.oecd.org/en/data/datasets/purchasing-power-parities.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      OECD Purchasing Power Parities
+                    </a>
+                    &
+                    <a
+                      href="http://numbeo.com/cost-of-living/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      Numbeo Global Cost of Living Index
+                    </a>
+                    .
+                  </>
+                ) : (
+                  <>
+                    <a
+                      href="https://www.oecd.org/en/data/datasets/purchasing-power-parities.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      OECD Purchasing Power Parities
+                    </a>
+                    與
+                    <a
+                      href="http://numbeo.com/cost-of-living/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
+                    >
+                      Numbeo Global Cost of Living Index
+                    </a>
+                    。
+                  </>
+                )}
               </li>
             </ul>
           </div>
         </div>
-      </div>
 
       {/* Toast Notification */}
       {mounted && toastMessage && createPortal(

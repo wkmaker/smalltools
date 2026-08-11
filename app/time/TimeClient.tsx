@@ -567,7 +567,14 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
               </div>
             )}
           </div>
-        ) : null
+        ) : (
+          <Link
+            href={t.switchLangHref}
+            className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+          >
+            {t.switchLangText}
+          </Link>
+        )
       }
     >
       <div className={`flex flex-col justify-center items-center w-full my-auto transition-all duration-500 ${timerActive ? 'min-h-0' : 'min-h-[60vh]'}`}>
@@ -578,12 +585,6 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
               <h3 className={`text-sm uppercase tracking-[1px] font-semibold ${styles.sectionHeader}`}>
                 {t.setupHeader}
               </h3>
-              <Link
-                href={t.switchLangHref}
-                className="px-3 py-1.5 text-sm rounded-xl border bg-select-bg border-border-glass text-text-sub hover:text-text-main transition-colors font-medium"
-              >
-                {t.switchLangText}
-              </Link>
             </div>
 
             {/* 事件名稱 */}

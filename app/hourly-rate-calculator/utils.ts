@@ -15,19 +15,25 @@ export interface Milestone {
   id: string;
   slug: string;
   label: string;
+  label_en?: string;
   desc: string;
+  desc_en?: string;
 }
 
 /** 國家生活圈適配資料結構 */
 export interface CountryMatch {
   id: string;
   name: string;
+  name_en?: string;
   flag: string;
   countries: string[];
+  countries_en?: string[];
   min_hourly_twd: number;
   max_hourly_twd: number;
   tag: string;
+  tag_en?: string;
   description: string;
+  description_en?: string;
   travel_difficulty?: string;
   local_avg_hourly_twd?: number;
   travel_badge?: string;
@@ -177,22 +183,113 @@ import countrySuitabilityData from './config/country_suitability.json';
 
 /**
  * 根據使用者時薪，動態劃分旅遊「簡單」、「一般」、「困難」三個地點與體驗說明
- * 數據直接讀取自 config/country_suitability.json 中的 travel_tier_rules 欄位
+ * 數據讀取自 config/country_suitability.json，並支援多語言切換
  */
-export function getTravelTiers(displayHourlyRate: number): {
+export function getTravelTiers(
+  displayHourlyRate: number,
+  lang: 'zh-TW' | 'en' = 'zh-TW'
+): {
   easy: TravelTier;
   medium: TravelTier;
   hard: TravelTier;
 } {
   const rules = countrySuitabilityData.travel_tier_rules;
-  let selectedRule = rules.standard;
+  let ruleKey: 'zero_rate' | 'standard' | 'mid_tier' | 'top_tier' = 'standard';
 
   if (displayHourlyRate <= 0) {
-    selectedRule = rules.zero_rate;
+    ruleKey = 'zero_rate';
   } else if (displayHourlyRate >= 1000) {
-    selectedRule = rules.top_tier;
+    ruleKey = 'top_tier';
   } else if (displayHourlyRate >= 450) {
-    selectedRule = rules.mid_tier;
+    ruleKey = 'mid_tier';
+  }
+
+  const selectedRule = rules[ruleKey];
+
+  if (lang === 'en') {
+    const enRules = {
+      zero_rate: {
+        easy: {
+          destinations: ['Cozy Living Room', 'Comfortable Bed', 'Nearby Park Walk'],
+          description: '0 TWD expenses! Lying in bed dreaming is the ultimate high-CP luxury.',
+        },
+        medium: {
+          destinations: ['Convenience Store AC', "Friend's Place (Free Water)"],
+          description: 'Without spending a cent, enjoy free AC and local hospitality.',
+        },
+        hard: {
+          destinations: ['Outside World', 'Anyplace Requiring Wallet'],
+          description: 'Stepping outside and paying is hard level. Staying in bed is recommended!',
+        },
+      },
+      standard: {
+        easy: {
+          destinations: ['🇹🇭 Thailand (Chiang Mai/Bangkok)', '🇻🇳 Vietnam (Ho Chi Minh/Hanoi)', '🇮🇩 Indonesia (Bali)', '🇵🇭 Philippines (Cebu)'],
+          description: 'Expenses 40~50% lower than Taiwan; enjoy Thai tea, dining out, and SPA massages without stress!',
+        },
+        medium: {
+          destinations: ['🇯🇵 Japan (Kansai/Fukuoka/Tokyo)', '🇰🇷 South Korea (Seoul/Busan)', '🇨🇿 Czechia (Prague)', '🇵🇱 Poland (Warsaw)'],
+          description: 'Living costs close to Taiwan; enjoy Yakiniku izakayas and European ancient cities!',
+        },
+        hard: {
+          destinations: ['🇨🇭 Switzerland (Zurich/Geneva)', '🇺🇸 USA (New York/Silicon Valley)', '🇬🇧 UK (London)', '🇸🇬 Singapore (Central)'],
+          description: 'Higher dining and housing costs; budget carefully.',
+        },
+      },
+      mid_tier: {
+        easy: {
+          destinations: ['🇹🇭 Thailand (Chiang Mai/Bangkok)', '🇻🇳 Vietnam (Ho Chi Minh)', '🇲🇽 Mexico (Mexico City)'],
+          description: 'Stay in pool apartments, enjoy local dining and massages comfortably!',
+        },
+        medium: {
+          destinations: ['🇯🇵 Japan (Kansai/Fukuoka)', '🇰🇷 South Korea (Busan/Seoul)', '🇭🇺 Hungary (Budapest)'],
+          description: 'Favorable Yen rate and romantic Eastern European ancient capitals.',
+        },
+        hard: {
+          destinations: ['🇩🇪 Germany (Berlin/Munich)', '🇸🇪 Sweden (Stockholm)', '🇺🇸 USA (New York/California)'],
+          description: 'High price levels and rents; plan travel budget carefully.',
+        },
+      },
+      top_tier: {
+        easy: {
+          destinations: ['🇹🇭 Thailand (Bangkok First Class)', '🇻🇳 Vietnam (Luxury Beach Resort)', '🇲🇾 Malaysia (KL Prime District)'],
+          description: 'Unbeatable purchasing power upgrade! Star hotels, infinity pools, and fine dining.',
+        },
+        medium: {
+          destinations: ['🇯🇵 Tokyo Downtown (Minato/Shinjuku)', '🇪🇸 Spain (Barcelona)', '🇮🇹 Italy (Rome/Milan)'],
+          description: 'Traverse Japan, Korea, and Mediterranean coasts freely; enjoy rich coffee and European culture.',
+        },
+        hard: {
+          destinations: ['🇨🇭 Switzerland (Alps First Class)', '🇺🇸 Silicon Valley / Manhattan Luxury', '🇸🇬 Singapore Financial Hub'],
+          description: 'Conquer high-cost paradises with high income, enjoying top prestige quality.',
+        },
+      },
+    };
+
+    const selectedEnRule = enRules[ruleKey];
+    return {
+      easy: {
+        difficulty: '簡單',
+        title: 'Easy (Low Stress)',
+        badgeStyle: 'text-text-main bg-surface-glass border border-border-glass font-bold',
+        destinations: selectedEnRule.easy.destinations,
+        description: selectedEnRule.easy.description,
+      },
+      medium: {
+        difficulty: '一般',
+        title: 'Moderate (Budget Travel)',
+        badgeStyle: 'text-text-main bg-surface-glass border border-border-glass font-bold',
+        destinations: selectedEnRule.medium.destinations,
+        description: selectedEnRule.medium.description,
+      },
+      hard: {
+        difficulty: '困難',
+        title: 'Challenging (Calculated Travel)',
+        badgeStyle: 'text-text-main bg-surface-glass border border-border-glass font-bold',
+        destinations: selectedEnRule.hard.destinations,
+        description: selectedEnRule.hard.description,
+      },
+    };
   }
 
   return {
