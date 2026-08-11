@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   keywords: '期貨槓桿計算機,台指期計算機,大台保證金,小台保證金,微台保證金,期貨斷頭點數,期貨維持率,期貨保證金',
   alternates: {
     canonical: 'https://tools.cjkuo.net/futures-calculator/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/futures-calculator/',
+      en: 'https://tools.cjkuo.net/futures-calculator/en/',
+      'x-default': 'https://tools.cjkuo.net/futures-calculator/en/',
+    },
   },
   openGraph: {
     title: '台股期貨槓桿計算機 - 免費線上大台/小台/微台保證金與逆風點數估算器',

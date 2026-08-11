@@ -633,19 +633,18 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
       description={t.description}
       accentColor="#00ff99"
       accentGlow="rgba(0, 255, 153, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.switchLangHref}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {t.switchLangText}
+        </Link>
+      }
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 當前時間動態看板 */}
         <div className={`${styles.cardContainer} flex flex-col gap-6`}>
-          <div className="flex items-center justify-end">
-            <Link
-              href={t.switchLangHref}
-              className="px-3 py-1.5 text-sm rounded-xl border bg-select-bg border-border-glass text-text-sub hover:text-text-main transition-colors font-medium"
-            >
-              {t.switchLangText}
-            </Link>
-          </div>
-
           <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-1">
             <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
               <span className="text-sm font-semibold text-text-sub truncate">{t.liveSecTitle}</span>

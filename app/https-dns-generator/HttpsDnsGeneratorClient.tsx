@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useId } from 'react';
+import { useState, useEffect, useCallback, useId, useRef } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './https-dns-generator.module.css';
@@ -139,8 +139,10 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
   const [noDefaultAlpn, setNoDefaultAlpn] = useState<boolean>(false);
   const [ech, setEch] = useState<string>('');
   const [activeProvider, setActiveProvider] = useState<'cf' | 'r53' | 'gcdns' | 'bind'>('cf');
-
   const [toast, setToast] = useState<string>('');
+
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef<boolean>(false);
 
   const hostInputId = useId();
   const ttlInputId = useId();
@@ -156,10 +158,59 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 240, 255, 0.6)');
   }, []);
 
-  const showToast = (msg: string) => {
+  // 初次掛載讀取 URL 參數
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+
+    const qMode = params.get('mode') as 'service' | 'alias' | null;
+    const qHost = params.get('host');
+    const qPrio = params.get('priority');
+    const qTarget = params.get('target');
+    const qH3 = params.get('h3');
+    const qH2 = params.get('h2');
+    const qV4 = params.get('v4');
+    const qV6 = params.get('v6');
+    const qPort = params.get('port');
+
+    if (qMode && ['service', 'alias'].includes(qMode)) setMode(qMode);
+    if (qHost) setHost(qHost);
+    if (qPrio && !isNaN(parseInt(qPrio, 10))) setPriority(parseInt(qPrio, 10));
+    if (qTarget) setTarget(qTarget);
+    if (qH3 !== null) setAlpnH3(qH3 === '1' || qH3 === 'true');
+    if (qH2 !== null) setAlpnH2(qH2 === '1' || qH2 === 'true');
+    if (qV4 !== null) setIpv4hint(qV4);
+    if (qV6 !== null) setIpv6hint(qV6);
+    if (qPort !== null) setPort(qPort);
+
+    isMountedRef.current = true;
+  }, []);
+
+  // 狀態更新時 300ms 防抖同步網址
+  useEffect(() => {
+    if (!isMountedRef.current || typeof window === 'undefined') return;
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      params.set('mode', mode);
+      if (host) params.set('host', host);
+      params.set('priority', priority.toString());
+      if (target) params.set('target', target);
+      if (alpnH3) params.set('h3', '1');
+      if (alpnH2) params.set('h2', '1');
+      if (ipv4hint) params.set('v4', ipv4hint);
+      if (ipv6hint) params.set('v6', ipv6hint);
+      if (port) params.set('port', port);
+
+      window.history.replaceState(null, '', '?' + params.toString());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [mode, host, priority, target, alpnH3, alpnH2, ipv4hint, ipv6hint, port]);
+
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
+  }, []);
 
   const applyPreset = (type: 'standard' | 'alias' | 'custom-port' | 'clear') => {
     if (type === 'standard') {
@@ -257,18 +308,8 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
   };
 
   const copyShareUrl = () => {
-    const params = new URLSearchParams();
-    params.set('mode', mode);
-    params.set('host', host);
-    params.set('priority', priority.toString());
-    params.set('target', target);
-    if (alpnH3) params.set('h3', '1');
-    if (alpnH2) params.set('h2', '1');
-    if (ipv4hint) params.set('v4', ipv4hint);
-    if (ipv6hint) params.set('v6', ipv6hint);
-    if (port) params.set('port', port);
-    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(shareUrl).then(() => showToast(t.copiedShare));
+    if (typeof window === 'undefined') return;
+    navigator.clipboard.writeText(window.location.href).then(() => showToast(t.copiedShare));
   };
 
   return (
@@ -278,19 +319,15 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
       description={t.description}
       accentColor="#00f0ff"
       accentGlow="rgba(0, 240, 255, 0.6)"
-    >
-      {/* 雙語切換按鈕 */}
-      <div className="flex justify-end mb-6">
+      extraHeaderControls={
         <Link
           href={lang === 'en' ? '/https-dns-generator/' : '/https-dns-generator/en/'}
-          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-all flex items-center gap-1.5"
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
         >
-          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-          </svg>
           {lang === 'en' ? '繁體中文' : 'English'}
         </Link>
-      </div>
+      }
+    >
 
       <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
         {/* 左欄：設定參數 (勾選與填空) */}

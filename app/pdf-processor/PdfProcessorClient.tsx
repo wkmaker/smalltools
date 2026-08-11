@@ -514,6 +514,14 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       description={t.description}
       accentColor="#ef4444"
       accentGlow="rgba(239, 68, 68, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.switchLangHref}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {t.switchLangText}
+        </Link>
+      }
     >
       <div
         onDragOver={handleFileDragOver}
@@ -538,12 +546,6 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         {/* 頂部頂級功能列與工具欄 */}
         <div className={`${styles.cardContainer} p-5 sm:p-6 flex justify-between items-center flex-wrap gap-4`}>
           <div className="flex items-center gap-4 flex-wrap">
-            <Link
-              href={t.switchLangHref}
-              className="px-3 py-1.5 text-sm rounded-xl border bg-select-bg border-border-glass text-text-sub hover:text-text-main transition-colors font-medium"
-            >
-              {t.switchLangText}
-            </Link>
 
             <input
               id={fileInputId}

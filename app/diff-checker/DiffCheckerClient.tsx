@@ -427,21 +427,16 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
       description={t.description}
       accentColor="#8b5cf6"
       accentGlow="rgba(139, 92, 246, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.langSwitchHref}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {t.langSwitchLabel}
+        </Link>
+      }
     >
       <div className="flex flex-col gap-6 text-left w-full px-4 max-sm:px-0">
-        {/* 右上方雙語切換按鈕 */}
-        <div className="flex justify-end items-center">
-          <Link
-            href={t.langSwitchHref}
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors flex items-center gap-1.5"
-          >
-            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20" />
-            </svg>
-            {t.langSwitchLabel}
-          </Link>
-        </div>
 
         {/* 控制設定列 */}
         <div className={styles.panelCard}>

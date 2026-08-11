@@ -113,21 +113,16 @@ export default function TextUtilityClient({ lang = 'zh-TW' }: TextUtilityClientP
       description={t.description}
       accentColor="#ff007f"
       accentGlow="rgba(255, 0, 127, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.langSwitchHref}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {t.langSwitchLabel}
+        </Link>
+      }
     >
       <div className="flex flex-col gap-6 text-left">
-        {/* 右上方雙語切換按鈕區 */}
-        <div className="flex justify-end items-center">
-          <Link
-            href={t.langSwitchHref}
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors flex items-center gap-1.5"
-          >
-            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20" />
-            </svg>
-            {t.langSwitchLabel}
-          </Link>
-        </div>
 
         {/* 上方：多維度統計看板 */}
         <div className="grid grid-cols-5 gap-4 max-lg:grid-cols-3 max-sm:grid-cols-2">

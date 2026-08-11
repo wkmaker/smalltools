@@ -771,9 +771,17 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
       description={t.description}
       accentColor="#ffb800"
       accentGlow="rgba(255, 184, 0, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={lang === 'zh-TW' ? '/liars-dice/en/' : '/liars-dice/'}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {lang === 'zh-TW' ? 'English' : '繁體中文'}
+        </Link>
+      }
     >
       <div className={styles.container}>
-        {/* 雙語與全螢幕按鈕列 */}
+        {/* 全螢幕按鈕 */}
         <div className="flex justify-end items-center gap-2 mb-4">
           <button
             type="button"
@@ -785,13 +793,6 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
             </svg>
             <span>{t.fullscreen}</span>
           </button>
-
-          <Link
-            href={lang === 'zh-TW' ? '/liars-dice/en/' : '/liars-dice/'}
-            className="px-3 py-1.5 text-xs font-medium rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
-          >
-            {lang === 'zh-TW' ? 'English' : '繁體中文'}
-          </Link>
         </div>
 
         {/* 普通模式核心面板 */}

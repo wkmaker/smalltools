@@ -292,17 +292,16 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#00ff66"
         accentGlow="rgba(0,255,102,0.6)"
+        extraHeaderControls={
+          <Link
+            href={t.langToggleUrl}
+            className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+          >
+            {t.langToggleLabel}
+          </Link>
+        }
       >
         <div className={styles.mainLayout}>
-          {/* Top Bar Language Switcher */}
-          <div className="flex justify-end mb-6">
-            <Link
-              href={t.langToggleUrl}
-              className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#00ff66)] transition-all no-underline"
-            >
-              {t.langToggleLabel}
-            </Link>
-          </div>
 
           <div className={styles.gridContainer}>
             {/* Options Column */}

@@ -361,6 +361,26 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
 
 
+14. **非同步任務與 API 請求競態防護 (Async Race & Abort Standard)**
+
+    * 凡涉及非同步檔案讀取 (`FileReader`) 或網路 DoH / HTTP API 查詢 (`fetch`) 的工具，必須宣告 `activeReaderRef` / `activeAbortControllerRef`。
+
+    * 在發起新任務或使用者高頻打字/切換條件前，必須自動呼叫 `.abort()` 中斷前次連線，並針對 API 請求加上 8 秒 Timeout 逾時防護 (`AbortSignal.timeout`)，徹底消弭舊連線慢返回反向覆蓋最新視圖的 Race Condition。
+
+
+
+15. **Textarea 動態自適應高度零 Layout Shift 規範 (Zero Jank Auto-height Standard)**
+
+    * 動態計算 `<textarea>` 自適應高度時，嚴禁先將 `style.height = 'auto'` 重置後呼叫 `window.scrollTo`，防範 DOM 瞬間塌陷引發全頁面閃爍與 Layout Shift。應直接讀取 `scrollHeight` 並平滑更新高度。
+
+
+
+16. **巨量數據與高負載演算法主執行緒凍結防護 (Main-Thread Frozen Safeguard)**
+
+    * 針對文字比對 (Diff)、大檔案編解碼 (Base64) 或高複雜度運算，必須設定字串長度與檔案大小上限（如 10MB 或 3,000,000 字元）。超出時給予截斷或分區預覽，兼顧 100% 完整複製匯出與極速 60fps UI 渲染。
+
+
+
 ---
 
 

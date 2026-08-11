@@ -952,17 +952,16 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#00ffaa"
         accentGlow="rgba(0, 255, 170, 0.6)"
+        extraHeaderControls={
+          <Link
+            href={t.langToggleUrl}
+            className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+          >
+            {t.langToggleLabel}
+          </Link>
+        }
       >
         <div className={styles.mainLayout}>
-          {/* Top Bar Language Switcher */}
-          <div className="flex justify-end mb-4">
-            <Link
-              href={t.langToggleUrl}
-              className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#00ffaa)] transition-all no-underline"
-            >
-              {t.langToggleLabel}
-            </Link>
-          </div>
 
           {/* 警告/訊息提示方塊 */}
           {alert.show && (

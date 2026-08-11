@@ -745,15 +745,15 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#00f5a0"
         accentGlow="rgba(0, 245, 160, 0.6)"
-      >
-        <div className="flex justify-end mb-6">
+        extraHeaderControls={
           <Link
             href={t.langToggleUrl}
-            className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#00f5a0)] transition-all no-underline"
+            className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
           >
             {t.langToggleLabel}
           </Link>
-        </div>
+        }
+      >
 
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：表單設定區 */}

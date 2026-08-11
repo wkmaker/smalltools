@@ -765,15 +765,15 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#ff0055"
         accentGlow="rgba(255,0,85,0.6)"
-      >
-        <div className="flex justify-end mb-6">
+        extraHeaderControls={
           <Link
             href={t.langToggleUrl}
-            className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#ff0055)] transition-all no-underline"
+            className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
           >
             {t.langToggleLabel}
           </Link>
-        </div>
+        }
+      >
 
         {/* 負攤還警示 Banner */}
         {isNegAmort && (

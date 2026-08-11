@@ -323,17 +323,16 @@ export default function UrlEncoderClient({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#ff7300"
         accentGlow="rgba(255,115,0,0.6)"
+        extraHeaderControls={
+          <Link
+            href={t.langToggleUrl}
+            className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+          >
+            {t.langToggleLabel}
+          </Link>
+        }
       >
         <div className={styles.mainLayout}>
-          {/* Top Bar Language Switcher */}
-          <div className="flex justify-end mb-6">
-            <Link
-              href={t.langToggleUrl}
-              className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#ff7300)] transition-all no-underline"
-            >
-              {t.langToggleLabel}
-            </Link>
-          </div>
 
           <div className={styles.panelsGrid}>
             {/* Plain Text Panel */}

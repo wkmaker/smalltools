@@ -36,6 +36,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/pledge-calculator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/pledge-calculator/en/', lastModified: '2026-08-11', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/futures-calculator/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/futures-calculator/en/', lastModified: '2026-08-11', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/dns-dig/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/dns-dig/en/', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/text-utility/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.8 },
@@ -65,6 +66,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/resignation-calculator/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/resignation-calculator/en/', lastModified: '2026-07-31', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/hourly-rate-calculator/', lastModified: '2026-08-01', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/hourly-rate-calculator/en/', lastModified: '2026-08-11', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/liars-dice/', lastModified: '2026-08-06', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/liars-dice/en/', lastModified: '2026-08-06', changeFrequency: 'monthly', priority: 0.8 },
   ];

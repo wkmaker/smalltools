@@ -309,17 +309,16 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#ff00aa"
         accentGlow="rgba(255,0,170,0.5)"
+        extraHeaderControls={
+          <Link
+            href={t.langToggleUrl}
+            className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+          >
+            {t.langToggleLabel}
+          </Link>
+        }
       >
         <div className={styles.mainLayout}>
-          {/* Top Bar Language Switcher */}
-          <div className="flex justify-end mb-6">
-            <Link
-              href={t.langToggleUrl}
-              className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#ff00aa)] transition-all no-underline"
-            >
-              {t.langToggleLabel}
-            </Link>
-          </div>
 
           <div className="grid grid-cols-2 gap-8 mb-6 max-[900px]:grid-cols-1">
             {/* Input Panel */}

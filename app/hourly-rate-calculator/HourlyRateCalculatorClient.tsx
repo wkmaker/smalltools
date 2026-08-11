@@ -22,9 +22,11 @@ import {
 interface HourlyRateCalculatorClientProps {
   initialSlug?: string;
   initialPr?: number;
+  lang?: 'zh-TW' | 'en';
 }
 
-export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: HourlyRateCalculatorClientProps) {
+export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lang = 'zh-TW' }: HourlyRateCalculatorClientProps) {
+  const isEn = lang === 'en';
   // ─── 主題色初始化 ─────────────────────────────────────────────────────────
   const [mounted, setMounted] = useState(false);
 
@@ -327,15 +329,24 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr }: H
   // ─── JSX ──────────────────────────────────────────────────────────────────
   return (
     <ToolLayout
-      title="真實時薪計算器"
+      title={isEn ? "Real Hourly Rate Calculator" : "真實時薪計算器"}
       subtitle="REAL HOURLY RATE CALCULATOR"
-      description="扣除通勤時間、隱形加班與額外開銷支出，計算每小時生命的真實收益與全球生活圈適配度分析。"
+      description={isEn ? "Deduct commute time, unpaid overtime, and work expenses to accurately calculate your true net hourly earnings." : "扣除通勤時間、隱形加班與額外開銷支出，計算每小時生命的真實收益與全球生活圈適配度分析。"}
       accentColor="#00f5a0"
       accentGlow="rgba(0, 245, 160, 0.6)"
       backHref={heroMilestone ? `/hourly-rate-calculator/?${queryParamsString}` : undefined}
-      backText={heroMilestone ? '返回時薪計算器' : undefined}
-      backTitle={heroMilestone ? '返回時薪計算器首頁' : undefined}
+      backText={heroMilestone ? (isEn ? 'Back to Calculator' : '返回時薪計算器') : undefined}
+      backTitle={heroMilestone ? (isEn ? 'Back to Calculator Home' : '返回時薪計算器首頁') : undefined}
+      extraHeaderControls={
+        <Link
+          href={isEn ? '/hourly-rate-calculator/' : '/hourly-rate-calculator/en/'}
+          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
+        >
+          {isEn ? '繁體中文' : 'English'}
+        </Link>
+      }
     >
+
       <div className={styles.container}>
         {/* Fix #1: IIFE 完全移除，改用獨立元件 <RankHeroBanner /> */}
         {heroMilestone && (
