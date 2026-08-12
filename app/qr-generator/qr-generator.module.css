@@ -3,6 +3,8 @@
 .qrPreview {
   width: 280px;
   height: 280px;
+  max-width: 100%;
+  box-sizing: border-box;
   background: white;
   padding: 1.25rem;
   border-radius: 1.5rem;
@@ -131,6 +133,10 @@
 
 /* 面板卡片 */
 .panelCard {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
@@ -152,12 +158,13 @@
 /* 內容類型 Segmented Control */
 .segmentedContainer {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   background: rgba(255, 255, 255, 0.015);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 50px;
-  padding: 0.375rem;
-  width: fit-content;
+  border-radius: 1rem;
+  padding: 0.5rem;
+  width: 100%;
 }
 
 :global([data-theme='light']) .segmentedContainer {
@@ -167,14 +174,17 @@
 
 .tabBtnActive {
   border: none;
-  border-radius: 50px;
-  padding: 0.5rem 1.25rem;
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 600;
   background: rgba(0, 255, 102, 0.1);
   color: #00ff66;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 :global([data-theme='light']) .tabBtnActive {
@@ -184,18 +194,26 @@
 
 .tabBtnInactive {
   border: none;
-  border-radius: 50px;
-  padding: 0.5rem 1.25rem;
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 500;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .tabBtnInactive:hover {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:global([data-theme='light']) .tabBtnInactive:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 /* 輸入框 */
@@ -378,4 +396,259 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 第二張卡片與程式碼預覽面板 (亮暗模式對齊) */
+.vcfCodeBox {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--card-border);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: all;
+  transition: all 0.3s ease;
+}
+
+:global([data-theme='light']) .vcfCodeBox {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--card-border);
+  color: var(--text-secondary);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+/* 下載 vCF/iCal 次要光澤按鈕 */
+.vcfDownloadBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  background: rgba(0, 255, 102, 0.08);
+  border: 1px solid rgba(0, 255, 102, 0.3);
+  color: #00ff66;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vcfDownloadBtn:hover {
+  background: rgba(0, 255, 102, 0.18);
+  border-color: #00ff66;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.3);
+}
+
+.vcfDownloadBtn:active {
+  transform: scale(0.96);
+}
+
+:global([data-theme='light']) .vcfDownloadBtn {
+  background: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.35);
+  color: #059669;
+}
+
+:global([data-theme='light']) .vcfDownloadBtn:hover {
+  background: rgba(5, 150, 105, 0.15);
+  border-color: #059669;
+  color: #047857;
+  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.2);
+}
+
+/* 複製按鈕 */
+.vcfCopyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: var(--select-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.vcfCopyBtn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:global([data-theme='light']) .vcfCopyBtn:hover {
+  color: var(--text-primary);
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.vcfCopyBtn:active {
+  transform: scale(0.96);
+}
+
+/* 平鋪膠囊按鈕 (Segmented Control Pills) 亮暗雙主題規範 */
+.segmentedContainer {
+  display: grid;
+  padding: 0.25rem;
+  background: var(--select-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 0.75rem;
+  gap: 0.25rem;
+}
+
+.segmentedBtn {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.segmentedBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='light']) .segmentedBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.segmentedBtnActive {
+  color: #00ff66 !important;
+  background: rgba(0, 255, 102, 0.12) !important;
+  border: 1px solid rgba(0, 255, 102, 0.35) !important;
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.2) !important;
+  font-weight: 700 !important;
+}
+
+:global([data-theme='light']) .segmentedBtnActive {
+  color: #059669 !important;
+  background: rgba(5, 150, 105, 0.12) !important;
+  border: 1px solid rgba(5, 150, 105, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.12) !important;
+  font-weight: 700 !important;
+}
+
+/* 內容類型極圓跑道容器 (Outer Pill Track) 徹底防溢出全防禦版 */
+.contentTypeTrack {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem;
+  background: var(--select-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 9999px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.contentTypeTrack::-webkit-scrollbar {
+  display: none;
+}
+
+:global([data-theme='light']) .contentTypeTrack {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* 手機版 (Mobile < 640px) 專屬響應式：切換為 2 欄精緻平鋪網格 */
+@media (max-width: 640px) {
+  .contentTypeTrack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    border-radius: 1.25rem;
+    padding: 0.5rem;
+    gap: 0.375rem;
+  }
+
+  .tabBtnInactive,
+  .tabBtnActive {
+    justify-content: center;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* 內容類型頁籤按鈕 (ContentType Tabs) 極圓膠囊雙主題規範 */
+.tabBtnInactive {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tabBtnInactive:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='light']) .tabBtnInactive:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.tabBtnActive {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  color: #00ff66 !important;
+  background: rgba(0, 255, 102, 0.15) !important;
+  border: 1px solid rgba(0, 255, 102, 0.35) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.2) !important;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+:global([data-theme='light']) .tabBtnActive {
+  color: #059669 !important;
+  background: rgba(5, 150, 105, 0.15) !important;
+  border: 1px solid rgba(5, 150, 105, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15) !important;
+  text-shadow: none;
 }

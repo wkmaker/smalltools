@@ -9,18 +9,25 @@ interface QrGeneratorClientProps {
   lang?: 'zh-TW' | 'en';
 }
 
+type ContentType = 'text' | 'wifi' | 'vcard' | 'event' | 'email' | 'sms' | 'tel';
+
 const TRANSLATIONS = {
   'zh-TW': {
     title: 'QR Code 產生器',
     subtitle: 'DESIGNER QR CODE GENERATOR',
     description:
-      '專業免費的線上藝術 QR Code 產生器！支援自訂點體樣式、雙色漸層、中央 Logo 拖曳內嵌、自動 30% 高容錯率及 PNG/SVG/WEBP 向量圖檔下載。',
+      '專業免費的線上藝術 QR Code 產生器！支援數位名片 (vCard)、行事曆 (iCal)、快捷訊息與自訂點體樣式、雙色漸層、中央 Logo 拖曳內嵌及向量下載。',
     copyShareLink: '複製分享設計連結',
     shareLinkCopied: '✓ 已複製設計網址！',
     shareLinkPrompt: '複製以下網址以進行分享：',
     contentType: '內容類型',
     textOrUrl: '文字 / 網址',
     wifiNetwork: 'WiFi 網路',
+    vcardContact: 'vCard 數位名片',
+    calendarEvent: '行事曆行程',
+    emailMsg: 'E-mail 郵件',
+    smsMsg: 'SMS 簡訊',
+    telCall: '電話撥號',
     qrContentLabel: 'QR Code 內容',
     textPlaceholder: '請輸入網址或文字 (e.g. https://...)',
     wifiSsid: 'WiFi SSID (網路名稱)',
@@ -28,8 +35,69 @@ const TRANSLATIONS = {
     wifiPass: 'WiFi 密碼',
     wifiPassPlaceholder: '請輸入 WiFi 密碼',
     securityType: '安全性類型',
+    wpaOption: 'WPA / WPA2 Personal',
+    wpa3Option: 'WPA3 Personal',
+    wpaEapOption: 'WPA / WPA2 Enterprise (EAP)',
+    wepOption: 'WEP (舊式加密)',
+    nopassOption: '無密碼 (nopass)',
     nopass: '無密碼 (nopass)',
     hiddenSsid: '隱藏 SSID 網路',
+
+    // vCard
+    vCardVersion: 'vCard 版本規格',
+    vCardVer3: 'vCard 3.0 (iOS / Android 原生相機相容推薦)',
+    vCardVer4: 'vCard 4.0 (現代 RFC 6350 規格)',
+    vCardLastName: '姓氏',
+    vCardLastNamePlaceholder: '例如：王',
+    vCardFirstName: '名字',
+    vCardFirstNamePlaceholder: '例如：小明',
+    vCardNickname: '暱稱',
+    vCardNicknamePlaceholder: '例如：阿傑 / Alex',
+    vCardOrg: '公司名稱',
+    vCardOrgPlaceholder: '例如：科技股份有限公司',
+    vCardDept: '部門名稱',
+    vCardDeptPlaceholder: '例如：研發部 / 行銷處',
+    vCardTitle: '職稱',
+    vCardTitlePlaceholder: '例如：資深軟體工程師',
+    vCardPhone: '手機號碼',
+    vCardPhonePlaceholder: '例如：0912345678',
+    vCardWorkPhone: '公司電話 / 座機 (可填分機)',
+    vCardWorkPhonePlaceholder: '例如：02-12345678,123 (若要填入分機請用 ",")',
+    vCardEmail: 'E-mail 信箱',
+    vCardEmailPlaceholder: '例如：service@example.com',
+    vCardUrl: '個人 / 公司網站',
+    vCardUrlPlaceholder: '例如：https://example.com',
+    vCardAddress: '通訊地址',
+    vCardAddressPlaceholder: '例如：台北市信義區信義路五段7號',
+    vCardBday: '生日 (Birthday)',
+    vCardBdayPlaceholder: '例如：1989-06-14',
+
+    // iCalendar Event
+    eventSummary: '行程標題',
+    eventSummaryPlaceholder: '例如：2026 產品發布會',
+    eventStart: '開始時間',
+    eventEnd: '結束時間',
+    eventTimezone: '活動時區 (Time Zone)',
+    timezoneLocal: '設備預設時區 (Local Time)',
+    eventLocation: '活動地點',
+    eventLocationPlaceholder: '例如：台北國際會議中心',
+    eventDescription: '行程描述 / 備註',
+    eventDescriptionPlaceholder: '例如：請準時入場，憑 QR Code 兌換贈品',
+
+    // Email / SMS / Tel
+    emailTo: '收件者 E-mail',
+    emailToPlaceholder: '例如：service@example.com',
+    emailSubject: '信件主旨',
+    emailSubjectPlaceholder: '例如：客服諮詢',
+    emailBody: '預設內文',
+    emailBodyPlaceholder: '例如：我想詢問...',
+    smsPhone: '簡訊收件號碼',
+    smsPhonePlaceholder: '例如：+886912345678',
+    smsBody: '簡訊預設內文',
+    smsBodyPlaceholder: '例如：註冊會員',
+    telPhone: '撥打電話號碼',
+    telPhonePlaceholder: '例如：+886212345678',
+
     dotsStyle: '碼體樣式',
     square: '方形',
     dots: '圓點',
@@ -67,6 +135,15 @@ const TRANSLATIONS = {
     hdSize: '2000 (高清)',
     downloadBtn: '下載設計好的 QR Code',
     downloadToast: '已觸發 QR Code 下載',
+    downloadVcfBtn: '下載 .vcf 數位名片檔',
+    copyVcfBtn: '複製 vCard 原始碼',
+    vcfPreviewTitle: 'vCard 數位名片預覽與下載',
+    downloadIcsBtn: '下載 .ics 行事曆檔案',
+    copyIcsBtn: '複製 iCalendar 原始碼',
+    icsPreviewTitle: 'iCalendar 行事曆行程預覽與下載',
+    vcfDownloadedToast: '已觸發 .vcf 數位名片檔下載',
+    icsDownloadedToast: '已觸發 .ics 行事曆檔下載',
+    rawCopiedToast: '已將原始文字內容複製至剪貼簿',
     langSwitchLabel: 'English',
     langSwitchHref: '/qr-generator/en/',
   },
@@ -74,13 +151,18 @@ const TRANSLATIONS = {
     title: 'Designer QR Code Generator',
     subtitle: 'DESIGNER QR CODE GENERATOR',
     description:
-      'Free professional online Designer QR Code Generator! Custom dot styles, dual gradients, center logo drag & drop, 30% error correction, and vector SVG download.',
+      'Free professional online Designer QR Code Generator! Supports vCard, iCalendar events, quick triggers, dot styles, dual gradients, logo overlay, and vector SVG download.',
     copyShareLink: 'Copy Shareable Design Link',
     shareLinkCopied: '✓ Design link copied!',
     shareLinkPrompt: 'Copy the following URL to share:',
     contentType: 'Content Type',
     textOrUrl: 'Text / URL',
     wifiNetwork: 'WiFi Network',
+    vcardContact: 'vCard Contact',
+    calendarEvent: 'Calendar Event',
+    emailMsg: 'E-mail',
+    smsMsg: 'SMS Message',
+    telCall: 'Phone Call',
     qrContentLabel: 'QR Code Content',
     textPlaceholder: 'Enter URL or text (e.g. https://...)',
     wifiSsid: 'WiFi SSID (Network Name)',
@@ -88,8 +170,69 @@ const TRANSLATIONS = {
     wifiPass: 'WiFi Password',
     wifiPassPlaceholder: 'Enter WiFi password',
     securityType: 'Security Type',
+    wpaOption: 'WPA / WPA2 Personal',
+    wpa3Option: 'WPA3 Personal',
+    wpaEapOption: 'WPA / WPA2 Enterprise (EAP)',
+    wepOption: 'WEP',
+    nopassOption: 'No Password (nopass)',
     nopass: 'No Password (nopass)',
     hiddenSsid: 'Hidden Network SSID',
+
+    // vCard
+    vCardVersion: 'vCard Spec Version',
+    vCardVer3: 'vCard 3.0 (Recommended for Camera Compatibility)',
+    vCardVer4: 'vCard 4.0 (Modern RFC 6350 Spec)',
+    vCardLastName: 'Last Name',
+    vCardLastNamePlaceholder: 'e.g. Smith',
+    vCardFirstName: 'First Name',
+    vCardFirstNamePlaceholder: 'e.g. John',
+    vCardNickname: 'Nickname',
+    vCardNicknamePlaceholder: 'e.g. Alex',
+    vCardOrg: 'Company Name',
+    vCardOrgPlaceholder: 'e.g. Tech Corp',
+    vCardDept: 'Department',
+    vCardDeptPlaceholder: 'e.g. R&D Dept',
+    vCardTitle: 'Job Title',
+    vCardTitlePlaceholder: 'e.g. Senior Developer',
+    vCardPhone: 'Mobile Phone',
+    vCardPhonePlaceholder: 'e.g. +886912345678',
+    vCardWorkPhone: 'Work Phone (Ext. Supported)',
+    vCardWorkPhonePlaceholder: 'e.g. +886212345678,123 (Use "," for extension)',
+    vCardEmail: 'Email Address',
+    vCardEmailPlaceholder: 'e.g. service@example.com',
+    vCardUrl: 'Website URL',
+    vCardUrlPlaceholder: 'e.g. https://example.com',
+    vCardAddress: 'Address',
+    vCardAddressPlaceholder: 'e.g. 123 Main St, City',
+    vCardBday: 'Birthday',
+    vCardBdayPlaceholder: 'e.g. 1989-06-14',
+
+    // iCalendar Event
+    eventSummary: 'Event Title',
+    eventSummaryPlaceholder: 'e.g. Annual Conference 2026',
+    eventStart: 'Start Time',
+    eventEnd: 'End Time',
+    eventTimezone: 'Time Zone',
+    timezoneLocal: 'Local Device Time',
+    eventLocation: 'Location',
+    eventLocationPlaceholder: 'e.g. Convention Center',
+    eventDescription: 'Description / Notes',
+    eventDescriptionPlaceholder: 'e.g. Bring your ticket',
+
+    // Email / SMS / Tel
+    emailTo: 'Recipient Email',
+    emailToPlaceholder: 'e.g. service@example.com',
+    emailSubject: 'Subject',
+    emailSubjectPlaceholder: 'e.g. Customer Inquiry',
+    emailBody: 'Body Content',
+    emailBodyPlaceholder: 'e.g. I would like to ask...',
+    smsPhone: 'Recipient Phone',
+    smsPhonePlaceholder: 'e.g. +886912345678',
+    smsBody: 'Message Body',
+    smsBodyPlaceholder: 'e.g. SUBSCRIBE',
+    telPhone: 'Phone Number to Call',
+    telPhonePlaceholder: 'e.g. +886212345678',
+
     dotsStyle: 'Dot Style',
     square: 'Square',
     dots: 'Dots',
@@ -128,6 +271,15 @@ const TRANSLATIONS = {
     hdSize: '2000 (HD)',
     downloadBtn: 'Download Designed QR Code',
     downloadToast: 'Triggered QR Code download',
+    downloadVcfBtn: 'Download .vcf Contact File',
+    copyVcfBtn: 'Copy Raw vCard Code',
+    vcfPreviewTitle: 'vCard Contact Preview & Download',
+    downloadIcsBtn: 'Download .ics Calendar File',
+    copyIcsBtn: 'Copy Raw iCalendar Code',
+    icsPreviewTitle: 'iCalendar Event Preview & Download',
+    vcfDownloadedToast: 'Triggered .vcf Contact download',
+    icsDownloadedToast: 'Triggered .ics Calendar download',
+    rawCopiedToast: 'Raw content copied to clipboard',
     langSwitchLabel: '繁體中文',
     langSwitchHref: '/qr-generator/',
   },
@@ -140,14 +292,49 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [QRCodeStyling, setQRCodeStyling] = useState<any>(null);
 
-  const [contentType, setContentType] = useState<'text' | 'wifi'>('text');
+  const [contentType, setContentType] = useState<ContentType>('text');
   const [text, setText] = useState<string>('https://tools.cjkuo.net');
 
   // WiFi 連線設定
   const [wifiSsid, setWifiSsid] = useState<string>('');
   const [wifiPass, setWifiPass] = useState<string>('');
-  const [wifiEncryption, setWifiEncryption] = useState<'WPA' | 'WEP' | 'nopass'>('WPA');
+  const [wifiEncryption, setWifiEncryption] = useState<'WPA' | 'WPA3' | 'WPA-EAP' | 'WEP' | 'nopass'>('WPA');
   const [wifiHidden, setWifiHidden] = useState<boolean>(false);
+
+  // vCard 數位名片設定
+  const [vCardVersion, setVCardVersion] = useState<'4.0' | '3.0'>('3.0');
+  const [vCardLastName, setVCardLastName] = useState<string>('');
+  const [vCardFirstName, setVCardFirstName] = useState<string>('');
+  const [vCardNickname, setVCardNickname] = useState<string>('');
+  const [vCardOrg, setVCardOrg] = useState<string>('');
+  const [vCardDept, setVCardDept] = useState<string>('');
+  const [vCardTitle, setVCardTitle] = useState<string>('');
+  const [vCardPhone, setVCardPhone] = useState<string>(''); // 手機號碼 (CELL)
+  const [vCardWorkPhone, setVCardWorkPhone] = useState<string>(''); // 公司電話 (WORK)
+  const [vCardEmail, setVCardEmail] = useState<string>('');
+  const [vCardUrl, setVCardUrl] = useState<string>('');
+  const [vCardAddress, setVCardAddress] = useState<string>('');
+  const [vCardBday, setVCardBday] = useState<string>('');
+
+  // iCalendar 行事曆設定
+  const [eventSummary, setEventSummary] = useState<string>('');
+  const [eventStart, setEventStart] = useState<string>('');
+  const [eventEnd, setEventEnd] = useState<string>('');
+  const [eventTimezone, setEventTimezone] = useState<string>('Asia/Taipei');
+  const [eventLocation, setEventLocation] = useState<string>('');
+  const [eventDescription, setEventDescription] = useState<string>('');
+
+  // Email 郵件
+  const [emailTo, setEmailTo] = useState<string>('');
+  const [emailSubject, setEmailSubject] = useState<string>('');
+  const [emailBody, setEmailBody] = useState<string>('');
+
+  // SMS 簡訊
+  const [smsPhone, setSmsPhone] = useState<string>('');
+  const [smsBody, setSmsBody] = useState<string>('');
+
+  // 電話撥號
+  const [telPhone, setTelPhone] = useState<string>('');
 
   // 碼體樣式
   const [dotsType, setDotsType] = useState<string>('square');
@@ -181,6 +368,37 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const wifiSsidId = useId();
   const wifiPassId = useId();
   const wifiEncryptionId = useId();
+
+  const vCardVersionId = useId();
+  const vCardLastNameId = useId();
+  const vCardFirstNameId = useId();
+  const vCardNicknameId = useId();
+  const vCardOrgId = useId();
+  const vCardDeptId = useId();
+  const vCardTitleId = useId();
+  const vCardPhoneId = useId();
+  const vCardWorkPhoneId = useId();
+  const vCardEmailId = useId();
+  const vCardUrlId = useId();
+  const vCardAddressId = useId();
+  const vCardBdayId = useId();
+
+  const eventSummaryId = useId();
+  const eventStartId = useId();
+  const eventEndId = useId();
+  const eventTimezoneId = useId();
+  const eventLocationId = useId();
+  const eventDescriptionId = useId();
+
+  const emailToId = useId();
+  const emailSubjectId = useId();
+  const emailBodyId = useId();
+
+  const smsPhoneId = useId();
+  const smsBodyId = useId();
+
+  const telPhoneId = useId();
+
   const bgColorId = useId();
   const errorCorrectionId = useId();
   const gradientTypeId = useId();
@@ -211,10 +429,57 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
       .replace(/,/g, '\\,');
   };
 
+  const toUtf8ByteString = (str: string): string => {
+    try {
+      return unescape(encodeURIComponent(str));
+    } catch (e) {
+      return str;
+    }
+  };
+
+  const formatICalDate = (dtStr: string, tz: string): string => {
+    if (!dtStr) return '';
+    const clean = dtStr.replace(/[-:]/g, '');
+    if (clean.includes('T')) {
+      const [d, t] = clean.split('T');
+      const timePadded = (t + '0000').slice(0, 6);
+      const formatted = `${d}T${timePadded}`;
+      if (tz === 'UTC') {
+        return `${formatted}Z`;
+      }
+      return formatted;
+    }
+    return clean;
+  };
+
+  const encodeQuotedPrintable = (str: string): string => {
+    if (!str) return '';
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(str);
+    let encoded = '';
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i];
+      if (
+        (b >= 48 && b <= 57) ||
+        (b >= 65 && b <= 90) ||
+        (b >= 97 && b <= 122) ||
+        b === 32 ||
+        b === 45 ||
+        b === 95
+      ) {
+        encoded += String.fromCharCode(b);
+      } else {
+        const hex = b.toString(16).toUpperCase();
+        encoded += '=' + (hex.length === 1 ? '0' + hex : hex);
+      }
+    }
+    return encoded;
+  };
+
   const getComputedData = (): string => {
     if (contentType === 'text') {
       return text.trim() || 'https://tools.cjkuo.net';
-    } else {
+    } else if (contentType === 'wifi') {
       const ssid = escapeWifiString(wifiSsid.trim());
       const pass = escapeWifiString(wifiPass.trim());
       const enc = wifiEncryption;
@@ -235,7 +500,134 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
         dataVal += ';';
         return dataVal;
       }
+    } else if (contentType === 'vcard') {
+      const ln = vCardLastName.trim();
+      const fn = vCardFirstName.trim();
+      const nick = vCardNickname.trim();
+      const org = vCardOrg.trim();
+      const dept = vCardDept.trim();
+      const title = vCardTitle.trim();
+      const address = vCardAddress.trim();
+      const bday = vCardBday.trim();
+      const cellPhone = vCardPhone.trim();
+      const workPhone = vCardWorkPhone.trim();
+      const email = vCardEmail.trim();
+      const url = vCardUrl.trim();
+
+      const hasChinese = /[\u4e00-\u9fa5]/.test(ln + fn + nick + org + dept + title + address);
+
+      const fullName = hasChinese
+        ? `${ln}${fn}`.trim() || fn || ln || 'Contact'
+        : `${fn} ${ln}`.trim() || fn || ln || 'Contact';
+
+      const ver = vCardVersion;
+
+      const lines: string[] = [
+        'BEGIN:VCARD',
+        `VERSION:${ver}`,
+        `FN:${fullName}`,
+        `N:${ln};${fn};;;`,
+        `SORT-STRING:${fullName}`,
+      ];
+
+      if (hasChinese) {
+        if (ln) lines.push(`X-PHONETIC-LAST-NAME:${ln}`);
+        if (fn) lines.push(`X-PHONETIC-FIRST-NAME:${fn}`);
+      }
+
+      if (nick) {
+        lines.push(`NICKNAME:${nick}`);
+      }
+
+      if (org && dept) {
+        lines.push(`ORG:${org} / ${dept}`);
+      } else if (org) {
+        lines.push(`ORG:${org}`);
+      } else if (dept) {
+        lines.push(`ORG:${dept}`);
+      }
+
+      if (title) {
+        lines.push(`TITLE:${title}`);
+      }
+
+      if (cellPhone) {
+        lines.push(ver === '4.0' ? `TEL;TYPE=cell:${cellPhone}` : `TEL;TYPE=CELL:${cellPhone}`);
+      }
+      if (workPhone) {
+        lines.push(ver === '4.0' ? `TEL;TYPE="work,voice":${workPhone}` : `TEL;TYPE=WORK,VOICE:${workPhone}`);
+      }
+
+      if (email) {
+        lines.push(ver === '4.0' ? `EMAIL;TYPE=work:${email}` : `EMAIL;TYPE=INTERNET,WORK:${email}`);
+      }
+      if (url) lines.push(`URL:${url}`);
+      if (address) {
+        lines.push(ver === '4.0' ? `ADR;TYPE=work:;;${address};;;;` : `ADR;TYPE=WORK:;;${address};;;;`);
+      }
+      if (bday) {
+        lines.push(`BDAY:${bday}`);
+      }
+
+      lines.push('END:VCARD');
+
+      return lines.join('\r\n');
+    } else if (contentType === 'event') {
+      const lines: string[] = ['BEGIN:VCALENDAR', 'VERSION:2.0'];
+      if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
+        lines.push(`X-WR-TIMEZONE:${eventTimezone}`);
+      }
+      lines.push('BEGIN:VEVENT');
+      lines.push(`SUMMARY:${eventSummary.trim() || 'Event'}`);
+
+      if (eventStart) {
+        if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
+          lines.push(`DTSTART;TZID=${eventTimezone}:${formatICalDate(eventStart, eventTimezone)}`);
+        } else {
+          lines.push(`DTSTART:${formatICalDate(eventStart, eventTimezone)}`);
+        }
+      }
+
+      if (eventEnd) {
+        if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
+          lines.push(`DTEND;TZID=${eventTimezone}:${formatICalDate(eventEnd, eventTimezone)}`);
+        } else {
+          lines.push(`DTEND:${formatICalDate(eventEnd, eventTimezone)}`);
+        }
+      }
+
+      if (eventLocation.trim()) lines.push(`LOCATION:${eventLocation.trim()}`);
+      if (eventDescription.trim()) lines.push(`DESCRIPTION:${eventDescription.trim()}`);
+
+      lines.push('END:VEVENT');
+      lines.push('END:VCALENDAR');
+
+      return lines.join('\r\n');
+    } else if (contentType === 'email') {
+      const to = emailTo.trim();
+      const sub = emailSubject.trim();
+      const body = emailBody.trim();
+      let mailto = `mailto:${to}`;
+      const params: string[] = [];
+      if (sub) params.push(`subject=${encodeURIComponent(sub)}`);
+      if (body) params.push(`body=${encodeURIComponent(body)}`);
+      if (params.length > 0) {
+        mailto += `?${params.join('&')}`;
+      }
+      return mailto || 'mailto:service@example.com';
+    } else if (contentType === 'sms') {
+      const phone = smsPhone.trim();
+      const body = smsBody.trim();
+      let smsStr = `sms:${phone}`;
+      if (body) {
+        smsStr += `?body=${encodeURIComponent(body)}`;
+      }
+      return smsStr || 'sms:+886912345678';
+    } else if (contentType === 'tel') {
+      const phone = telPhone.trim();
+      return `tel:${phone}` || 'tel:+886212345678';
     }
+    return 'https://tools.cjkuo.net';
   };
 
   const showToast = (msg: string) => {
@@ -261,21 +653,54 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
 
     const params = new URLSearchParams(window.location.search);
 
-    const ct = params.get('ct');
+    const ct = params.get('ct') as ContentType | null;
+    if (ct && ['text', 'wifi', 'vcard', 'event', 'email', 'sms', 'tel'].includes(ct)) {
+      setContentType(ct);
+    }
+
     if (ct === 'wifi') {
-      setContentType('wifi');
       const ws = params.get('ws');
       if (ws) setWifiSsid(ws);
       const wp = params.get('wp');
       if (wp) setWifiPass(wp);
       const we = params.get('we');
-      if (we === 'WPA' || we === 'WEP' || we === 'nopass') {
+      if (we === 'WPA' || we === 'WPA3' || we === 'WPA-EAP' || we === 'WEP' || we === 'nopass') {
         setWifiEncryption(we as any);
       }
       const wh = params.get('wh');
       if (wh) setWifiHidden(wh === '1');
+    } else if (ct === 'vcard') {
+      const vc_ver = params.get('vc_ver');
+      if (vc_ver === '4.0' || vc_ver === '3.0') setVCardVersion(vc_ver);
+      const vc_ln = params.get('vc_ln'); if (vc_ln) setVCardLastName(vc_ln);
+      const vc_fn = params.get('vc_fn'); if (vc_fn) setVCardFirstName(vc_fn);
+      const vc_nk = params.get('vc_nk'); if (vc_nk) setVCardNickname(vc_nk);
+      const vc_org = params.get('vc_org'); if (vc_org) setVCardOrg(vc_org);
+      const vc_dp = params.get('vc_dp'); if (vc_dp) setVCardDept(vc_dp);
+      const vc_title = params.get('vc_title'); if (vc_title) setVCardTitle(vc_title);
+      const vc_tel = params.get('vc_tel'); if (vc_tel) setVCardPhone(vc_tel);
+      const vc_wp = params.get('vc_wp'); if (vc_wp) setVCardWorkPhone(vc_wp);
+      const vc_em = params.get('vc_em'); if (vc_em) setVCardEmail(vc_em);
+      const vc_url = params.get('vc_url'); if (vc_url) setVCardUrl(vc_url);
+      const vc_adr = params.get('vc_adr'); if (vc_adr) setVCardAddress(vc_adr);
+      const vc_bd = params.get('vc_bd'); if (vc_bd) setVCardBday(vc_bd);
+    } else if (ct === 'event') {
+      const ev_sum = params.get('ev_sum'); if (ev_sum) setEventSummary(ev_sum);
+      const ev_st = params.get('ev_st'); if (ev_st) setEventStart(ev_st);
+      const ev_en = params.get('ev_en'); if (ev_en) setEventEnd(ev_en);
+      const ev_tz = params.get('ev_tz'); if (ev_tz) setEventTimezone(ev_tz);
+      const ev_loc = params.get('ev_loc'); if (ev_loc) setEventLocation(ev_loc);
+      const ev_desc = params.get('ev_desc'); if (ev_desc) setEventDescription(ev_desc);
+    } else if (ct === 'email') {
+      const em_to = params.get('em_to'); if (em_to) setEmailTo(em_to);
+      const em_sub = params.get('em_sub'); if (em_sub) setEmailSubject(em_sub);
+      const em_body = params.get('em_body'); if (em_body) setEmailBody(em_body);
+    } else if (ct === 'sms') {
+      const sm_to = params.get('sm_to'); if (sm_to) setSmsPhone(sm_to);
+      const sm_body = params.get('sm_body'); if (sm_body) setSmsBody(sm_body);
+    } else if (ct === 'tel') {
+      const tl_to = params.get('tl_to'); if (tl_to) setTelPhone(tl_to);
     } else {
-      setContentType('text');
       const tParam = params.get('t');
       if (tParam) setText(tParam);
     }
@@ -331,11 +756,41 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
 
       if (contentType === 'text') {
         if (text) params.set('t', text);
-      } else {
+      } else if (contentType === 'wifi') {
         if (wifiSsid) params.set('ws', wifiSsid);
         if (wifiPass) params.set('wp', wifiPass);
         if (wifiEncryption !== 'WPA') params.set('we', wifiEncryption);
         if (wifiHidden) params.set('wh', '1');
+      } else if (contentType === 'vcard') {
+        if (vCardVersion !== '4.0') params.set('vc_ver', vCardVersion);
+        if (vCardLastName) params.set('vc_ln', vCardLastName);
+        if (vCardFirstName) params.set('vc_fn', vCardFirstName);
+        if (vCardNickname) params.set('vc_nk', vCardNickname);
+        if (vCardOrg) params.set('vc_org', vCardOrg);
+        if (vCardDept) params.set('vc_dp', vCardDept);
+        if (vCardTitle) params.set('vc_title', vCardTitle);
+        if (vCardPhone) params.set('vc_tel', vCardPhone);
+        if (vCardWorkPhone) params.set('vc_wp', vCardWorkPhone);
+        if (vCardEmail) params.set('vc_em', vCardEmail);
+        if (vCardUrl) params.set('vc_url', vCardUrl);
+        if (vCardAddress) params.set('vc_adr', vCardAddress);
+        if (vCardBday) params.set('vc_bd', vCardBday);
+      } else if (contentType === 'event') {
+        if (eventSummary) params.set('ev_sum', eventSummary);
+        if (eventStart) params.set('ev_st', eventStart);
+        if (eventEnd) params.set('ev_en', eventEnd);
+        if (eventTimezone !== 'Asia/Taipei') params.set('ev_tz', eventTimezone);
+        if (eventLocation) params.set('ev_loc', eventLocation);
+        if (eventDescription) params.set('ev_desc', eventDescription);
+      } else if (contentType === 'email') {
+        if (emailTo) params.set('em_to', emailTo);
+        if (emailSubject) params.set('em_sub', emailSubject);
+        if (emailBody) params.set('em_body', emailBody);
+      } else if (contentType === 'sms') {
+        if (smsPhone) params.set('sm_to', smsPhone);
+        if (smsBody) params.set('sm_body', smsBody);
+      } else if (contentType === 'tel') {
+        if (telPhone) params.set('tl_to', telPhone);
       }
 
       params.set('dt', dotsType);
@@ -367,6 +822,30 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
     wifiPass,
     wifiEncryption,
     wifiHidden,
+    vCardVersion,
+    vCardLastName,
+    vCardFirstName,
+    vCardNickname,
+    vCardOrg,
+    vCardDept,
+    vCardTitle,
+    vCardPhone,
+    vCardWorkPhone,
+    vCardEmail,
+    vCardUrl,
+    vCardAddress,
+    vCardBday,
+    eventSummary,
+    eventStart,
+    eventEnd,
+    eventLocation,
+    eventDescription,
+    emailTo,
+    emailSubject,
+    emailBody,
+    smsPhone,
+    smsBody,
+    telPhone,
     dotsType,
     cornersSquare,
     cornersDot,
@@ -392,7 +871,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
       width: 280,
       height: 280,
       type: 'svg',
-      data: getComputedData(),
+      data: toUtf8ByteString(getComputedData()),
       image: logoBase64 || '',
       backgroundOptions: {
         color: bgTransparent ? 'transparent' : bgColor,
@@ -439,6 +918,30 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
     wifiPass,
     wifiEncryption,
     wifiHidden,
+    vCardVersion,
+    vCardLastName,
+    vCardFirstName,
+    vCardNickname,
+    vCardOrg,
+    vCardDept,
+    vCardTitle,
+    vCardPhone,
+    vCardWorkPhone,
+    vCardEmail,
+    vCardUrl,
+    vCardAddress,
+    vCardBday,
+    eventSummary,
+    eventStart,
+    eventEnd,
+    eventLocation,
+    eventDescription,
+    emailTo,
+    emailSubject,
+    emailBody,
+    smsPhone,
+    smsBody,
+    telPhone,
     dotsType,
     cornersSquare,
     cornersDot,
@@ -509,6 +1012,49 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
     showToast(t.downloadToast);
   };
 
+  // --- 下載 .vcf 名片檔 ---
+  const downloadVcfFile = () => {
+    const data = getComputedData();
+    const blob = new Blob([data], { type: 'text/vcard;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const nameStr = `${vCardLastName}${vCardFirstName}`.trim() || 'contact';
+    a.download = `contact_${nameStr}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(t.vcfDownloadedToast);
+  };
+
+  // --- 下載 .ics 行事曆檔 ---
+  const downloadIcsFile = () => {
+    const data = getComputedData();
+    const blob = new Blob([data], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const summaryStr = eventSummary.trim() || 'event';
+    a.download = `event_${summaryStr}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(t.icsDownloadedToast);
+  };
+
+  // --- 複製 Raw 文字 ---
+  const copyRawContent = async () => {
+    const data = getComputedData();
+    try {
+      await navigator.clipboard.writeText(data);
+      showToast(t.rawCopiedToast);
+    } catch (err) {
+      window.prompt(t.shareLinkPrompt, data);
+    }
+  };
+
   // --- 複製分享連結 ---
   const copyShareLink = async () => {
     const url = window.location.href;
@@ -551,27 +1097,91 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
         </button>
       </div>
 
-      <div className="grid grid-cols-[1.2fr_0.8fr] gap-8 items-start text-left max-[1024px]:grid-cols-1 w-full px-4 max-sm:px-0">
+      <div className="grid grid-cols-[1.2fr_0.8fr] gap-8 items-start text-left max-[1024px]:grid-cols-1 w-full max-w-full overflow-hidden box-border px-4 max-sm:px-0">
         {/* 左欄：設定面板 */}
         <div className={styles.panelCard}>
           {/* 內容類型切換 */}
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium text-text-sub">{t.contentType}</span>
-            <div className={styles.segmentedContainer}>
-              <button
-                type="button"
-                onClick={() => setContentType('text')}
-                className={contentType === 'text' ? styles.tabBtnActive : styles.tabBtnInactive}
-              >
-                {t.textOrUrl}
-              </button>
-              <button
-                type="button"
-                onClick={() => setContentType('wifi')}
-                className={contentType === 'wifi' ? styles.tabBtnActive : styles.tabBtnInactive}
-              >
-                {t.wifiNetwork}
-              </button>
+            <div className={styles.contentTypeTrack}>
+              {[
+                {
+                  id: 'text',
+                  label: t.textOrUrl,
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: 'vcard',
+                  label: t.vcardContact,
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 012-2h2a2 2 0 012 2v2m-4 0h4m-6 7a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 3h2" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: 'event',
+                  label: t.calendarEvent,
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: 'wifi',
+                  label: t.wifiNetwork,
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: 'email',
+                  label: t.emailMsg,
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: 'sms',
+                  label: t.smsMsg,
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  ),
+                },
+                {
+                  id: 'tel',
+                  label: t.telCall,
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  ),
+                },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setContentType(tab.id as ContentType)}
+                  className={contentType === tab.id ? styles.tabBtnActive : styles.tabBtnInactive}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -591,6 +1201,355 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
                   autoComplete="off"
                   className={styles.inputField}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* 內容輸入：vCard 數位名片 */}
+          {contentType === 'vcard' && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-text-sub">{t.vCardVersion}</span>
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-select-bg border border-border-glass rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setVCardVersion('3.0')}
+                    className={`${styles.segmentedBtn} ${vCardVersion === '3.0' ? styles.segmentedBtnActive : ''}`}
+                  >
+                    {t.vCardVer3}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVCardVersion('4.0')}
+                    className={`${styles.segmentedBtn} ${vCardVersion === '4.0' ? styles.segmentedBtnActive : ''}`}
+                  >
+                    {t.vCardVer4}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardLastNameId} className="text-sm font-medium text-text-sub">
+                    {t.vCardLastName}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardLastNameId}
+                      type="text"
+                      value={vCardLastName}
+                      onChange={(e) => setVCardLastName(e.target.value)}
+                      placeholder={t.vCardLastNamePlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardFirstNameId} className="text-sm font-medium text-text-sub">
+                    {t.vCardFirstName}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardFirstNameId}
+                      type="text"
+                      value={vCardFirstName}
+                      onChange={(e) => setVCardFirstName(e.target.value)}
+                      placeholder={t.vCardFirstNamePlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardNicknameId} className="text-sm font-medium text-text-sub">
+                    {t.vCardNickname}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardNicknameId}
+                      type="text"
+                      value={vCardNickname}
+                      onChange={(e) => setVCardNickname(e.target.value)}
+                      placeholder={t.vCardNicknamePlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardBdayId} className="text-sm font-medium text-text-sub">
+                    {t.vCardBday}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardBdayId}
+                      type="date"
+                      value={vCardBday}
+                      onChange={(e) => setVCardBday(e.target.value)}
+                      placeholder={t.vCardBdayPlaceholder}
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardOrgId} className="text-sm font-medium text-text-sub">
+                    {t.vCardOrg}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardOrgId}
+                      type="text"
+                      value={vCardOrg}
+                      onChange={(e) => setVCardOrg(e.target.value)}
+                      placeholder={t.vCardOrgPlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardDeptId} className="text-sm font-medium text-text-sub">
+                    {t.vCardDept}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardDeptId}
+                      type="text"
+                      value={vCardDept}
+                      onChange={(e) => setVCardDept(e.target.value)}
+                      placeholder={t.vCardDeptPlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor={vCardTitleId} className="text-sm font-medium text-text-sub">
+                  {t.vCardTitle}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={vCardTitleId}
+                    type="text"
+                    value={vCardTitle}
+                    onChange={(e) => setVCardTitle(e.target.value)}
+                    placeholder={t.vCardTitlePlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardPhoneId} className="text-sm font-medium text-text-sub">
+                    {t.vCardPhone}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardPhoneId}
+                      type="tel"
+                      value={vCardPhone}
+                      onChange={(e) => setVCardPhone(e.target.value)}
+                      placeholder={t.vCardPhonePlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardWorkPhoneId} className="text-sm font-medium text-text-sub">
+                    {t.vCardWorkPhone}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardWorkPhoneId}
+                      type="tel"
+                      value={vCardWorkPhone}
+                      onChange={(e) => setVCardWorkPhone(e.target.value)}
+                      placeholder={t.vCardWorkPhonePlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardEmailId} className="text-sm font-medium text-text-sub">
+                    {t.vCardEmail}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardEmailId}
+                      type="email"
+                      value={vCardEmail}
+                      onChange={(e) => setVCardEmail(e.target.value)}
+                      placeholder={t.vCardEmailPlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={vCardUrlId} className="text-sm font-medium text-text-sub">
+                    {t.vCardUrl}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={vCardUrlId}
+                      type="url"
+                      value={vCardUrl}
+                      onChange={(e) => setVCardUrl(e.target.value)}
+                      placeholder={t.vCardUrlPlaceholder}
+                      autoComplete="off"
+                      className={styles.inputField}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor={vCardAddressId} className="text-sm font-medium text-text-sub">
+                  {t.vCardAddress}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={vCardAddressId}
+                    type="text"
+                    value={vCardAddress}
+                    onChange={(e) => setVCardAddress(e.target.value)}
+                    placeholder={t.vCardAddressPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 內容輸入：iCalendar 行事曆行程 */}
+          {contentType === 'event' && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <label htmlFor={eventSummaryId} className="text-sm font-medium text-text-sub">
+                  {t.eventSummary}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={eventSummaryId}
+                    type="text"
+                    value={eventSummary}
+                    onChange={(e) => setEventSummary(e.target.value)}
+                    placeholder={t.eventSummaryPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 max-sm:grid-cols-1">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={eventStartId} className="text-sm font-medium text-text-sub">
+                    {t.eventStart}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={eventStartId}
+                      type="datetime-local"
+                      value={eventStart}
+                      onChange={(e) => setEventStart(e.target.value)}
+                      className="w-full bg-transparent border-none outline-none text-text-main font-medium cursor-pointer [color-scheme:dark]"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={eventEndId} className="text-sm font-medium text-text-sub">
+                    {t.eventEnd}
+                  </label>
+                  <div className={styles.inputContainer}>
+                    <input
+                      id={eventEndId}
+                      type="datetime-local"
+                      value={eventEnd}
+                      onChange={(e) => setEventEnd(e.target.value)}
+                      className="w-full bg-transparent border-none outline-none text-text-main font-medium cursor-pointer [color-scheme:dark]"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor={eventTimezoneId} className="text-sm font-medium text-text-sub">
+                    {t.eventTimezone}
+                  </label>
+                  <select
+                    id={eventTimezoneId}
+                    value={eventTimezone}
+                    onChange={(e) => setEventTimezone(e.target.value)}
+                    className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-3 py-3 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
+                  >
+                    <option value="Asia/Taipei">Asia/Taipei (UTC+8)</option>
+                    <option value="Asia/Tokyo">Asia/Tokyo (UTC+9)</option>
+                    <option value="Asia/Shanghai">Asia/Shanghai (UTC+8)</option>
+                    <option value="Asia/Hong_Kong">Asia/Hong_Kong (UTC+8)</option>
+                    <option value="Asia/Singapore">Asia/Singapore (UTC+8)</option>
+                    <option value="Europe/London">Europe/London (UTC+0)</option>
+                    <option value="America/New_York">America/New_York (UTC-5)</option>
+                    <option value="America/Los_Angeles">America/Los_Angeles (UTC-8)</option>
+                    <option value="UTC">UTC (Universal Time)</option>
+                    <option value="LOCAL">{t.timezoneLocal}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor={eventLocationId} className="text-sm font-medium text-text-sub">
+                  {t.eventLocation}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={eventLocationId}
+                    type="text"
+                    value={eventLocation}
+                    onChange={(e) => setEventLocation(e.target.value)}
+                    placeholder={t.eventLocationPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor={eventDescriptionId} className="text-sm font-medium text-text-sub">
+                  {t.eventDescription}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={eventDescriptionId}
+                    type="text"
+                    value={eventDescription}
+                    onChange={(e) => setEventDescription(e.target.value)}
+                    placeholder={t.eventDescriptionPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -643,11 +1602,13 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
                     id={wifiEncryptionId}
                     value={wifiEncryption}
                     onChange={(e) => setWifiEncryption(e.target.value as any)}
-                    className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-base font-medium cursor-pointer"
+                    className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
                   >
-                    <option value="WPA">WPA/WPA2</option>
-                    <option value="WEP">WEP</option>
-                    <option value="nopass">{t.nopass}</option>
+                    <option value="WPA">{t.wpaOption}</option>
+                    <option value="WPA3">{t.wpa3Option}</option>
+                    <option value="WPA-EAP">{t.wpaEapOption}</option>
+                    <option value="WEP">{t.wepOption}</option>
+                    <option value="nopass">{t.nopassOption}</option>
                   </select>
                 </div>
 
@@ -662,6 +1623,121 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
                     {t.hiddenSsid}
                   </label>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* 內容輸入：E-mail 郵件 */}
+          {contentType === 'email' && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <label htmlFor={emailToId} className="text-sm font-medium text-text-sub">
+                  {t.emailTo}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={emailToId}
+                    type="email"
+                    value={emailTo}
+                    onChange={(e) => setEmailTo(e.target.value)}
+                    placeholder={t.emailToPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor={emailSubjectId} className="text-sm font-medium text-text-sub">
+                  {t.emailSubject}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={emailSubjectId}
+                    type="text"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder={t.emailSubjectPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor={emailBodyId} className="text-sm font-medium text-text-sub">
+                  {t.emailBody}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={emailBodyId}
+                    type="text"
+                    value={emailBody}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    placeholder={t.emailBodyPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 內容輸入：SMS 簡訊 */}
+          {contentType === 'sms' && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <label htmlFor={smsPhoneId} className="text-sm font-medium text-text-sub">
+                  {t.smsPhone}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={smsPhoneId}
+                    type="tel"
+                    value={smsPhone}
+                    onChange={(e) => setSmsPhone(e.target.value)}
+                    placeholder={t.smsPhonePlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor={smsBodyId} className="text-sm font-medium text-text-sub">
+                  {t.smsBody}
+                </label>
+                <div className={styles.inputContainer}>
+                  <input
+                    id={smsBodyId}
+                    type="text"
+                    value={smsBody}
+                    onChange={(e) => setSmsBody(e.target.value)}
+                    placeholder={t.smsBodyPlaceholder}
+                    autoComplete="off"
+                    className={styles.inputField}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 內容輸入：電話撥號 */}
+          {contentType === 'tel' && (
+            <div className="flex flex-col gap-3">
+              <label htmlFor={telPhoneId} className="text-sm font-medium text-text-sub">
+                {t.telPhone}
+              </label>
+              <div className={styles.inputContainer}>
+                <input
+                  id={telPhoneId}
+                  type="tel"
+                  value={telPhone}
+                  onChange={(e) => setTelPhone(e.target.value)}
+                  placeholder={t.telPhonePlaceholder}
+                  autoComplete="off"
+                  className={styles.inputField}
+                />
               </div>
             </div>
           )}
@@ -1069,61 +2145,150 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
           </div>
         </div>
 
-        {/* 右欄：預覽與下載 */}
-        <div className={`${styles.panelCard} sticky top-6 items-center`}>
-          <div
-            className={`${styles.qrPreview} ${bgTransparent ? styles.checkerboardBg : ''}`}
-            style={{ backgroundColor: bgTransparent ? undefined : bgColor }}
-          >
-            {/* 動態渲染掛載容器 */}
-            <div ref={containerRef} className="w-[280px] h-[280px] flex items-center justify-center" />
-          </div>
-
-          {/* 下載設定 */}
-          <div className="flex flex-col gap-4 w-full max-w-[280px]">
-            <div className="grid grid-cols-2 gap-3.5">
-              <div className="flex flex-col gap-2">
-                <label htmlFor={downloadFormatId} className="text-sm font-medium text-text-sub">
-                  {t.downloadFormat}
-                </label>
-                <select
-                  id={downloadFormatId}
-                  value={downloadFormat}
-                  onChange={(e) => setDownloadFormat(e.target.value as any)}
-                  className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-3 py-2.5 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
-                >
-                  <option value="png">PNG</option>
-                  <option value="svg">SVG</option>
-                  <option value="jpeg">JPEG</option>
-                  <option value="webp">WEBP</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={downloadSizeId} className="text-sm font-medium text-text-sub">
-                  {t.downloadSize}
-                </label>
-                <select
-                  id={downloadSizeId}
-                  value={downloadSize}
-                  onChange={(e) => setDownloadSize(parseInt(e.target.value))}
-                  className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-3 py-2.5 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
-                >
-                  <option value="300">300 x 300</option>
-                  <option value="600">600 x 600</option>
-                  <option value="1200">{t.printSize}</option>
-                  <option value="2000">{t.hdSize}</option>
-                </select>
-              </div>
+        {/* 右欄：雙獨立卡片佈局 (QR Code 卡片 + 資訊與檔案下載卡片) */}
+        <div className="flex flex-col gap-6 max-[1024px]:static max-[1024px]:top-auto sticky top-6 w-full max-w-full">
+          {/* 上卡片：QR Code 畫布與圖片下載 */}
+          <div className={`${styles.panelCard} items-center`}>
+            <div
+              className={`${styles.qrPreview} ${bgTransparent ? styles.checkerboardBg : ''}`}
+              style={{ backgroundColor: bgTransparent ? undefined : bgColor }}
+            >
+              {/* 動態渲染掛載容器 */}
+              <div ref={containerRef} className="w-[280px] h-[280px] max-w-full max-h-full flex items-center justify-center" />
             </div>
 
-            <button type="button" onClick={downloadQr} className={styles.downloadBtn}>
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
-              </svg>
-              {t.downloadBtn}
-            </button>
+            {/* 下載設定 */}
+            <div className="flex flex-col gap-4 w-full max-w-full">
+              {/* 下載格式膠囊按鈕 */}
+              <div className="flex flex-col gap-2 w-full">
+                <span className="text-sm font-medium text-text-sub">{t.downloadFormat}</span>
+                <div className="grid grid-cols-4 gap-1 p-1 bg-select-bg border border-border-glass rounded-xl">
+                  {(['png', 'svg', 'jpeg', 'webp'] as const).map((fmt) => (
+                    <button
+                      key={fmt}
+                      type="button"
+                      onClick={() => setDownloadFormat(fmt)}
+                      className={`${styles.segmentedBtn} ${downloadFormat === fmt ? styles.segmentedBtnActive : ''} uppercase`}
+                    >
+                      {fmt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 下載尺寸膠囊按鈕 */}
+              <div className="flex flex-col gap-2 w-full">
+                <span className="text-sm font-medium text-text-sub">{t.downloadSize}</span>
+                <div className="grid grid-cols-4 gap-1 p-1 bg-select-bg border border-border-glass rounded-xl">
+                  {[
+                    { val: 300, label: '300' },
+                    { val: 600, label: '600' },
+                    { val: 1200, label: '1200' },
+                    { val: 2000, label: '2000' },
+                  ].map((sz) => (
+                    <button
+                      key={sz.val}
+                      type="button"
+                      onClick={() => setDownloadSize(sz.val)}
+                      className={`${styles.segmentedBtn} ${downloadSize === sz.val ? styles.segmentedBtnActive : ''}`}
+                    >
+                      {sz.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button type="button" onClick={downloadQr} className={styles.downloadBtn}>
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
+                </svg>
+                {t.downloadBtn}
+              </button>
+            </div>
           </div>
+
+          {/* 下卡片：特殊格式 (.vcf / .ics) 獨立資訊與檔案卡片 */}
+          {contentType === 'vcard' && (
+            <div className={styles.panelCard}>
+              <div className="flex flex-col gap-3.5 w-full">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text-sub uppercase tracking-wider">
+                    {t.vcfPreviewTitle}
+                  </span>
+                </div>
+
+                <div className="flex gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={downloadVcfFile}
+                    className={styles.vcfDownloadBtn}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
+                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    <span>{t.downloadVcfBtn}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={copyRawContent}
+                    title={t.copyVcfBtn}
+                    className={styles.vcfCopyBtn}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* 即時 .vcf 文字預覽 */}
+                <div className={styles.vcfCodeBox}>
+                  {getComputedData()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {contentType === 'event' && (
+            <div className={styles.panelCard}>
+              <div className="flex flex-col gap-3.5 w-full">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text-sub uppercase tracking-wider">
+                    {t.icsPreviewTitle}
+                  </span>
+                </div>
+
+                <div className="flex gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={downloadIcsFile}
+                    className={styles.vcfDownloadBtn}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
+                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    <span>{t.downloadIcsBtn}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={copyRawContent}
+                    title={t.copyIcsBtn}
+                    className={styles.vcfCopyBtn}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* 即時 .ics 文字預覽 */}
+                <div className={styles.vcfCodeBox}>
+                  {getComputedData()}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
