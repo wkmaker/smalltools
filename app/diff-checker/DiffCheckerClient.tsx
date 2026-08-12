@@ -70,6 +70,7 @@ const TRANSLATIONS = {
     copiedResultToast: '✓ 已複製合併結果至剪貼簿！',
     copyFailedToast: '複製失敗，請手動複製文字框內容。',
     unifiedPlaceholder: '（Unified 模式比對後，可在此取得動態合併結果）',
+    toastFileTooLarge: '檔案過大，請選擇小於 10MB 的文字檔案',
     langSwitchLabel: 'English',
     langSwitchHref: '/diff-checker/en/',
   },
@@ -111,6 +112,7 @@ const TRANSLATIONS = {
     copiedResultToast: '✓ Merged result copied to clipboard!',
     copyFailedToast: 'Copy failed. Please manually copy from text area.',
     unifiedPlaceholder: '(Merged result will appear here after unified diff analysis)',
+    toastFileTooLarge: 'File is too large. Please select a text file under 10MB',
     langSwitchLabel: '繁體中文',
     langSwitchHref: '/diff-checker/',
   },
@@ -154,15 +156,14 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
   const isSyncingRight = useRef<boolean>(false);
   const mergeTextareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const activeLeftReaderRef = useRef<FileReader | null>(null);
+  const activeRightReaderRef = useRef<FileReader | null>(null);
+
   const adjustMergeTextareaHeight = useCallback(() => {
     const el = mergeTextareaRef.current;
     if (!el) return;
-
-    const currentScrollY = window.scrollY;
     el.style.height = 'auto';
-    const newHeight = Math.max(80, el.scrollHeight);
-    el.style.height = `${newHeight}px`;
-    window.scrollTo(window.scrollX, currentScrollY);
+    el.style.height = `${Math.max(100, el.scrollHeight)}px`;
   }, []);
 
   // 初始化主題顏色
@@ -197,8 +198,11 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
 
   // 核心比對處理
   const runDiff = useCallback(() => {
-    const oldStr = normalizeNewlines(originalText);
-    const newStr = normalizeNewlines(modifiedText);
+    const safeOldStr = originalText.length > 3000000 ? originalText.substring(0, 3000000) : originalText;
+    const safeNewStr = modifiedText.length > 3000000 ? modifiedText.substring(0, 3000000) : modifiedText;
+
+    const oldStr = normalizeNewlines(safeOldStr);
+    const newStr = normalizeNewlines(safeNewStr);
 
     const diffParts = (Diff.diffLines as any)(oldStr, newStr, { ignoreCase });
 
@@ -357,8 +361,21 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
   };
 
   const handleDropFile = (file: File, target: 'left' | 'right') => {
+    if (file.size > 10 * 1024 * 1024) {
+      showToast(t.toastFileTooLarge);
+      return;
+    }
+
+    const readerRef = target === 'left' ? activeLeftReaderRef : activeRightReaderRef;
+    if (readerRef.current) {
+      readerRef.current.abort();
+    }
+
     const reader = new FileReader();
+    readerRef.current = reader;
+
     reader.onload = (e) => {
+      if (readerRef.current !== reader) return;
       const content = (e.target?.result as string) || '';
       if (target === 'left') {
         setOriginalText(content);
@@ -410,21 +427,21 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
       description={t.description}
       accentColor="#8b5cf6"
       accentGlow="rgba(139, 92, 246, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.langSwitchHref}
+          className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#8b5cf6)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(139,92,246,0.4))] select-none"
+        >
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          <span>{t.langSwitchLabel}</span>
+        </Link>
+      }
     >
       <div className="flex flex-col gap-6 text-left w-full px-4 max-sm:px-0">
-        {/* 右上方雙語切換按鈕 */}
-        <div className="flex justify-end items-center">
-          <Link
-            href={t.langSwitchHref}
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors flex items-center gap-1.5"
-          >
-            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20" />
-            </svg>
-            {t.langSwitchLabel}
-          </Link>
-        </div>
 
         {/* 控制設定列 */}
         <div className={styles.panelCard}>

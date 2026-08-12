@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import HourlyRateCalculatorClient from '../../HourlyRateCalculatorClient';
-import milestoneData from '../../config/percentile_milestones.json';
+import HourlyRateCalculatorClient from '../../../HourlyRateCalculatorClient';
+import milestoneData from '../../../config/percentile_milestones.json';
 
 interface RankPageProps {
   params: Promise<{ slug: string }>;
@@ -28,13 +28,13 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: RankPageProps): Promise<Metadata> {
   const { slug } = await params;
   const matched = findMilestone(slug);
-  const milestoneLabel = matched ? matched.label : '全台打工人 PR 評定';
+  const milestoneLabel = matched ? (matched.label_en || matched.label) : 'Taiwan Salary Percentile';
   const milestonePr = matched ? matched.pr : 50;
-  const milestoneDesc = matched ? matched.desc : '快來測測你的扣除通勤與加班後的真實時薪。';
+  const milestoneDesc = matched ? (matched.desc_en || matched.desc) : 'Calculate your real hourly earnings and migration matches.';
 
-  const title = `【${milestoneLabel} (PR ${milestonePr})】全台薪資排行榜專屬評定 - 真實時薪計算器`;
-  const description = `【PR ${milestonePr} - ${milestoneLabel}】${milestoneDesc} 精算扣除通勤工時、隱形加班與生活開銷後的生命真實時薪與全球生活圈適配度。`;
-  const canonicalUrl = `https://tools.cjkuo.net/hourly-rate-calculator/rank/${slug}/`;
+  const title = `【${milestoneLabel} (PR ${milestonePr})】Taiwan Worker Salary Ranking - Real Hourly Rate Calculator`;
+  const description = `【PR ${milestonePr} - ${milestoneLabel}】${milestoneDesc} Calculate net hourly earnings after commute and unpaid overtime.`;
+  const canonicalUrl = `https://tools.cjkuo.net/hourly-rate-calculator/en/rank/${slug}/`;
 
   return {
     title,
@@ -42,24 +42,24 @@ export async function generateMetadata({ params }: RankPageProps): Promise<Metad
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        'zh-TW': canonicalUrl,
-        en: `https://tools.cjkuo.net/hourly-rate-calculator/en/rank/${slug}/`,
-        'x-default': `https://tools.cjkuo.net/hourly-rate-calculator/en/rank/${slug}/`,
+        'zh-TW': `https://tools.cjkuo.net/hourly-rate-calculator/rank/${slug}/`,
+        en: canonicalUrl,
+        'x-default': canonicalUrl,
       },
     },
     openGraph: {
       title,
       description,
       url: canonicalUrl,
-      siteName: 'Smalltools 小工具庫',
-      locale: 'zh_TW',
+      siteName: 'Smalltools',
+      locale: 'en_US',
       type: 'website',
       images: [
         {
           url: 'https://tools.cjkuo.net/support.svg',
           width: 1200,
           height: 630,
-          alt: `${milestoneLabel} (PR ${milestonePr}) 全台打工人薪資評定`,
+          alt: `${milestoneLabel} (PR ${milestonePr}) Taiwan Worker Salary Rating`,
         },
       ],
     },
@@ -72,18 +72,18 @@ export async function generateMetadata({ params }: RankPageProps): Promise<Metad
   };
 }
 
-export default async function RankPage({ params }: RankPageProps) {
+export default async function EnglishRankPage({ params }: RankPageProps) {
   const { slug } = await params;
   const matched = findMilestone(slug);
-  const milestoneLabel = matched ? matched.label : '全台打工人 PR 評定';
+  const milestoneLabel = matched ? (matched.label_en || matched.label) : 'Taiwan Salary Percentile';
   const milestonePr = matched ? matched.pr : 50;
-  const milestoneDesc = matched ? matched.desc : '快來測測你的扣除通勤與加班後的真實時薪。';
-  const canonicalUrl = `https://tools.cjkuo.net/hourly-rate-calculator/rank/${slug}/`;
+  const milestoneDesc = matched ? (matched.desc_en || matched.desc) : 'Calculate your real hourly earnings and migration matches.';
+  const canonicalUrl = `https://tools.cjkuo.net/hourly-rate-calculator/en/rank/${slug}/`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: `【${milestoneLabel} (PR ${milestonePr})】全台薪資排行榜專屬評定`,
+    name: `【${milestoneLabel} (PR ${milestonePr})】Taiwan Salary Ranking`,
     description: milestoneDesc,
     url: canonicalUrl,
     applicationCategory: 'FinanceApplication',
@@ -100,8 +100,8 @@ export default async function RankPage({ params }: RankPageProps) {
       <HourlyRateCalculatorClient
         initialSlug={slug}
         initialPr={matched ? matched.pr : undefined}
+        lang="en"
       />
     </>
   );
 }
-

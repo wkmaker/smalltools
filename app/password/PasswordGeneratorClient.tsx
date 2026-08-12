@@ -9,14 +9,16 @@ const CHAR_SETS = {
   upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
   lower: 'abcdefghijklmnopqrstuvwxyz',
   number: '0123456789',
-  symbol: '!@#$%^&*()_+-=[]{}|;:,./<>?',
+  commonSymbol: '!@#$%^&*_-+=',
+  otherSymbol: '()[]{}.,:;?',
 } as const;
 
 const CONFUSABLE = {
   upper: ['I', 'O', 'Z', 'S', 'B'],
   lower: ['l', 'o'],
   number: ['0', '1', '2', '5', '8'],
-  symbol: ['|', ',', '.', '-', '_'],
+  commonSymbol: ['-', '_'],
+  otherSymbol: [',', '.'],
 } as const;
 
 type CharSetKey = keyof typeof CHAR_SETS;
@@ -30,14 +32,15 @@ const TRANSLATIONS = {
     title: '線上安全密碼產生器',
     subtitle: 'CSPRNG Password Generator',
     description:
-      '專業免費的線上安全密碼生成器，採用 CSPRNG 密碼學隨機數引擎，支援自訂長度、大小寫字母、數字及特殊符號，並可即時評估密碼強度與熵值。',
+      '專業免費的線上安全密碼生成器，採用 CSPRNG 密碼學隨機數引擎，支援自訂長度、大小寫字母、數字及通用與相容性特殊符號，並可即時評估密碼強度與熵值。',
     langToggleLabel: 'English',
     langToggleUrl: '/password/en/',
     lengthLabel: '密碼長度 (Length)',
     upperLabel: '大寫字母 (A-Z)',
     lowerLabel: '小寫字母 (a-z)',
     numberLabel: '數字 (0-9)',
-    symbolLabel: '特殊符號 (!@#...)',
+    commonSymbolLabel: '通用特殊符號 (!@#$%^&*_-+=)',
+    otherSymbolLabel: '其他特殊符號 (()[]{}.,:;?) (需注意相容性)',
     excludeLabel: '排除相似與混淆字元 (如 1, l, I, 0, O, o 等)',
     strictLabel: '強制每種字元集至少出現一個 (分佈更均勻)',
     generateBtn: '重新生成安全密碼',
@@ -60,14 +63,15 @@ const TRANSLATIONS = {
     title: 'Secure Password Generator',
     subtitle: 'CSPRNG Password Generator',
     description:
-      'Cryptographically secure online password generator using CSPRNG engine. Customize length, uppercase/lowercase, digits, and symbols with live password strength analysis.',
+      'Cryptographically secure online password generator using CSPRNG engine. Customize length, uppercase/lowercase, digits, common & compatible symbols with live password strength analysis.',
     langToggleLabel: '繁體中文',
     langToggleUrl: '/password/',
     lengthLabel: 'Password Length',
     upperLabel: 'Uppercase (A-Z)',
     lowerLabel: 'Lowercase (a-z)',
     numberLabel: 'Digits (0-9)',
-    symbolLabel: 'Symbols (!@#...)',
+    commonSymbolLabel: 'Common Symbols (!@#$%^&*_-+=)',
+    otherSymbolLabel: 'Other Symbols (()[]{}.,:;?) (Compatibility)',
     excludeLabel: 'Exclude ambiguous chars (e.g. 1, l, I, 0, O, o)',
     strictLabel: 'Include at least one from each selected set',
     generateBtn: 'Generate Secure Password',
@@ -141,7 +145,8 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
   const useUpperId = useId();
   const useLowerId = useId();
   const useNumberId = useId();
-  const useSymbolId = useId();
+  const useCommonSymbolId = useId();
+  const useOtherSymbolId = useId();
   const excludeConfusableId = useId();
   const strictModeId = useId();
 
@@ -149,8 +154,9 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
   const [useUpper, setUseUpper] = useState(true);
   const [useLower, setUseLower] = useState(true);
   const [useNumber, setUseNumber] = useState(true);
-  const [useSymbol, setUseSymbol] = useState(true);
-  const [excludeConfusable, setExcludeConfusable] = useState(false);
+  const [useCommonSymbol, setUseCommonSymbol] = useState(true);
+  const [useOtherSymbol, setUseOtherSymbol] = useState(false);
+  const [excludeConfusable, setExcludeConfusable] = useState(true);
   const [strictMode, setStrictMode] = useState(true);
 
   const [password, setPassword] = useState(t.placeholderInitial);
@@ -172,7 +178,8 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
       if (useUpper) selected.push({ key: 'upper', chars: CHAR_SETS.upper });
       if (useLower) selected.push({ key: 'lower', chars: CHAR_SETS.lower });
       if (useNumber) selected.push({ key: 'number', chars: CHAR_SETS.number });
-      if (useSymbol) selected.push({ key: 'symbol', chars: CHAR_SETS.symbol });
+      if (useCommonSymbol) selected.push({ key: 'commonSymbol', chars: CHAR_SETS.commonSymbol });
+      if (useOtherSymbol) selected.push({ key: 'otherSymbol', chars: CHAR_SETS.otherSymbol });
 
       if (selected.length === 0) {
         setPassword(t.placeholderSelectCharset);
@@ -232,7 +239,8 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
       useUpper,
       useLower,
       useNumber,
-      useSymbol,
+      useCommonSymbol,
+      useOtherSymbol,
       excludeConfusable,
       strictMode,
       t.placeholderSelectCharset,
@@ -254,7 +262,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
   useEffect(() => {
     generatePassword(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [length, useUpper, useLower, useNumber, useSymbol, excludeConfusable, strictMode]);
+  }, [length, useUpper, useLower, useNumber, useCommonSymbol, useOtherSymbol, excludeConfusable, strictMode]);
 
   const handleRegenerate = () => {
     if (password && !password.includes('!') && !password.includes('請') && !password.includes('Please')) {
@@ -292,17 +300,21 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#00ff66"
         accentGlow="rgba(0,255,102,0.6)"
+        extraHeaderControls={
+          <Link
+            href={t.langToggleUrl}
+            className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#00ff66)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(0,255,102,0.4))] select-none"
+          >
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span>{t.langToggleLabel}</span>
+          </Link>
+        }
       >
         <div className={styles.mainLayout}>
-          {/* Top Bar Language Switcher */}
-          <div className="flex justify-end mb-6">
-            <Link
-              href={t.langToggleUrl}
-              className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#00ff66)] transition-all no-underline"
-            >
-              {t.langToggleLabel}
-            </Link>
-          </div>
 
           <div className={styles.gridContainer}>
             {/* Options Column */}
@@ -331,7 +343,8 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
                     { id: useUpperId, label: t.upperLabel, val: useUpper, set: setUseUpper },
                     { id: useLowerId, label: t.lowerLabel, val: useLower, set: setUseLower },
                     { id: useNumberId, label: t.numberLabel, val: useNumber, set: setUseNumber },
-                    { id: useSymbolId, label: t.symbolLabel, val: useSymbol, set: setUseSymbol },
+                    { id: useCommonSymbolId, label: t.commonSymbolLabel, val: useCommonSymbol, set: setUseCommonSymbol },
+                    { id: useOtherSymbolId, label: t.otherSymbolLabel, val: useOtherSymbol, set: setUseOtherSymbol },
                   ].map(opt => (
                     <label key={opt.id} htmlFor={opt.id} className={styles.customCheckbox}>
                       <input

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import styles from './futures-calculator.module.css';
 
@@ -11,6 +12,121 @@ interface Preset {
   initialMargin: number;
   maintMargin: number;
 }
+
+interface FuturesCalculatorClientProps {
+  lang?: 'zh-TW' | 'en';
+}
+
+const TRANSLATIONS = {
+  'zh-TW': {
+    title: '台股期貨槓桿計算機',
+    subtitle: 'TAIWAN FUTURES RISK & MARGIN CALCULATOR',
+    description:
+      '專業免費的線上台指期 (大台/小台/微台/自訂) 槓桿與維持率計算器！支援多空雙向部位切換、實質槓桿試算、0%-60%逆風壓力測試與保證金回補金額估算。',
+    sectionSettings: '期貨部位與保證金設定',
+    presetLabel: '商品規格',
+    presetTx: '大台 (TX)',
+    presetMtx: '小台 (MTX)',
+    presetTmf: '微台 (TMF)',
+    presetCustom: '自訂商品',
+    customPtValLabel: '自訂每點點值 (元/點)',
+    directionLabel: '交易方向 (部位)',
+    positionLong: '多頭 (看漲 做多)',
+    positionShort: '空頭 (看跌 做空)',
+    indexLabel: '成交指數點位 (點)',
+    indexPlaceholder: '例如：22,000',
+    qtyLabel: '下單口數 (口)',
+    capitalLabel: '準備本金 (元)',
+    capPreset15: '投入 1.5 倍原始保證金',
+    capPreset20: '投入 2.0 倍原始保證金',
+    initMarginLabel: '單口原始保證金 (元)',
+    maintMarginLabel: '單口維持保證金 (元)',
+    shareBtn: '複製期貨槓桿試算分享連結',
+    dashboardTitle: '風控指標與實質槓桿儀表板',
+    statusSafeFull: '部位完全安全',
+    statusSafe: '安全 (高於原始保證金)',
+    statusWarning: '警示 (低於原始保證金)',
+    statusMarginCall: '追繳 (低於維持保證金)',
+    statusLiquidation: '即將強制平倉 (風險 < 25%)',
+    contractValTitle: '合約總價值 (規模)',
+    leverageTitle: '當前實質資金槓桿',
+    leverageLow: '安全風控等級',
+    leverageMid: '適中風險等級',
+    leverageHigh: '高槓桿高風險',
+    stressTitleLong: '模擬逆風波段 (指數下跌)',
+    stressTitleShort: '模擬逆風波段 (指數上漲)',
+    stressPoints: '折合',
+    stressPointsUnit: '點',
+    simIndexLabel: '模擬成交指數',
+    simCapitalLabel: '預估模擬權益數',
+    simLossLabel: '損益：',
+    marginCallTitle: '追繳警示點位 (維持保證金)',
+    liqTitle: '強制平倉點位 (風險指標 25%)',
+    allowWind: '容許逆風：',
+    pointsUnit: '點',
+    topupWarning: '模擬權益數已低於總原始保證金，回補至 100% 原始保證金水位：',
+    topupSafe: '權益數高於原始保證金，無須補繳',
+    topupCashLabel: '需補足至 100% 原始保證金之現金',
+    currencyUnit: '元',
+    toastCopied: '已複製期貨槓桿試算分享連結',
+    langToggleLabel: 'English',
+    langToggleUrl: '/futures-calculator/en/',
+  },
+  en: {
+    title: 'Futures Risk & Margin Calculator',
+    subtitle: 'TAIWAN FUTURES RISK & MARGIN CALCULATOR',
+    description:
+      'Free online Taiwan Index Futures (TX, MTX, TMF) risk & margin calculator! Supports Long/Short positions, actual leverage, 0-60% adverse stress testing, and margin call threshold estimation.',
+    sectionSettings: 'Position & Margin Settings',
+    presetLabel: 'Contract Type',
+    presetTx: 'Large TX',
+    presetMtx: 'Mini MTX',
+    presetTmf: 'Micro TMF',
+    presetCustom: 'Custom',
+    customPtValLabel: 'Custom Point Value ($/pt)',
+    directionLabel: 'Position Direction',
+    positionLong: 'Long (Bullish)',
+    positionShort: 'Short (Bearish)',
+    indexLabel: 'Entry Index Price (pts)',
+    indexPlaceholder: 'e.g. 22,000',
+    qtyLabel: 'Order Quantity (lots)',
+    capitalLabel: 'Total Capital ($)',
+    capPreset15: 'Use 1.5x Initial Margin',
+    capPreset20: 'Use 2.0x Initial Margin',
+    initMarginLabel: 'Initial Margin / Lot ($)',
+    maintMarginLabel: 'Maintenance Margin / Lot ($)',
+    shareBtn: 'Copy Futures Share Link',
+    dashboardTitle: 'Risk Indicator & Real Leverage Dashboard',
+    statusSafeFull: 'Fully Safe',
+    statusSafe: 'Safe (Above Initial Margin)',
+    statusWarning: 'Warning (Below Initial Margin)',
+    statusMarginCall: 'Margin Call (Below Maintenance)',
+    statusLiquidation: 'Liquidation Risk (Risk < 25%)',
+    contractValTitle: 'Total Contract Value',
+    leverageTitle: 'Actual Capital Leverage',
+    leverageLow: 'Safe Risk Level',
+    leverageMid: 'Moderate Risk Level',
+    leverageHigh: 'High Leverage Risk',
+    stressTitleLong: 'Adverse Stress Test (Index Drop)',
+    stressTitleShort: 'Adverse Stress Test (Index Rise)',
+    stressPoints: 'Equivalent to',
+    stressPointsUnit: 'pts',
+    simIndexLabel: 'Simulated Index Price',
+    simCapitalLabel: 'Simulated Equity',
+    simLossLabel: 'P&L: ',
+    marginCallTitle: 'Margin Call Threshold (Maint. Margin)',
+    liqTitle: 'Liquidation Threshold (Risk 25%)',
+    allowWind: 'Adverse Tolerance: ',
+    pointsUnit: 'pts',
+    topupWarning: 'Simulated Equity below Initial Margin! Deposit required for 100% level:',
+    topupSafe: 'Equity above Initial Margin. No deposit required.',
+    topupCashLabel: 'Deposit Cash Needed for 100% Initial Margin',
+    currencyUnit: '$',
+    toastCopied: 'Futures share link copied to clipboard',
+    langToggleLabel: '繁體中文',
+    langToggleUrl: '/futures-calculator/',
+  },
+};
 
 const PRESETS: Preset[] = [
   { id: 'tx', name: '大台 (TX)', multiplier: 200, initialMargin: 242000, maintMargin: 186000 },
@@ -24,7 +140,9 @@ function formatNumber(val: number): string {
   return Math.round(val).toLocaleString('zh-TW');
 }
 
-export default function FuturesCalculatorClient() {
+export default function FuturesCalculatorClient({ lang = 'zh-TW' }: FuturesCalculatorClientProps) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
+
   const [selectedPreset, setSelectedPreset] = useState<'tx' | 'mtx' | 'tmf' | 'custom'>('tx');
   const [position, setPosition] = useState<'long' | 'short'>('long');
 
@@ -41,6 +159,7 @@ export default function FuturesCalculatorClient() {
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef<boolean>(false);
 
   const indexInputId = useId();
   const quantityInputId = useId();
@@ -52,7 +171,7 @@ export default function FuturesCalculatorClient() {
   const showToast = useCallback((msg: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ msg, show: true });
-    toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
+    toastTimerRef.current = setTimeout(() => setToast((st: { msg: string; show: boolean }) => ({ ...st, show: false })), 2500);
   }, []);
 
   // 設定全頁背景主題色 (赤紅/火力紅)
@@ -61,9 +180,48 @@ export default function FuturesCalculatorClient() {
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 59, 48, 0.6)');
   }, []);
 
+  // 初次掛載解析 URL Query 參數
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+
+    const p = params.get('p') as 'tx' | 'mtx' | 'tmf' | 'custom' | null;
+    const dir = params.get('dir') as 'long' | 'short' | null;
+    const idx = params.get('idx');
+    const q = params.get('q');
+    const cap = params.get('cap');
+    const m = params.get('m');
+
+    if (p && ['tx', 'mtx', 'tmf', 'custom'].includes(p)) setSelectedPreset(p);
+    if (dir && ['long', 'short'].includes(dir)) setPosition(dir);
+    if (idx && !isNaN(parseFloat(idx))) setIndexPrice(parseFloat(idx));
+    if (q && !isNaN(parseInt(q, 10))) setQuantity(parseInt(q, 10));
+    if (cap && !isNaN(parseInt(cap, 10))) setCapital(parseInt(cap, 10));
+    if (m && !isNaN(parseFloat(m))) setMultiplier(parseFloat(m));
+
+    isMountedRef.current = true;
+  }, []);
+
+  // 狀態變更時自動 replaceState 同步 URL
+  useEffect(() => {
+    if (!isMountedRef.current || typeof window === 'undefined') return;
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      params.set('p', selectedPreset);
+      params.set('dir', position);
+      if (indexPrice !== '') params.set('idx', indexPrice.toString());
+      if (quantity !== '') params.set('q', quantity.toString());
+      if (capital !== '') params.set('cap', capital.toString());
+      if (multiplier !== '') params.set('m', multiplier.toString());
+
+      window.history.replaceState(null, '', '?' + params.toString());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [selectedPreset, position, indexPrice, quantity, capital, multiplier]);
+
   const handlePresetSelect = (presetId: 'tx' | 'mtx' | 'tmf' | 'custom') => {
     setSelectedPreset(presetId);
-    const item = PRESETS.find(p => p.id === presetId);
+    const item = PRESETS.find(pr => pr.id === presetId);
     if (item && presetId !== 'custom') {
       setMultiplier(item.multiplier);
       setInitialMargin(item.initialMargin);
@@ -135,58 +293,74 @@ export default function FuturesCalculatorClient() {
 
   // 複製試算分享連結
   const copyShareLink = () => {
-    const params = new URLSearchParams({
-      p: selectedPreset,
-      dir: position,
-      idx: numIndex.toString(),
-      q: numQty.toString(),
-      cap: numCapital.toString(),
-      m: numPtVal.toString(),
-    });
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(url).then(() => showToast('已複製期貨槓桿試算分享連結'));
+    if (typeof window === 'undefined') return;
+    navigator.clipboard.writeText(window.location.href).then(() => showToast(t.toastCopied));
   };
 
   return (
     <>
       <ToolLayout
-        title="台股期貨槓桿計算機"
-        subtitle="TAIWAN FUTURES RISK & MARGIN CALCULATOR"
-        description="專業免費的線上台指期 (大台/小台/微台/自訂) 槓桿與維持率計算器！支援多空雙向部位切換、實質槓桿試算、0%-60%逆風壓力測試與保證金回補金額估算。"
+        title={t.title}
+        subtitle={t.subtitle}
+        description={t.description}
         accentColor="#ff3b30"
         accentGlow="rgba(255, 59, 48, 0.6)"
+        extraHeaderControls={
+          <Link
+            href={t.langToggleUrl}
+            className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#ff3b30)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(255,59,48,0.4))] select-none"
+          >
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span>{t.langToggleLabel}</span>
+          </Link>
+        }
       >
+
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
           {/* 左欄：設定區 */}
           <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
             <h3 className={`text-sm ${styles.accentText} uppercase tracking-[1px] font-semibold border-b border-border-glass pb-3`}>
-              期貨部位與保證金設定
+              {t.sectionSettings}
             </h3>
 
             {/* 商品規格選擇 */}
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">商品規格</span>
+              <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.presetLabel}</span>
               <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1.5 rounded-xl`}>
-                {PRESETS.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => handlePresetSelect(p.id)}
-                    className={`py-2 px-3 text-sm rounded-lg cursor-pointer transition-all border ${
-                      selectedPreset === p.id
-                        ? styles.activeScheme
-                        : 'border-transparent text-text-sub hover:text-text-main'
-                    }`}
-                  >
-                    {p.name}
-                  </button>
-                ))}
+                {PRESETS.map(p => {
+                  let presetName = p.name;
+                  if (p.id === 'tx') presetName = t.presetTx;
+                  if (p.id === 'mtx') presetName = t.presetMtx;
+                  if (p.id === 'tmf') presetName = t.presetTmf;
+                  if (p.id === 'custom') presetName = t.presetCustom;
+
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => handlePresetSelect(p.id)}
+                      className={`py-2 px-3 text-sm rounded-lg cursor-pointer transition-all border ${
+                        selectedPreset === p.id
+                          ? styles.activeScheme
+                          : 'border-transparent text-text-sub hover:text-text-main'
+                      }`}
+                    >
+                      {presetName}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* 自訂每點點值 */}
             {selectedPreset === 'custom' && (
               <div className="flex flex-col gap-2 bg-surface-glass p-4 rounded-xl border border-border-glass">
-                <label htmlFor={multInputId} className={`text-sm ${styles.accentText} font-medium uppercase tracking-[1px]`}>自訂每點點值 (元/點)</label>
+                <label htmlFor={multInputId} className={`text-sm ${styles.accentText} font-medium uppercase tracking-[1px]`}>
+                  {t.customPtValLabel}
+                </label>
                 <input
                   id={multInputId}
                   type="number"
@@ -199,7 +373,7 @@ export default function FuturesCalculatorClient() {
 
             {/* 多空部位切換 */}
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">交易方向 (部位)</span>
+              <span className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.directionLabel}</span>
               <div className={`grid grid-cols-2 gap-2 ${styles.segmentGroup} p-1 rounded-xl`}>
                 <button
                   onClick={() => setPosition('long')}
@@ -209,7 +383,7 @@ export default function FuturesCalculatorClient() {
                       : 'border-transparent text-text-sub hover:text-text-main'
                   }`}
                 >
-                  多頭 (看漲 做多)
+                  {t.positionLong}
                 </button>
                 <button
                   onClick={() => setPosition('short')}
@@ -219,7 +393,7 @@ export default function FuturesCalculatorClient() {
                       : 'border-transparent text-text-sub hover:text-text-main'
                   }`}
                 >
-                  空頭 (看跌 做空)
+                  {t.positionShort}
                 </button>
               </div>
             </div>
@@ -227,12 +401,12 @@ export default function FuturesCalculatorClient() {
             {/* 成交點位、口數與準備本金 */}
             <div className={`flex flex-col gap-4 ${styles.divider} pt-4`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor={indexInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">成交指數點位 (點)</label>
+                <label htmlFor={indexInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.indexLabel}</label>
                 <input
                   id={indexInputId}
                   type="text"
                   inputMode="numeric"
-                  placeholder="例如：22,000"
+                  placeholder={t.indexPlaceholder}
                   value={indexPrice === '' ? '' : indexPrice.toLocaleString('zh-TW')}
                   onChange={e => {
                     const raw = e.target.value.replace(/[^\d]/g, '');
@@ -244,7 +418,7 @@ export default function FuturesCalculatorClient() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={quantityInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">下單口數 (口)</label>
+                  <label htmlFor={quantityInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.qtyLabel}</label>
                   <input
                     id={quantityInputId}
                     type="number"
@@ -256,7 +430,7 @@ export default function FuturesCalculatorClient() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label htmlFor={capitalInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">準備本金 (元)</label>
+                  <label htmlFor={capitalInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.capitalLabel}</label>
                   <input
                     id={capitalInputId}
                     type="text"
@@ -277,13 +451,13 @@ export default function FuturesCalculatorClient() {
                   onClick={() => setCapitalPreset(1.5)}
                   className={`py-2 px-1 text-sm ${styles.activeScheme} rounded-lg transition-all cursor-pointer font-mono font-medium`}
                 >
-                  投入 1.5 倍原始保證金
+                  {t.capPreset15}
                 </button>
                 <button
                   onClick={() => setCapitalPreset(2.0)}
                   className="py-2 px-1 text-sm bg-surface-glass border border-border-glass text-text-sub rounded-lg hover:text-text-main transition-all cursor-pointer font-mono font-medium"
                 >
-                  投入 2.0 倍原始保證金
+                  {t.capPreset20}
                 </button>
               </div>
             </div>
@@ -291,7 +465,7 @@ export default function FuturesCalculatorClient() {
             {/* 單口保證金標準 (自由編輯) */}
             <div className={`grid grid-cols-2 gap-4 ${styles.divider} pt-4`}>
               <div className="flex flex-col gap-2">
-                <label htmlFor={initMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">單口原始保證金 (元)</label>
+                <label htmlFor={initMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.initMarginLabel}</label>
                 <input
                   id={initMarginInputId}
                   type="text"
@@ -306,7 +480,7 @@ export default function FuturesCalculatorClient() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor={maintMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">單口維持保證金 (元)</label>
+                <label htmlFor={maintMarginInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.maintMarginLabel}</label>
                 <input
                   id={maintMarginInputId}
                   type="text"
@@ -327,7 +501,7 @@ export default function FuturesCalculatorClient() {
               className={`mt-2 w-full h-[44px] flex items-center justify-center gap-2 text-sm font-medium tracking-[1px]
                 ${styles.activeScheme} rounded-xl transition-all duration-300 cursor-pointer`}
             >
-              複製期貨槓桿試算分享連結
+              {t.shareBtn}
             </button>
           </div>
 
@@ -336,7 +510,7 @@ export default function FuturesCalculatorClient() {
             {/* 1. SVG 風險指標儀表板 */}
             <div className={`${styles.glassCard} p-6 flex flex-col items-center justify-center shadow-lg relative`}>
               <h3 className="text-sm text-text-sub uppercase tracking-[1px] font-semibold mb-4 self-start">
-                風控指標與實質槓桿儀表板
+                {t.dashboardTitle}
               </h3>
 
               <div className="relative w-full max-w-[320px] flex flex-col items-center">
@@ -378,14 +552,14 @@ export default function FuturesCalculatorClient() {
                     : 'bg-[#ef4444]/15 border-[#ef4444]/40 text-[#ef4444] animate-pulse'
                 }`}>
                   {totalInitMargin === 0 && simCapital > 0
-                    ? '部位完全安全'
+                    ? t.statusSafeFull
                     : riskRatio >= 100
-                    ? '安全 (高於原始保證金)'
+                    ? t.statusSafe
                     : simCapital >= totalMaintMargin
-                    ? '警示 (低於原始保證金)'
+                    ? t.statusWarning
                     : riskRatio >= 25
-                    ? '追繳 (低於維持保證金)'
-                    : '即將強制平倉 (風險 < 25%)'}
+                    ? t.statusMarginCall
+                    : t.statusLiquidation}
                 </div>
               </div>
             </div>
@@ -393,17 +567,17 @@ export default function FuturesCalculatorClient() {
             {/* 實質槓桿與合約規模 */}
             <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
               <div className={styles.statCard}>
-                <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px] mb-1">合約總價值 (規模)</span>
-                <span className="font-mono text-xl font-bold text-text-main">${formatNumber(contractValue)} 元</span>
+                <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px] mb-1">{t.contractValTitle}</span>
+                <span className="font-mono text-xl font-bold text-text-main">${formatNumber(contractValue)} {t.currencyUnit}</span>
               </div>
 
               <div className={styles.statCard}>
-                <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px] mb-1">當前實質資金槓桿</span>
+                <span className="text-sm text-text-sub font-semibold uppercase tracking-[1px] mb-1">{t.leverageTitle}</span>
                 <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
-                  {actualLeverage.toFixed(2)} 倍
+                  {actualLeverage.toFixed(2)} x
                 </span>
                 <span className="text-xs text-text-sub mt-1">
-                  {actualLeverage <= 2.5 ? '安全風控等級' : actualLeverage <= 5 ? '適中風險等級' : '高槓桿高風險'}
+                  {actualLeverage <= 2.5 ? t.leverageLow : actualLeverage <= 5 ? t.leverageMid : t.leverageHigh}
                 </span>
               </div>
             </div>
@@ -412,10 +586,10 @@ export default function FuturesCalculatorClient() {
             <div className={`${styles.glassCard} p-6 flex flex-col gap-4 shadow-lg`}>
               <div className="flex justify-between items-center text-xs font-semibold">
                 <span className="text-text-sub uppercase tracking-[1px]">
-                  模擬逆風波段 ({position === 'long' ? '指數下跌' : '指數上漲'})
+                  {position === 'long' ? t.stressTitleLong : t.stressTitleShort}
                 </span>
                 <span className={`font-mono text-sm ${styles.accentText} font-bold`}>
-                  {stressDropPct.toFixed(1)}% <span className="text-xs text-text-sub font-normal">(折合 {formatNumber(dropPoints)} 點)</span>
+                  {stressDropPct.toFixed(1)}% <span className="text-xs text-text-sub font-normal">({t.stressPoints} {formatNumber(dropPoints)} {t.stressPointsUnit})</span>
                 </span>
               </div>
 
@@ -431,13 +605,13 @@ export default function FuturesCalculatorClient() {
 
               <div className="grid grid-cols-2 gap-4 font-mono text-xs max-sm:grid-cols-1">
                 <div className="bg-surface-glass border border-border-glass p-3 rounded-xl flex flex-col gap-1">
-                  <span className="text-text-sub">模擬成交指數</span>
-                  <span className="text-base text-text-main font-bold">{formatNumber(simIndex)} 點</span>
+                  <span className="text-text-sub">{t.simIndexLabel}</span>
+                  <span className="text-base text-text-main font-bold">{formatNumber(simIndex)} {t.pointsUnit}</span>
                 </div>
                 <div className="bg-surface-glass border border-border-glass p-3 rounded-xl flex flex-col gap-1">
-                  <span className="text-text-sub">預估模擬權益數</span>
-                  <span className="text-base text-text-main font-bold">${formatNumber(simCapital)} 元</span>
-                  <span className="text-[0.7rem] text-[#ef4444]">損益：-${formatNumber(simLoss)} 元</span>
+                  <span className="text-text-sub">{t.simCapitalLabel}</span>
+                  <span className="text-base text-text-main font-bold">${formatNumber(simCapital)} {t.currencyUnit}</span>
+                  <span className="text-[0.7rem] text-[#ef4444]">{t.simLossLabel}-${formatNumber(simLoss)} {t.currencyUnit}</span>
                 </div>
               </div>
             </div>
@@ -445,18 +619,18 @@ export default function FuturesCalculatorClient() {
             {/* 3. 臨界點資訊卡片 */}
             <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
               <div className={`${styles.statCard} font-mono`}>
-                <span className="text-sm font-semibold text-text-sub">追繳警示點位 (維持保證金)</span>
-                <span className="text-xl font-bold text-[#f59e0b]">{formatNumber(marginCallPrice)} 點</span>
+                <span className="text-sm font-semibold text-text-sub">{t.marginCallTitle}</span>
+                <span className="text-xl font-bold text-[#f59e0b]">{formatNumber(marginCallPrice)} {t.pointsUnit}</span>
                 <span className="text-xs text-text-sub">
-                  容許逆風：<strong className="text-[#f59e0b]">{formatNumber(marginCallPts)} 點</strong>
+                  {t.allowWind}<strong className="text-[#f59e0b]">{formatNumber(marginCallPts)} {t.pointsUnit}</strong>
                 </span>
               </div>
 
               <div className={`${styles.statCard} font-mono`}>
-                <span className="text-sm font-semibold text-text-sub">強制平倉點位 (風險指標 25%)</span>
-                <span className={`text-xl font-bold ${styles.accentText}`}>{formatNumber(liqPrice)} 點</span>
+                <span className="text-sm font-semibold text-text-sub">{t.liqTitle}</span>
+                <span className={`text-xl font-bold ${styles.accentText}`}>{formatNumber(liqPrice)} {t.pointsUnit}</span>
                 <span className="text-xs text-text-sub">
-                  容許逆風：<strong className={styles.accentText}>{formatNumber(liqPts)} 點</strong>
+                  {t.allowWind}<strong className={styles.accentText}>{formatNumber(liqPts)} {t.pointsUnit}</strong>
                 </span>
               </div>
             </div>
@@ -473,22 +647,22 @@ export default function FuturesCalculatorClient() {
                     <svg className="w-4 h-4 text-[#ef4444] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    模擬權益數已低於總原始保證金，回補至 100% 原始保證金水位：
+                    {t.topupWarning}
                   </span>
                 ) : (
                   <span className="text-[#10b981] inline-flex items-center gap-1">
                     <svg className="w-4 h-4 text-[#10b981] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    權益數高於原始保證金，無須補繳
+                    {t.topupSafe}
                   </span>
                 )}
               </h3>
 
               <div className="font-mono text-xs bg-surface-glass border border-border-glass p-4 rounded-xl flex flex-col gap-1">
-                <span className="text-text-sub font-semibold text-xs">需補足至 100% 原始保證金之現金</span>
+                <span className="text-text-sub font-semibold text-xs">{t.topupCashLabel}</span>
                 <span className={`text-base font-bold ${isBelowInit ? 'text-[#ef4444]' : 'text-text-main'}`}>
-                  ${formatNumber(topupCash)} 元
+                  ${formatNumber(topupCash)} {t.currencyUnit}
                 </span>
               </div>
             </div>

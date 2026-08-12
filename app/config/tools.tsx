@@ -79,7 +79,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'finance',
         keywords: '房貸計算機 mortgage loan 自備款 寬限期 階梯利率 多段式利率 apr 還款',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00ffaa]">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
           </svg>
         ),
@@ -93,7 +93,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'finance',
         keywords: '股票質押 維持率 壓力測試 stock pledging risk calculator 追繳 臨界',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ffb800]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#eab308]">
             <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
         ),
@@ -107,7 +107,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'finance',
         keywords: '台股期貨 槓桿 逆風 點數 futures margin leverage calculator 斷頭 追繳 臨界',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff3b30]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff5252]">
             <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 15.66z" />
           </svg>
         ),
@@ -121,7 +121,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'finance',
         keywords: '真實時薪計算器 hourly rate calculator 時薪 最低時薪 PR 排行 通勤 加班',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f0ff]">
             <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z" />
           </svg>
         ),
@@ -135,7 +135,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'finance',
         keywords: '薪資與勞健保計算機 薪資 勞保 健保 勞退 實領薪水 雇主成本 salary calculator',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff7300]">
             <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
           </svg>
         ),
@@ -149,7 +149,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'finance',
         keywords: '離職計算機 離職預告期 勞基法第16條 離職生效日 最後在職日 特休折現 離職預告範本 謀職假 resignation calculator',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00ff66]">
             <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
           </svg>
         ),
@@ -184,7 +184,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'developer',
         keywords: 'url 編碼 解碼 encoder decoder query 參數 網址 轉換',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff7300]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#6366f1]">
             <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
           </svg>
         ),
@@ -257,7 +257,7 @@ export const CATEGORIES: CategorySection[] = [
         subtitle: 'IP DIAGNOSTIC TOOL',
         description: '專業的網路與 IP 連線診斷工具。支援即時 IPv4/IPv6 雙棧偵測、Cloudflare 與 Mullvad 隱私節點查詢，以及公有雲服務連線延遲診斷。',
         href: '/ip-detector/',
-        cardClass: 'digCard',
+        cardClass: 'ipDetectorCard',
         category: 'network',
         keywords: 'ip detector diagnostic trace ping check ipv4 ipv6 cloudflare mullvad aws gcp azure apple 檢測 診斷 延遲',
         svg: (
@@ -275,7 +275,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'network',
         keywords: 'dns https record type 65 rfc 9460 svcb cloudflare route53 alpn ipv4hint ipv6hint 設定 產生器 教學',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f0ff]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#6366f1]">
             <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm1 14h-2v-2h2v2zm0-4h-2V7h2v4z" />
           </svg>
         ),
@@ -289,7 +289,7 @@ export const CATEGORIES: CategorySection[] = [
         category: 'network',
         keywords: 'ip calculator subnet subnet mask cidr usable ip network broadcast total ips 位址 計算器 網段 遮罩 可用IP 廣播位址 網路位址',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f0ff]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#a3e635]">
             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
           </svg>
         ),
@@ -320,7 +320,7 @@ export const CATEGORIES: CategorySection[] = [
         subtitle: 'DESIGNER QR CODE GENERATOR',
         description: '專業的藝術二維碼設計生成工具。支援碼體與定位點液態化自訂、霓虹漸層色調整、置中頭像/Logo 拖曳上傳與自動安全容錯防禦。',
         href: '/qr-generator/',
-        cardClass: 'httpsDnsCard',
+        cardClass: 'qrCard',
         category: 'text',
         keywords: 'qrcode qr code generator designer style gradient logo 產生器 二維碼 漸層 賽博綠',
         svg: (
@@ -355,7 +355,7 @@ export const CATEGORIES: CategorySection[] = [
         subtitle: 'TARGET TIMER',
         description: '唯美精緻的目標計時器，清楚顯示倒數與累計時間，支援多種時間顯示格式與自訂主題色。',
         href: '/time/',
-        cardClass: 'httpsDnsCard',
+        cardClass: 'timerCard',
         category: 'utility',
         keywords: '目標計時器 target timer 倒數 累計',
         svg: (
@@ -369,11 +369,11 @@ export const CATEGORIES: CategorySection[] = [
         subtitle: 'EPOCH TIMESTAMP CONVERTER',
         description: '專業的 Epoch Unix 時間戳記轉換工具，支援秒與毫秒自動判定，並即時在台北時間、UTC、美西時間（PST/PDT）及自訂時區之間進行雙向轉換，並附帶歷史轉換紀錄。',
         href: '/epoch/',
-        cardClass: 'interestCard',
+        cardClass: 'epochCard',
         category: 'utility',
         keywords: 'epoch unix 時間戳記 timestamp converter 時區 台北 utc pst',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00ff99]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
             <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
           </svg>
         ),
@@ -383,7 +383,7 @@ export const CATEGORIES: CategorySection[] = [
         subtitle: 'LUCKY WHEEL SPINNER',
         description: '彈性、直覺且視覺效果豐富的轉盤抽獎工具。支援自訂獎項名稱、數量、權重比例與色彩，提供全螢幕舞台、物理緩動動畫、音效與中獎歷史紀錄。',
         href: '/lucky-wheel/',
-        cardClass: 'interestCard',
+        cardClass: 'luckyWheelCard',
         category: 'utility',
         keywords: '幸運轉盤 抽獎 小工具 lucky wheel prize raffle 全螢幕 權重 機率 音效 尾牙',
         svg: (
@@ -397,7 +397,7 @@ export const CATEGORIES: CategorySection[] = [
         subtitle: 'UNIVERSAL IMAGE PROCESSOR',
         description: '精緻且功能齊全的圖片處理解決方案。支援 Cropper.js v2 視覺化裁切、自訂尺寸調整 (Resize)、jSquash 高速 WebAssembly 轉檔與壓縮品質調整，並支援多檔批次處理一鍵打包 ZIP 下載。',
         href: '/image-processor/',
-        cardClass: 'jsonCard',
+        cardClass: 'imageProcessorCard',
         category: 'utility',
         keywords: 'image processor crop resize compress jsquash cropper zip batch 圖片 裁切 尺寸 調整 壓縮 轉檔 批次',
         svg: (
@@ -411,11 +411,11 @@ export const CATEGORIES: CategorySection[] = [
         subtitle: 'PDF PAGE COMPOSER',
         description: '強大且安全的純前端 PDF 處理神器。支援多檔 PDF 與圖片合併、拖曳頁面任意排序、單頁 90° 旋轉、頁面刪除與無失真匯出，100% 瀏覽器本機運算。',
         href: '/pdf-processor/',
-        cardClass: 'carCard',
+        cardClass: 'pdfProcessorCard',
         category: 'utility',
         keywords: 'pdf processor page composer merge sort rotate delete pdf-lib pdfjs sortablejs 頁面組合器 合併 排序 旋轉 刪除 圖片轉檔 轉檔 珊瑚紅',
         svg: (
-          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ef4444]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff3b30]">
             <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z" />
           </svg>
         ),

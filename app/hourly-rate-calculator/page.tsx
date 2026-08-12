@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   keywords: '真實時薪計算器,時薪計算,最低時薪,薪資PR,打工人,通勤時間,隱形加班,薪資排行,計算機',
   alternates: {
     canonical: 'https://tools.cjkuo.net/hourly-rate-calculator/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/hourly-rate-calculator/',
+      en: 'https://tools.cjkuo.net/hourly-rate-calculator/en/',
+      'x-default': 'https://tools.cjkuo.net/hourly-rate-calculator/en/',
+    },
   },
   openGraph: {
     type: 'website',

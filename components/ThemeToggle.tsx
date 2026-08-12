@@ -26,7 +26,7 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
       className={`
         theme-toggle-btn
         relative inline-flex items-center justify-center gap-2
-        p-2.5 rounded-xl
+        h-[42px] px-3.5 rounded-xl
         bg-white/[.06] border border-white/10
         text-text-sub hover:text-text-main
         backdrop-blur-md

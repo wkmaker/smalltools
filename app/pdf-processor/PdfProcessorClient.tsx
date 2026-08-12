@@ -514,6 +514,19 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       description={t.description}
       accentColor="#ef4444"
       accentGlow="rgba(239, 68, 68, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.switchLangHref}
+          className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#ef4444)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(239,68,68,0.4))] select-none"
+        >
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          <span>{t.switchLangText}</span>
+        </Link>
+      }
     >
       <div
         onDragOver={handleFileDragOver}
@@ -538,12 +551,6 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         {/* 頂部頂級功能列與工具欄 */}
         <div className={`${styles.cardContainer} p-5 sm:p-6 flex justify-between items-center flex-wrap gap-4`}>
           <div className="flex items-center gap-4 flex-wrap">
-            <Link
-              href={t.switchLangHref}
-              className="px-3 py-1.5 text-sm rounded-xl border bg-select-bg border-border-glass text-text-sub hover:text-text-main transition-colors font-medium"
-            >
-              {t.switchLangText}
-            </Link>
 
             <input
               id={fileInputId}
@@ -819,7 +826,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
                     type="button"
                     onClick={() => setZoomScale(1)}
                     disabled={zoomScale === 1}
-                    className="px-2.5 py-1 text-[11px] font-semibold text-red-500 hover:underline cursor-pointer border-l border-border-glass disabled:opacity-30 disabled:text-text-sub"
+                    className="px-2.5 py-1 text-xs font-semibold text-red-500 hover:underline cursor-pointer border-l border-border-glass disabled:opacity-30 disabled:text-text-sub"
                     title="Reset 100%"
                   >
                     {t.resetZoom}

@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   keywords: '信貸計算機,個人信貸試算,信用貸款,APR計算機,實質年利率,本息平均攤還,本金平均攤還,貸款利息計算',
   alternates: {
     canonical: 'https://tools.cjkuo.net/personal-loan/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/personal-loan/',
+      en: 'https://tools.cjkuo.net/personal-loan/en/',
+      'x-default': 'https://tools.cjkuo.net/personal-loan/en/',
+    },
   },
   openGraph: {
     title: '個人信貸試算器 - 免費線上信用貸款與 APR 實質年利率計算機',

@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   keywords: '房貸計算機,房屋貸款試算,房貸月付額,寬限期,階梯利率,新青安房貸,本息平均攤還,本金平均攤還,房貸首期',
   alternates: {
     canonical: 'https://tools.cjkuo.net/mortgage-loan/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/mortgage-loan/',
+      en: 'https://tools.cjkuo.net/mortgage-loan/en/',
+      'x-default': 'https://tools.cjkuo.net/mortgage-loan/en/',
+    },
   },
   openGraph: {
     title: '房屋貸款試算器 - 免費線上房貸月付額、寬限期與 APR 計算機',

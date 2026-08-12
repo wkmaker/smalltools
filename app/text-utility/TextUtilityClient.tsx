@@ -113,21 +113,21 @@ export default function TextUtilityClient({ lang = 'zh-TW' }: TextUtilityClientP
       description={t.description}
       accentColor="#ff007f"
       accentGlow="rgba(255, 0, 127, 0.6)"
+      extraHeaderControls={
+        <Link
+          href={t.langSwitchHref}
+          className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#ff007f)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(255,0,127,0.4))] select-none"
+        >
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          <span>{t.langSwitchLabel}</span>
+        </Link>
+      }
     >
       <div className="flex flex-col gap-6 text-left">
-        {/* 右上方雙語切換按鈕區 */}
-        <div className="flex justify-end items-center">
-          <Link
-            href={t.langSwitchHref}
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors flex items-center gap-1.5"
-          >
-            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20" />
-            </svg>
-            {t.langSwitchLabel}
-          </Link>
-        </div>
 
         {/* 上方：多維度統計看板 */}
         <div className="grid grid-cols-5 gap-4 max-lg:grid-cols-3 max-sm:grid-cols-2">

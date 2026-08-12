@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   keywords: '車貸試算器,汽車貸款計算機,車貸月付金,車貸利率,本息均勻攤還,本金均勻攤還,汽車貸款',
   alternates: {
     canonical: 'https://tools.cjkuo.net/car-loan/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/car-loan/',
+      en: 'https://tools.cjkuo.net/car-loan/en/',
+      'x-default': 'https://tools.cjkuo.net/car-loan/en/',
+    },
   },
   openGraph: {
     title: '車貸試算器 - 免費線上汽車貸款月付金與利息計算機',

@@ -6,8 +6,9 @@ import ToolLayout from '../components/ToolLayout';
 import styles from './base64.module.css';
 
 function utf8ToB64(str: string): string {
+  const safeStr = typeof str.toWellFormed === 'function' ? str.toWellFormed() : str;
   return btoa(
-    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+    encodeURIComponent(safeStr).replace(/%([0-9A-F]{2})/g, (_, p1) =>
       String.fromCharCode(parseInt(p1, 16))
     )
   );
@@ -83,6 +84,9 @@ const TRANSLATIONS = {
     toastFileTooLarge: '檔案過大，請選擇小於 30MB 的檔案',
     toastReadError: '檔案讀取出錯',
     toastShareCopied: '分享連結已複製到剪貼簿',
+    textDecodeFailed: '文字檔案預覽解碼失敗',
+    previewTruncatedBadge: '文字預覽已截取前 3,000 字 (完整 Base64 已於下方生成)',
+    truncatedSuffix: '\n\n... (檔案內容較長，此處僅顯示前 3,000 字元預覽 / 完整 Base64 數據已於下方生成)',
   },
   en: {
     title: 'Base64 Encoder & Decoder',
@@ -121,6 +125,9 @@ const TRANSLATIONS = {
     toastFileTooLarge: 'File is too large, please select a file under 30MB',
     toastReadError: 'Error reading file',
     toastShareCopied: 'Shareable link copied to clipboard',
+    textDecodeFailed: 'Text file preview decoding failed',
+    previewTruncatedBadge: 'Preview truncated to first 3,000 chars (Full Base64 ready below)',
+    truncatedSuffix: '\n\n... (Content Truncated for Preview / Full Base64 available below)',
   },
 };
 
@@ -169,6 +176,8 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
     toastTimer.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   }, []);
 
+  const activeFileReaderRef = useRef<FileReader | null>(null);
+
   const encodeText = useCallback((text: string, enc: EncodingType, safe: boolean, wrap: boolean) => {
     if (!text) {
       setBase64Text('');
@@ -186,6 +195,7 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
       setBase64Error(false);
     } catch {
       setBase64Text('');
+      setBase64Error(true);
     }
   }, []);
 
@@ -195,11 +205,9 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
       setBase64Error(false);
       return;
     }
-    let str = b64.trim().replace(/\s/g, '');
-    if (str.includes('-') || str.includes('_') || !str.includes('=')) {
-      let norm = str.replace(/-/g, '+').replace(/_/g, '/');
-      while (norm.length % 4) norm += '=';
-      str = norm;
+    let str = b64.trim().replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4 !== 0) {
+      str += '=';
     }
     try {
       const decoded = enc === 'UTF-8' ? b64ToUtf8(str) : atob(str);
@@ -269,10 +277,17 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
         showToast(t.toastFileTooLarge);
         return;
       }
+      if (activeFileReaderRef.current) {
+        activeFileReaderRef.current.abort();
+      }
+
       setFileState(s => ({ ...s, file, loading: true, dataUrl: '', rawBase64: '', previewType: null }));
 
       const reader = new FileReader();
+      activeFileReaderRef.current = reader;
+
       reader.onload = e => {
+        if (activeFileReaderRef.current !== reader) return;
         const dataUrl = e.target?.result as string;
         const raw = dataUrl.split(',')[1];
         const type = file.type;
@@ -286,22 +301,24 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
         else if (type.startsWith('text/') || type === 'application/json' || type === 'application/javascript') {
           previewType = 'text';
           try {
-            const txt = b64ToUtf8(raw);
-            previewContent = txt.length > 3000 ? txt.substring(0, 3000) + '\n\n... (Content Truncated)' : txt;
+            const safeRawChunk = raw.substring(0, 4000);
+            const txt = b64ToUtf8(safeRawChunk);
+            previewContent = txt.length > 3000 ? txt.substring(0, 3000) + t.truncatedSuffix : txt;
           } catch {
-            previewContent = 'Text file decoding failed';
+            previewContent = t.textDecodeFailed;
           }
         }
 
         setFileState({ file, dataUrl, rawBase64: raw, previewType, previewContent, loading: false });
       };
       reader.onerror = () => {
+        if (activeFileReaderRef.current !== reader) return;
         showToast(t.toastReadError);
         setFileState(s => ({ ...s, loading: false }));
       };
       reader.readAsDataURL(file);
     },
-    [showToast, t.toastFileTooLarge, t.toastReadError]
+    [showToast, t]
   );
 
   const resetFile = () => {
@@ -323,6 +340,19 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
         description={t.description}
         accentColor="#ff7300"
         accentGlow="rgba(255,115,0,0.5)"
+        extraHeaderControls={
+          <Link
+            href={t.langToggleUrl}
+            className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#ff7300)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(255,115,0,0.4))] select-none"
+          >
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span>{t.langToggleLabel}</span>
+          </Link>
+        }
       >
         <div className={styles.container}>
           {/* Top Bar: Tabs & Language Switcher */}
@@ -344,14 +374,6 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mb-2">
-              <Link
-                href={t.langToggleUrl}
-                className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border-glass bg-select-bg text-text-sub hover:text-text-main hover:border-[var(--theme-color,#ff7300)] transition-all no-underline"
-              >
-                {t.langToggleLabel}
-              </Link>
-            </div>
           </div>
 
           {/* Text Tab Content */}
@@ -482,6 +504,9 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
                   onDrop={handleDrop}
                   className={`${styles.dropzone} ${isDragOver ? styles.dropzoneActive : ''}`}
                 >
+                  <label htmlFor={fileInputId} className="sr-only">
+                    {t.tabFile}
+                  </label>
                   <input
                     id={fileInputId}
                     ref={fileInputRef}
@@ -527,9 +552,19 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
                   </div>
 
                   <div>
-                    <span className="text-xs font-semibold text-text-sub uppercase tracking-wide block mb-3">
-                      {t.dataPreview}
-                    </span>
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className="text-xs font-semibold text-text-sub uppercase tracking-wide">
+                        {t.dataPreview}
+                      </span>
+                      {fileState.previewType === 'text' && fileState.file && fileState.file.size > 3000 && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium">
+                          <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                          </svg>
+                          {t.previewTruncatedBadge}
+                        </span>
+                      )}
+                    </div>
                     <div className={styles.previewBox}>
                       {fileState.loading && <div className={styles.spinner} />}
                       {!fileState.loading && fileState.previewType === 'image' && (

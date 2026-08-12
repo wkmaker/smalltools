@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   keywords: '股票質押,維持率計算機,斷頭價,追繳股價,股票貸款,維持率130,股票借款,台股槓桿',
   alternates: {
     canonical: 'https://tools.cjkuo.net/pledge-calculator/',
+    languages: {
+      'zh-TW': 'https://tools.cjkuo.net/pledge-calculator/',
+      en: 'https://tools.cjkuo.net/pledge-calculator/en/',
+      'x-default': 'https://tools.cjkuo.net/pledge-calculator/en/',
+    },
   },
   openGraph: {
     title: '股票質押維持率計算機 - 免費線上台股斷頭價與壓力測試工具',
