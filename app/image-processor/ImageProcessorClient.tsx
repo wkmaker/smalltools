@@ -138,6 +138,8 @@ const TRANSLATIONS = {
   },
 };
 
+import { createSimpleZip } from './utils/zipBuilder';
+
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;
@@ -146,96 +148,48 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// 簡單輕量純前端 PKZip Builder
-function createSimpleZip(files: { name: string; data: Uint8Array }[]): Blob {
-  const parts: Uint8Array[] = [];
-  const cdEntries: Uint8Array[] = [];
-  let offset = 0;
+const safeLoadImage = (src: string, timeoutMs = 10000): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const timer = setTimeout(() => {
+      img.src = '';
+      reject(new Error('圖片載入逾時'));
+    }, timeoutMs);
 
-  files.forEach((f) => {
-    const nameBytes = new TextEncoder().encode(f.name);
-    const date = new Date();
-    const dosTime =
-      (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1);
-    const dosDate =
-      ((date.getFullYear() - 1980) << 9) |
-      ((date.getMonth() + 1) << 5) |
-      date.getDate();
-
-    let crc = 0xffffffff;
-    for (let i = 0; i < f.data.length; i++) {
-      crc ^= f.data[i];
-      for (let j = 0; j < 8; j++) {
-        crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
-      }
-    }
-    crc = (crc ^ 0xffffffff) >>> 0;
-
-    const localHeader = new Uint8Array(30 + nameBytes.length);
-    const view = new DataView(localHeader.buffer);
-    view.setUint32(0, 0x04034b50, true);
-    view.setUint16(4, 20, true);
-    view.setUint16(6, 0, true);
-    view.setUint16(8, 0, true);
-    view.setUint16(10, dosTime, true);
-    view.setUint16(12, dosDate, true);
-    view.setUint32(14, crc, true);
-    view.setUint32(18, f.data.length, true);
-    view.setUint32(22, f.data.length, true);
-    view.setUint16(26, nameBytes.length, true);
-    view.setUint16(28, 0, true);
-    localHeader.set(nameBytes, 30);
-
-    parts.push(localHeader);
-    parts.push(f.data);
-
-    const cdEntry = new Uint8Array(46 + nameBytes.length);
-    const cdView = new DataView(cdEntry.buffer);
-    cdView.setUint32(0, 0x02014b50, true);
-    cdView.setUint16(4, 20, true);
-    cdView.setUint16(6, 20, true);
-    cdView.setUint16(8, 0, true);
-    cdView.setUint16(10, 0, true);
-    cdView.setUint16(12, dosTime, true);
-    cdView.setUint16(14, dosDate, true);
-    cdView.setUint32(16, crc, true);
-    cdView.setUint32(20, f.data.length, true);
-    cdView.setUint32(24, f.data.length, true);
-    cdView.setUint16(28, nameBytes.length, true);
-    cdView.setUint16(30, 0, true);
-    cdView.setUint16(32, 0, true);
-    cdView.setUint16(34, 0, true);
-    cdView.setUint16(36, 0, true);
-    cdView.setUint32(38, 0, true);
-    cdView.setUint32(42, offset, true);
-    cdEntry.set(nameBytes, 46);
-
-    cdEntries.push(cdEntry);
-    offset += localHeader.length + f.data.length;
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error('無法載入圖片或圖檔已毀損'));
+    };
+    img.src = src;
   });
+};
 
-  const cdOffset = offset;
-  let cdSize = 0;
-  cdEntries.forEach((e) => {
-    parts.push(e);
-    cdSize += e.length;
-  });
-
-  const eocd = new Uint8Array(22);
-  const eocdView = new DataView(eocd.buffer);
-  eocdView.setUint32(0, 0x06054b50, true);
-  eocdView.setUint16(4, 0, true);
-  eocdView.setUint16(6, 0, true);
-  eocdView.setUint16(8, files.length, true);
-  eocdView.setUint16(10, files.length, true);
-  eocdView.setUint32(12, cdSize, true);
-  eocdView.setUint32(16, cdOffset, true);
-  eocdView.setUint16(20, 0, true);
-
-  parts.push(eocd);
-
-  return new Blob(parts as BlobPart[], { type: 'application/zip' });
-}
+const calculateBatchDimensions = (
+  imgW: number,
+  imgH: number,
+  targetW: number,
+  targetH: number,
+  scalePct: number,
+  keepAspectRatio: boolean
+) => {
+  if (targetW > 0 && targetH > 0) {
+    return { w: targetW, h: targetH };
+  }
+  if (targetW > 0 && keepAspectRatio && imgW > 0) {
+    return { w: targetW, h: Math.max(1, Math.round((targetW / imgW) * imgH)) };
+  }
+  if (targetH > 0 && keepAspectRatio && imgH > 0) {
+    return { w: Math.max(1, Math.round((targetH / imgH) * imgW)), h: targetH };
+  }
+  return {
+    w: Math.max(1, Math.round((imgW * scalePct) / 100)),
+    h: Math.max(1, Math.round((imgH * scalePct) / 100)),
+  };
+};
 
 export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorClientProps) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
@@ -483,16 +437,37 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     setTargetHeight(newH);
   };
 
-  // 核心圖片 Canvas 繪製處理 (含旋轉與翻轉)
+  // 釋放 Blob Object URLs
+  useEffect(() => {
+    return () => {
+      batchItems.forEach((item) => {
+        if (item.thumbUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(item.thumbUrl);
+        }
+      });
+    };
+  }, [batchItems]);
+
+  // 核心圖片 Canvas 繪製處理 (含旋轉、翻轉與最大像素安全限制)
   const renderProcessedCanvas = useCallback(
     (img: HTMLImageElement, w: number, h: number) => {
+      const MAX_PIXELS = 16777216; // 16MP 防爆框/溢出防護
+      const currentPixels = w * h;
+      let finalW = w;
+      let finalH = h;
+      if (currentPixels > MAX_PIXELS && currentPixels > 0) {
+        const ratio = Math.sqrt(MAX_PIXELS / currentPixels);
+        finalW = Math.floor(w * ratio);
+        finalH = Math.floor(h * ratio);
+      }
+
       const isRotated = rotation === 90 || rotation === 270;
-      const canvasW = isRotated ? h : w;
-      const canvasH = isRotated ? w : h;
+      const canvasW = isRotated ? finalH : finalW;
+      const canvasH = isRotated ? finalW : finalH;
 
       const canvas = document.createElement('canvas');
-      canvas.width = canvasW;
-      canvas.height = canvasH;
+      canvas.width = Math.max(1, canvasW);
+      canvas.height = Math.max(1, canvasH);
       const ctx = canvas.getContext('2d');
       if (!ctx) return canvas;
 
@@ -504,7 +479,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       ctx.rotate((rotation * Math.PI) / 180);
       ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
 
-      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.drawImage(img, -finalW / 2, -finalH / 2, finalW, finalH);
       ctx.restore();
 
       return canvas;
@@ -568,7 +543,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     showToast(t.origDownloaded);
   };
 
-  // 多圖批次一鍵 ZIP 打包下載 (含 Yielding 非阻塞主執行緒時間片釋放)
+  // 多圖批次一鍵 ZIP 打包下載 (含 Yielding 時間片與防護機制)
   const downloadBatchZip = async () => {
     if (batchItems.length === 0) return;
     setIsProcessing(true);
@@ -586,14 +561,24 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         // 時間片釋放 (Yielding Chunk to Main Thread)
         await new Promise((r) => setTimeout(r, 0));
 
-        const img = new Image();
-        await new Promise<void>((resolve) => {
-          img.onload = () => resolve();
-          img.src = item.thumbUrl;
-        });
+        let img: HTMLImageElement;
+        try {
+          img = await safeLoadImage(item.thumbUrl);
+        } catch {
+          setBatchItems((prev) =>
+            prev.map((it, idx) => (idx === i ? { ...it, status: 'error' } : it))
+          );
+          continue;
+        }
 
-        const w = targetWidth > 0 ? targetWidth : Math.round((img.width * scalePercent) / 100);
-        const h = targetHeight > 0 ? targetHeight : Math.round((img.height * scalePercent) / 100);
+        const { w, h } = calculateBatchDimensions(
+          img.width,
+          img.height,
+          targetWidth,
+          targetHeight,
+          scalePercent,
+          keepAspect
+        );
 
         const canvas = renderProcessedCanvas(img, w, h);
         const dataUrl = canvas.toDataURL(format, quality);
@@ -615,6 +600,11 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         );
       }
 
+      if (processedFiles.length === 0) {
+        showToast(t.zipFailed('無有效圖片可供打包'));
+        return;
+      }
+
       const zipBlob = createSimpleZip(processedFiles);
       const zipUrl = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
@@ -623,7 +613,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(zipUrl), 5000);
+      requestAnimationFrame(() => URL.revokeObjectURL(zipUrl));
 
       showToast(t.zipCompleted);
     } catch (err) {
