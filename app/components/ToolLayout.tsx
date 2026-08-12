@@ -118,14 +118,15 @@ export default function ToolLayout({
         className={`
           tool-back-btn
           absolute top-6 left-6 z-[11]
-          inline-flex items-center gap-2 text-sm font-medium
-          ${compactBackBtn ? 'p-2.5 rounded-xl justify-center max-sm:p-2' : 'px-4 py-2 rounded-lg max-sm:px-3 max-sm:py-1.5 max-sm:text-xs'}
-          bg-surface-glass-btn border border-border-glass
-          text-text-sub no-underline
-          transition-all duration-300
-          hover:text-text-main hover:border-[var(--tool-accent)] hover:bg-white/[.06]
-          hover:shadow-[0_0_15px_var(--tool-glow)]
-          hover:-translate-y-0.5
+          inline-flex items-center gap-1.5 text-xs font-semibold
+          h-[42px] rounded-xl
+          ${compactBackBtn ? 'w-[42px] px-0 justify-center' : 'px-3.5'}
+          bg-white/[.06] border border-white/10 backdrop-blur-md
+          text-text-sub no-underline select-none
+          transition-all duration-300 ease-out
+          hover:text-text-main hover:border-[var(--tool-accent)] hover:bg-white/[.08]
+          hover:shadow-[0_0_12px_var(--tool-glow)]
+          hover:scale-105 active:scale-95
           w-fit self-start
           max-sm:top-4 max-sm:left-4
         `}

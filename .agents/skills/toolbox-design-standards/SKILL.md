@@ -32,39 +32,45 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 
 
 
-2. **配色與主題霓虹發光 (Neon Theme Colors)**
+2. **配色與主題霓虹發光 (Neon Theme Colors) 與全站工具清冊**
 
    * **全站極黑與亮色氛圍**：暗色模式使用純極黑 `#030305` 凸顯霓虹發光；亮色模式使用純淨鈦白與柔和藍紫流光。
 
-   * **工具主題色定義**：
+   * **全站 28 個小工具雙主題色與 `cardClass` 完整對照表 (Full Tool Registry Table)**：
+     全站所有工具於首頁設定檔 (`app/config/tools.tsx`)、首頁樣式檔 (`app/page.module.css`) 及工具內部客戶端 (`[ToolName]Client.tsx`) 必須 100% 嚴格遵守下表宣告之專屬 `cardClass` 命名、暗色霓虹主題色與亮色模式 WCAG AA 高對比深色階 Hex：
 
-     - **倒數計時 / 網路診斷 / DNS HTTPS 產生器**：科技冰藍 `#00f0ff` (`rgba(0,240,255,0.6)`)
+     | 工具名稱 | 路由路徑 (`href`) | 專屬 `cardClass` | 暗色模式主題色 (Glow) | 亮色模式高對比深色階 (WCAG AA) |
+     | :--- | :--- | :--- | :--- | :--- |
+     | **複利計算機** | `/compound-interest/` | `interestCard` | 財富金黃 `#ffb800` (`rgba(255,184,0,0.6)`) | 深琥珀金 `#d97706` (Amber 600) |
+     | **信貸計算機** | `/personal-loan/` | `loanCard` | 薄荷翡翠綠 `#00f5a0` (`rgba(0,245,160,0.6)`) | 深翠綠 `#059669` (Emerald 600) |
+     | **車貸計算器** | `/car-loan/` | `carCard` | 霓虹赤紅 `#ff3b30` (`rgba(255,59,48,0.6)`) | 深紅 `#dc2626` (Red 600) |
+     | **房貸計算機** | `/mortgage-loan/` | `mortgageCard` | 水晶藍綠 `#00ffaa` (`rgba(0,255,170,0.6)`) | 深藍綠 `#0d9488` (Teal 600) |
+     | **股票質押壓力測試器** | `/pledge-calculator/` | `pledgeCard` | 耀眼金黃 `#eab308` (`rgba(234,179,8,0.6)`) | 深金黃 `#ca8a04` (Yellow 600) |
+     | **期貨槓桿點數估算器** | `/futures-calculator/` | `futuresCard` | 珊瑚艷紅 `#ff5252` (`rgba(255,82,82,0.6)`) | 深鮮紅 `#b91c1c` (Red 700) |
+     | **真實時薪計算器** | `/hourly-rate-calculator/` | `hourlyRateCard` | 科技冰藍 `#00f0ff` (`rgba(0,240,255,0.6)`) | 深海天藍 `#0284c7` (Sky 600) |
+     | **薪資與勞健保計算機** | `/my-salary-calculator/` | `salaryCard` | 活力火焰橘 `#ff7300` (`rgba(255,115,0,0.6)`) | 深橘 `#ea580c` (Orange 600) |
+     | **離職時間與預告期** | `/resignation-calculator/` | `resignationCard` | 賽博極光綠 `#00ff66` (`rgba(0,255,102,0.6)`) | 深翠綠 `#16a34a` (Green 600) |
+     | **Base64 編碼/解碼** | `/base64/` | `base64Card` | 活力火焰橘 `#ff7300` (`rgba(255,115,0,0.6)`) | 深橘 `#ea580c` (Orange 600) |
+     | **URL 編碼/解碼** | `/url/` | `urlCard` | 深度靛藍 `#6366f1` (`rgba(99,102,241,0.6)`) | 深靛藍 `#4338ca` (Indigo 700) |
+     | **安全密碼生成器** | `/password/` | `passwordCard` | 賽博極光綠 `#00ff66` (`rgba(0,255,102,0.6)`) | 深翠綠 `#16a34a` (Green 600) |
+     | **JSON 格式化美化器** | `/json/` | `jsonCard` | 霓虹粉桃 `#ff00aa` (`rgba(255,0,170,0.6)`) | 深洋紅 `#c026d3` (Fuchsia 600) |
+     | **SSL 憑證格式轉換器** | `/ssl-converter/` | `sslConverterCard` | 水晶藍綠 `#00ffaa` (`rgba(0,255,170,0.6)`) | 深藍綠 `#0d9488` (Teal 600) |
+     | **DIG 網路診斷工具** | `/dns-dig/` | `digCard` | 電光紫羅蘭 `#8b5cf6` (`rgba(139,92,246,0.6)`) | 深紫 `#7c3aed` (Violet 600) |
+     | **IP 檢測助手** | `/ip-detector/` | `ipDetectorCard` | 科技冰藍 `#00f0ff` (`rgba(0,240,255,0.6)`) | 深海天藍 `#0284c7` (Sky 600) |
+     | **DNS HTTPS 紀錄產生器** | `/https-dns-generator/` | `httpsDnsCard` | 深度靛藍 `#6366f1` (`rgba(99,102,241,0.6)`) | 深靛藍 `#4338ca` (Indigo 700) |
+     | **IP 子網段計算器** | `/ip-calculator/` | `ipCalculatorCard` | 極客黃綠 `#a3e635` (`rgba(163,230,53,0.6)`) | 深黃綠 `#65a30d` (Lime 600) |
+     | **文字處理助手** | `/text-utility/` | `textUtilityCard` | 霓虹粉紅 `#ff007f` (`rgba(255,0,127,0.6)`) | 深紫紅 `#be185d` (Pink 700) |
+     | **Designer QR Code 產生器** | `/qr-generator/` | `qrCard` | 賽博極光綠 `#00ff66` (`rgba(0,255,102,0.6)`) | 深翠綠 `#16a34a` (Green 600) |
+     | **兩份文件比對工具** | `/diff-checker/` | `diffCheckerCard` | 電光紫羅蘭 `#8b5cf6` (`rgba(139,92,246,0.6)`) | 深紫 `#7c3aed` (Violet 600) |
+     | **目標計時器** | `/time/` | `timerCard` | 科技冰藍 `#00f0ff` (`rgba(0,240,255,0.6)`) | 深海天藍 `#0284c7` (Sky 600) |
+     | **Epoch 時間戳記** | `/epoch/` | `epochCard` | 薄荷翡翠綠 `#00f5a0` (`rgba(0,245,160,0.6)`) | 深翠綠 `#059669` (Emerald 600) |
+     | **幸運轉盤抽獎** | `/lucky-wheel/` | `luckyWheelCard` | 財富金黃 `#ffb800` (`rgba(255,184,0,0.6)`) | 深琥珀金 `#d97706` (Amber 600) |
+     | **萬能圖片處理大師** | `/image-processor/` | `imageProcessorCard` | 霓虹桃粉 `#d946ef` (`rgba(217,70,239,0.6)`) | 深洋紅 `#c026d3` (Fuchsia 600) |
+     | **PDF 頁面組合器** | `/pdf-processor/` | `pdfProcessorCard` | 霓虹赤紅 `#ff3b30` (`rgba(255,59,48,0.6)`) | 深紅 `#dc2626` (Red 600) |
+     | **PDF 壓縮大師** | `/pdf-compressor/` | `pdfCompressorCard` | 耀眼金黃 `#eab308` (`rgba(234,179,8,0.6)`) | 深金黃 `#ca8a04` (Yellow 600) |
+     | **吹牛骰子搖骰器** | `/liars-dice/` | `liarsDiceCard` | 珊瑚艷紅 `#ff5252` (`rgba(255,82,82,0.6)`) | 深鮮紅 `#b91c1c` (Red 700) |
 
-     - **複利計算機 / 股票質押 / 金融理財**：財富金黃 `#ffb800` (`rgba(255,184,0,0.6)`)
-
-     - **信貸試算 / 房貸試算 / 薪資算薪水**：薄荷翡翠綠 `#00f5a0` (`rgba(0,245,160,0.6)`)
-
-     - **安全密碼 / QR Code 產生器**：賽博極光綠 `#00ff66` (`rgba(0,255,102,0.6)`)
-
-     - **Epoch 時間戳記**：極客綠 `#00ff99` (`rgba(0,255,153,0.6)`)
-
-     - **SSL 憑證轉換器**：亮翠綠 `#00ffaa` (`rgba(0,255,170,0.6)`)
-
-     - **文件比對 (Diff Checker) / DNS DIG 查詢**：紫羅蘭色 `#8b5cf6` (`rgba(139,92,246,0.6)`)
-
-     - **萬能圖片處理大師**：霓虹桃粉 `#d946ef` (`rgba(217,70,239,0.6)`)
-
-     - **車貸計算器 / 期貨槓桿計算機**：霓虹紅 / 赤紅 `#ff3b30` (`rgba(255,59,48,0.6)`)
-
-     - **PDF 頁面組合器**：經典紅 `#ef4444` (`rgba(239,68,68,0.6)`)
-
-     - **PDF 壓縮大師**：耀眼黃 `#eab308` (`rgba(234,179,8,0.6)`)
-
-     - **Base64 處理器**：活力橘 `#ff7300` (`rgba(255,115,0,0.6)`)
-
-     - **JSON 格式化**：霓虹粉桃 `#ff00aa` (`rgba(255,0,170,0.6)`)
-
-     - **文字處理助手**：霓虹粉紅 `#ff007f` (`rgba(255,0,127,0.6)`)
+   * **卡片 Class 共用禁忌**：新增小工具時，**嚴禁在 `app/config/tools.tsx` 中隨意共用其他工具之 `cardClass`** (例如錯把 QR Code 產生器設為 `httpsDnsCard`)。必須宣告獨立 `cardClass` 命名，並同步於 `app/page.module.css` 註冊對應的 Hover、Glow 及亮色模式對比度樣式。
 
    * **互動狀態**：輸入框聚焦 (`focus:border-[var(--theme-color)]`) 與按鈕懸停 (`hover:shadow-[0_0_15px_var(--theme-color)]`) 時，必須亮起對應主題色的發光與陰影。
 

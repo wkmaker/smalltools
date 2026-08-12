@@ -341,7 +341,7 @@
     transform: translateX(4px);
 }
 
-/* 主題獨立 Hover 顏色重設 */
+/* 主題獨立 Hover 顏色重設 (依據 SKILL 決定性散列極光對照表) */
 .interestCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 184, 0, 0.06), transparent 40%); }
 .interestCard:hover { border-color: rgba(255, 184, 0, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 184, 0, 0.15); }
 .interestCard:hover h3 { color: #ffb800; text-shadow: 0 0 10px rgba(255, 184, 0, 0.4); }
@@ -352,40 +352,50 @@
 .loanCard:hover h3 { color: #00f5a0; text-shadow: 0 0 10px rgba(0, 245, 160, 0.4); }
 .loanCard .cardAction { color: #00f5a0; }
 
-.carCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 0, 85, 0.06), transparent 40%); }
-.carCard:hover { border-color: rgba(255, 0, 85, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 0, 85, 0.15); }
-.carCard:hover h3 { color: #ff0055; text-shadow: 0 0 10px rgba(255, 0, 85, 0.4); }
-.carCard .cardAction { color: #ff0055; }
+.carCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 59, 48, 0.06), transparent 40%); }
+.carCard:hover { border-color: rgba(255, 59, 48, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 59, 48, 0.15); }
+.carCard:hover h3 { color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.4); }
+.carCard .cardAction { color: #ff3b30; }
 
-.mortgageCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(139, 92, 246, 0.06), transparent 40%); }
-.mortgageCard:hover { border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(139, 92, 246, 0.15); }
-.mortgageCard:hover h3 { color: #8b5cf6; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
-.mortgageCard .cardAction { color: #8b5cf6; }
+.mortgageCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 170, 0.06), transparent 40%); }
+.mortgageCard:hover { border-color: rgba(0, 255, 170, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 255, 170, 0.15); }
+.mortgageCard:hover h3 { color: #00ffaa; text-shadow: 0 0 10px rgba(0, 255, 170, 0.4); }
+.mortgageCard .cardAction { color: #00ffaa; }
 
-.pledgeCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 184, 0, 0.06), transparent 40%); }
-.pledgeCard:hover { border-color: rgba(255, 184, 0, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 184, 0, 0.15); }
-.pledgeCard:hover h3 { color: #ffb800; text-shadow: 0 0 10px rgba(255, 184, 0, 0.4); }
-.pledgeCard .cardAction { color: #ffb800; }
+.pledgeCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(234, 179, 8, 0.06), transparent 40%); }
+.pledgeCard:hover { border-color: rgba(234, 179, 8, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(234, 179, 8, 0.15); }
+.pledgeCard:hover h3 { color: #eab308; text-shadow: 0 0 10px rgba(234, 179, 8, 0.4); }
+.pledgeCard .cardAction { color: #eab308; }
 
-.futuresCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 59, 48, 0.06), transparent 40%); }
-.futuresCard:hover { border-color: rgba(255, 59, 48, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 59, 48, 0.15); }
-.futuresCard:hover h3 { color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.4); }
-.futuresCard .cardAction { color: #ff3b30; }
+.futuresCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 82, 82, 0.06), transparent 40%); }
+.futuresCard:hover { border-color: rgba(255, 82, 82, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 82, 82, 0.15); }
+.futuresCard:hover h3 { color: #ff5252; text-shadow: 0 0 10px rgba(255, 82, 82, 0.4); }
+.futuresCard .cardAction { color: #ff5252; }
 
-.salaryCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(34, 197, 94, 0.06), transparent 40%); }
-.salaryCard:hover { border-color: rgba(34, 197, 94, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(34, 197, 94, 0.15); }
-.salaryCard:hover h3 { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
-.salaryCard .cardAction { color: #22c55e; }
+.hourlyRateCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%); }
+.hourlyRateCard:hover { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 240, 255, 0.15); }
+.hourlyRateCard:hover h3 { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+.hourlyRateCard .cardAction { color: #00f0ff; }
+
+.salaryCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 115, 0, 0.06), transparent 40%); }
+.salaryCard:hover { border-color: rgba(255, 115, 0, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 115, 0, 0.15); }
+.salaryCard:hover h3 { color: #ff7300; text-shadow: 0 0 10px rgba(255, 115, 0, 0.4); }
+.salaryCard .cardAction { color: #ff7300; }
+
+.resignationCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 102, 0.06), transparent 40%); }
+.resignationCard:hover { border-color: rgba(0, 255, 102, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 255, 102, 0.15); }
+.resignationCard:hover h3 { color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.4); }
+.resignationCard .cardAction { color: #00ff66; }
 
 .base64Card::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 115, 0, 0.06), transparent 40%); }
 .base64Card:hover { border-color: rgba(255, 115, 0, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 115, 0, 0.15); }
 .base64Card:hover h3 { color: #ff7300; text-shadow: 0 0 10px rgba(255, 115, 0, 0.4); }
 .base64Card .cardAction { color: #ff7300; }
 
-.urlCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 119, 255, 0.06), transparent 40%); }
-.urlCard:hover { border-color: rgba(0, 119, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 119, 255, 0.15); }
-.urlCard:hover h3 { color: #0077ff; text-shadow: 0 0 10px rgba(0, 119, 255, 0.4); }
-.urlCard .cardAction { color: #0077ff; }
+.urlCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(99, 102, 241, 0.06), transparent 40%); }
+.urlCard:hover { border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(99, 102, 241, 0.15); }
+.urlCard:hover h3 { color: #6366f1; text-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+.urlCard .cardAction { color: #6366f1; }
 
 .passwordCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 102, 0.06), transparent 40%); }
 .passwordCard:hover { border-color: rgba(0, 255, 102, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 255, 102, 0.15); }
@@ -397,35 +407,80 @@
 .jsonCard:hover h3 { color: #ff00aa; text-shadow: 0 0 10px rgba(255, 0, 170, 0.4); }
 .jsonCard .cardAction { color: #ff00aa; }
 
-.sslConverterCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(20, 184, 166, 0.06), transparent 40%); }
-.sslConverterCard:hover { border-color: rgba(20, 184, 166, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(20, 184, 166, 0.15); }
-.sslConverterCard:hover h3 { color: #14b8a6; text-shadow: 0 0 10px rgba(20, 184, 166, 0.4); }
-.sslConverterCard .cardAction { color: #14b8a6; }
+.sslConverterCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 170, 0.06), transparent 40%); }
+.sslConverterCard:hover { border-color: rgba(0, 255, 170, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 255, 170, 0.15); }
+.sslConverterCard:hover h3 { color: #00ffaa; text-shadow: 0 0 10px rgba(0, 255, 170, 0.4); }
+.sslConverterCard .cardAction { color: #00ffaa; }
 
 .digCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(139, 92, 246, 0.06), transparent 40%); }
 .digCard:hover { border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(139, 92, 246, 0.15); }
 .digCard:hover h3 { color: #8b5cf6; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
 .digCard .cardAction { color: #8b5cf6; }
 
-.httpsDnsCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%); }
-.httpsDnsCard:hover { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 240, 255, 0.15); }
-.httpsDnsCard:hover h3 { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
-.httpsDnsCard .cardAction { color: #00f0ff; }
+.ipDetectorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%); }
+.ipDetectorCard:hover { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 240, 255, 0.15); }
+.ipDetectorCard:hover h3 { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+.ipDetectorCard .cardAction { color: #00f0ff; }
 
-.ipCalculatorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%); }
-.ipCalculatorCard:hover { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 240, 255, 0.15); }
-.ipCalculatorCard:hover h3 { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
-.ipCalculatorCard .cardAction { color: #00f0ff; }
+.httpsDnsCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(99, 102, 241, 0.06), transparent 40%); }
+.httpsDnsCard:hover { border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(99, 102, 241, 0.15); }
+.httpsDnsCard:hover h3 { color: #6366f1; text-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+.httpsDnsCard .cardAction { color: #6366f1; }
+
+.ipCalculatorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(163, 230, 53, 0.06), transparent 40%); }
+.ipCalculatorCard:hover { border-color: rgba(163, 230, 53, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(163, 230, 53, 0.15); }
+.ipCalculatorCard:hover h3 { color: #a3e635; text-shadow: 0 0 10px rgba(163, 230, 53, 0.4); }
+.ipCalculatorCard .cardAction { color: #a3e635; }
 
 .textUtilityCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 0, 127, 0.06), transparent 40%); }
 .textUtilityCard:hover { border-color: rgba(255, 0, 127, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 0, 127, 0.15); }
 .textUtilityCard:hover h3 { color: #ff007f; text-shadow: 0 0 10px rgba(255, 0, 127, 0.4); }
 .textUtilityCard .cardAction { color: #ff007f; }
 
-.diffCheckerCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(180, 0, 255, 0.06), transparent 40%); }
-.diffCheckerCard:hover { border-color: rgba(180, 0, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(180, 0, 255, 0.15); }
-.diffCheckerCard:hover h3 { color: #b400ff; text-shadow: 0 0 10px rgba(180, 0, 255, 0.4); }
-.diffCheckerCard .cardAction { color: #b400ff; }
+.qrCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 255, 102, 0.06), transparent 40%); }
+.qrCard:hover { border-color: rgba(0, 255, 102, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 255, 102, 0.15); }
+.qrCard:hover h3 { color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.4); }
+.qrCard .cardAction { color: #00ff66; }
+
+.diffCheckerCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(139, 92, 246, 0.06), transparent 40%); }
+.diffCheckerCard:hover { border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(139, 92, 246, 0.15); }
+.diffCheckerCard:hover h3 { color: #8b5cf6; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
+.diffCheckerCard .cardAction { color: #8b5cf6; }
+
+.timerCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%); }
+.timerCard:hover { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 240, 255, 0.15); }
+.timerCard:hover h3 { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+.timerCard .cardAction { color: #00f0ff; }
+
+.epochCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 245, 160, 0.06), transparent 40%); }
+.epochCard:hover { border-color: rgba(0, 245, 160, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 245, 160, 0.15); }
+.epochCard:hover h3 { color: #00f5a0; text-shadow: 0 0 10px rgba(0, 245, 160, 0.4); }
+.epochCard .cardAction { color: #00f5a0; }
+
+.luckyWheelCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 184, 0, 0.06), transparent 40%); }
+.luckyWheelCard:hover { border-color: rgba(255, 184, 0, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 184, 0, 0.15); }
+.luckyWheelCard:hover h3 { color: #ffb800; text-shadow: 0 0 10px rgba(255, 184, 0, 0.4); }
+.luckyWheelCard .cardAction { color: #ffb800; }
+
+.imageProcessorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(217, 70, 239, 0.06), transparent 40%); }
+.imageProcessorCard:hover { border-color: rgba(217, 70, 239, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(217, 70, 239, 0.15); }
+.imageProcessorCard:hover h3 { color: #d946ef; text-shadow: 0 0 10px rgba(217, 70, 239, 0.4); }
+.imageProcessorCard .cardAction { color: #d946ef; }
+
+.pdfProcessorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 59, 48, 0.06), transparent 40%); }
+.pdfProcessorCard:hover { border-color: rgba(255, 59, 48, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 59, 48, 0.15); }
+.pdfProcessorCard:hover h3 { color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.4); }
+.pdfProcessorCard .cardAction { color: #ff3b30; }
+
+.pdfCompressorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(234, 179, 8, 0.06), transparent 40%); }
+.pdfCompressorCard:hover { border-color: rgba(234, 179, 8, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(234, 179, 8, 0.15); }
+.pdfCompressorCard:hover h3 { color: #eab308; text-shadow: 0 0 10px rgba(234, 179, 8, 0.4); }
+.pdfCompressorCard .cardAction { color: #eab308; }
+
+.liarsDiceCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 82, 82, 0.06), transparent 40%); }
+.liarsDiceCard:hover { border-color: rgba(255, 82, 82, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 82, 82, 0.15); }
+.liarsDiceCard:hover h3 { color: #ff5252; text-shadow: 0 0 10px rgba(255, 82, 82, 0.4); }
+.liarsDiceCard .cardAction { color: #ff5252; }
 
 .placeholderCard {
     border-style: dashed;
@@ -557,5 +612,98 @@
 :global([data-theme='light']) .placeholderCard h3 { color: rgba(71, 85, 105, 0.6); }
 :global([data-theme='light']) .placeholderCard p { color: rgba(100, 116, 139, 0.6); }
 :global([data-theme='light']) .placeholderCard .cardAction { color: rgba(100, 116, 139, 0.6); }
+
+/* ── 亮色模式高對比度 28 全工具獨立降階特化 (WCAG 2.1 AA Contrast Standard) ── */
+:global([data-theme='light']) .toolCard:hover h3 { color: #0284c7; text-shadow: none; }
+:global([data-theme='light']) .cardAction { color: #0284c7; }
+
+/* 金融理財區 - 9 個工具全數獨立配色 */
+:global([data-theme='light']) .interestCard:hover h3,
+:global([data-theme='light']) .interestCard .cardAction { color: #d97706; text-shadow: none; } /* 深琥珀金 */
+
+:global([data-theme='light']) .loanCard:hover h3,
+:global([data-theme='light']) .loanCard .cardAction { color: #059669; text-shadow: none; } /* 深翡翠綠 */
+
+:global([data-theme='light']) .carCard:hover h3,
+:global([data-theme='light']) .carCard .cardAction { color: #dc2626; text-shadow: none; } /* 深赤紅 */
+
+:global([data-theme='light']) .mortgageCard:hover h3,
+:global([data-theme='light']) .mortgageCard .cardAction { color: #0d9488; text-shadow: none; } /* 深松石綠 */
+
+:global([data-theme='light']) .pledgeCard:hover h3,
+:global([data-theme='light']) .pledgeCard .cardAction { color: #ca8a04; text-shadow: none; } /* 深暖金黃 */
+
+:global([data-theme='light']) .futuresCard:hover h3,
+:global([data-theme='light']) .futuresCard .cardAction { color: #b91c1c; text-shadow: none; } /* 深珊瑚紅 */
+
+:global([data-theme='light']) .hourlyRateCard:hover h3,
+:global([data-theme='light']) .hourlyRateCard .cardAction { color: #0284c7; text-shadow: none; } /* 深湛藍 */
+
+:global([data-theme='light']) .salaryCard:hover h3,
+:global([data-theme='light']) .salaryCard .cardAction { color: #ea580c; text-shadow: none; } /* 深熱情橘 */
+
+:global([data-theme='light']) .resignationCard:hover h3,
+:global([data-theme='light']) .resignationCard .cardAction { color: #16a34a; text-shadow: none; } /* 深森林鮮綠 */
+
+/* 開發輔助區 - 5 個工具獨立配色 */
+:global([data-theme='light']) .base64Card:hover h3,
+:global([data-theme='light']) .base64Card .cardAction { color: #c2410c; text-shadow: none; } /* 深柿橘 */
+
+:global([data-theme='light']) .urlCard:hover h3,
+:global([data-theme='light']) .urlCard .cardAction { color: #4338ca; text-shadow: none; } /* 深靛藍 */
+
+:global([data-theme='light']) .passwordCard:hover h3,
+:global([data-theme='light']) .passwordCard .cardAction { color: #15803d; text-shadow: none; } /* 深極光綠 */
+
+:global([data-theme='light']) .jsonCard:hover h3,
+:global([data-theme='light']) .jsonCard .cardAction { color: #c026d3; text-shadow: none; } /* 深洋紅 */
+
+:global([data-theme='light']) .sslConverterCard:hover h3,
+:global([data-theme='light']) .sslConverterCard .cardAction { color: #0f766e; text-shadow: none; } /* 深海綠 */
+
+/* 網路工具區 - 4 個工具獨立配色 */
+:global([data-theme='light']) .digCard:hover h3,
+:global([data-theme='light']) .digCard .cardAction { color: #7c3aed; text-shadow: none; } /* 深紫羅蘭 */
+
+:global([data-theme='light']) .ipDetectorCard:hover h3,
+:global([data-theme='light']) .ipDetectorCard .cardAction { color: #0369a1; text-shadow: none; } /* 深海天藍 */
+
+:global([data-theme='light']) .httpsDnsCard:hover h3,
+:global([data-theme='light']) .httpsDnsCard .cardAction { color: #1d4ed8; text-shadow: none; } /* 深皇家藍 */
+
+:global([data-theme='light']) .ipCalculatorCard:hover h3,
+:global([data-theme='light']) .ipCalculatorCard .cardAction { color: #65a30d; text-shadow: none; } /* 深黃綠 */
+
+/* 文字編輯區 - 3 個工具獨立配色 */
+:global([data-theme='light']) .textUtilityCard:hover h3,
+:global([data-theme='light']) .textUtilityCard .cardAction { color: #be185d; text-shadow: none; } /* 深玫瑰紅 */
+
+:global([data-theme='light']) .qrCard:hover h3,
+:global([data-theme='light']) .qrCard .cardAction { color: #047857; text-shadow: none; } /* 深薄荷綠 */
+
+:global([data-theme='light']) .diffCheckerCard:hover h3,
+:global([data-theme='light']) .diffCheckerCard .cardAction { color: #6d28d9; text-shadow: none; } /* 深紫 */
+
+/* 實用小工具區 - 7 個工具獨立配色 */
+:global([data-theme='light']) .timerCard:hover h3,
+:global([data-theme='light']) .timerCard .cardAction { color: #2563eb; text-shadow: none; } /* 深寶藍 */
+
+:global([data-theme='light']) .epochCard:hover h3,
+:global([data-theme='light']) .epochCard .cardAction { color: #0d9488; text-shadow: none; } /* 深青翠綠 */
+
+:global([data-theme='light']) .luckyWheelCard:hover h3,
+:global([data-theme='light']) .luckyWheelCard .cardAction { color: #b45309; text-shadow: none; } /* 深琥珀金 */
+
+:global([data-theme='light']) .imageProcessorCard:hover h3,
+:global([data-theme='light']) .imageProcessorCard .cardAction { color: #a21caf; text-shadow: none; } /* 深紫紅 */
+
+:global([data-theme='light']) .pdfProcessorCard:hover h3,
+:global([data-theme='light']) .pdfProcessorCard .cardAction { color: #b91c1c; text-shadow: none; } /* 深火紅 */
+
+:global([data-theme='light']) .pdfCompressorCard:hover h3,
+:global([data-theme='light']) .pdfCompressorCard .cardAction { color: #ca8a04; text-shadow: none; } /* 深芥末黃 */
+
+:global([data-theme='light']) .liarsDiceCard:hover h3,
+:global([data-theme='light']) .liarsDiceCard .cardAction { color: #991b1b; text-shadow: none; } /* 深朱紅 */
 
 
