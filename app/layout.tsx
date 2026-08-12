@@ -1,23 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import { ThemeProvider } from '@/components/ThemeProvider';
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-jetbrains',
-  display: 'swap',
-});
 
 const BASE_URL = 'https://tools.cjkuo.net';
 
@@ -96,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="zh-TW" suppressHydrationWarning>
       <head>
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
