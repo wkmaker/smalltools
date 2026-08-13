@@ -470,6 +470,56 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 內容類型選單軌道 Ref 與滑鼠拖拽滑動
+  const contentTypeTrackRef = useRef<HTMLDivElement>(null);
+  const contentTypeBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const isDraggingTrackRef = useRef<boolean>(false);
+  const dragStartXRef = useRef<number>(0);
+  const dragStartScrollLeftRef = useRef<number>(0);
+  const hasDraggedRef = useRef<boolean>(false);
+
+  // 當選取的內容類型變更時，自動將對應按鈕置中滾動
+  useEffect(() => {
+    const track = contentTypeTrackRef.current;
+    const activeBtn = contentTypeBtnRefs.current[contentType];
+    if (track && activeBtn) {
+      const trackWidth = track.clientWidth;
+      const btnLeft = activeBtn.offsetLeft;
+      const btnWidth = activeBtn.clientWidth;
+      const targetScrollLeft = btnLeft - trackWidth / 2 + btnWidth / 2;
+      track.scrollTo({
+        left: targetScrollLeft,
+        behavior: 'smooth',
+      });
+    }
+  }, [contentType]);
+
+  const handleMouseDownTrack = (e: React.MouseEvent<HTMLDivElement>) => {
+    const track = contentTypeTrackRef.current;
+    if (!track) return;
+    isDraggingTrackRef.current = true;
+    dragStartXRef.current = e.pageX - track.offsetLeft;
+    dragStartScrollLeftRef.current = track.scrollLeft;
+    hasDraggedRef.current = false;
+  };
+
+  const handleMouseMoveTrack = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingTrackRef.current) return;
+    const track = contentTypeTrackRef.current;
+    if (!track) return;
+    e.preventDefault();
+    const x = e.pageX - track.offsetLeft;
+    const walk = (x - dragStartXRef.current) * 1.5;
+    if (Math.abs(walk) > 5) {
+      hasDraggedRef.current = true;
+    }
+    track.scrollLeft = dragStartScrollLeftRef.current - walk;
+  };
+
+  const handleMouseUpOrLeaveTrack = () => {
+    isDraggingTrackRef.current = false;
+  };
+
   // --- 輔助函數 ---
   const parseHexColor = (val: string, fallback: string): string => {
     const clean = val.replace('#', '');
@@ -1162,7 +1212,14 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
           {/* 內容類型切換 */}
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium text-text-sub">{t.contentType}</span>
-            <div className={styles.contentTypeTrack}>
+            <div
+              ref={contentTypeTrackRef}
+              className={styles.contentTypeTrack}
+              onMouseDown={handleMouseDownTrack}
+              onMouseMove={handleMouseMoveTrack}
+              onMouseUp={handleMouseUpOrLeaveTrack}
+              onMouseLeave={handleMouseUpOrLeaveTrack}
+            >
               {[
                 {
                   id: 'text',
@@ -1233,8 +1290,17 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
               ].map((tab) => (
                 <button
                   key={tab.id}
+                  ref={(el) => {
+                    contentTypeBtnRefs.current[tab.id] = el;
+                  }}
                   type="button"
-                  onClick={() => setContentType(tab.id as ContentType)}
+                  onClick={(e) => {
+                    if (hasDraggedRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setContentType(tab.id as ContentType);
+                  }}
                   className={contentType === tab.id ? styles.tabBtnActive : styles.tabBtnInactive}
                 >
                   {tab.icon}
