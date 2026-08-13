@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './resignation-calculator.module.css';
 
 // 語意化雙語字典
@@ -123,6 +124,73 @@ const TRANSLATIONS = {
     severanceStrategyTitle: '被資遣最佳換錢策略建議',
     severanceStrategyDesc1: '依勞基法規定，資遣謀職假（每週 2 天有薪假）未請「無法折算現金」；而特別休假未休完依法必須「100% 發給工資代金」。',
     severanceStrategyDesc2: '極力建議：優先請滿資遣謀職假外出面試，並將特休假全數保留至離職退保日換錢！預估可額外多領約',
+
+    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解勞基法預告期、離職生效退保日、特休代金結算與謀職假權益',
+    faqItems: [
+      {
+        q: '離職預告天數包含假日嗎？還是只算工作天？',
+        a: '依勞動部函釋與法院判決，離職預告天數計算包含例假日、國定假日與休息日（以曆天 Calendar Days 計算，非僅工作天）。例如法定預告期為 10 天，從告知的「次日」開始連數 10 個日曆天即可。',
+      },
+      {
+        q: '離職預告的「起算日」、「最後在職日」與「離職生效日」該如何計算？',
+        a: `依勞基法規定與司法判例：
+
+① 告知日：您正式向雇主（主管或 HR）提出離職預告當天。
+② 預告起算日：依民法第 120 條「始日不算入」，從告知日的「次日」開始起算第一天。
+③ 最後在職日：勞動契約關係存續的最後一天。算滿預告天數的當天即為最後在職日。
+④ 離職生效日（退保日）：最後在職日的「次日」。公司應於此日正式退保勞健保。`,
+      },
+      {
+        q: '離職日（最後在職日）可以是週末或國定假日嗎？與「最後出勤日」有何不同？',
+        a: `離職日（勞動契約最後在職日）完全可以是週末或國定假日！預告期與離職日皆依「日曆天」計算，包含例假日與休息日。
+
+關鍵概念區別如下：
+① 實際最後出勤日 (Last Office Day)：您最後一天進辦公室實體上班、提供勞務的日子（例如週五）。
+② 最後在職日 (Last Working Day)：勞動契約關係存續的最後一天（可押在週日），薪資與勞健保算至當天深夜 24:00。
+③ 離職生效日 (Effective Date)：契約正式終止、公司為您辦理退保的日子（最後在職日的隔天週一）。`,
+      },
+      {
+        q: '離職如果有特休，最後一天一定要進公司上班嗎？',
+        a: `完全不需要！只要完成工作交接，最後一天亦可依法排休特休。
+
+特休與最後一天的處理方式兩種選擇：
+① 選擇請特休：在預告期內（包含最後一天）您隨時可以依法排休特休。請假當天不用進公司，但最後在職日的薪資與勞健保狀態仍持續算到當天。
+② 選擇換現金：若您選擇將特休留著不請，依勞基法第 38 條規定，契約終止時公司必須將未休完的特休天數 100% 結算折換發給工資代金。`,
+      },
+      {
+        q: '未滿 3 個月的試用期員工離職需要預告嗎？離職需要公司批准才能走嗎？',
+        a: `試用期與離職生效規範如下：
+
+① 試用期預告：勞基法第 16 條規定工作未滿 3 個月者，法令無強制規定預告期。
+② 離職是否需公司批准：離職屬於勞工的「形成權（單方意思表示）」。只要您已依法定預告期正式通知雇主（不論 Oral、Email 或 Line 訊息留存憑證），時間一到離職即自動生效，完全不需要公司或主管點頭批准！`,
+      },
+      {
+        q: '預告期間可以請「資遣謀職假」嗎？謀職假給薪嗎？',
+        a: '依勞基法第 16 條第 2 項規定，僅有在「公司資遣員工（非自願離職）」時，員工於預告期間每星期得請假最多 2 日外出謀職，且謀職假期間「工資照給（給全薪）」。若是員工「自願離職」，則不適用謀職假規定。',
+      },
+      {
+        q: '如果離職預告天數不足（提前離職），會有法律責任或賠償問題嗎？',
+        a: '若勞工未符合法定預告天數逕行離職，勞動契約仍會在離職日終止；但若因突襲式離職導致公司遭受具體經濟損失（如業務中斷、緊急交接成本），雇主得依民法損害賠償相關規定向勞工民事求償（前提是雇主需負舉證責任證明具體損失金額）。因此建議盡量符合法定預告期，或與公司協商取得雙方同意提前解約。',
+      },
+      {
+        q: '離職時可以向公司索取哪些證明文件？',
+        a: `離職前建議確認向 HR 索取以下文件：
+
+① 服務證明書（離職證明）：依勞基法第 19 條，雇主不得拒絕發給。非自願離職者應載明資遣事由與勞基法條款（以利申請失業給付）。
+② 健保轉出申報表影本：以利順利銜接下一家公司投保或至區公所加保。
+③ 勞退自提與所得扣繳憑單：確認勞退自提%數與當年度扣繳稅額。`,
+      },
+      {
+        q: '預告期提早結束（提前離職）的破月薪資怎麼算？公司要求我提早走要給預告工資嗎？離職當天一定要結清薪水嗎？',
+        a: `提前離職薪資計算與權益重點如下：
+
+① 破月薪資比例計算：月薪制勞工未做滿整個月時，薪水應按當月實際在職天數（包括工作日、休息日與例假日）占全月總天數的比例計算，不可擅自扣除例假日與休息日的薪資。
+② 離職日判定：離職日（勞動契約終止日）為最後實際在職日。若雙方合意提前結束，薪資與勞健保退保日皆應計算至該實際最後一天。
+③ 公司要求提早離開：如果是雇主因故主動要求員工在預告期滿前提早離開，雇主必須依法給付該提早天數的「預告期工資」。
+④ 發薪日規定：離職當月的薪資不一定要在離職當天拿現金結清，公司得於原約定的發薪日如期全額匯款給付，不得故意扣發或拖延。`,
+      },
+    ],
     laborLawArt38Title: '台灣勞基法第 38 條特別休假天數規範',
     art38Rule1: '工作 6 個月以上未滿 1 年者：3 日。',
     art38Rule2: '工作 1 年以上未滿 2 年者：7 日；2 年以上未滿 3 年者：10 日。',
@@ -250,6 +318,73 @@ const TRANSLATIONS = {
     art38Rule2: 'Tenure 1 yr to < 2 yrs: 7 days; 2 yrs to < 3 yrs: 10 days.',
     art38Rule3: 'Tenure 3 yrs to < 5 yrs: 14 days/yr; 5 yrs to < 10 yrs: 15 days/yr.',
     art38Rule4: 'Tenure 10+ yrs: +1 day per year up to 30 days max.',
+
+    faqTitle: 'Frequently Asked Questions & Guide',
+    faqSubtitle: 'Learn more about Taiwan Labor Law notice periods, effective dates, annual leave payouts, and job-seeking leave.',
+    faqItems: [
+      {
+        q: 'Does the Taiwan resignation notice period include weekends and public holidays?',
+        a: 'Yes. According to Ministry of Labor rulings and Taiwan judicial precedents, notice periods are calculated in calendar days (including weekends, National Holidays, and rest days). For example, a 10-day notice period consists of 10 consecutive calendar days starting from the day AFTER notice is given.',
+      },
+      {
+        q: 'How are the notice start date, last working day, and effective resignation date calculated?',
+        a: `Based on Taiwan Labor Standards Act (LSA) Article 16:
+
+① Notice Date: The day you officially notify your employer (manager/HR).
+② Notice Start Date: LSA uses Civil Code Art. 120 (first day excluded). Notice begins on the day AFTER notification.
+③ Last Working Day: The final contractual employment date when the required notice days are fully satisfied.
+④ Effective Resignation Date: The day AFTER the last working day, on which labor and health insurance policies are officially canceled/transferred.`,
+      },
+      {
+        q: 'Can the official last working day be a weekend or national holiday? How does it differ from the last office day?',
+        a: `Yes! The contractual last working day can fall on a weekend or public holiday.
+
+Distinctions between key date concepts:
+① Actual Last Office Day: The last day you physically attend the office and provide labor (e.g. Friday).
+② Contractual Last Working Day: The last official day your employment contract remains active (can be set to Sunday), with salary and insurance calculated until 24:00 that day.
+③ Effective Resignation Date: The date employment is officially terminated and insurance is canceled (the day after the last working day, e.g. Monday).`,
+      },
+      {
+        q: 'If I have unused annual leave, do I have to work on my last day?',
+        a: `No! As long as handovers are complete, you can take statutory annual leave on your final working day.
+
+Options for handling annual leave:
+① Taking Leave: You may take annual leave during the notice period (including the last day). You do not need to attend office on leave days, while salary and insurance remain valid through the last working day.
+② Cashing Out: If you choose not to take leave, LSA Art. 38(4) mandates that employers must cash out 100% of unused annual leave days upon contract termination.`,
+      },
+      {
+        q: 'Do employees with less than 3 months of tenure need to give notice? Does resignation require employer approval?',
+        a: `Probation and resignation approval rules:
+
+① Tenure < 3 Months: Under LSA Article 16, no statutory notice period is required for employment under 3 months.
+② Employer Approval: Resignation is a unilateral right under Taiwan law. Once you give proper notice (via email or message), resignation takes effect automatically upon the end date without requiring approval.`,
+      },
+      {
+        q: 'Who is entitled to paid Job-Seeking Leave during the notice period?',
+        a: 'Under LSA Article 16(2), paid job-seeking leave (up to 2 days per week with full salary) applies ONLY when the employer terminates the employee (involuntary severance). Voluntary resignations do not qualify for paid job-seeking leave.',
+      },
+      {
+        q: 'What happens if an employee fails to provide sufficient notice?',
+        a: 'The employment contract still terminates on the announced date. However, if early departure causes direct, proven financial damages to the business (e.g. operational shutdown), the employer may seek civil compensation under Taiwan Civil Code. It is highly recommended to satisfy notice requirements or negotiate a mutual release.',
+      },
+      {
+        q: 'What documents should I request from HR upon leaving?',
+        a: `Ensure you request:
+
+① Certificate of Service / Employment Certificate (LSA Art. 19 mandates employers cannot refuse issuing this).
+② Health Insurance Cancellation/Transfer Form.
+③ Voluntary Pension Contribution confirmation & Tax Withholding Statements.`,
+      },
+      {
+        q: 'How is prorated salary calculated if resignation takes effect early? What if the employer asks me to leave earlier than the notice period ends? Must salary be paid on the final day?',
+        a: `Salary calculations and worker rights for early departure:
+
+① Prorated Salary Calculation: For monthly-salaried employees who work a partial month, salary must be calculated based on actual calendar days employed in that month (including working days, rest days, and statutory holidays). Employers CANNOT deduct pay for rest days and weekends.
+② Effective Departure Date: The resignation date is the actual final date of employment. If both parties agree to end early, salary and labor/health insurance cancellation apply to that actual final day.
+③ Employer Demanding Early Departure: If the employer requests the employee to leave earlier than the full notice period, the employer MUST pay notice compensation ("notice pay") for the remaining notice days under LSA Art. 16.
+④ Salary Payday Regulations: Final month salary does not have to be paid in cash on the last day. The employer may disburse it on the scheduled regular payday. Employers CANNOT withhold pay under the pretext of incomplete handovers.`,
+      },
+    ],
   },
 };
 
@@ -1476,6 +1611,14 @@ Sincerely,
 
           </div>
         </div>
+
+        {/* 通用 FAQ 常見問題區塊 */}
+        <FaqSection
+          items={t.faqItems}
+          title={t.faqTitle}
+          subtitle={t.faqSubtitle}
+          accentColor="#00ff66"
+        />
       </div>
 
       {/* Toast 反饋浮層 */}
