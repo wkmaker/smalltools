@@ -729,9 +729,11 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     }
 
     const midAngle = (selectedSector.startAngle + selectedSector.endAngle) / 2;
-    const targetRotation = 360 - midAngle;
+    // 頂部指針位於 12 點鐘方向 (270度)，需計算目標旋轉角度使扇區中心對齊 270 度
+    const targetRotation = (270 - midAngle + 360) % 360;
     const extraRounds = (5 + Math.floor(Math.random() * 4)) * 360;
-    const finalAngle = currentRotationAngle + extraRounds + (targetRotation - (currentRotationAngle % 360));
+    const deltaAngle = (targetRotation - (currentRotationAngle % 360) + 360) % 360;
+    const finalAngle = currentRotationAngle + extraRounds + deltaAngle;
 
     const startTime = performance.now();
     const duration = 5000;

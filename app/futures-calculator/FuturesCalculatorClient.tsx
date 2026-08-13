@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './futures-calculator.module.css';
 
 interface Preset {
@@ -71,6 +72,46 @@ const TRANSLATIONS = {
     toastCopied: '已複製期貨槓桿試算分享連結',
     langToggleLabel: 'English',
     langToggleUrl: '/futures-calculator/en/',
+
+    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解台指期保證金制度、實質槓桿計算、逆風耐受點數與盤中追繳斷頭機制',
+    faqItems: [
+      {
+        q: '什麼是期貨交易的「原始保證金」與「維持保證金」？',
+        a: `期貨採用保證金交易制度 (Margin Trading)：
+
+① 原始保證金 (Initial Margin)：建立期貨部位（開倉）時帳戶內必須具備的最少資金門檻。
+② 維持保證金 (Maintenance Margin)：持有部位期間，帳戶權益數（權益總值）必須維持的最低警戒金額。若權益數低於維持保證金，將觸發追繳通知。`,
+      },
+      {
+        q: '大台 (TX)、小台 (MTX) 與微台 (TMF) 每點契約價值與保證金有何差別？',
+        a: `台指期貨三大合約對照如下：
+
+① 大台 (TX)：每點 200 元。保證金約 241,000 元。
+② 小台 (MTX)：每點 50 元 (大台的 1/4)。保證金約 60,250 元。
+③ 微台 (TMF)：每點 10 元 (小台的 1/5)。保證金約 12,050 元。
+投資人可依自身資金規模靈活選擇適合的槓桿合約。`,
+      },
+      {
+        q: '什麼是期貨「追繳 (Margin Call)」與「砍倉 / 斷頭 (Liquidation)」？',
+        a: `期貨風控機制如下：
+
+① 期貨追繳：盤後結算時，若帳戶權益數低於「維持保證金」，期貨商會發出追繳通知，要求在下個交易日中午 12:00 前補足至「原始保證金」。
+② 盤中強制砍倉 (斷頭)：盤中交易時，若行情劇烈逆風導致帳戶風險指標降至 25% 以下，期貨商系統將不經通知自動以市價委託單強行平倉（砍倉）所有部位。`,
+      },
+      {
+        q: '如何計算期貨部位的「實質槓桿倍數」？高槓桿有何風險？',
+        a: '實質槓桿倍數 = 期貨部位總名目價值 ÷ 帳戶實際投入總資金。例如台指期在 22,000 點時，一口大台總名目價值為 22,000 × 200 = 4,400,000 元。若您帳戶僅放原始保證金 241,000 元，實質槓桿即高達 18.25 倍！大盤僅需波動 5.4% 即可能導致本金歸零。建議保留 2 至 3 倍以上的保證金以降低槓桿風控。',
+      },
+      {
+        q: '什麼是期貨的「逆風承受點數 (Adverse Movement Range)」？',
+        a: '逆風承受點數代表在部位觸發追繳或斷頭前，大盤指數最多允許反向波動的點數。算式：多單逆風點數 = (帳戶權益數 - 維持保證金) ÷ 每點價值。本工具能精準算出多單與空單在不同資金配置下的耐受點數。',
+      },
+      {
+        q: '期貨留倉過夜有哪些風險？如何預防跳空開高 / 開低？',
+        a: '留倉過夜面臨國際股市（如美股、夜盤）劇烈波動帶來的「隔日跳空風險」。預防措施包括：避開重大利率決議或財報日過夜、適度降低口數與槓桿倍數、掛好停損單 (Stop-Loss Order)，或利用微台指 (TMF) 進行精細化的部位對沖。',
+      },
+    ],
   },
   en: {
     title: 'Futures Risk & Margin Calculator',
@@ -125,6 +166,46 @@ const TRANSLATIONS = {
     toastCopied: 'Futures share link copied to clipboard',
     langToggleLabel: '繁體中文',
     langToggleUrl: '/futures-calculator/',
+
+    faqTitle: 'Frequently Asked Questions & Guide',
+    faqSubtitle: 'Learn more about Taiwan Futures margin systems, actual leverage calculations, points tolerance, and liquidation mechanisms.',
+    faqItems: [
+      {
+        q: 'What are Initial Margin and Maintenance Margin in futures trading?',
+        a: `Futures use a margin-based trading framework:
+
+① Initial Margin: Minimum capital required in your account to open a new futures position.
+② Maintenance Margin: Minimum equity threshold required to keep a position open. Falling below this triggers a Margin Call.`,
+      },
+      {
+        q: 'What are the differences between TX (Large), MTX (Mini), and TMF (Micro) Taiwan Index Futures?',
+        a: `Comparison of Taiwan Index Futures contracts:
+
+① TX (Large): NT$200 per point. Initial margin ~NT$241,000.
+② MTX (Mini): NT$50 per point (1/4 of TX). Initial margin ~NT$60,250.
+③ TMF (Micro): NT$10 per point (1/5 of MTX). Initial margin ~NT$12,050.
+Investors can select contracts matching their capital size and risk tolerance.`,
+      },
+      {
+        q: 'What is a Futures Margin Call and Forced Liquidation?',
+        a: `Risk management rules:
+
+① Margin Call: Issued after market close if equity falls below Maintenance Margin, requiring deposits back up to Initial Margin by 12:00 PM next business day.
+② Forced Liquidation: If intraday risk indicator drops below 25%, brokers automatically liquidate positions via market orders without prior notice.`,
+      },
+      {
+        q: 'How is actual leverage calculated, and what are the risks of high leverage?',
+        a: 'Actual Leverage = Total Contract Nominal Value ÷ Total Capital Deposited. For example, at 22,000 points, 1 TX contract is worth NT$4,400,000. Depositing only initial margin (NT$241,000) yields 18.25x leverage! A 5.4% adverse market move wipes out 100% of equity.',
+      },
+      {
+        q: 'What is Adverse Movement Range (Points Tolerance)?',
+        a: 'Adverse Movement Range represents the maximum index points the market can move against your position before triggering margin calls or liquidation.',
+      },
+      {
+        q: 'What are the risks of holding overnight futures positions?',
+        a: 'Overnight positions face overnight gap risk driven by global markets (U.S. stocks & night session). Mitigation includes using stop-loss orders, reducing leverage, or hedging via TMF micro contracts.',
+      },
+    ],
   },
 };
 
@@ -668,6 +749,14 @@ export default function FuturesCalculatorClient({ lang = 'zh-TW' }: FuturesCalcu
             </div>
           </div>
         </div>
+
+        {/* 通用 FAQ 常見問題區塊 */}
+        <FaqSection
+          items={t.faqItems}
+          title={t.faqTitle}
+          subtitle={t.faqSubtitle}
+          accentColor="#f97316"
+        />
       </ToolLayout>
 
       {/* Toast 提示條 */}
