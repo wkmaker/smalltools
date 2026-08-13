@@ -195,6 +195,10 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
    * 必須逐一檢查每個子頁籤面板 (`activeTab === '...'`)、隱藏浮層、上傳 Dropzone、密碼輸入框、結果評估明細卡片及複製/下載按鈕。
    * 徹底清理所有硬編碼黑底 (如 `bg-black/20`, `bg-black/40`)、硬編碼邊框 (如 `border-white/[.08]`)、硬編碼白字 (`text-white`) 及未降階之霓虹主題色 (`text-[#00ffaa]`)，全數改為語意 Token 或對應 CSS Module 的 `:global([data-theme='light'])` 特化類別。
 
+   ### ⑪ 動態 Props 主題色組件防錯規範 (Dynamic Accent Component Rule)
+   * 凡建立接收 `accentColor` 屬性的通用 UI 組件（如 `<MetricCard>`、`<FaqSection>`），**嚴禁在 JSX 中直接將暗色霓虹 Hex 以行內樣式 `style={{ color: accentColor }}` 直接渲染**。
+   * **必須於組件內部封裝 `getLightModeAccentColor(accentColor)` 轉譯函式**，或透過 CSS 變數配合 `:global([data-theme='light'])`。在亮色模式下必須自動將 `#00ff66` / `#00f0ff` / `#ffb800` 等霓虹 Hex 降階轉為高對比度深色階（如 `#059669` / `#0284c7` / `#d97706`），100% 符合 WCAG 2.1 AA 標準。
+
 ---
 
 ## 二、 核心架構與效能開發大原則 (Core Architecture & Performance Principles)

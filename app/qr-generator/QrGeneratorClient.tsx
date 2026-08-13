@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './qr-generator.module.css';
 
 interface QrGeneratorClientProps {
@@ -146,6 +147,35 @@ const TRANSLATIONS = {
     rawCopiedToast: '已將原始文字內容複製至剪貼簿',
     langSwitchLabel: 'English',
     langSwitchHref: '/qr-generator/en/',
+
+    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqSubtitle: '了解藝術 QR Code 製作細節、容錯機制與圖檔格式建議',
+    faqItems: [
+      {
+        q: '本工具產生的 QR Code 有安全與隱私洩漏的疑慮嗎？資料會不會被儲存在伺服器？',
+        a: '完全不會！本工具採用 100% 純前端技術 (Client-Side Browser-Based) 運作，所有的圖片生成、資料編碼與名片運算都在您自己的瀏覽器內部完成。您的輸入內容、聯絡資訊或 Logo 完全不會上傳至任何後端伺服器，絕無隱私洩漏或第三方追蹤疑慮。',
+      },
+      {
+        q: '藝術 QR Code 插入中央 Logo 後，手機掃描會不會失敗？',
+        a: '不會。QR Code 具備「容錯機制 (Error Correction Level)」。當您拖曳上傳 Logo 時，本工具會自動將容錯等級調高至 H 級 (Highest, 30%)，即使中央高達 30% 面積被 Logo 遮擋，周圍的關鍵數據與校正點仍能被手機相機 100% 精準解碼。',
+      },
+      {
+        q: '為什麼建議選用向量 SVG 格式輸出？與 PNG / WEBP 有何差別？',
+        a: 'SVG 是無損向量圖檔（Vector Graphic），無論放大至大樓看板或印刷名片皆不會失真點陣化，設計師亦可在 Illustrator / Figma 中繼續微調，且能作為 Inline SVG 直接嵌入網頁，無須額外 HTTP 請求，極有利於 Core Web Vitals 與 SEO 效能。PNG 與 WEBP 則是點陣圖檔，WEBP 具備高壓縮率與高清品質，是網頁圖片展示 (Web Image SEO) 的最佳選擇；PNG 則適合用於社群分享與簡訊傳送。',
+      },
+      {
+        q: '產生的 QR Code 有使用期限或掃描次數限制嗎？收費方式如何？',
+        a: '完全免費且永久有效！本工具產生的內容為「靜態原生碼 (Static QR Code)」，資料直接寫入二維碼矩陣中，不經過任何中繼轉址伺服器。沒有掃描次數上限、沒有使用期限，更無廣告干擾，只要您的原始連結沒有失效，二維碼就永久有效。',
+      },
+      {
+        q: '如何產生掃描後能直接加入手機通訊錄的 vCard 名片 QR Code？',
+        a: '只要切換頂部標籤至「聯絡名片 (vCard)」，輸入姓名、電話、Email 與公司職稱即可生成。手機掃描後會跳出「新增至聯絡人」提示。因部分 iOS / Android 系統基於安全與隱私防護，原生相機直接掃描時可能僅讀取姓名與電話，若需確保地址、備註或公司分機 100% 完整填入，建議使用本工具提供的「下載 .vcf 數位名片檔」功能，傳送 .vcf 檔開啟即可無痛儲存至通訊錄！',
+      },
+      {
+        q: '這個 Designer QR Code 產生器適合哪些情境與使用者？',
+        a: '非常適合四大情境：① 行銷與設計師：製作活動海報、展場 DM、帶有品牌漸層色的專屬二維碼並導出向量 SVG；② 商家與餐廳老闆：引導 Google 評論、FB 粉專按讚、菜單連結或 WiFi 快速連線；③ 活動主辦與 HR：報到連結、講義下載、行事曆行程 (.ics) 與展場離線應用；④ 一般使用者：交換 vCard 數位名片與分享家用 WiFi。',
+      },
+    ],
   },
   en: {
     title: 'Designer QR Code Generator',
@@ -282,6 +312,35 @@ const TRANSLATIONS = {
     rawCopiedToast: 'Raw content copied to clipboard',
     langSwitchLabel: '繁體中文',
     langSwitchHref: '/qr-generator/',
+
+    faqTitle: 'Frequently Asked Questions & Guide',
+    faqSubtitle: 'Learn more about error correction levels, logo safety, and vector export formats.',
+    faqItems: [
+      {
+        q: 'Is my data safe with this QR Code generator? Are my inputs saved on any server?',
+        a: 'Completely safe! This tool runs 100% on the client-side (Browser-Based). All encoding, image generation, and card processing occur entirely within your browser. Your input text, contact details, and uploaded logos are never sent or stored on any server, ensuring total privacy and zero tracking.',
+      },
+      {
+        q: 'Will embedding a center Logo cause QR Code scanning to fail?',
+        a: 'No. QR Codes feature built-in Error Correction. When you upload a Logo, this tool automatically boosts error correction to Level H (30%), allowing smartphones to scan and decode the QR code reliably even with up to 30% center coverage.',
+      },
+      {
+        q: 'Why is vector SVG format recommended over PNG or WEBP?',
+        a: 'SVG is a resolution-independent vector format that scales endlessly without pixelation, ideal for large print, billboards, and design software (Illustrator/Figma). Inline SVG also reduces HTTP requests, boosting website Core Web Vitals and SEO performance. PNG and WEBP are raster formats; WEBP offers superior compression for web image SEO, while PNG provides lossless transparency for social sharing.',
+      },
+      {
+        q: 'Do generated QR Codes expire or have scan limits? Is it really free?',
+        a: '100% free and permanent! All QR Codes generated are static codes where data is encoded directly into the matrix without redirect servers. There are no scan limits, no expiration dates, and zero ads. As long as your destination link remains valid, the QR code will work forever.',
+      },
+      {
+        q: 'How do I create a vCard QR Code that saves contact info automatically?',
+        a: 'Select the "Contact vCard" tab and enter your details to generate a standard vCard QR Code. Smartphone cameras will prompt "Add to Contacts" when scanned. Note: Due to OS security policies on iOS/Android, camera scanning alone may omit extended fields like addresses or notes. We recommend using our "Download .vcf Contact File" button to send a .vcf file directly for 100% full-field contact import.',
+      },
+      {
+        q: 'Who is this Designer QR Code generator best suited for?',
+        a: 'It is ideal for: ① Marketers & Designers: Creating posters, branded gradient QR codes, and exporting vector SVGs; ② Business & Restaurant Owners: Guiding Google reviews, social pages, digital menus, or instant WiFi connection; ③ Event Organizers & HR: Registration links, PDF downloads, calendar events (.ics), and offline PWA usage; ④ General Users: Sharing vCard contact cards or home WiFi passwords effortlessly.',
+      },
+    ],
   },
 };
 
@@ -410,6 +469,56 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const qrCodeRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 內容類型選單軌道 Ref 與滑鼠拖拽滑動
+  const contentTypeTrackRef = useRef<HTMLDivElement>(null);
+  const contentTypeBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const isDraggingTrackRef = useRef<boolean>(false);
+  const dragStartXRef = useRef<number>(0);
+  const dragStartScrollLeftRef = useRef<number>(0);
+  const hasDraggedRef = useRef<boolean>(false);
+
+  // 當選取的內容類型變更時，自動將對應按鈕置中滾動
+  useEffect(() => {
+    const track = contentTypeTrackRef.current;
+    const activeBtn = contentTypeBtnRefs.current[contentType];
+    if (track && activeBtn) {
+      const trackWidth = track.clientWidth;
+      const btnLeft = activeBtn.offsetLeft;
+      const btnWidth = activeBtn.clientWidth;
+      const targetScrollLeft = btnLeft - trackWidth / 2 + btnWidth / 2;
+      track.scrollTo({
+        left: targetScrollLeft,
+        behavior: 'smooth',
+      });
+    }
+  }, [contentType]);
+
+  const handleMouseDownTrack = (e: React.MouseEvent<HTMLDivElement>) => {
+    const track = contentTypeTrackRef.current;
+    if (!track) return;
+    isDraggingTrackRef.current = true;
+    dragStartXRef.current = e.pageX - track.offsetLeft;
+    dragStartScrollLeftRef.current = track.scrollLeft;
+    hasDraggedRef.current = false;
+  };
+
+  const handleMouseMoveTrack = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingTrackRef.current) return;
+    const track = contentTypeTrackRef.current;
+    if (!track) return;
+    e.preventDefault();
+    const x = e.pageX - track.offsetLeft;
+    const walk = (x - dragStartXRef.current) * 1.5;
+    if (Math.abs(walk) > 5) {
+      hasDraggedRef.current = true;
+    }
+    track.scrollLeft = dragStartScrollLeftRef.current - walk;
+  };
+
+  const handleMouseUpOrLeaveTrack = () => {
+    isDraggingTrackRef.current = false;
+  };
 
   // --- 輔助函數 ---
   const parseHexColor = (val: string, fallback: string): string => {
@@ -1103,7 +1212,14 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
           {/* 內容類型切換 */}
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium text-text-sub">{t.contentType}</span>
-            <div className={styles.contentTypeTrack}>
+            <div
+              ref={contentTypeTrackRef}
+              className={styles.contentTypeTrack}
+              onMouseDown={handleMouseDownTrack}
+              onMouseMove={handleMouseMoveTrack}
+              onMouseUp={handleMouseUpOrLeaveTrack}
+              onMouseLeave={handleMouseUpOrLeaveTrack}
+            >
               {[
                 {
                   id: 'text',
@@ -1174,8 +1290,17 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
               ].map((tab) => (
                 <button
                   key={tab.id}
+                  ref={(el) => {
+                    contentTypeBtnRefs.current[tab.id] = el;
+                  }}
                   type="button"
-                  onClick={() => setContentType(tab.id as ContentType)}
+                  onClick={(e) => {
+                    if (hasDraggedRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setContentType(tab.id as ContentType);
+                  }}
                   className={contentType === tab.id ? styles.tabBtnActive : styles.tabBtnInactive}
                 >
                   {tab.icon}
@@ -2291,6 +2416,14 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
           )}
         </div>
       </div>
+
+      {/* 通用 FAQ 常見問題區塊 */}
+      <FaqSection
+        items={t.faqItems}
+        title={t.faqTitle}
+        subtitle={t.faqSubtitle}
+        accentColor="#00ff66"
+      />
 
       {toast && <div className={styles.toast}>{toast}</div>}
     </ToolLayout>

@@ -566,6 +566,12 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  user-select: none;
+}
+
+.contentTypeTrack:active {
+  cursor: grabbing;
 }
 
 .contentTypeTrack::-webkit-scrollbar {
@@ -652,3 +658,4 @@
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15) !important;
   text-shadow: none;
 }
+
