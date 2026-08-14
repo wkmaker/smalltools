@@ -264,8 +264,19 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [length, useUpper, useLower, useNumber, useCommonSymbol, useOtherSymbol, excludeConfusable, strictMode]);
 
+  const isPlaceholder = (val: string) => {
+    return (
+      val === TRANSLATIONS['zh-TW'].placeholderInitial ||
+      val === TRANSLATIONS['zh-TW'].placeholderSelectCharset ||
+      val === TRANSLATIONS['zh-TW'].placeholderNoChars ||
+      val === TRANSLATIONS['en'].placeholderInitial ||
+      val === TRANSLATIONS['en'].placeholderSelectCharset ||
+      val === TRANSLATIONS['en'].placeholderNoChars
+    );
+  };
+
   const handleRegenerate = () => {
-    if (password && !password.includes('!') && !password.includes('請') && !password.includes('Please')) {
+    if (password && !isPlaceholder(password)) {
       setHistory(prev => {
         if (prev[0] === password) return prev;
         return [password, ...prev].slice(0, 5);
@@ -275,7 +286,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
   };
 
   const copyPassword = () => {
-    if (!password || password.includes('!') || password.includes('請') || password.includes('Please')) {
+    if (!password || isPlaceholder(password)) {
       showToast(t.toastInvalidPassword);
       return;
     }
