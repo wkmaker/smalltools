@@ -47,6 +47,48 @@ export function getLightModeAccentColor(darkColor: string): string {
   return map[darkColor.toLowerCase()] || darkColor;
 }
 
+function renderAnswerWithLinks(text: string) {
+  const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^\s\)]+\)|https?:\/\/[^\s\)\n]+)/g;
+  const parts = text.split(tokenRegex);
+
+  return parts.map((part, i) => {
+    const mdMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)$/);
+    if (mdMatch) {
+      const linkText = mdMatch[1];
+      const linkUrl = mdMatch[2];
+      return (
+        <a
+          key={i}
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline font-semibold hover:opacity-80 transition-opacity"
+          style={{ color: 'var(--faq-accent-dark)' }}
+        >
+          {linkText}
+        </a>
+      );
+    }
+
+    if (part.match(/^https?:\/\//)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline font-medium hover:opacity-80 transition-opacity break-all"
+          style={{ color: 'var(--faq-accent-dark)' }}
+        >
+          {part}
+        </a>
+      );
+    }
+
+    return part;
+  });
+}
+
 export default function FaqSection({
   items,
   title = '常問問題與專業指南 (FAQ)',
@@ -112,7 +154,11 @@ export default function FaqSection({
                 </svg>
               </button>
 
-              {isOpen && <div className={styles.faqAnswer}>{item.a}</div>}
+              {isOpen && (
+                <div className={styles.faqAnswer}>
+                  {typeof item.a === 'string' ? renderAnswerWithLinks(item.a) : item.a}
+                </div>
+              )}
             </div>
           );
         })}
@@ -120,3 +166,4 @@ export default function FaqSection({
     </div>
   );
 }
+
