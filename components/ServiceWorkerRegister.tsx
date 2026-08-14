@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function ServiceWorkerRegister() {
   const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
@@ -34,6 +37,8 @@ export default function ServiceWorkerRegister() {
       navigator.serviceWorker
         .register('/sw.js')
         .then((registration) => {
+          setSwRegistration(registration);
+          
           // 定期檢查 SW 更新
           registration.update();
 
@@ -65,6 +70,15 @@ export default function ServiceWorkerRegister() {
         });
     });
   }, []);
+
+  // 當站內路由切換時，主動觸發 Service Worker 的更新檢查
+  useEffect(() => {
+    if (swRegistration) {
+      swRegistration.update().catch((err) => {
+        console.warn('Failed to update Service Worker on route change:', err);
+      });
+    }
+  }, [pathname, swRegistration]);
 
   if (!showUpdateToast) return null;
 
