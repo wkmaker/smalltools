@@ -353,12 +353,19 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
      **工具列內附加動作按鈕**：若工具有其他功能按鈕原本與語系切換同排（如全螢幕按鈕、複製連結按鈕），語系切換移出後，剩餘按鈕保留在工具內容區自行排列（`flex justify-end`）；`extraHeaderControls` 只放語系切換按鈕本身，不包含其他功能按鈕。
 
 
+4. **金融與專業領域必備免責條款**
+   * 凡涉及法律、稅務、金融借貸（如房貸/信貸/車貸/薪資）、股票質押或期貨交易等專業領域之工具與 FAQ，**必須明確附上免責條款與聲明**（提醒使用者本工具計算與試算結果僅供投資、參考與學習使用，實際數字、法規適用與最終結算請務必以政府官方公告、法院判決、券商/銀行公告或專業律師/會計師核算為主）。
 
-9. **Next.js App Router 靜態 Sitemap 生成與 AWS 部署避坑規範 (Sitemap & AWS Deployment)**
+5. **全站禁止 Emoji 規範**
+   * FAQ 題目、解答內文及所有介面顯示文字，**嚴禁使用任何原生 Emoji 圖示**（如 ⚠️, 📈, ⚡）。必須使用工具提供的 SVG 向量圖示替代，確保 UI 一致性且符合打包單元測試標準。
+
+6. **Next.js App Router 靜態 Sitemap 生成與 AWS 部署避坑規範 (Sitemap & AWS Deployment)**
 
    * **`app/sitemap.ts` 原生動態生成**：全站統一採用 App Router 原生 `app/sitemap.ts` 定義 `MetadataRoute.Sitemap`。當執行 `next build` 進行靜態導出 (`output: 'export'`) 時，Next.js 會自動於 `out/sitemap.xml` 產出對應的 XML。
 
-    * **多語言獨立路由 Sitemap 清單同步**：新增工具之多語言獨立路由（如 `/my-salary-calculator/en/`、`/pdf-compressor/en/`）時，除了宣告 Metadata，**必須同步將英文路由網址更新至 `app/sitemap.ts` 的 `pages` 清單陣列**，並設定 `lastModified` 為當前日期，確保靜態導出產出的 `out/sitemap.xml` 100% 覆蓋所有語系頁面。
+   * **多語言獨立路由與 `lastModified` 時間戳記即時同步原則**：
+     - 新增工具之多語言獨立路由（如 `/my-salary-calculator/en/`、`/pdf-compressor/en/`）時，除了宣告 Metadata，**必須同步將英文路由網址更新至 `app/sitemap.ts` 的 `pages` 清單陣列**。
+     - **全站變更即時同步**：不限於 FAQ 變更——凡對任何工具進行程式碼重構、功能新增、UI 修正、文案調整或 SEO 擴充，**必須同步將 `app/sitemap.ts` 中該工具對應的所有路由網址（包含繁中與英文）之 `lastModified` 時間戳記更新為最新修改日期**，確保靜態導出產出之 `out/sitemap.xml` 精準覆蓋全站頁面最新狀態。
 
    * **必須顯式宣告靜態導出 (`export const dynamic = 'force-static'`)**：在 `app/sitemap.ts` 檔案頂層**必須顯式加入 `export const dynamic = 'force-static';`**。若未宣告，Next.js 在 `output: export` 靜態導出模式下執行 `next build` 會拋出 `/sitemap.xml` 路由未設置靜態導出而中斷編譯的錯誤。
 
@@ -431,6 +438,32 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
 16. **巨量數據與高負載演算法主執行緒凍結防護 (Main-Thread Frozen Safeguard)**
 
     * 針對文字比對 (Diff)、大檔案編解碼 (Base64) 或高複雜度運算，必須設定字串長度與檔案大小上限（如 10MB 或 3,000,000 字元）。超出時給予截斷或分區預覽，兼顧 100% 完整複製匯出與極速 60fps UI 渲染。
+
+
+
+17. **全站工具 FAQ 常見問題區塊與 Schema.org `FAQPage` JSON-LD 規範 (Universal FAQ & FAQPage JSON-LD Standard)**
+
+    * **雙重 FAQ 架構 (Dual FAQ Architecture)**：
+      - **SSR 端 (`app/[tool-name]/page.tsx` & `en/page.tsx`)**：必須引用 `generateFaqSchema` 工具函式 (`@/app/utils/faqSchema`) 產生 Schema.org `FAQPage` JSON-LD 結構化資料，並在 `<script type="application/ld+json">` 中渲染，顯著提升 Google 搜尋引擎之 Rich Snippets 搜尋曝光與 SEO 排名。
+      - **Client 端 (`app/[tool-name]/[ToolName]Client.tsx`)**：於 `TRANSLATIONS` 雙語字典中宣告 `faqTitle`、`faqSubtitle` 及 `faqItems` (繁中與英文各 6~8 題)，傳入全站通用元件 `<FaqSection>` 展示流暢可手動展開/收合的手風琴問答介面。
+      - **雙語與內容 100% 一致性**：`page.tsx` / `en/page.tsx` 的 JSON-LD 陣列與 `TRANSLATIONS` 的 `faqItems` 內容必須 100% 保持文字與題目完全同步。
+
+    * **`<FaqSection>` 放置佈局規範 (Layout Positioning)**：
+      - `<FaqSection>` 必須放置於 `ToolLayout` 內部、工具主體左右雙欄 Grid 容器下方（但獨立於 Grid 容器之外），讓 FAQ 於全寬自然延伸，帶來流暢優雅的下滑閱讀體驗。
+      - 傳入之 `accentColor` 在亮色模式下會由組件內部自動呼叫 `getLightModeAccentColor` 降階轉為高對比深色階（如 Amber 600 / Red 600 / Emerald 600），確保 WCAG AA 可讀性。
+
+    * **FAQ 內文清晰換行與排版規範 (FAQ Formatting & Line-Breaks Standard)**：
+      - `<FaqSection>` 答題區預設套用 `white-space: pre-line`。
+      - **清晰段落與標點排版**：答題內文中的子項目（如 `① 原始保證金` 與 `② 維持保證金`）、算例說明、救急策略或警示段落之間，**必須使用雙空行 (`\n\n`) 獨立分隔**，嚴禁將大量文字擠成一整團密集的單一行段落。
+
+    * **法律、稅務、金融借貸與專業領域必備免責條款 (Mandatory Legal, Financial & Professional Disclaimers)**：
+      - 凡涉及法律（如離職預告/勞基法）、稅務、金融借貸（如房貸/信貸/車貸/薪資）、股票質押或期貨交易等專業領域之工具與 FAQ，**必須明確附上免責條款與聲明**（提醒使用者本工具計算與試算結果僅供投資、參考與學習使用，實際數字、法規適用與最終結算請務必以政府官方公告、法院判決、券商/銀行公告或專業律師/會計師核算為主）。
+      - **槓桿與雨天收傘風險**：涉及槓桿、貸款、期貨或股票質押的金融工具，FAQ 必須明確涵蓋大跌風險、斷頭追繳機制，以及券商/銀行「雨天收傘（到期拒絕展延或機動調升借款利率）」之隱藏風險。
+      - **極端行情滑價與超額虧損警示 (Over-Loss / 穿價風險)**：期貨與槓桿交易工具必須明確警示「在劇烈行情、跳空、滑價或漲跌停鎖死下，即使達到砍倉門檻，市價砍倉單仍可能因無人承接或成交在極度不利價位，導致實際虧損超過全部本金 (Over-Loss 追繳負債)」，提示交易者切勿將強制砍倉視為安全防線。
+
+    * **遵循全站「向量 SVG 圖示替代 Emoji 規範」 (Strict No-Emoji Compliance in FAQ)**：
+      - FAQ 題目與解答內文必須嚴格遵守全站禁止裸露 Emoji 規範（避免觸發 prebuild 單元測試 `check-ui-standards.mjs` 硬性攔截並中斷打包）。
+      - 答題文字內**嚴禁寫入原生 Emoji**（如 ⚠️, 📈, ⚡）；警示段落與標頭應採用中括號或純文字標號（如 `【極端行情滑價與超額虧損警示】` 或 `[Extreme Volatility Risk]`），圖示由向量 SVG 負責展示。
 
 
 
