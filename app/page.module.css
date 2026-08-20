@@ -482,6 +482,11 @@
 .liarsDiceCard:hover h3 { color: #ff5252; text-shadow: 0 0 10px rgba(255, 82, 82, 0.4); }
 .liarsDiceCard .cardAction { color: #ff5252; }
 
+.pregnancyCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 64, 129, 0.06), transparent 40%); }
+.pregnancyCard:hover { border-color: rgba(255, 64, 129, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 64, 129, 0.15); }
+.pregnancyCard:hover h3 { color: #ff4081; text-shadow: 0 0 10px rgba(255, 64, 129, 0.4); }
+.pregnancyCard .cardAction { color: #ff4081; }
+
 .placeholderCard {
     border-style: dashed;
     border-color: rgba(255, 255, 255, 0.1);
@@ -705,5 +710,9 @@
 
 :global([data-theme='light']) .liarsDiceCard:hover h3,
 :global([data-theme='light']) .liarsDiceCard .cardAction { color: #991b1b; text-shadow: none; } /* 深朱紅 */
+
+:global([data-theme='light']) .pregnancyCard:hover h3,
+:global([data-theme='light']) .pregnancyCard .cardAction { color: #e11d48; text-shadow: none; } /* 深玫瑰紅 */
+
 
 

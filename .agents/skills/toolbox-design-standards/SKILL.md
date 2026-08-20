@@ -69,6 +69,7 @@ description: 適用於小型工具庫（smalltools）Next.js App Router 與 Tail
      | **PDF 頁面組合器** | `/pdf-processor/` | `pdfProcessorCard` | 霓虹赤紅 `#ff3b30` (`rgba(255,59,48,0.6)`) | 深紅 `#dc2626` (Red 600) |
      | **PDF 壓縮大師** | `/pdf-compressor/` | `pdfCompressorCard` | 耀眼金黃 `#eab308` (`rgba(234,179,8,0.6)`) | 深金黃 `#ca8a04` (Yellow 600) |
      | **吹牛骰子搖骰器** | `/liars-dice/` | `liarsDiceCard` | 珊瑚艷紅 `#ff5252` (`rgba(255,82,82,0.6)`) | 深鮮紅 `#b91c1c` (Red 700) |
+     | **孕期與產檢假計算機** | `/pregnancy-calculator/` | `pregnancyCard` | 霓虹粉桃 `#ff4081` (`rgba(255,64,129,0.6)`) | 深玫瑰紅 `#e11d48` (Rose 600) |
 
    * **卡片 Class 共用禁忌**：新增小工具時，**嚴禁在 `app/config/tools.tsx` 中隨意共用其他工具之 `cardClass`** (例如錯把 QR Code 產生器設為 `httpsDnsCard`)。必須宣告獨立 `cardClass` 命名，並同步於 `app/page.module.css` 註冊對應的 Hover、Glow 及亮色模式對比度樣式。
 
