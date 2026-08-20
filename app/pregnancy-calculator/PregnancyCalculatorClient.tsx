@@ -81,6 +81,7 @@ const TRANSLATIONS = {
 
     // 法定假別與津貼
     benefitsTitle: '台灣法定產檢假、產假與生育給付試算',
+    benefitsToggleDesc: '（點擊展開/收合 8天產檢假、8週產假、生育給付與育嬰津貼明細）',
     checkupLeaveLabel: '有薪產檢假',
     checkupLeaveDesc: '依法享有 8 天全薪產檢假（可拆分半天或小時計）',
     maternityLeaveLabel: '法定產假',
@@ -97,10 +98,13 @@ const TRANSLATIONS = {
 
     // 一鍵範本
     templateTitle: '一鍵生成請產檢假 / 產假申請範本 (Email / Line)',
+    templateToggleDesc: '（預設收合，點擊展開完整申請信與交接範本）',
     templateCopyBtn: '複製請假申請範本',
     copiedSuccess: '已成功複製請假範本至剪貼簿！',
     shareLinkBtn: '複製試算分享連結',
     shareLinkCopied: '已成功複製試算分享連結！可直接傳給伴侶或家人。',
+    btnExpand: '展開',
+    btnCollapse: '收合',
 
     // Checklist
     checklistTitle: '孕期重要準備與待產包 Check List',
@@ -215,6 +219,7 @@ const TRANSLATIONS = {
 
     // Benefits
     benefitsTitle: 'Maternity Leave & Statutory Benefits Estimation',
+    benefitsToggleDesc: '(Click to expand/collapse prenatal leave & benefits breakdown)',
     checkupLeaveLabel: 'Paid Prenatal Checkup Leave',
     checkupLeaveDesc: '8 days of fully paid prenatal checkup leave (hourly or half-day increments)',
     maternityLeaveLabel: 'Statutory Maternity Leave',
@@ -231,10 +236,13 @@ const TRANSLATIONS = {
 
     // Template
     templateTitle: 'One-Click Leave Application Template (Email / Message)',
+    templateToggleDesc: '(Collapsed by default, click to expand application email template)',
     templateCopyBtn: 'Copy Application Template',
     copiedSuccess: 'Leave template copied to clipboard successfully!',
     shareLinkBtn: 'Copy Shareable Link',
     shareLinkCopied: 'Shareable calculation link copied to clipboard!',
+    btnExpand: 'Expand',
+    btnCollapse: 'Collapse',
 
     // Checklist
     checklistTitle: 'Pregnancy Preparation & Hospital Bag Checklist',
@@ -375,9 +383,11 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     return { totalDays, weeks, days: remDays };
   }, [crlValue]);
 
-  // 薪資與產假設定
+  // 薪資、產假與摺疊設定
   const [monthlySalary, setMonthlySalary] = useState<number | ''>(45800);
   const [leaveStartWeeksOption, setLeaveStartWeeksOption] = useState<number>(2); // 產前 2 週開始請
+  const [isBenefitsExpanded, setIsBenefitsExpanded] = useState<boolean>(true);
+  const [isTemplateExpanded, setIsTemplateExpanded] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState(false);
   const [shareLinkToast, setShareLinkToast] = useState(false);
   const isMountedRef = React.useRef<boolean>(false);
@@ -394,16 +404,54 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 64, 129, 0.6)');
   }, []);
 
-  // URL 雙向狀態連動：初次載入解析 URL 參數
+  // 50 週 (350天) 本地儲存常數
+  const STORAGE_KEY = 'smalltools_pregnancy_calc_v1';
+  const TTL_50_WEEKS_MS = 50 * 7 * 24 * 60 * 60 * 1000;
+
+  // 初次載入：從 LocalStorage 還原（具備 50 週存活期）或解析分享 URL 參數
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
 
+    let hasLoadedFromStorage = false;
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        const age = Date.now() - (data.updatedAt || 0);
+
+        if (age < TTL_50_WEEKS_MS) {
+          if (data.calcMode) setCalcMode(data.calcMode);
+          if (data.lmpDate) setLmpDate(data.lmpDate);
+          if (typeof data.cycleDays === 'number') setCycleDays(data.cycleDays);
+          if (data.eddDateInput !== undefined) setEddDateInput(data.eddDateInput);
+          if (data.scanDate) setScanDate(data.scanDate);
+          if (data.scanInputType) setScanInputType(data.scanInputType);
+          if (typeof data.scanWeeks === 'number') setScanWeeks(data.scanWeeks);
+          if (typeof data.scanDays === 'number') setScanDays(data.scanDays);
+          if (data.crlValue !== undefined) setCrlValue(data.crlValue);
+          if (data.ivfDate) setIvfDate(data.ivfDate);
+          if (data.ivfType) setIvfType(data.ivfType);
+          if (data.monthlySalary !== undefined) setMonthlySalary(data.monthlySalary);
+          if (typeof data.leaveStartWeeksOption === 'number') setLeaveStartWeeksOption(data.leaveStartWeeksOption);
+          if (data.checkedItems) setCheckedItems(data.checkedItems);
+          if (typeof data.isBenefitsExpanded === 'boolean') setIsBenefitsExpanded(data.isBenefitsExpanded);
+          if (typeof data.isTemplateExpanded === 'boolean') setIsTemplateExpanded(data.isTemplateExpanded);
+
+          hasLoadedFromStorage = true;
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // 若 URL 帶有分享參數，URL 權重最高並覆蓋
+    const params = new URLSearchParams(window.location.search);
     if (params.has('mode')) {
       const m = params.get('mode');
-      if (m === 'lmp' || m === 'edd' || m === 'ultrasound' || m === 'ivf') {
-        setCalcMode(m);
-      }
+      if (m === 'lmp' || m === 'edd' || m === 'ultrasound' || m === 'ivf') setCalcMode(m);
     }
     if (params.has('lmp')) {
       const v = params.get('lmp');
@@ -411,9 +459,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     }
     if (params.has('cycle')) {
       const parsed = parseInt(params.get('cycle') || '28', 10);
-      if (!isNaN(parsed) && parsed >= 20 && parsed <= 45) {
-        setCycleDays(parsed);
-      }
+      if (!isNaN(parsed) && parsed >= 20 && parsed <= 45) setCycleDays(parsed);
     }
     if (params.has('edd')) {
       const v = params.get('edd');
@@ -445,9 +491,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     }
     if (params.has('ivfType')) {
       const v = params.get('ivfType');
-      if (v === 'd5' || v === 'd3' || v === 'egg') {
-        setIvfType(v);
-      }
+      if (v === 'd5' || v === 'd3' || v === 'egg') setIvfType(v);
     }
     if (params.has('salary')) {
       const parsed = parseInt(params.get('salary') || '45800', 10);
@@ -461,9 +505,57 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     isMountedRef.current = true;
   }, [defaultLmp]);
 
-  // URL 雙向狀態連動：參數變更時自動同步至網址 (replaceState)
+  // 本地狀態持續儲存：每次修改或開啟網頁，自動刷新 50 週過期時間
   useEffect(() => {
     if (!isMountedRef.current || typeof window === 'undefined') return;
+
+    const payload = {
+      calcMode,
+      lmpDate,
+      cycleDays,
+      eddDateInput,
+      scanDate,
+      scanInputType,
+      scanWeeks,
+      scanDays,
+      crlValue,
+      ivfDate,
+      ivfType,
+      monthlySalary,
+      leaveStartWeeksOption,
+      checkedItems,
+      isBenefitsExpanded,
+      isTemplateExpanded,
+      updatedAt: Date.now(), // 刷新最後存取時間戳記 (50 週 TTL)
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
+  }, [
+    calcMode,
+    lmpDate,
+    cycleDays,
+    eddDateInput,
+    scanDate,
+    scanInputType,
+    scanWeeks,
+    scanDays,
+    crlValue,
+    ivfDate,
+    ivfType,
+    monthlySalary,
+    leaveStartWeeksOption,
+    checkedItems,
+    isBenefitsExpanded,
+    isTemplateExpanded,
+  ]);
+
+  // 複製試算分享連結（動態組裝 Query String，平時保持網址純淨）
+  const handleCopyShareLink = async () => {
+    if (typeof window === 'undefined') return;
     const params = new URLSearchParams();
 
     params.set('mode', calcMode);
@@ -493,15 +585,10 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
       params.set('leaveStart', leaveStartWeeksOption.toString());
     }
 
-    const qs = params.toString();
-    const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-    window.history.replaceState(null, '', newUrl);
-  }, [calcMode, lmpDate, cycleDays, eddDateInput, scanDate, scanInputType, scanWeeks, scanDays, crlValue, ivfDate, ivfType, monthlySalary, leaveStartWeeksOption]);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
-  const handleCopyShareLink = async () => {
-    if (typeof window === 'undefined') return;
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(shareUrl);
       setShareLinkToast(true);
       setTimeout(() => setShareLinkToast(false), 3000);
     } catch {
@@ -1158,67 +1245,104 @@ Date: ${formatDate(new Date())}`;
               </div>
             </div>
 
-            {/* 產假與津貼試算卡片 */}
+            {/* 產假與津貼試算卡片 (支援摺疊) */}
             <div className={styles.glassCard}>
-              <h2 className={styles.cardTitle}>
-                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
-                  <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
-                </svg>
-                {t.benefitsTitle}
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-text-main text-sm">{t.checkupLeaveLabel}</span>
-                    <span className={styles.badge}>8 {t.daysUnit}</span>
-                  </div>
-                  <p className="text-xs text-text-sub">{t.checkupLeaveDesc}</p>
+              <div
+                className="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none"
+                onClick={() => setIsBenefitsExpanded((prev) => !prev)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setIsBenefitsExpanded((prev) => !prev);
+                  }
+                }}
+              >
+                <div className="flex flex-col">
+                  <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>
+                    <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
+                      <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+                    </svg>
+                    {t.benefitsTitle}
+                  </h2>
+                  {!isBenefitsExpanded && (
+                    <span className="text-xs text-text-sub mt-1">
+                      {t.benefitsToggleDesc}
+                    </span>
+                  )}
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-text-main text-sm">{t.paternityLeaveLabel}</span>
-                    <span className={styles.badge}>7 {t.daysUnit}</span>
-                  </div>
-                  <p className="text-xs text-text-sub">{t.paternityLeaveDesc}</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-2 md:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-text-main text-sm">{t.maternityLeaveLabel}</span>
-                    <span className={styles.badge}>56 {t.daysUnit} (8 {t.weeksUnit})</span>
-                  </div>
-                  <p className="text-xs text-text-sub">{t.maternityLeaveDesc}</p>
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-xs border-t border-border-glass">
-                    <span className="text-text-sub">{t.maternityLeavePeriod}:</span>
-                    <strong className="text-text-main">{formatDate(benefits.leaveStart)} ~ {formatDate(benefits.leaveEnd)}</strong>
-                    <span className="text-text-sub ml-auto">{t.expectedReturnDate}: <strong className={styles.accentText}>{formatDate(benefits.returnDate)}</strong></span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-text-sub">
+                    {isBenefitsExpanded ? t.btnCollapse : t.btnExpand}
+                  </span>
+                  <div
+                    className={`w-7 h-7 rounded-lg bg-surface-glass border border-border-glass flex items-center justify-center text-text-sub transition-transform duration-200 ${
+                      isBenefitsExpanded ? 'rotate-180' : ''
+                    }`}
+                  >
+                    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                    </svg>
                   </div>
                 </div>
-
-                {typeof monthlySalary === 'number' && monthlySalary > 0 && (
-                  <>
-                    <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-                      <span className="font-semibold text-text-main text-sm">{t.laborInsuranceTitle}</span>
-                      <span className={`text-lg font-bold ${styles.accentText}`}>
-                        {t.approxUnit} {benefits.laborBenefit.toLocaleString('zh-TW')}
-                      </span>
-                      <p className="text-xs text-text-sub">{t.laborInsuranceDesc}</p>
-                    </div>
-
-                    <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-                      <span className="font-semibold text-text-main text-sm">{t.parentalLeaveTitle}</span>
-                      <span className={`text-lg font-bold ${styles.accentText}`}>
-                        {t.approxUnit} {benefits.parentalAllowanceTotal.toLocaleString('zh-TW')}
-                      </span>
-                      <p className="text-xs text-text-sub">
-                        {t.parentalLeaveDesc} (約 {benefits.parentalAllowanceMonthly.toLocaleString('zh-TW')} / 月)
-                      </p>
-                    </div>
-                  </>
-                )}
               </div>
+
+              {isBenefitsExpanded && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-glass">
+                  <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-text-main text-sm">{t.checkupLeaveLabel}</span>
+                      <span className={styles.badge}>8 {t.daysUnit}</span>
+                    </div>
+                    <p className="text-xs text-text-sub">{t.checkupLeaveDesc}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-text-main text-sm">{t.paternityLeaveLabel}</span>
+                      <span className={styles.badge}>7 {t.daysUnit}</span>
+                    </div>
+                    <p className="text-xs text-text-sub">{t.paternityLeaveDesc}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-2 md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-text-main text-sm">{t.maternityLeaveLabel}</span>
+                      <span className={styles.badge}>56 {t.daysUnit} (8 {t.weeksUnit})</span>
+                    </div>
+                    <p className="text-xs text-text-sub">{t.maternityLeaveDesc}</p>
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs border-t border-border-glass">
+                      <span className="text-text-sub">{t.maternityLeavePeriod}:</span>
+                      <strong className="text-text-main">{formatDate(benefits.leaveStart)} ~ {formatDate(benefits.leaveEnd)}</strong>
+                      <span className="text-text-sub ml-auto">{t.expectedReturnDate}: <strong className={styles.accentText}>{formatDate(benefits.returnDate)}</strong></span>
+                    </div>
+                  </div>
+
+                  {typeof monthlySalary === 'number' && monthlySalary > 0 && (
+                    <>
+                      <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+                        <span className="font-semibold text-text-main text-sm">{t.laborInsuranceTitle}</span>
+                        <span className={`text-lg font-bold ${styles.accentText}`}>
+                          {t.approxUnit} {benefits.laborBenefit.toLocaleString('zh-TW')}
+                        </span>
+                        <p className="text-xs text-text-sub">{t.laborInsuranceDesc}</p>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+                        <span className="font-semibold text-text-main text-sm">{t.parentalLeaveTitle}</span>
+                        <span className={`text-lg font-bold ${styles.accentText}`}>
+                          {t.approxUnit} {benefits.parentalAllowanceTotal.toLocaleString('zh-TW')}
+                        </span>
+                        <p className="text-xs text-text-sub">
+                          {t.parentalLeaveDesc} (約 {benefits.parentalAllowanceMonthly.toLocaleString('zh-TW')} / 月)
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1287,33 +1411,80 @@ Date: ${formatDate(new Date())}`;
           </div>
         </div>
 
-        {/* 一鍵生成請假範本 */}
+        {/* 一鍵生成請假範本 (支援摺疊) */}
         <div className={styles.glassCard}>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>
-              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-              </svg>
-              {t.templateTitle}
-            </h2>
-            <button onClick={handleCopyTemplate} className={styles.accentBtn}>
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-              </svg>
-              {t.templateCopyBtn}
-            </button>
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none"
+            onClick={() => setIsTemplateExpanded((prev) => !prev)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsTemplateExpanded((prev) => !prev);
+              }
+            }}
+          >
+            <div className="flex flex-col">
+              <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>
+                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                </svg>
+                {t.templateTitle}
+              </h2>
+              {!isTemplateExpanded && (
+                <span className="text-xs text-text-sub mt-1">
+                  {t.templateToggleDesc}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-text-sub">
+                {isTemplateExpanded ? t.btnCollapse : t.btnExpand}
+              </span>
+              <div
+                className={`w-7 h-7 rounded-lg bg-surface-glass border border-border-glass flex items-center justify-center text-text-sub transition-transform duration-200 ${
+                  isTemplateExpanded ? 'rotate-180' : ''
+                }`}
+              >
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          {copiedToast && (
-            <div className={`mb-3 ${styles.copiedToastBanner}`}>
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-              </svg>
-              {t.copiedSuccess}
+          {isTemplateExpanded && (
+            <div className="mt-4 pt-4 border-t border-border-glass flex flex-col gap-3">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyTemplate();
+                  }}
+                  className={styles.accentBtn}
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                  </svg>
+                  {t.templateCopyBtn}
+                </button>
+              </div>
+
+              {copiedToast && (
+                <div className={`mb-2 ${styles.copiedToastBanner}`}>
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                  {t.copiedSuccess}
+                </div>
+              )}
+
+              <div className={styles.templateBox}>{leaveApplicationTemplate}</div>
             </div>
           )}
-
-          <div className={styles.templateBox}>{leaveApplicationTemplate}</div>
         </div>
 
         {/* 孕期與待產包 Checklist */}
