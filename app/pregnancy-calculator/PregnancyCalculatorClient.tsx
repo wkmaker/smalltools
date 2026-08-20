@@ -28,8 +28,15 @@ const TRANSLATIONS = {
     cycleDaysLabel: '平均月經週期天數 (天)',
     eddDateLabel: '醫師評估預產期 (EDD)',
     scanDateLabel: '超音波檢查當日日期',
+    scanInputTypeLabel: '超音波數據輸入方式',
+    scanInputWeeks: '直接輸入胎兒週數 (週 + 天)',
+    scanInputCrl: '輸入超音波照片 CRL 頭臀長 (mm)',
     scanWeeksLabel: '檢查時胎兒週數',
     scanDaysLabel: '天數',
+    crlInputLabel: '超音波單上的 CRL 胎兒頭臀長 (mm)',
+    crlPlaceholder: '如 45 (代表 4.5 cm)',
+    crlCalculatedAge: '換算胎兒週數約為：',
+    crlFormulaHint: '（採用 Hadlock 醫學公式：CRL 適用於懷孕 6~14 週，數值約 5~84 mm）',
     ivfDateLabel: '植入 / 受精取卵日期',
     ivfTypeLabel: '受精 / 植入類型',
     ivfTypeD5: 'Day 5 囊胚植入 (Blastocyst)',
@@ -92,6 +99,8 @@ const TRANSLATIONS = {
     templateTitle: '一鍵生成請產檢假 / 產假申請範本 (Email / Line)',
     templateCopyBtn: '複製請假申請範本',
     copiedSuccess: '已成功複製請假範本至剪貼簿！',
+    shareLinkBtn: '複製試算分享連結',
+    shareLinkCopied: '已成功複製試算分享連結！可直接傳給伴侶或家人。',
 
     // Checklist
     checklistTitle: '孕期重要準備與待產包 Check List',
@@ -100,8 +109,8 @@ const TRANSLATIONS = {
     checkStage3: '第三孕期 (28~40週) 與待產包必備',
     
     // 免責聲明
-    disclaimerTitle: '專業醫療與法規免責聲明',
-    disclaimerDesc: '本計算機預產期與胎兒成長數據係依醫學平均值（Naegele\'s Rule 等）推算，僅供衛教與行程規劃參考，實際週數與生產時程請以產檢婦產科醫師超音波診斷為準。勞基法與勞保津貼給付標準以主管機關最新法規與勞保局實際核定金額為主。',
+    disclaimerTitle: '專業醫療、營養補充與法規免責聲明',
+    disclaimerDesc: '本計算機預產期與胎兒成長數據係依醫學平均值（Naegele\'s Rule 等）推算，僅供衛教與行程規劃參考，實際週數與生產時程請以產檢婦產科醫師超音波診斷為準。孕期所有維生素、礦物質、葉酸、DHA 等營養補充品之種類、劑量與服用時機，請務必諮詢婦產科專科醫師，並以個人醫囑指示為主。勞基法與勞保津貼給付標準以主管機關最新法規與勞保局實際核定金額為主。',
 
     // FAQ
     faqTitle: '常見問題與專業產檢指南 (FAQ)',
@@ -153,8 +162,15 @@ const TRANSLATIONS = {
     cycleDaysLabel: 'Average Cycle Length (Days)',
     eddDateLabel: 'Estimated Due Date (EDD)',
     scanDateLabel: 'Ultrasound Scan Date',
+    scanInputTypeLabel: 'Ultrasound Data Input Type',
+    scanInputWeeks: 'Enter Gestational Weeks (Weeks + Days)',
+    scanInputCrl: 'Enter Crown-Rump Length CRL (mm)',
     scanWeeksLabel: 'Gestational Weeks at Scan',
     scanDaysLabel: 'Days',
+    crlInputLabel: 'Crown-Rump Length (CRL in mm)',
+    crlPlaceholder: 'e.g. 45 (for 4.5 cm)',
+    crlCalculatedAge: 'Calculated Gestational Age:',
+    crlFormulaHint: '(Using Hadlock formula: CRL is most accurate between weeks 6-14, approx 5-84 mm)',
     ivfDateLabel: 'Transfer / Egg Retrieval Date',
     ivfTypeLabel: 'Transfer Type',
     ivfTypeD5: 'Day 5 Blastocyst Transfer',
@@ -217,6 +233,8 @@ const TRANSLATIONS = {
     templateTitle: 'One-Click Leave Application Template (Email / Message)',
     templateCopyBtn: 'Copy Application Template',
     copiedSuccess: 'Leave template copied to clipboard successfully!',
+    shareLinkBtn: 'Copy Shareable Link',
+    shareLinkCopied: 'Shareable calculation link copied to clipboard!',
 
     // Checklist
     checklistTitle: 'Pregnancy Preparation & Hospital Bag Checklist',
@@ -225,8 +243,8 @@ const TRANSLATIONS = {
     checkStage3: '3rd Trimester (Weeks 28-40) & Hospital Bag',
 
     // Disclaimer
-    disclaimerTitle: 'Medical & Legal Disclaimer',
-    disclaimerDesc: 'Calculations are based on standard clinical algorithms (e.g. Naegele\'s Rule) for educational and planning purposes. Actual due date and fetal development should always be confirmed by your OB-GYN via ultrasound. Statutory benefits and labor subsidies are subject to the latest official government regulations.',
+    disclaimerTitle: 'Medical, Nutritional Supplements & Legal Disclaimer',
+    disclaimerDesc: 'Calculations are based on standard clinical algorithms (e.g. Naegele\'s Rule) for educational and planning purposes. Actual due date and fetal development should always be confirmed by your OB-GYN via ultrasound. All nutritional supplements (such as folic acid, calcium, DHA, and prenatal vitamins), choices, and dosages MUST strictly follow your physician\'s instructions and medical advice. Statutory benefits and labor subsidies are subject to the latest official government regulations.',
 
     // FAQ
     faqTitle: 'Frequently Asked Questions & Guidelines (FAQ)',
@@ -316,8 +334,10 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const cycleInputId = useId();
   const eddInputId = useId();
   const scanDateId = useId();
+  const scanTypeSelectId = useId();
   const scanWeeksId = useId();
   const scanDaysId = useId();
+  const crlInputId = useId();
   const ivfDateId = useId();
   const ivfTypeId = useId();
   const salaryInputId = useId();
@@ -337,15 +357,30 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const [cycleDays, setCycleDays] = useState<number>(28);
   const [eddDateInput, setEddDateInput] = useState<string>('');
   const [scanDate, setScanDate] = useState<string>(() => formatDate(new Date()));
+  const [scanInputType, setScanInputType] = useState<'weeks' | 'crl'>('weeks');
   const [scanWeeks, setScanWeeks] = useState<number>(12);
   const [scanDays, setScanDays] = useState<number>(0);
+  const [crlValue, setCrlValue] = useState<number | ''>(45);
   const [ivfDate, setIvfDate] = useState<string>(() => formatDate(new Date()));
   const [ivfType, setIvfType] = useState<'d5' | 'd3' | 'egg'>('d5');
+
+  // 依 CRL (mm) 換算胎兒天數與週數 (Hadlock Formula)
+  const crlConvertedAge = useMemo(() => {
+    if (typeof crlValue !== 'number' || crlValue <= 0) return { totalDays: 84, weeks: 12, days: 0 };
+    // Hadlock Formula: Days = 52.37 + 1.315 * CRL - 0.0022 * CRL^2
+    const d = Math.round(52.37 + 1.315 * crlValue - 0.0022 * crlValue * crlValue);
+    const totalDays = Math.max(35, Math.min(110, d)); // 約 5~15 週
+    const weeks = Math.floor(totalDays / 7);
+    const remDays = totalDays % 7;
+    return { totalDays, weeks, days: remDays };
+  }, [crlValue]);
 
   // 薪資與產假設定
   const [monthlySalary, setMonthlySalary] = useState<number | ''>(45800);
   const [leaveStartWeeksOption, setLeaveStartWeeksOption] = useState<number>(2); // 產前 2 週開始請
   const [copiedToast, setCopiedToast] = useState(false);
+  const [shareLinkToast, setShareLinkToast] = useState(false);
+  const isMountedRef = React.useRef<boolean>(false);
 
   // Checklist 狀態
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({
@@ -358,6 +393,121 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     document.documentElement.style.setProperty('--theme-color', '#ff4081');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 64, 129, 0.6)');
   }, []);
+
+  // URL 雙向狀態連動：初次載入解析 URL 參數
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.has('mode')) {
+      const m = params.get('mode');
+      if (m === 'lmp' || m === 'edd' || m === 'ultrasound' || m === 'ivf') {
+        setCalcMode(m);
+      }
+    }
+    if (params.has('lmp')) {
+      const v = params.get('lmp');
+      if (v) setLmpDate(v);
+    }
+    if (params.has('cycle')) {
+      const parsed = parseInt(params.get('cycle') || '28', 10);
+      if (!isNaN(parsed) && parsed >= 20 && parsed <= 45) {
+        setCycleDays(parsed);
+      }
+    }
+    if (params.has('edd')) {
+      const v = params.get('edd');
+      if (v) setEddDateInput(v);
+    }
+    if (params.has('scanDate')) {
+      const v = params.get('scanDate');
+      if (v) setScanDate(v);
+    }
+    if (params.has('scanType')) {
+      const st = params.get('scanType');
+      if (st === 'weeks' || st === 'crl') setScanInputType(st);
+    }
+    if (params.has('scanWeeks')) {
+      const parsed = parseInt(params.get('scanWeeks') || '12', 10);
+      if (!isNaN(parsed)) setScanWeeks(parsed);
+    }
+    if (params.has('scanDays')) {
+      const parsed = parseInt(params.get('scanDays') || '0', 10);
+      if (!isNaN(parsed)) setScanDays(parsed);
+    }
+    if (params.has('crl')) {
+      const parsed = parseFloat(params.get('crl') || '45');
+      if (!isNaN(parsed)) setCrlValue(parsed);
+    }
+    if (params.has('ivfDate')) {
+      const v = params.get('ivfDate');
+      if (v) setIvfDate(v);
+    }
+    if (params.has('ivfType')) {
+      const v = params.get('ivfType');
+      if (v === 'd5' || v === 'd3' || v === 'egg') {
+        setIvfType(v);
+      }
+    }
+    if (params.has('salary')) {
+      const parsed = parseInt(params.get('salary') || '45800', 10);
+      if (!isNaN(parsed)) setMonthlySalary(parsed);
+    }
+    if (params.has('leaveStart')) {
+      const parsed = parseInt(params.get('leaveStart') || '2', 10);
+      if (!isNaN(parsed)) setLeaveStartWeeksOption(parsed);
+    }
+
+    isMountedRef.current = true;
+  }, [defaultLmp]);
+
+  // URL 雙向狀態連動：參數變更時自動同步至網址 (replaceState)
+  useEffect(() => {
+    if (!isMountedRef.current || typeof window === 'undefined') return;
+    const params = new URLSearchParams();
+
+    params.set('mode', calcMode);
+    if (calcMode === 'lmp') {
+      if (lmpDate) params.set('lmp', lmpDate);
+      if (cycleDays !== 28) params.set('cycle', cycleDays.toString());
+    } else if (calcMode === 'edd') {
+      if (eddDateInput) params.set('edd', eddDateInput);
+    } else if (calcMode === 'ultrasound') {
+      if (scanDate) params.set('scanDate', scanDate);
+      params.set('scanType', scanInputType);
+      if (scanInputType === 'crl') {
+        if (crlValue !== '') params.set('crl', crlValue.toString());
+      } else {
+        params.set('scanWeeks', scanWeeks.toString());
+        if (scanDays > 0) params.set('scanDays', scanDays.toString());
+      }
+    } else if (calcMode === 'ivf') {
+      if (ivfDate) params.set('ivfDate', ivfDate);
+      params.set('ivfType', ivfType);
+    }
+
+    if (monthlySalary !== '' && monthlySalary !== 45800) {
+      params.set('salary', monthlySalary.toString());
+    }
+    if (leaveStartWeeksOption !== 2) {
+      params.set('leaveStart', leaveStartWeeksOption.toString());
+    }
+
+    const qs = params.toString();
+    const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(null, '', newUrl);
+  }, [calcMode, lmpDate, cycleDays, eddDateInput, scanDate, scanInputType, scanWeeks, scanDays, crlValue, ivfDate, ivfType, monthlySalary, leaveStartWeeksOption]);
+
+  const handleCopyShareLink = async () => {
+    if (typeof window === 'undefined') return;
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareLinkToast(true);
+      setTimeout(() => setShareLinkToast(false), 3000);
+    } catch {
+      // fallback
+    }
+  };
 
   // 核心計算：推算預產期 (EDD Date) 與 受孕日 (Conception Date)
   const { estimatedDueDate, conceptionDate } = useMemo(() => {
@@ -381,7 +531,9 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     } else if (calcMode === 'ultrasound') {
       const scanD = new Date(scanDate);
       if (!isNaN(scanD.getTime())) {
-        const totalScanDays = (scanWeeks || 0) * 7 + (scanDays || 0);
+        const totalScanDays = scanInputType === 'crl'
+          ? crlConvertedAge.totalDays
+          : ((scanWeeks || 0) * 7 + (scanDays || 0));
         const remainingDaysToEdd = 280 - totalScanDays;
         edd = addDays(scanD, remainingDaysToEdd);
         conception = addDays(edd, -266);
@@ -654,12 +806,34 @@ Date: ${formatDate(new Date())}`;
           {/* 左側：設定面板 */}
           <div className="flex flex-col gap-6">
             <div className={styles.glassCard}>
-              <h2 className={styles.cardTitle}>
-                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
-                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
-                </svg>
-                {t.calcModeLabel}
-              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>
+                  <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
+                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
+                  </svg>
+                  {t.calcModeLabel}
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleCopyShareLink}
+                  className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-surface-glass border border-border-glass text-text-sub hover:text-text-main transition-colors flex items-center gap-1.5"
+                  title={t.shareLinkBtn}
+                >
+                  <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                    <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+                  </svg>
+                  {t.shareLinkBtn}
+                </button>
+              </div>
+
+              {shareLinkToast && (
+                <div className={`mb-3 ${styles.copiedToastBanner}`}>
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                  {t.shareLinkCopied}
+                </div>
+              )}
 
               <div className="flex flex-col gap-4">
                 {/* 模式選擇 */}
@@ -744,36 +918,87 @@ Date: ${formatDate(new Date())}`;
                         className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors [color-scheme:dark]"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor={scanWeeksId} className="text-xs font-semibold text-text-sub">
-                          {t.scanWeeksLabel}
-                        </label>
-                        <input
-                          id={scanWeeksId}
-                          type="number"
-                          min="4"
-                          max="40"
-                          value={scanWeeks}
-                          onChange={(e) => setScanWeeks(parseInt(e.target.value) || 0)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor={scanDaysId} className="text-xs font-semibold text-text-sub">
-                          {t.scanDaysLabel}
-                        </label>
-                        <input
-                          id={scanDaysId}
-                          type="number"
-                          min="0"
-                          max="6"
-                          value={scanDays}
-                          onChange={(e) => setScanDays(parseInt(e.target.value) || 0)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
-                        />
-                      </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor={scanTypeSelectId} className="text-xs font-semibold text-text-sub">
+                        {t.scanInputTypeLabel}
+                      </label>
+                      <select
+                        id={scanTypeSelectId}
+                        value={scanInputType}
+                        onChange={(e) => setScanInputType(e.target.value as any)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
+                      >
+                        <option value="weeks">{t.scanInputWeeks}</option>
+                        <option value="crl">{t.scanInputCrl}</option>
+                      </select>
                     </div>
+
+                    {scanInputType === 'weeks' ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor={scanWeeksId} className="text-xs font-semibold text-text-sub">
+                            {t.scanWeeksLabel}
+                          </label>
+                          <input
+                            id={scanWeeksId}
+                            type="number"
+                            min="4"
+                            max="40"
+                            value={scanWeeks}
+                            onChange={(e) => setScanWeeks(parseInt(e.target.value) || 0)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor={scanDaysId} className="text-xs font-semibold text-text-sub">
+                            {t.scanDaysLabel}
+                          </label>
+                          <input
+                            id={scanDaysId}
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={scanDays}
+                            onChange={(e) => setScanDays(parseInt(e.target.value) || 0)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor={crlInputId} className="text-xs font-semibold text-text-sub">
+                            {t.crlInputLabel}
+                          </label>
+                          <input
+                            id={crlInputId}
+                            type="number"
+                            step="0.1"
+                            min="5"
+                            max="84"
+                            placeholder={t.crlPlaceholder}
+                            value={crlValue}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              setCrlValue(raw === '' ? '' : parseFloat(raw));
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
+                          />
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-text-sub">{t.crlCalculatedAge}</span>
+                            <strong className={`${styles.accentText} font-bold text-sm`}>
+                              {crlConvertedAge.weeks} {t.weeksUnit} + {crlConvertedAge.days} {t.daysUnit}
+                            </strong>
+                          </div>
+                          <p className="text-xs text-text-sub leading-tight">
+                            {t.crlFormulaHint}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -1105,7 +1330,7 @@ Date: ${formatDate(new Date())}`;
             <div className="flex flex-col gap-2.5">
               <h3 className="text-xs font-bold text-text-main pb-1 border-b border-border-glass">{t.checkStage1}</h3>
               {[
-                { id: 'folicAcid', labelZh: '每日補充葉酸 400~600 mcg', labelEn: 'Daily folic acid 400-600 mcg' },
+                { id: 'folicAcid', labelZh: '每日補充葉酸 400~600 mcg (劑量請依醫囑為主)', labelEn: 'Daily folic acid 400-600 mcg (Consult doctor for dosage)' },
                 { id: 'dietHabits', labelZh: '戒菸、戒酒、避免生食生乳', labelEn: 'Avoid alcohol, tobacco & raw foods' },
                 { id: 'maternityBook', labelZh: '領取媽媽手冊與產檢假規劃', labelEn: 'Obtain handbook & plan checkup leaves' },
                 { id: 'confinementCenter', labelZh: '熱門月子中心 / 產後護理之家參觀預約', labelEn: 'Book postpartum confinement center' },
@@ -1132,7 +1357,7 @@ Date: ${formatDate(new Date())}`;
             <div className="flex flex-col gap-2.5">
               <h3 className="text-xs font-bold text-text-main pb-1 border-b border-border-glass">{t.checkStage2}</h3>
               {[
-                { id: 'nutrition', labelZh: '補充鈣質、維生素 D 與藻油/魚油 DHA', labelEn: 'Supplement calcium, Vit D & DHA' },
+                { id: 'nutrition', labelZh: '補充鈣質、維生素 D 與藻油/魚油 DHA (請依醫囑為主)', labelEn: 'Supplement calcium, Vit D & DHA (Please follow medical advice)' },
                 { id: 'anatomyScan', labelZh: '預約高層次超音波 (20~24週)', labelEn: 'Book detailed anatomy scan (Weeks 20-24)' },
                 { id: 'stretchMark', labelZh: '早晚塗抹孕婦妊娠霜與撫紋油', labelEn: 'Apply belly moisturizer/oil' },
                 { id: 'daycareSurvey', labelZh: '托嬰中心登記或保母初步諮詢', labelEn: 'Inquire daycare or nanny services' },
