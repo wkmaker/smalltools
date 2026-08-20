@@ -64,6 +64,10 @@ const faqJsonLd = generateFaqSchema([
     q: 'How does the 80% parental leave allowance work?',
     a: 'Eligible parents taking leave of absence to care for children under 3 years old receive up to 6 months of allowance at 80% of average insured wages (60% employment insurance + 20% government subsidy). Both parents can now apply concurrently.',
   },
+  {
+    q: 'Why was this pregnancy calculator developed? A message from the developer to parents-to-be [Warm Wishes]',
+    a: 'When first stepping into the journey of pregnancy and prenatal care, facing intricate clinical milestones and statutory leave policies can feel overwhelming, and it is completely normal to feel uncertain about what to do next. I built this tool hoping to organize clear timelines, fetal growth milestones, and maternity benefits so we can all navigate this journey with peace of mind and grow together.\n\nI will continue refining and expanding this tool based on ongoing experiences and community feedback. Wishing all couples and families a smooth, joyful journey and the safe arrival of a happy, healthy baby!',
+  },
 ]);
 
 export default function PregnancyCalculatorEnPage() {

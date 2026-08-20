@@ -91,6 +91,34 @@ function renderAnswerWithLinks(text: string) {
   });
 }
 
+function renderQuestionWithIcon(q: string) {
+  if (!q.includes('[愛心]') && !q.includes('[heart]') && !q.includes('[Warm Wishes]')) {
+    return <span>{q}</span>;
+  }
+
+  const parts = q.split(/(\[愛心\]|\[heart\]|\[Warm Wishes\])/g);
+  return (
+    <span className="inline-flex items-center gap-1.5 flex-wrap">
+      {parts.map((part, i) => {
+        if (part === '[愛心]' || part === '[heart]' || part === '[Warm Wishes]') {
+          return (
+            <span
+              key={i}
+              className="inline-flex items-center justify-center text-[var(--faq-accent-dark,#ff4081)] align-middle shrink-0"
+              aria-label="heart"
+            >
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            </span>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+}
+
 export default function FaqSection({
   items,
   title = '常問問題與專業指南 (FAQ)',
@@ -186,7 +214,7 @@ export default function FaqSection({
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
                   className={styles.faqQuestionBtn}
                 >
-                  <span>{item.q}</span>
+                  {renderQuestionWithIcon(item.q)}
                   <svg
                     viewBox="0 0 24 24"
                     className={`${styles.faqIcon} ${isOpen ? styles.faqIconActive : ''}`}

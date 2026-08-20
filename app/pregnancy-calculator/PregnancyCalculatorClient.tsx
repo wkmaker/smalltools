@@ -144,6 +144,10 @@ const TRANSLATIONS = {
         q: '育嬰留職停薪津貼（育嬰假）的 8 成薪如何發放？父母可以同時請領嗎？',
         a: '依性別平等工作法與就業保險法規定：\n\n① 請領資格：任職滿 6 個月且子女未滿 3 歲前，得申請育嬰留職停薪（最長至子女滿 3 歲止，合計不超過 2 年）。\n② 津貼金額：就業保險發給「60% 育嬰津貼」+ 政府加發「20% 育嬰留職停薪薪資補助」，合計達平均月投保薪資之「80% (8成薪)」，每一子女最長補助 6 個月。\n③ 父母同時請領：現行法規已開放父母「可以同時申請」育嬰留職停薪並同時請領 8 成津貼，大幅減輕育兒經濟壓力。',
       },
+      {
+        q: '為什麼會開發這個「孕期計算機」？作者想對準爸媽說的話 [愛心]',
+        a: '其實在剛接觸孕產這個領域時，面對繁複的醫學週數、檢查項目與法規津貼，我也常常感到手足無措、不懂具體該做些什麼。建立這個工具，就是希望能夠整理出清晰的時程與權益，幫助大家在懷孕與待產的這條路上一起安心成長。\n\n我也會隨著未來的自身經驗與各界回饋不斷修正與完善這個計算機。預祝全天下的夫妻都可以順利、平安、快樂地迎接一個健康可愛的寶貝！',
+      },
     ],
   },
   'en': {
@@ -282,6 +286,10 @@ const TRANSLATIONS = {
         q: 'How does the 80% parental leave allowance work?',
         a: 'Eligible parents taking leave of absence to care for children under 3 years old receive up to 6 months of allowance at 80% of average insured wages (60% employment insurance + 20% government subsidy). Both parents can now apply concurrently.',
       },
+      {
+        q: 'Why was this pregnancy calculator developed? A message from the developer to parents-to-be [Warm Wishes]',
+        a: 'When first stepping into the journey of pregnancy and prenatal care, facing intricate clinical milestones and statutory leave policies can feel overwhelming, and it is completely normal to feel uncertain about what to do next. I built this tool hoping to organize clear timelines, fetal growth milestones, and maternity benefits so we can all navigate this journey with peace of mind and grow together.\n\nI will continue refining and expanding this tool based on ongoing experiences and community feedback. Wishing all couples and families a smooth, joyful journey and the safe arrival of a happy, healthy baby!',
+      },
     ],
   },
 };
@@ -392,11 +400,8 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const [shareLinkToast, setShareLinkToast] = useState(false);
   const isMountedRef = React.useRef<boolean>(false);
 
-  // Checklist 狀態
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({
-    folicAcid: true,
-    maternityBook: true,
-  });
+  // Checklist 狀態（預設不勾選，由使用者自由互動打勾）
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   // 設定主題色
   useEffect(() => {
