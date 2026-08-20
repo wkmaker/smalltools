@@ -448,6 +448,20 @@ export const CATEGORIES: CategorySection[] = [
           </svg>
         ),
       },
+      {
+        name: '孕期與產檢假計算機',
+        subtitle: 'PREGNANCY & MATERNITY LEAVE',
+        description: '專業精準的孕產時程規劃工具。支援最後月經 (LMP)、預產期 (EDD)、超音波與試管植入推算，精算 40 週產檢里程碑、胎兒成長尺寸，並整合台灣勞基法試算 8 天產檢假、8 週產假、育嬰留停 8 成薪與勞保生育給付。',
+        href: '/pregnancy-calculator/',
+        cardClass: 'pregnancyCard',
+        category: 'utility',
+        keywords: '孕期計算機 預產期計算 產檢假 產假 育嬰留停津貼 勞保生育給付 高層次超音波 唐氏症 懷孕週數 待產包 pregnancy due date maternity',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff4081]">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+        ),
+      },
     ],
   },
 ];
