@@ -37,6 +37,8 @@ interface Translations {
   diceUnit: string;
   fullscreen: string;
   exitFullscreen: string;
+  onlineVersionText: string;
+  onlineVersionLinkText: string;
 }
 
 const TRANSLATIONS: Record<'zh-TW' | 'en', Translations> = {
@@ -65,6 +67,8 @@ const TRANSLATIONS: Record<'zh-TW' | 'en', Translations> = {
     diceUnit: '顆',
     fullscreen: '全螢幕舞台',
     exitFullscreen: '退出全螢幕',
+    onlineVersionText: '另外提供連線版本',
+    onlineVersionLinkText: 'Drink Games',
   },
   en: {
     title: 'Liar\'s Dice Roller',
@@ -91,6 +95,8 @@ const TRANSLATIONS: Record<'zh-TW' | 'en', Translations> = {
     diceUnit: 'dice',
     fullscreen: 'Fullscreen Stage',
     exitFullscreen: 'Exit Fullscreen',
+    onlineVersionText: 'Online multiplayer version available:',
+    onlineVersionLinkText: 'Drink Games',
   },
 };
 
@@ -783,6 +789,23 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
           </svg>
           <span>{lang === 'zh-TW' ? 'English' : '繁體中文'}</span>
         </Link>
+      }
+      extraFooterContent={
+        <div className="flex items-center gap-1.5">
+          <span>{t.onlineVersionText}</span>
+          <a
+            href="https://dgames.cjkuo.net/"
+            target="_blank"
+            rel="noopener"
+            title={lang === 'zh-TW' ? '前往 Drink Games 線上連線派對遊戲（吹牛骰子多人房）' : 'Go to Drink Games - Online Multiplayer Party Games'}
+            className="inline-flex items-center gap-1 text-[#ffb800] hover:text-amber-300 hover:underline font-semibold transition-colors"
+          >
+            <span>{t.onlineVersionLinkText}</span>
+            <svg viewBox="0 0 24 24" width={11} height={11} fill="currentColor">
+              <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+            </svg>
+          </a>
+        </div>
       }
     >
       <div className={styles.container}>

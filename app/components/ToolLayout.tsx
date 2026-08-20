@@ -41,6 +41,7 @@ interface ToolLayoutProps {
   onBackClick?: (e: React.MouseEvent) => void; // 自訂點擊返回按鈕事件
   containerClassName?: string; // 可選傳入自訂外容器 class
   extraHeaderControls?: React.ReactNode; // 可選傳入頂欄右側自訂按鈕組
+  extraFooterContent?: React.ReactNode;  // 可選傳入頁尾贊助旁邊自訂補充內容
   children: React.ReactNode;
 }
 
@@ -60,6 +61,7 @@ export default function ToolLayout({
   onBackClick,
   containerClassName = '',
   extraHeaderControls,
+  extraFooterContent,
   children,
 }: ToolLayoutProps) {
   const pathname = usePathname();
@@ -175,21 +177,29 @@ export default function ToolLayout({
         {children}
       </div>
 
-      {/* ── 頁尾贊助連結 (可透過 hideFooter 隱藏) ── */}
+      {/* ── 頁尾贊助與自訂連結 (可透過 hideFooter 隱藏) ── */}
       {!hideFooter && (
-        <div className="tool-layout-footer mt-12 pt-5 border-t border-white/[.06] flex items-center justify-center gap-2 text-xs text-text-sub">
-          <span>{isEn ? 'Enjoying this tool?' : '喜歡這個小工具嗎？'}</span>
-          <a
-            href="https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-pink-400 hover:text-pink-300 hover:underline font-medium transition-colors"
-          >
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
-            {isEn ? 'Sponsor the Author ☕' : '贊助支持作者 ☕'}
-          </a>
+        <div className="tool-layout-footer mt-12 pt-5 border-t border-white/[.06] flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-text-sub">
+          <div className="flex items-center gap-2">
+            <span>{isEn ? 'Enjoying this tool?' : '喜歡這個小工具嗎？'}</span>
+            <a
+              href="https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-pink-400 hover:text-pink-300 hover:underline font-medium transition-colors"
+            >
+              <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              {isEn ? 'Sponsor the Author ☕' : '贊助支持作者 ☕'}
+            </a>
+          </div>
+          {extraFooterContent && (
+            <>
+              <span className="text-white/20 hidden sm:inline">•</span>
+              <div className="flex items-center gap-1.5">{extraFooterContent}</div>
+            </>
+          )}
         </div>
       )}
     </div>
