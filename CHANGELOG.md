@@ -4,6 +4,24 @@
 
 ---
 
+## [1.2.0] - 2026-08-20
+
+### 🚀 新增功能 (Added)
+- **全面注入 FAQ 結構化資料 (JSON-LD FAQPage Schema)**：
+  - 為 **IP 計算器 (`/ip-calculator`)**、**幸運大轉盤 (`/lucky-wheel`)**、**PDF 壓縮器 (`/pdf-compressor`)**、**PDF 頁面組合器 (`/pdf-processor`)** 與 **吹牛骰子遊戲 (`/liars-dice`)** 等中英文雙語頁面，全面導入語意化 FAQPage Schema，強化 Google 搜尋引擎 rich snippets 索引與排名效益。
+- **互動式 FAQ 手風琴元件 (FaqSection) 升級**：
+  - 支援外層主折疊與展開機制，並附帶動態狀態徽章（Badge）與快速收合按鈕。
+  - 採用 Glassmorphism 毛玻璃視覺風格與微交互動畫，維持工具主畫面清爽度。
+  - 答案文字內嵌關鍵詞與工具內部鏈結（如子網路計算、PDF 壓縮等），強化站內權重流動。
+- **ToolLayout 頁尾自訂插槽 (extraFooterContent)**：
+  - 新增頁尾自訂補充內容插槽，支援各工具頁面靈活延伸額外導航或說明資訊。
+
+### ⚡ 效能與體驗優化 (Changed)
+- **Sitemap 更新頻率與時間同步**：
+  - 更新 `sitemap.ts` 中完成 SEO 優化的工具頁面 `lastModified` 日期為 `2026-08-20`。
+
+---
+
 ## [1.1.0] - 2026-08-04
 
 ### 🚀 新增功能 (Added)
