@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import {
   inspectPdfStructure,
   compressPdfInPlace,
@@ -89,6 +90,46 @@ const TRANSLATIONS = {
     hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-compressor/en/',
+    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解 PDF 圖片降採樣原理、文字無損機制、DPI 解析度與隱私安全保障',
+    faqItems: [
+      {
+        q: 'PDF 壓縮大師是如何縮小檔案體積的？文字和表格會變模糊嗎？',
+        a: `100% 不會模糊！PDF 檔案體積龐大通常是因為內嵌了高解析度的相片或掃描圖片。本工具專門針對 PDF 內部的「點陣圖片 (Bitmap Images)」進行深度智慧降採樣 (Downsampling) 與 WebP/JPEG 畫質壓縮，同時對原生文字內容、向量線條、表格與字型檔進行 100% 原生無損保護，確保壓縮後的 PDF 文字依然能清晰放大與任意複製搜尋。`,
+      },
+      {
+        q: '「輕度」、「平衡」與「極致」三種壓縮預設有何差異？如何自訂 DPI？',
+        a: `本工具提供三大推薦模式與進階微調：
+
+① 輕度壓縮 (Light)：品質 0.85 / 200 DPI，微幅瘦身並維持極高列印精緻度。
+② 平衡壓縮 (Balanced - 推薦)：品質 0.70 / 144 DPI，大幅縮減約 60% 體積，適合公文傳閱與電子郵件附件。
+③ 極致壓縮 (Maximum)：品質 0.50 / 96 DPI，強效瘦身約 80%，適合網頁快速載入與螢幕線上閱讀。
+
+您亦可展開「進階微調設定」自由調整 Quality (1~100) 與 Max DPI (96/144/200)。`,
+      },
+      {
+        q: '可以同時壓縮多個 PDF 檔案嗎？支援 ZIP 打包下載嗎？',
+        a: `支援！您可以一次拖曳上傳多份 PDF 檔案進行批次排隊處理。壓縮完成後，您可以個別下載各檔案的壓縮成品，亦可點擊頂部「打包 ZIP 下載」按鈕，一鍵將所有已瘦身的 PDF 檔案打包為單一 ZIP 壓縮檔下載。`,
+      },
+      {
+        q: '什麼是「結構預檢」與「圖片明細」？為什麼有些圖片會顯示「已保護」？',
+        a: `在正式壓縮前，工具會自動掃描 PDF 結構並列出所有內嵌圖片的解析度、寬高與色彩格式。
+
+若內嵌圖片解析度原本就低於目標 DPI、檔案極小或屬於特殊透明遮罩 (Alpha Mask)，系統會智慧決策為「已保護 (Protected)」並跳過重壓，防止因過度壓縮反而導致體積膨脹或畫質崩壞。`,
+      },
+      {
+        q: '受密碼保護的 PDF 檔案可以進行壓縮嗎？',
+        a: `可以。若上傳的 PDF 設有開啟密碼，系統會即時彈出密碼輸入框。在您輸入正確密碼後，瀏覽器會在本地解開加密區塊並繼續進行圖片壓縮與結構瘦身。`,
+      },
+      {
+        q: '如果我的 PDF 只有純文字而沒有任何圖片，壓縮效果如何？',
+        a: `PDF 的體積若主要由龐大的內嵌字型 (Embedded Fonts) 或大量純向量幾何線條組成，由於工具堅持「文字與向量 100% 原生無損可複製」，壓縮幅度會相對有限（約 5%~15% 結構最佳化）。本工具最顯著的瘦身效果（減小 50%~80%）主要來自包含掃描頁面、照片或插圖的 PDF 文件。`,
+      },
+      {
+        q: '上傳機密文件或合約進行 PDF 壓縮安全嗎？檔案會被上傳到後端嗎？',
+        a: `100% 安全無虞！本工具採用「零伺服器架構 (Zero-Server Architecture)」，所有 PDF 解析、圖片重繪降採樣與重組工作均 100% 於您的瀏覽器記憶體本地完成，絕無任何資料上傳至任何雲端伺服器，甚至在斷網環境下也能完美離線執行。`,
+      },
+    ],
   },
   en: {
     title: 'PDF Compressor Master',
@@ -148,6 +189,46 @@ const TRANSLATIONS = {
     hidePassword: 'Hide Password',
     switchLangText: '繁體中文',
     switchLangHref: '/pdf-compressor/',
+    faqTitle: 'Frequently Asked Questions & Guide (FAQ)',
+    faqSubtitle: 'Learn about PDF image downsampling, text preservation, DPI settings, and privacy guarantees',
+    faqItems: [
+      {
+        q: 'How does PDF Compressor Master reduce file size? Will text and tables become blurry?',
+        a: `100% crisp and clear! Large PDF files are usually bloated by high-resolution embedded photos and scanned images. This tool specifically targets embedded bitmap images for intelligent downsampling and recompression, while leaving all native text, vector shapes, fonts, and table structures 100% untouched and lossless.`,
+      },
+      {
+        q: 'What is the difference between Light, Balanced, and Maximum modes? How do I customize DPI?',
+        a: `We provide 3 preset modes plus advanced fine-tuning:
+
+1. Light: Quality 0.85 / 200 DPI, moderate reduction with print-ready crispness.
+2. Balanced (Recommended): Quality 0.70 / 144 DPI, shrinks file size by ~60%, ideal for email attachments and office sharing.
+3. Maximum: Quality 0.50 / 96 DPI, shrinks size by up to ~80%, perfect for web publishing and screen viewing.
+
+You can also toggle 'Advanced Settings' to manually adjust compression quality and DPI thresholds.`,
+      },
+      {
+        q: 'Can I compress multiple PDF files at once? Is ZIP batch download supported?',
+        a: `Yes! You can drag and drop multiple PDF files to process in batch queue. Once completed, you can download each compressed file individually or click 'Download All ZIP' to export all compressed PDFs into a single ZIP archive.`,
+      },
+      {
+        q: "What is 'Structure Inspection' and why are some images marked as 'Protected'?",
+        a: `Before compressing, the engine inspects the PDF structure to detect image resolutions, dimensions, and color profiles.
+
+If an image is already below the target DPI, extremely small, or serves as a transparency mask, the system flags it as 'Protected' and skips recompression to prevent file inflation or visual artifacts.`,
+      },
+      {
+        q: 'Can password-protected PDF files be compressed?',
+        a: `Yes. If an uploaded PDF is password-encrypted, a prompt will appear asking for the open password. Once verified locally, the tool unlocks and compresses the file normally.`,
+      },
+      {
+        q: 'How effective is compression on text-only PDFs without any images?',
+        a: `If a PDF consists solely of vector text and embedded fonts, compression gains will be modest (5%-15% structural optimization) because we strictly preserve 100% text readability and copyability. The most dramatic size reduction (50%-80%) occurs on PDFs containing photos, scanned pages, or embedded illustrations.`,
+      },
+      {
+        q: 'Is it safe to compress confidential documents? Are files uploaded to external servers?',
+        a: `100% private and secure! Operating on a Zero-Server Architecture, all parsing, downsampling, and repackaging occur entirely within your browser's local memory. No files or data ever leave your device, and the tool works completely offline.`,
+      },
+    ],
   },
 };
 
@@ -1060,6 +1141,14 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
           </div>
         )}
       </div>
+
+      {/* 通用 FAQ 常見問題區塊 */}
+      <FaqSection
+        items={t.faqItems}
+        title={t.faqTitle}
+        subtitle={t.faqSubtitle}
+        accentColor="#eab308"
+      />
 
       {toast && (
         <div className={styles.toast}>
