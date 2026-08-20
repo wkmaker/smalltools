@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useId } from 'react';
+import { useState, useEffect, useRef, useId, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import {
   renderPdfPagesProgressive,
   renderSinglePdfPageHighRes,
@@ -20,62 +21,107 @@ const TRANSLATIONS = {
   'zh-TW': {
     title: 'PDF 頁面組合器',
     subtitle: 'ONLINE PDF PAGE COMPOSER',
-    description: '專業免費的線上 PDF 頁面組合器！支援多檔 PDF 自動拆頁展開預覽、圖片混搭合併、點擊滿版超清大圖檢視、滑鼠拖曳頁面排序、單頁 90° 旋轉與刪除、高品質 PDF 匯出。100% 瀏覽器本機端安全運算。',
+    description: '專業免費的純前端 PDF 頁面組合器！支援多檔合併、拖曳排序、單頁旋轉與刪除、圖片插入與轉檔。100% 瀏覽器本地記憶體運算，極致保護檔案隱私。',
+    tag100Local: '100% 瀏覽器本機端運算',
+    noPagesLoaded: '尚未載入任何頁面',
+    dragOrClickText: '請拖曳上傳 PDF 或圖片檔案開始頁面組合與編輯',
     addPdfImg: '新增 PDF / 圖片',
-    parsingPages: '解析頁面中...',
-    totalCount: (n: number) => `總計 ${n} 個頁面`,
-    exportQualityLabel: '匯出品質：',
-    qHigh: '高畫質原圖 (95%)',
-    qBal: '推薦平衡 (85%)',
-    qLow: '輕度瘦身 (65%)',
-    rotateAll: '全部旋轉 90°',
-    clearAll: '清空全部',
-    exportPdf: '匯出 PDF 檔案',
-    exporting: '合成導出中...',
-    dropTitle: '拖曳一或多個 PDF / 圖片檔案至此，自動解析拆解所有頁面',
-    dropSub: '支援滑鼠拖曳頁面任意排序、點擊展放大圖預覽、單頁旋轉刪除與真 PDF 合成導出',
-    dragOverlayText: '放開滑鼠以新增多個 PDF / 圖片頁面',
-    clickToZoom: '點擊放大檢視',
+    parsingPages: '正在解析頁面...',
+    totalCount: (n: number) => `共 ${n} 頁`,
+    exportQualityLabel: '匯出畫質：',
+    qHigh: '高畫質 (95%)',
+    qBal: '平衡推薦 (85%)',
+    qLow: '極速輕巧 (65%)',
+    rotateAll: '全體旋轉 90°',
+    clearAll: '清空畫布',
+    exportPdf: '匯出合併 PDF',
+    exporting: '匯出中...',
+    dropTitle: '拖曳 PDF 或圖片至此處自動拆解與預覽',
+    dropSub: '支援拖曳自由調換順序、大圖滿版預覽、單頁旋轉與無失真 PDF 匯出。',
+    dragOverlayText: '放開滑鼠以新增 PDF 或圖片頁面',
+    clickToZoom: '點擊展開大圖',
     pageImg: '圖片',
     rotate: '旋轉',
     delete: '刪除',
-    addMoreBottom: '拖曳一或多個檔案至此處，即可繼續新增',
+    addMoreBottom: '拖曳或點擊此處新增更多檔案',
     pageInfo: (curr: number, total: number) => `#${curr} / ${total}`,
     zoom: '縮放',
-    resetZoom: '重置',
+    resetZoom: '重置 100%',
     rotate90: '旋轉 90°',
-    close: '關閉 (ESC)',
-    renderingHighRes: '正在使用 PDF.js 即時渲染 300 DPI 超高清圖像...',
+    close: '關閉預覽 (ESC)',
+    renderingHighRes: '正在以 PDF.js 渲染 300 DPI 超清原稿...',
     prevPage: '上一頁',
     nextPage: '下一頁',
-    shortcutsHint: '按鍵 Esc 關閉 ｜ ◄ ► 方向鍵切換頁面',
-    toastValidOnly: '請選擇有效的 PDF 或 PNG/JPG/WebP 圖片檔案',
-    toastParsedDone: '多檔解析與預覽處理完成！',
-    toastMovedPage: (src: number, tgt: number) => `已將頁面 #${src} 移至 #${tgt}`,
-    toastPageRemoved: '已刪除指定頁面',
+    shortcutsHint: 'ESC 關閉 | ◄ ► 方向鍵切換頁面',
+    toastValidOnly: '請選擇正確的 PDF 格式或 PNG/JPG/WebP 圖片檔案',
+    toastParsedDone: '檔案解析載入完成！',
+    toastMovedPage: (src: number, tgt: number) => `已將第 #${src} 頁移動至第 #${tgt} 頁`,
+    toastPageRemoved: '已移除指定頁面',
     toastRotatedAll: '已將所有頁面順時針旋轉 90 度',
-    confirmClearAll: '確定要清空所有已載入的 PDF 頁面與圖片嗎？',
+    confirmClearAll: '確定要清空目前已載入的所有頁面嗎？',
     toastClearedAll: '已清空所有頁面',
-    toastExporting: '正在本機合成高畫質 PDF 檔案...',
-    toastExportSuccess: 'PDF 匯出下載成功！',
-    toastExportFailed: (msg: string) => `PDF 匯出失敗：${msg}`,
-    toastPdfError: (name: string) => `無法解析 PDF 檔案 [${name}]，可能檔案已加密或毀損`,
+    toastExporting: '正在編譯並匯出高品質 PDF 檔案...',
+    toastExportSuccess: 'PDF 檔案已成功合併並匯出！',
+    toastExportFailed: (msg: string) => `匯出失敗：${msg}`,
+    toastPdfError: (name: string) => `解析 PDF 檔案 [${name}] 失敗，可能檔案已損毀或受加密保護。`,
     unlockModalTitle: '檔案受密碼保護',
-    unlockModalSub: (name: string) => `PDF 檔案 [${name}] 受到開啟密碼保護，請輸入密碼以拆解與預覽頁面。`,
+    unlockModalSub: (name: string) => `PDF 檔案 [${name}] 設有開啟密碼，請輸入密碼以進行頁面拆解與預覽。`,
     passwordPlaceholder: '請輸入 PDF 開啟密碼',
-    unlockBtn: '解鎖並拆頁',
-    unlocking: '驗證解鎖中...',
+    unlockBtn: '解鎖並拆解頁面',
+    unlocking: '解密中...',
     cancelBtn: '取消',
-    invalidPasswordMsg: '密碼不正確，請確認後重新輸入。',
+    invalidPasswordMsg: '密碼不正確，請重新輸入。',
     showPassword: '顯示密碼',
     hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-processor/en/',
+    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解多檔 PDF 合併、圖片轉檔、頁面旋轉排序與無損導出機制',
+    faqItems: [
+      {
+        q: 'PDF 頁面組合器支援哪些核心功能？如何合併多個 PDF？',
+        a: `本工具是一站式的純前端 PDF 頁面編輯器，支援：
+
+① 多檔合併與圖片插入：可同時拖曳載入多個 PDF 檔案以及 PNG/JPG 圖片，自動依序拆解為單頁畫布。
+② 視覺化拖曳排序：透過滑鼠拖曳（或點擊左右箭頭按鈕）自由調換頁面順序。
+③ 單頁旋轉與刪除：支援單頁 90° 順時針旋轉與一鍵刪除多餘頁面。
+④ 一鍵高畫質匯出：將排版完成的頁面無失真重組為單一全新 PDF 檔案。`,
+      },
+      {
+        q: '可以將 PNG 或 JPG 圖片直接插入 PDF 中並轉為 PDF 頁面嗎？',
+        a: `可以！您可以將一至多張 PNG、JPG 或 WebP 圖片直接拖入工作區。工具會自動將圖片轉換為高解析度 PDF 頁面，並允許您與其他 PDF 頁面混合排序與合併。`,
+      },
+      {
+        q: '如何放大檢視特定頁面的細節？',
+        a: `點擊任意頁面縮圖右上角的「檢視」按鈕（或雙擊頁面），即可開啟「滿版超清動態縮放 Lightbox」。
+
+在檢視視窗中，工具會以 JIT 高解析度即時無損渲染該頁面，並提供滑鼠滾輪縮放、平移拖曳、90° 旋轉與鍵盤左右鍵快捷翻頁功能。`,
+      },
+      {
+        q: '合併或旋轉 PDF 頁面後，原本的文字會變成圖片或失真嗎？',
+        a: `絕不失真！工具底層直接操作 PDF 的原生頁面物件樹 (Object Tree)，保留原本所有的向量字型、文字層與高解析度素材，合併或旋轉過程不進行任何破壞性畫質壓縮，文字依然清晰且支援全選複製。`,
+      },
+      {
+        q: '如果部分頁面方向橫豎顛倒，可以單獨旋轉特定頁面嗎？',
+        a: `可以！您可以在頁面縮圖卡片上點擊「旋轉 90°」按鈕，每點擊一次即順時針旋轉 90 度（支援 90° / 180° / 270° 校正）。在匯出時，系統會精確寫入對應的 /Rotate 頁面標籤，校正顛倒的文件方向。`,
+      },
+      {
+        q: '如果要合併的 PDF 檔案有密碼保護，該如何處理？',
+        a: `當您載入設有開啟密碼的 PDF 檔案時，系統會自動彈出解鎖視窗。輸入正確密碼後，工具會在瀏覽器本機記憶體完成解密，並將各頁面順利載入至畫布中供您自由組合。`,
+      },
+      {
+        q: '處理涉及合約或機密資料的 PDF 安全嗎？',
+        a: `100% 隱私安全！本工具絕不上傳任何檔案至外部伺服器。所有頁面拆解、拖曳重組、旋轉與新檔合成運算皆 100% 於您的瀏覽器本地記憶體中完成，甚至斷網也能離線順暢操作。`,
+      },
+    ],
   },
   en: {
     title: 'PDF Page Composer',
     subtitle: 'ONLINE PDF PAGE COMPOSER',
-    description: 'Free online PDF Page Composer! Auto split & preview multi-file PDFs, combine images, drag-and-drop reorder, 90° rotation, single-page deletion, and high-res PDF export. 100% client-side execution.',
+    description: 'Free online PDF Page Composer! Combine multiple PDFs, split & preview pages, drag-and-drop reorder, rotate & delete single pages, insert images, and export clean PDFs with 100% in-browser security.',
+    tag100Local: '100% In-Browser Execution',
+    noPagesLoaded: 'No pages loaded yet',
+    dragOrClickText: 'Drag & drop PDF or image files to start page composing & editing',
     addPdfImg: 'Add PDF / Images',
     parsingPages: 'Parsing pages...',
     totalCount: (n: number) => `Total ${n} page(s)`,
@@ -87,17 +133,17 @@ const TRANSLATIONS = {
     clearAll: 'Clear All',
     exportPdf: 'Export Combined PDF',
     exporting: 'Exporting PDF...',
-    dropTitle: 'Drag & drop PDF / image files here to auto split & preview',
-    dropSub: 'Supports drag & drop reordering, full-size preview, page rotation, and PDF export.',
+    dropTitle: 'Drag & drop PDF or images here to auto-split & preview',
+    dropSub: 'Supports drag-to-reorder, full-size preview, page rotation, and lossless PDF export.',
     dragOverlayText: 'Drop files to add PDF or image pages',
-    clickToZoom: 'Click to preview',
+    clickToZoom: 'Click to zoom',
     pageImg: 'Image',
     rotate: 'Rotate',
     delete: 'Delete',
     addMoreBottom: 'Drag or click here to add more files',
     pageInfo: (curr: number, total: number) => `#${curr} / ${total}`,
     zoom: 'Zoom',
-    resetZoom: 'Reset',
+    resetZoom: 'Reset 100%',
     rotate90: 'Rotate 90°',
     close: 'Close (ESC)',
     renderingHighRes: 'Rendering 300 DPI high-res page with PDF.js...',
@@ -126,6 +172,45 @@ const TRANSLATIONS = {
     hidePassword: 'Hide Password',
     switchLangText: '繁體中文',
     switchLangHref: '/pdf-processor/',
+    faqTitle: 'Frequently Asked Questions & Guide (FAQ)',
+    faqSubtitle: 'Learn about multi-file PDF merging, image conversion, page rotation, and lossless export',
+    faqItems: [
+      {
+        q: 'What core features does PDF Page Composer support? How do I merge PDFs?',
+        a: `PDF Page Composer is an all-in-one client-side editor supporting:
+
+1. Multi-file Merge & Image Import: Drag and drop multiple PDF files and PNG/JPG images to automatically split into individual page tiles.
+2. Visual Drag & Drop Reorder: Freely adjust page sequence using drag-and-drop or move buttons.
+3. Rotate & Delete: Rotate pages by 90° or remove unwanted pages.
+4. Lossless Export: Reassemble all arranged pages into a single new PDF document.`,
+      },
+      {
+        q: 'Can I insert PNG or JPG images and convert them into PDF pages?',
+        a: `Yes! You can drag and drop PNG, JPG, or WebP images directly into the workspace. The tool automatically wraps them into crisp PDF pages, allowing seamless mixing and sorting alongside other PDF documents.`,
+      },
+      {
+        q: 'How can I zoom in to inspect page details closely?',
+        a: `Click the 'Preview' button on any page tile (or double click) to open the Full-Viewport Lightbox.
+
+The lightbox renders the page in Just-In-Time high resolution, complete with mouse-wheel zoom, pan dragging, rotation, and keyboard arrow navigation.`,
+      },
+      {
+        q: 'Will text become rasterized or lose quality after merging or rotating?',
+        a: `Never! The tool directly manipulates the PDF's native object tree, preserving all original vector fonts, text streams, and high-res assets without any lossy rasterization. Text remains crisp, selectable, and searchable.`,
+      },
+      {
+        q: 'Can I rotate individual sideways or upside-down pages?',
+        a: `Yes! Click the 'Rotate 90°' button on any page tile to rotate clockwise (90°, 180°, 270°). The exported PDF embeds the exact /Rotate metadata to correct page orientations.`,
+      },
+      {
+        q: 'How does the tool handle password-protected PDF files during merge?',
+        a: `When you load a password-protected PDF, an unlock dialog will appear. Entering the correct password unlocks the document locally in memory, allowing all pages to be loaded onto the canvas for merging.`,
+      },
+      {
+        q: 'Is it safe to process confidential documents or contracts?',
+        a: `100% safe and confidential! The composer operates completely on the client side. All splitting, reordering, rotation, and rendering happen inside your browser memory with zero server uploads, working 100% offline.`,
+      },
+    ],
   },
 };
 
@@ -775,6 +860,14 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
           </div>
         )}
       </div>
+
+      {/* 通用 FAQ 常見問題區塊 */}
+      <FaqSection
+        items={t.faqItems}
+        title={t.faqTitle}
+        subtitle={t.faqSubtitle}
+        accentColor="#ef4444"
+      />
 
       {/* 大圖展開 滿版超清動態縮放 Lightbox Modal */}
       {isMounted && previewItem && previewPageIndex !== null && createPortal(

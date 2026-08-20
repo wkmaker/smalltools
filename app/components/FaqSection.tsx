@@ -2,6 +2,7 @@
  * FaqSection.tsx
  * ──────────────────────────────────────────────────────────────
  * 全站工具頁面共用 FAQ 手風琴組件
+ * 支援整區折疊/展開 (Master Collapsible)
  * 支援亮/暗雙主題高對比度降階適配 (WCAG 2.1 AA Compliant)
  */
 
@@ -18,6 +19,7 @@ export interface FaqSectionProps {
   title?: string;
   subtitle?: string;
   accentColor?: string;
+  defaultExpanded?: boolean;
   className?: string;
 }
 
@@ -94,8 +96,10 @@ export default function FaqSection({
   title = '常問問題與專業指南 (FAQ)',
   subtitle,
   accentColor = '#00ff66',
+  defaultExpanded = false,
   className = '',
 }: FaqSectionProps) {
+  const [isExpanded, setIsExpanded] = useState<boolean>(defaultExpanded);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   if (!items || items.length === 0) return null;
@@ -108,62 +112,101 @@ export default function FaqSection({
     '--faq-glow-dark': `${accentColor}25`,
   } as React.CSSProperties;
 
+  // 判斷是否為中文介面
+  const isChinese = /[\u4e00-\u9fa5]/.test(title);
+  const badgeText = isChinese ? `${items.length} 則問答` : `${items.length} Q&As`;
+  const actionText = isExpanded
+    ? (isChinese ? '收合' : 'Collapse')
+    : (isChinese ? '展開問答' : 'Expand FAQ');
+
   return (
-    <div className={`${styles.faqContainer} ${className}`} style={containerStyle}>
-      {/* FAQ 區塊頁頭 */}
-      <div className={styles.faqHeader}>
-        <h2 className={styles.faqTitle}>
-          <svg
-            viewBox="0 0 24 24"
-            className={styles.titleIcon}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-          <span>{title}</span>
-        </h2>
-        {subtitle && <p className={styles.faqSubtitle}>{subtitle}</p>}
-      </div>
-
-      {/* 手風琴列表 */}
-      <div className={styles.faqList}>
-        {items.map((item, idx) => {
-          const isOpen = openIndex === idx;
-          return (
-            <div
-              key={idx}
-              className={`${styles.faqItem} ${isOpen ? styles.faqItemActive : ''}`}
+    <div
+      className={`${styles.faqContainer} ${!isExpanded ? styles.faqContainerCollapsed : ''} ${className}`}
+      style={containerStyle}
+      onClick={() => {
+        if (!isExpanded) setIsExpanded(true);
+      }}
+    >
+      {/* FAQ 主折疊控制 Header */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsExpanded((prev) => !prev);
+        }}
+        className={`${styles.faqMasterHeader} ${isExpanded ? styles.faqHeaderExpanded : ''}`}
+        aria-expanded={isExpanded}
+      >
+        <div className={styles.faqTitleGroup}>
+          <h2 className={styles.faqTitle}>
+            <svg
+              viewBox="0 0 24 24"
+              className={styles.titleIcon}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <button
-                type="button"
-                onClick={() => setOpenIndex(isOpen ? null : idx)}
-                className={styles.faqQuestionBtn}
-              >
-                <span>{item.q}</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`${styles.faqIcon} ${isOpen ? styles.faqIconActive : ''}`}
-                >
-                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
-                </svg>
-              </button>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span>{title}</span>
+            <span className={styles.faqBadge}>{badgeText}</span>
+          </h2>
+          {isExpanded && subtitle && <p className={styles.faqSubtitle}>{subtitle}</p>}
+        </div>
 
-              {isOpen && (
-                <div className={styles.faqAnswer}>
-                  {typeof item.a === 'string' ? renderAnswerWithLinks(item.a) : item.a}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+        <div className={styles.faqMasterAction}>
+          <div className={styles.faqMasterActionBtn}>
+            <span>{actionText}</span>
+            <svg
+              viewBox="0 0 24 24"
+              className={`${styles.masterChevron} ${isExpanded ? styles.masterChevronExpanded : ''}`}
+            >
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+            </svg>
+          </div>
+        </div>
+      </button>
+
+      {/* 手風琴列表（展開時呈現） */}
+      {isExpanded && (
+        <div className={styles.faqList}>
+          {items.map((item, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <div
+                key={idx}
+                className={`${styles.faqItem} ${isOpen ? styles.faqItemActive : ''}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(isOpen ? null : idx)}
+                  className={styles.faqQuestionBtn}
+                >
+                  <span>{item.q}</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className={`${styles.faqIcon} ${isOpen ? styles.faqIconActive : ''}`}
+                  >
+                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+                  </svg>
+                </button>
+
+                {isOpen && (
+                  <div className={styles.faqAnswer}>
+                    {typeof item.a === 'string' ? renderAnswerWithLinks(item.a) : item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
+
 
