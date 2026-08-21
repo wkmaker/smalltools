@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './car-loan.module.css';
 
 interface LoanRow {
@@ -107,6 +108,40 @@ const TRANSLATIONS = {
     unitY: '年',
     unitM: '月',
     unitCurrency: '元',
+
+    // FAQ 常見問題
+    faqTitle: '汽車貸款常見問題與還款指南 (FAQ)',
+    faqSubtitle: '全方位掌握車貸利率試算、攤還方式差異、氣球貸尾款與提前結清等關鍵問題',
+    faqItems: [
+      {
+        q: '汽車貸款常見的年利率是多少？新車與中古車（二手車）利率有何差異？',
+        a: '汽車貸款利率主要依據「車輛新舊」、「借款人信用條件」與「承辦機構（銀行 vs 融資公司）」而定：\n\n① 新車貸款：\n通常利率最低，常態年利率約在 2.5% ~ 5% 之間。若搭配車商特定零利率或低利促銷，利率甚至可更低（但可能折抵車價折扣）。\n\n② 原車融資 / 二手中古車貸款：\n中古車因折舊與殘值風險較高，銀行利率約 4.5% ~ 9%，民間融資公司或中古車商配合之分期專案則約在 6% ~ 14% 不等。\n\n③ 信用與擔保影響：\n良好的個人聯徵信用評分、穩定的薪資收入證明或提供保證人，皆有助於爭取更優惠的核貸利率與成數。',
+      },
+      {
+        q: '車貸還款方式「本息均攤」與「本金均攤」哪一種更划算？',
+        a: '兩者計算原理與適合對象如下：\n\n① 本息平均攤還（本息均攤，最常見）：\n將整個貸款期間的本金與總利息加總後，平均分攤到每個月。每月還款金額固定不變，前期還款利息佔比較高、後期本金佔比較高。適合上班族與一般家庭編列固定每月收支預算。\n\n② 本金平均攤還（本金均攤）：\n將全部本金平均分攤到每期，利息則按剩餘本金逐期遞減計算。前期每月還款金額最高，隨後逐月減少。優點是「總利息支出低於本息均攤」，適合前期還款能力充裕、希望節省利息總額的借款人。',
+      },
+      {
+        q: '什麼是「氣球貸（尾款保留）」與「階梯低月付」？有什麼隱藏風險？',
+        a: '氣球貸與階梯低月付常見於進口車或新車銷售方案中，旨在降低買車初期的月繳門檻：\n\n① 氣球貸 (Balloon Payment)：\n將貸款金額的一部分（如 20%~30%）保留到最後一期作為「尾款」，前面期數僅攤還剩餘部分本金與利息。期滿時借款人必須「一次清償高額尾款」、「申請尾款再分期」或「將車輛售出折抵尾款」。\n\n② 階梯式低月付：\n在前 1~2 年提供超低月付額，期滿後恢復正常本息攤還，使後期的月付金額大幅跳升。\n\n③ 隱藏風險：\n此類方案雖然讓您在前期輕鬆交車，但因本金在前中期減少速度緩慢，導致「總利息支出明顯高於一般標準攤還」。若最後一期無力清償尾款或車輛中古殘值下跌，可能面臨二胎高利貸款或車輛遭查封拍賣之資金斷鏈風險。',
+      },
+      {
+        q: '什麼是「實質年利率 (APR)」？為什麼車貸不能只看表面標示利率？',
+        a: '實質年利率（APR, Annual Percentage Rate）是將貸款本金、表面年利率以及所有衍生手續費（如動保設定費、銀行開辦費、帳管費）納入內部報酬率公式進行折現攤提後計算出的「真實借款年化成本」。\n\n① 手續費對短天期或小額貸款影響巨大：\n例如借款 30 萬元、年利率 3.5%、貸款 3 年，表面看利率不高，但若加計 5,000 元設定費與手續費，實質 APR 會立即上升至約 4.6% 以上。\n\n② 比較方案最佳工具：\n比較不同銀行或車商方案時，以 APR 為統一比較基準，才能避免落入「低表面利率、高昂手續費」的數字盲區。',
+      },
+      {
+        q: '什麼是「動保設定費」？為什麼辦理車貸都需要收取？',
+        a: '動保設定費全稱為「車輛動產擔保設定登記規費」：\n\n① 法定擔保登記：\n當您向銀行或融資公司貸款買車時，債權人為保障債權，會向公路監理機關辦理動產抵押設定，防止車主在貸款未清償前擅自過戶或轉賣車輛。\n\n② 收費標準：\n監理所官方規費約為 900 ~ 1,200 元，但承貸金融機構通常會加上代辦作業手續費，市場常態收費約在 3,500 ~ 5,000 元之間，通常於撥款時內扣或於交車前一次性收取。',
+      },
+      {
+        q: '車貸可以提前全部還清（提前結清）嗎？會有違約金嗎？',
+        a: '車貸提前清償規定視各合約條款而定：\n\n① 綁約期限制：\n多數車貸合約會約定 12 ~ 20 個月不等的「限制清償期（綁約期）」。若在綁約期內提前大額還款或結清，金融機構會依剩餘本金收取 3% ~ 5% 的提前清償違約金。\n\n② 綁約期滿免違約金：\n超過綁約期後通常可隨時全額結清且免收違約金。結清後請務必向承辦機構索取「清償證明」與「抵押權塗銷同意書」，並前往監理機關辦理塗銷登記，車輛所有權才算完全解除抵押限制。',
+      },
+      {
+        q: '本車貸計算機試算結果是否具備法律效力？（免責條款）',
+        a: '本線上車貸試算工具所提供之月付金、總利息、攤還明細與 APR 數值，係依據標準金融複利數學模型進行理論估算，僅供消費者購車財務規劃與比較參考之用，不構成任何融資承諾或法律要約。\n\n實際核貸利率、最高可貸成數、手續費用、綁約期限、違約金條件與最終每月應繳金額，均以各承辦銀行、融資機構或車商金融部門依申請人信用狀況與車況審核之正式合約為準。',
+      },
+    ],
   },
   en: {
     title: 'Car Loan Calculator',
@@ -166,6 +201,40 @@ const TRANSLATIONS = {
     unitY: 'yr',
     unitM: 'mo',
     unitCurrency: '$',
+
+    // FAQ
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Everything you need to know about auto loan rates, balloon payments, APR, and early payoff',
+    faqItems: [
+      {
+        q: 'What is the typical interest rate for an auto loan, and how do new vs. used car loans differ?',
+        a: 'Auto loan interest rates vary based on vehicle age, credit score, loan term, and the lender:\n\n① New Car Loans:\nTypically offer the lowest rates, generally ranging between 2.5% and 5.0% APR. Automakers may also offer promotional low APRs or dealer incentives.\n\n② Used Car / Refinance Loans:\nDue to vehicle depreciation and collateral risk, used car loan rates typically range from 4.5% to 12.0%+ depending on credit tier and vehicle mileage.\n\n③ Credit & Income Factors:\nA solid credit score, verifiable income history, and a lower debt-to-income (DTI) ratio significantly help in securing top-tier interest rates.',
+      },
+      {
+        q: 'Which repayment method is better: Equal Monthly Payment (Amortization) or Equal Principal Payment?',
+        a: 'The two repayment methods cater to different financial strategies:\n\n① Equal Principal and Interest (Standard Amortization):\nYour monthly payment remains constant throughout the loan term. Interest represents a larger portion of earlier payments and gradually declines. This makes monthly budgeting predictable and straightforward.\n\n② Equal Principal Payment:\nYou repay a fixed amount of principal each month, plus accrued interest on the remaining balance. Monthly payments start at their highest and decline over time. Total interest paid is lower, which suits borrowers who have higher initial cash flow and want to save on total interest.',
+      },
+      {
+        q: 'What are Balloon Payments and Stepped Low Monthly Payments? What are the hidden risks?',
+        a: 'These creative financing options are designed to lower upfront monthly payments for buyers:\n\n① Balloon Payment Structure:\nA significant portion of the principal (e.g. 20% to 30%) is deferred to the final payment. Monthly installments during the term are substantially lower, but the borrower must pay off the balloon lump sum, refinance it, or trade in the vehicle at maturity.\n\n② Stepped Low Payments:\nPayments are kept very low for the first 1 to 2 years, followed by sharp step-up increases in monthly installments for the remaining years.\n\n③ Associated Risks:\nBecause the principal is amortized much more slowly, total interest costs are substantially higher than standard loans. If vehicle market value depreciates faster than expected or if the borrower lacks funds for the balloon payment, refinancing at higher rates or repossession risks may arise.',
+      },
+      {
+        q: 'What is Annual Percentage Rate (APR), and why should I look beyond the nominal interest rate?',
+        a: 'Annual Percentage Rate (APR) reflects the true, all-in annualized cost of borrowing by factoring in the nominal interest rate along with mandatory fees (such as loan origination, vehicle mortgage registration, and documentation fees) amortized over the loan term.\n\n① Impact of Fixed Fees:\nOn shorter-term or smaller car loans, a $3,500 to $5,000 upfront fee can increase the effective borrowing cost by 1.0% to 2.0% above the advertised rate.\n\n② Accurate Comparison:\nComparing offers based on APR rather than nominal rates ensures an apples-to-apples evaluation without hidden fee surprises.',
+      },
+      {
+        q: 'What is the Vehicle Mortgage Registration Fee (動保設定費)?',
+        a: 'When financing a vehicle, the lender places a legal lien on the vehicle title registered with motor vehicle regulatory authorities to prevent unauthorized resale before loan completion.\n\nLenders and finance companies charge a one-time administrative and filing fee (typically around TWD 3,500 to 5,000 / USD 100 to 200) either deducted from the disbursed loan proceeds or billed at vehicle delivery.',
+      },
+      {
+        q: 'Can I pay off my auto loan early, and is there a prepayment penalty?',
+        a: 'Early repayment terms depend on your specific loan agreement:\n\n① Lock-in / Prepayment Penalty Period:\nMost auto loan contracts specify a lock-in window (typically 12 to 20 months). Settling the loan early within this period may incur a 3% to 5% penalty on the remaining principal.\n\n② Post-Lockout Settlement:\nOnce the lock-in period expires, you can typically pay off the remaining balance without penalties. After full payoff, obtain the official Release of Lien / Certificate of Settlement from your lender and cancel the vehicle registration lien.',
+      },
+      {
+        q: "Is the car loan calculator's result legally binding? (Financial Disclaimer)",
+        a: 'All monthly payments, total interest figures, amortization schedules, and APR computations generated by this tool are theoretical estimates based on standard compound interest formulas for budgeting and educational purposes only.\n\nFinal interest rates, maximum loan-to-value (LTV) limits, origination fees, prepayment terms, and approved payment schedules are subject to formal underwriting and contractual terms issued by your lending bank or licensed automotive finance company.',
+      },
+    ],
   },
 };
 
@@ -1178,6 +1247,16 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
               )}
             </div>
           </div>
+        </div>
+
+        {/* 常見問題 FAQ 區塊 */}
+        <div className="mt-8">
+          <FaqSection
+            title={t.faqTitle}
+            subtitle={t.faqSubtitle}
+            items={t.faqItems}
+            accentColor="#ff3b30"
+          />
         </div>
       </ToolLayout>
 
