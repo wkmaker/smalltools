@@ -45,8 +45,14 @@ const TRANSLATIONS = {
 
     // 薪資與假別設定
     leaveSettingsTitle: '產假與津貼設定 (選填)',
-    monthlySalaryLabel: '月投保薪資 (TWD) [試算生育給付與育嬰津貼]',
+    monthlySalaryLabel: '前 6 個月平均月投保薪資 (TWD)',
+    monthlySalaryHelper: '依分娩或留停前 6 個月平均投保薪資計算（最高級距 45,800 元）',
     monthlySalaryPlaceholder: '請輸入月薪，如 45800',
+    salaryTooltipBtnAria: '投保薪資計算基準說明',
+    salaryTooltipTitle: '投保薪資試算基準說明',
+    salaryTooltipLabor: '勞保生育給付：按「分娩當月起前 6 個月」平均月投保薪資，一次給付 2 個月（雙胞胎 4 個月）。',
+    salaryTooltipParental: '育嬰留職停薪津貼：按「育嬰留停當月起前 6 個月」平均月投保薪資，每月發給 80%（最長 6 個月）。',
+    salaryTooltipCap: '投保級距上限：若實際薪資高於 45,800 元，勞保最高投保級距為 45,800 元（試算公部門津貼請以 45,800 為上限輸入）。',
     leaveStartWeeksLabel: '預計開始請產假時間點',
     leaveStartOpt2Weeks: '產前 2 週開始休產假 (預產期前 14 天)',
     leaveStartOpt3Weeks: '產前 3 週開始休產假 (預產期前 21 天)',
@@ -145,6 +151,10 @@ const TRANSLATIONS = {
         a: '依性別平等工作法與就業保險法規定：\n\n① 請領資格：任職滿 6 個月且子女未滿 3 歲前，得申請育嬰留職停薪（最長至子女滿 3 歲止，合計不超過 2 年）。\n② 津貼金額：就業保險發給「60% 育嬰津貼」+ 政府加發「20% 育嬰留職停薪薪資補助」，合計達平均月投保薪資之「80% (8成薪)」，每一子女最長補助 6 個月。\n③ 父母同時請領：現行法規已開放父母「可以同時申請」育嬰留職停薪並同時請領 8 成津貼，大幅減輕育兒經濟壓力。',
       },
       {
+        q: '本計算機的產假與津貼是依據哪裡的法律？非台灣地區適用嗎？',
+        a: '本工具中的各項法定假別天數（8天產檢假、8週產假、7天陪產檢假）、勞保生育給付（2個月）及育嬰留職停薪津貼（8成薪），均是依據「台灣（中華民國）」現行之《勞動基準法》、《性別平等工作法》與《就業保險法》等法規進行設計與試算。\n\n【醫學計算部分】預產期推算、胎兒各週生長尺寸與關鍵產檢時程屬於國際通用之醫學常規，全球各地準爸媽皆可通用參考；\n\n【假別與津貼部分】若您身處香港、新加坡、馬來西亞、中國大陸、美加或歐洲等其他國家或地區，由於各地區之法定產假天數、育嬰留停政策與公部門津貼制度各有不同，假別與津貼試算結果僅供架構參考，具體權益請務必以您所在當地的勞動法規與社會保險制度為準。',
+      },
+      {
         q: '為什麼會開發這個「孕期計算機」？作者想對準爸媽說的話 [愛心]',
         a: '其實在剛接觸孕產這個領域時，面對繁複的醫學週數、檢查項目與法規津貼，我也常常感到手足無措、不懂具體該做些什麼。建立這個工具，就是希望能夠整理出清晰的時程與權益，幫助大家在懷孕與待產的這條路上一起安心成長。\n\n我也會隨著未來的自身經驗與各界回饋不斷修正與完善這個計算機。預祝全天下的夫妻都可以順利、平安、快樂地迎接一個健康可愛的寶貝！',
       },
@@ -187,8 +197,14 @@ const TRANSLATIONS = {
 
     // Salary & Leave
     leaveSettingsTitle: 'Leave & Benefits Settings (Optional)',
-    monthlySalaryLabel: 'Monthly Salary (TWD/USD) [Estimate Subsidies]',
+    monthlySalaryLabel: 'Avg. Monthly Insured Salary (6-Mo) (TWD)',
+    monthlySalaryHelper: 'Based on 6-month pre-leave avg. insured wage (Taiwan labor cap: TWD 45,800)',
     monthlySalaryPlaceholder: 'e.g. 45800',
+    salaryTooltipBtnAria: 'Insured wage calculation guidelines',
+    salaryTooltipTitle: 'Insured Wage & Subsidy Guidelines',
+    salaryTooltipLabor: 'Maternity Cash Benefit: 2 months of pre-childbirth 6-month average insured salary (4 months for twins).',
+    salaryTooltipParental: 'Parental Leave Allowance: 80% of pre-leave 6-month average insured salary (up to 6 months per child).',
+    salaryTooltipCap: 'Insured Salary Cap: If actual salary exceeds TWD 45,800, the maximum insured cap is TWD 45,800 in Taiwan.',
     leaveStartWeeksLabel: 'Planned Maternity Leave Start',
     leaveStartOpt2Weeks: '2 Weeks Before Due Date',
     leaveStartOpt3Weeks: '3 Weeks Before Due Date',
@@ -285,6 +301,10 @@ const TRANSLATIONS = {
       {
         q: 'How does the 80% parental leave allowance work?',
         a: 'Eligible parents taking leave of absence to care for children under 3 years old receive up to 6 months of allowance at 80% of average insured wages (60% employment insurance + 20% government subsidy). Both parents can now apply concurrently.',
+      },
+      {
+        q: 'Are the statutory maternity leave and subsidy calculations applicable outside Taiwan?',
+        a: 'The leave entitlements (8 days prenatal checkup leave, 8 weeks maternity leave, 7 days partner leave), maternity cash benefits (2 months), and parental leave allowance (80% wage subsidy) in this tool are based on the labor laws of Taiwan (R.O.C.), including the Labor Standards Act, Act of Gender Equality in Employment, and Employment Insurance Act.\n\n[Medical Timelines & Milestones] The due date estimation, fetal growth size comparisons, and 40-week clinical ultrasound milestones follow universal obstetric standards and are globally applicable.\n\n[Leaves & Government Benefits] If you reside in other countries or regions (such as Hong Kong, Singapore, Malaysia, North America, the UK, or the EU), statutory maternity leave durations, paid paternity leave, and government parental subsidies vary significantly by jurisdiction. Please refer to your local employment regulations and statutory benefit systems for official eligibility.',
       },
       {
         q: 'Why was this pregnancy calculator developed? A message from the developer to parents-to-be [Warm Wishes]',
@@ -394,6 +414,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   // 薪資、產假與摺疊設定
   const [monthlySalary, setMonthlySalary] = useState<number | ''>(45800);
   const [leaveStartWeeksOption, setLeaveStartWeeksOption] = useState<number>(2); // 產前 2 週開始請
+  const [showSalaryTooltip, setShowSalaryTooltip] = useState<boolean>(false);
   const [isBenefitsExpanded, setIsBenefitsExpanded] = useState<boolean>(true);
   const [isTemplateExpanded, setIsTemplateExpanded] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState(false);
@@ -1140,9 +1161,41 @@ Date: ${formatDate(new Date())}`;
 
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor={salaryInputId} className="text-xs font-semibold text-text-sub">
-                    {t.monthlySalaryLabel}
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label htmlFor={salaryInputId} className="text-xs font-semibold text-text-sub">
+                      {t.monthlySalaryLabel}
+                    </label>
+                    <div className="relative inline-block">
+                      <button
+                        type="button"
+                        onClick={() => setShowSalaryTooltip((prev) => !prev)}
+                        onMouseEnter={() => setShowSalaryTooltip(true)}
+                        onMouseLeave={() => setShowSalaryTooltip(false)}
+                        aria-label={t.salaryTooltipBtnAria}
+                        className="p-1 rounded-full text-text-sub hover:text-text-main hover:bg-white/10 transition-colors focus:outline-none flex items-center justify-center"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+
+                      {showSalaryTooltip && (
+                        <div className={`absolute right-0 top-full mt-1.5 w-72 sm:w-80 p-3.5 z-30 text-xs rounded-xl shadow-xl ${styles.tooltipContainer}`}>
+                          <p className="font-bold mb-1.5 text-text-main flex items-center gap-1.5">
+                            <svg className="w-4 h-4 text-[#ff4081]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {t.salaryTooltipTitle}
+                          </p>
+                          <div className="flex flex-col gap-1.5 text-text-sub leading-relaxed text-xs">
+                            <p>・{t.salaryTooltipLabor}</p>
+                            <p>・{t.salaryTooltipParental}</p>
+                            <p className="opacity-85">・{t.salaryTooltipCap}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <input
                     id={salaryInputId}
                     type="text"
@@ -1155,6 +1208,12 @@ Date: ${formatDate(new Date())}`;
                     }}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
                   />
+                  <span className="text-xs text-text-sub flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-[#ff4081] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 01-2 2h-4a2 2 0 01-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    {t.monthlySalaryHelper}
+                  </span>
                 </div>
 
                 <div className="flex flex-col gap-1.5">

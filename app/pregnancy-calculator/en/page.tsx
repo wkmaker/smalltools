@@ -65,6 +65,10 @@ const faqJsonLd = generateFaqSchema([
     a: 'Eligible parents taking leave of absence to care for children under 3 years old receive up to 6 months of allowance at 80% of average insured wages (60% employment insurance + 20% government subsidy). Both parents can now apply concurrently.',
   },
   {
+    q: 'Are the statutory maternity leave and subsidy calculations applicable outside Taiwan?',
+    a: 'The leave entitlements (8 days prenatal checkup leave, 8 weeks maternity leave, 7 days partner leave), maternity cash benefits (2 months), and parental leave allowance (80% wage subsidy) in this tool are based on the labor laws of Taiwan (R.O.C.), including the Labor Standards Act, Act of Gender Equality in Employment, and Employment Insurance Act.\n\n[Medical Timelines & Milestones] The due date estimation, fetal growth size comparisons, and 40-week clinical ultrasound milestones follow universal obstetric standards and are globally applicable.\n\n[Leaves & Government Benefits] If you reside in other countries or regions (such as Hong Kong, Singapore, Malaysia, North America, the UK, or the EU), statutory maternity leave durations, paid paternity leave, and government parental subsidies vary significantly by jurisdiction. Please refer to your local employment regulations and statutory benefit systems for official eligibility.',
+  },
+  {
     q: 'Why was this pregnancy calculator developed? A message from the developer to parents-to-be [Warm Wishes]',
     a: 'When first stepping into the journey of pregnancy and prenatal care, facing intricate clinical milestones and statutory leave policies can feel overwhelming, and it is completely normal to feel uncertain about what to do next. I built this tool hoping to organize clear timelines, fetal growth milestones, and maternity benefits so we can all navigate this journey with peace of mind and grow together.\n\nI will continue refining and expanding this tool based on ongoing experiences and community feedback. Wishing all couples and families a smooth, joyful journey and the safe arrival of a happy, healthy baby!',
   },
