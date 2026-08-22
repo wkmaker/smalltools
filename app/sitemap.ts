@@ -84,6 +84,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.6,
     });
+    pages.push({
+      url: `/hourly-rate-calculator/en/rank/${prCode}/`,
+      lastModified: '2026-08-02',
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    });
   });
 
   return pages.map((page) => ({

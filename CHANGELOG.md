@@ -4,6 +4,20 @@
 
 ---
 
+## [1.5.1] - 2026-08-22
+
+### 🔍 SEO 深度優化與文件完善 (SEO & Documentation)
+- **Sitemap 網站地圖全方位補完 (`app/sitemap.ts`)**：
+  - 新增真實時薪計算器之英文版 PR 排行里程碑動態路由 (`/hourly-rate-calculator/en/rank/{slug}/`) 至 Sitemap，達成全站 100% 靜態與動態路由完整索引覆蓋。
+- **全自動 SEO 與 FAQ 單元測試守門員 (Automated SEO Quality Gates)**：
+  - 新增 `tests/audit-seo.mjs` 腳本，自動檢查全站 30 個工具之中英文雙語 Metadata、Canonical URL、Hreflang 多語系標記、OpenGraph / Twitter 卡片與 Schema.org JSON-LD 規範。
+  - 將 SEO 與 FAQ 驗證整合至 `npm run prebuild` 與 `npm test`，確保上線建置前 100% 符合搜尋引擎標準。
+- **專案文件與架構指南升級 (`README.md`)**：
+  - 增設「SEO 與搜尋引擎最佳化架構」章節，詳述 Canonical、Hreflang、Schema.org (WebApplication / FAQPage / WebSite) 及 Sitemap 技術規範。
+  - 擴充測試與品質驗證指令清單 (`npm test`, `npm run test:seo`, `npm run test:faq`, `npm run test:ui`)。
+
+---
+
 ## [1.5.0] - 2026-08-22
 
 ### 🚀 新增功能 (Added)

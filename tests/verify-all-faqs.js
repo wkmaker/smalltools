@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const dirs = fs.readdirSync(path.join(process.cwd(), 'app'), { withFileTypes: true })
-  .filter(d => d.isDirectory() && !['components', 'utils', 'rank', 'api'].includes(d.name))
+  .filter(d => d.isDirectory() && !['components', 'utils', 'rank', 'api', 'en', 'config'].includes(d.name))
   .map(d => d.name);
 
 let total = 0;

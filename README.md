@@ -101,10 +101,45 @@ npm run build
 ```
 建置完成後，靜態網頁資產將自動生成於 `out/` 目錄中，可直接託管於任何靜態網頁伺服器（如 AWS S3、GitHub Pages、Cloudflare Pages 等）。
 
-### 4. 執行代碼檢查 (Linter)
+### 4. 執行自動化檢查與測試 (Quality Assurance & SEO Tests)
 ```bash
+# 執行全套測試 (包含 UI 規範、SEO 檢查與 FAQ 結構化資料)
+npm test
+
+# 單獨執行 SEO 深度檢查 (檢查 Metadata, Canonical, Hreflang, Schema.org, Sitemap)
+npm run test:seo
+
+# 單獨驗證 FAQ 結構化資料覆蓋率
+npm run test:faq
+
+# 單獨檢查 UI 設計規範與 WCAG 亮暗模式色彩對比
+npm run test:ui
+
+# 執行 ESLint 程式碼檢查
 npm run lint
 ```
+
+---
+
+## 🎯 SEO 與搜尋引擎最佳化架構 (SEO & Schema.org Standards)
+
+Smalltools 具備完善的企業級 SEO 架構，確保全站所有工具與頁面在 Google、Bing 及各大搜尋引擎具備極高的收錄品質與點擊轉換率 (CTR)：
+
+1. **🏷️ 完整 Meta 標籤與社交卡片 (Metadata & Social Cards)**：
+   - 每項工具均配置專屬語意化 `title`、`description`、`keywords`。
+   - 完整支援 Open Graph (`og:image`, `og:title`, `og:description`, `og:type`) 與 Twitter Large Card 預覽。
+2. **🌐 權威網址與多語系標記 (Canonical & Hreflang / Alternates)**：
+   - 全站統一採用 `trailingSlash: true` 格式標準（例如 `https://tools.cjkuo.net/base64/`）。
+   - 雙語系頁面全面配置 `alternates.languages`（`zh-TW`、`en` 以及 `x-default` 預設國際語言指向英文版）。
+3. **📊 豐富結構化資料 (Schema.org JSON-LD Rich Snippets)**：
+   - **`WebApplication` / `SoftwareApplication`**：定義應用程式類別、作業系統相容性與免費價格（Price 0 TWD）。
+   - **`FAQPage`**：全站 30 個工具均配備 7~9 則專業問答，於 Google 搜尋結果呈現問答手風琴展開卡片。
+   - **`WebSite`**：首頁配置 SearchAction 搜尋框結構化資料。
+4. **🗺️ 靜態 Sitemap 與 Robots.txt (Automated Sitemap & Indexing)**：
+   - `app/sitemap.ts` 自動生成包含 30 項工具中文版、英文版、首頁以及全台時薪 PR 排名動態頁面之完整網站地圖。
+   - `robots.txt` 明確規範允許檢索範圍並正確導向 `sitemap.xml`。
+5. **🛡️ 建置自動化卡關守門員 (Prebuild Gatekeeper)**：
+   - 每次執行 `npm run build` 時自動觸發 `prebuild`，若有任何工具遺漏 SEO 標記、未配置 FAQ 或違反 UI 規範，將自動中斷建置以防瑕疵代碼上線。
 
 ---
 
