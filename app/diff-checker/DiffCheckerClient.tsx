@@ -4,6 +4,7 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef, useId } from
 import Link from 'next/link';
 import * as Diff from 'diff';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './diff-checker.module.css';
 
 // Split 視窗單列型態
@@ -58,21 +59,53 @@ const TRANSLATIONS = {
     placeholderOriginal: '在此貼上原始文字，或將檔案拖曳至此...',
     placeholderModified: '在此貼上變更後的文字，或將檔案拖曳至此...',
     loadedFileToast: '已成功載入檔案：',
-    analysisTitle: '比對分析結果',
-    splitSubtext: '雙欄同步滾動檢視',
-    unifiedSubtext: '可點擊右側按鈕進行互動式合併',
+    analysisTitle: '比對結果分析',
+    splitSubtext: '雙欄同步滾動對齊檢視',
+    unifiedSubtext: '點擊右側操作按鈕可進行互動式逐行合併',
     restoreOld: '保留舊版',
-    excludeLine: '✕ 排除此行',
+    excludeLine: '✕ 剔除此行',
     revertDefault: '↺ 還原預設',
-    finalMergeResult: '最終合併結果',
-    canEditNotice: '（可直接編輯此區域）',
-    copyResult: '複製結果',
-    copiedResultToast: '✓ 已複製合併結果至剪貼簿！',
-    copyFailedToast: '複製失敗，請手動複製文字框內容。',
-    unifiedPlaceholder: '（Unified 模式比對後，可在此取得動態合併結果）',
-    toastFileTooLarge: '檔案過大，請選擇小於 10MB 的文字檔案',
+    finalMergeResult: '最終合併成果',
+    canEditNotice: '(可直接於下方文字框編輯)',
+    copyResult: '複製合併結果',
+    copiedResultToast: '✓ 已將合併結果複製到剪貼簿！',
+    copyFailedToast: '複製失敗，請手動全選複製。',
+    unifiedPlaceholder: '(完成比對後，此處將自動產生 Unified 合併成果)',
+    toastFileTooLarge: '檔案過大，請選擇小於 10MB 的純文字或程式碼檔案',
     langSwitchLabel: 'English',
     langSwitchHref: '/diff-checker/en/',
+    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解 Myers 差分比對原理、雙欄與單欄檢視差異、純前端隱私安全性與互動式合併操作',
+    faqItems: [
+      {
+        q: '什麼是文字與程式碼比對 (Diff Checker)？它的底層運作原理是什麼？',
+        a: 'Diff 比對工具用於精確識別兩份文字或原始碼版本之間的「新增 (Added)」、「刪除 (Removed)」與「未變更 (Unchanged)」差異：\n\n① 經典 Myers 差分演算法：\n本工具基於 Git 與各大版本控制系統廣泛採用的 Myers Diff Algorithm，以最短編輯路徑 (Shortest Edit Script) 精準計算出最小變更集合。\n\n② 視覺化逐行與字元高亮：\n清楚標註具體修改的行號與內容區塊，大幅提升程式碼審查 (Code Review)、法律合約修訂與文稿校對的效率。',
+      },
+      {
+        q: '「左右雙欄 (Split Mode)」與「單欄混合 (Unified Mode)」比對模式有何不同？',
+        a: '兩種視圖模式分別適合不同的使用場景：\n\n① 左右雙欄 (Split View)：\n將原始版本 (Original) 與修改後版本 (Modified) 左右並排呈現，並鎖定雙欄同步滾動，便於直觀對照前後版本的結構佈局變化。\n\n② 單欄混合 (Unified View)：\n將所有變更融合在單一視圖中，以紅色標示刪除行、綠色標示新增行（類似 GitHub PR 與 Git Patch 格式），適合專注於行級細節差異。',
+      },
+      {
+        q: '在線上貼上商業機密原始碼、合約或包含個資之文件進行比對是否安全？',
+        a: '絕對安全！本比對工具為 100% 純前端（Client-Side）本地運算架構：\n\n① 零後端傳輸：\n所有文字解析、Diff 矩陣運算與高亮渲染皆完全在您的電腦瀏覽器記憶體中執行。\n\n② 零雲端留存：\n系統不會向任何伺服器發送或備份您的輸入文本與拖曳檔案，即使在斷網離線狀態下亦可正常運作。',
+      },
+      {
+        q: '什麼是「忽略大小寫 (Ignore Case)」？在何種比對情境下建議開啟？',
+        a: '功能作用與應用場景如下：\n\n① 忽略字母大小寫差異：\n開啟後，系統會將 `apple` 與 `Apple` 視為相同文字，不列入差異統計。\n\n② 適用情境：\n適合用於比對不區分大小寫的 SQL 查詢語句、HTML 標籤、設定檔關鍵字或單純注重文字語意的文稿校對。',
+      },
+      {
+        q: '本工具支援哪些檔案格式匯入比對？是否有檔案大小限制？',
+        a: '支援彈性的檔案拖曳匯入工作流：\n\n① 支援檔案型態：\n支援各類純文字格式（`.txt`, `.md`, `.json`, `.csv`, `.xml`, `.yaml`）以及所有主流程式語言源碼（`.js`, `.ts`, `.py`, `.java`, `.go`, `.cpp`, `.css`, `.html` 等）。\n\n② 瀏覽器效能建議：\n建議單一檔案大小小於 10MB（約數十萬行文字），以確保瀏覽器 DOM 渲染保持 60fps 流暢度。',
+      },
+      {
+        q: 'Unified 模式下的「逐行合併決策 (Merge Diff)」功能如何操作？',
+        a: '強大的互動式版本合併功能：\n\n① 自訂採納變更：\n在 Unified 視圖中，您可以點擊任一差異行切換「保留 (Active)」或「略過 (Skipped)」狀態，客製化決定最終保留的內容。\n\n② 即時匯出合併結果：\n完成決策後可點擊「複製合併結果」或「匯出合併檔案」，快速產出融合後的最新版本文件。',
+      },
+      {
+        q: '如何快速在兩份文件間交換比對方向或清除重置？',
+        a: '提供全方位快捷工具列：\n\n① 一鍵交換 (Swap)：\n點擊「交換左右」按鈕即可瞬間對調 Original 與 Modified 內容，無需手動剪貼。\n\n② 專注模式與清空：\n支援「隱藏編輯器 (Show Diff Only)」全螢幕沉浸式審閱比對結果，以及一鍵清空重置。',
+      },
+    ],
   },
   en: {
     title: 'Document Diff Checker',
@@ -115,6 +148,38 @@ const TRANSLATIONS = {
     toastFileTooLarge: 'File is too large. Please select a text file under 10MB',
     langSwitchLabel: '繁體中文',
     langSwitchHref: '/diff-checker/',
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Everything you need to know about Myers diff algorithms, view modes, client-side security, and interactive merging',
+    faqItems: [
+      {
+        q: 'What is a Text Diff Checker and how does the underlying comparison algorithm work?',
+        a: 'A Diff Checker identifies structural and line-level changes between two text or code files:\n\n① Classic Myers Diff Algorithm:\nPowered by the Myers Difference Algorithm (the same engine underpinning Git and standard version control systems), it calculates the Shortest Edit Script (SES) to find minimal edit sets.\n\n② Visual Line & Character Highlights:\nClearly flags inserted, deleted, and unmodified lines with colored indicators, speeding up code reviews, legal contract auditing, and copywriting revisions.',
+      },
+      {
+        q: 'What is the difference between Split Mode (Side-by-Side) and Unified Mode?',
+        a: 'Each view mode serves distinct review preferences:\n\n① Side-by-Side Split View:\nDisplays the original and modified documents side-by-side with synchronized dual-pane scroll locking, perfect for examining structural layout shifts.\n\n② Single-Pane Unified View:\nMerges all revisions into a continuous single stream with red/green diff badges (similar to GitHub PRs and Git patch files), ideal for line-by-line inspection.',
+      },
+      {
+        q: 'Is it secure to paste proprietary code, legal contracts, or sensitive text into this online tool?',
+        a: '100% Secure! The tool operates strictly as a client-side web application in your browser:\n\n① Zero Backend Transmission:\nAll diff calculations and syntax rendering occur purely within your computer memory.\n\n② Zero Cloud Logging:\nNo text, files, or metadata are ever uploaded to remote servers. The tool functions completely offline.',
+      },
+      {
+        q: 'What does the "Ignore Case" option do, and when should it be toggled on?',
+        a: 'Toggling case-insensitivity alters match semantics:\n\n① Disregarding Capitalization:\nTreats `Apple` and `apple` as identical tokens without flagging them as differences.\n\n② Best Use Cases:\nIdeal for SQL queries, HTML markup, configuration files, or general copy editing where letter case does not affect technical semantics.',
+      },
+      {
+        q: 'What file types are supported for drag-and-drop file imports? Are there file size limits?',
+        a: 'Our tool accepts a wide range of plain text and developer source files:\n\n① Supported Formats:\nText documents (`.txt`, `.md`, `.json`, `.csv`, `.xml`, `.yaml`) and programming source files (`.js`, `.ts`, `.py`, `.java`, `.go`, `.cpp`, `.css`, `.html`, etc.).\n\n② Performance Guideline:\nWe recommend files under 10MB (several hundred thousand lines) to preserve 60fps browser rendering responsiveness.',
+      },
+      {
+        q: 'How does the interactive "Merge Diff" workflow operate in Unified Mode?',
+        a: 'A built-in interactive reconciliation engine:\n\n① Custom Line Selection:\nIn Unified mode, click any modified line to toggle between "Active (Kept)" and "Skipped" states to curate your final revision.\n\n② One-Click Merged Export:\nClick "Copy Merged Result" or "Export Merged File" to instantly generate a unified resolved document.',
+      },
+      {
+        q: 'How can I quickly swap comparison directions or reset the workspace?',
+        a: 'Productivity toolbar shortcuts:\n\n① Swap Button:\nInstantly swap the Original and Modified buffers without manual cut-and-paste.\n\n② Focus Mode & Clear:\nToggle "Show Diff Only" to maximize the comparison pane or use "Clear" to wipe both editors.',
+      },
+    ],
   },
 };
 
@@ -724,6 +789,16 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
               />
             </div>
           )}
+        </div>
+
+        {/* 常見問題 FAQ 區塊 */}
+        <div className="mt-8">
+          <FaqSection
+            title={t.faqTitle}
+            subtitle={t.faqSubtitle}
+            items={t.faqItems}
+            accentColor="#00f5a0"
+          />
         </div>
       </div>
 

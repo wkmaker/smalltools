@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './mortgage-loan.module.css';
 
 interface Stage {
@@ -78,7 +79,7 @@ const TRANSLATIONS = {
     aprTotalFeeRate: 'APR 總費用年率',
     totalInterestExpense: '總利息支出',
     totalRepaymentAmount: '總還款金額',
-    trendChartTitle: '房貸賸餘本金遞減趨勢圖',
+    trendChartTitle: '房貸展示本金遞減趨勢圖',
     remainingPrincipalLegend: '賸餘本金餘額',
     scheduleTableTitle: '房貸還款期數明細表',
     totalPeriodsText: (count: number) => `共 ${count} 期`,
@@ -95,6 +96,40 @@ const TRANSLATIONS = {
     periodText: (num: number) => `第 ${num} 期`,
     defaultLoanName1: '新青安房貸',
     defaultLoanName2: '一般商業房貸',
+
+    // FAQ
+    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqSubtitle: '全方位掌握房貸本息均攤、寬限期衝擊、新青安雙貸款組合與 APR 實質利率',
+    faqItems: [
+      {
+        q: '「本息平均攤還」與「本金平均攤還」有何差異？哪一種還款方式比較划算？',
+        a: '房貸常見的兩大還款方式計算原理與適用情境如下：\n\n① 本息平均攤還（最普及）：\n將整個貸款年限內的本金與總利息加總，平均分攤至每個月。每月還款金額固定不變，前期利息佔比較高、後期本金佔比較高。優點是每月支出固定，便於上班族與家庭編列穩定預算。\n\n② 本金平均攤還（省息首選）：\n將貸款本金平均分攤至每一期，利息則依剩餘本金按月計算。前期每月還款金額最高，隨後逐月遞減。總利息支出通常比本息均攤少約 15%~25%，適合前期還款能力充足、希望極大化節省利息的借款人。',
+      },
+      {
+        q: '什麼是「房貸寬限期」？使用寬限期有哪些潛在風險？',
+        a: '房貸寬限期是指在約定期限內（通常為 1~5 年），借款人「只繳利息、不還本金」的還款機制：\n\n① 適用優勢：\n寬限期間每月支出極低，適合購屋初期需要充裕現金流進行裝潢、添購家具或保留週轉金的買方。\n\n② 攤提壓縮風險：\n寬限期結束後，剩餘本金必須在「縮短的剩餘年限」內攤還完畢。例如 30 年房貸使用 5 年寬限期，第 6 年起必須在 25 年內攤還全部本金，每月還款金額可能瞬間暴增 40% ~ 70%，若未提前規劃收入現金流，容易引發繳款斷鏈危機。',
+      },
+      {
+        q: '什麼是「多段式階梯利率」與「新青安房貸」組合貸款方案？',
+        a: '階梯利率與政策組合貸款是台灣房貸市場常見的形式：\n\n① 多段式階梯利率：\n貸款期間分成 2 段或 3 段不同利率，常見為前期 1~2 年提供低利優惠吸引申辦，隨後各段依基準利率加碼逐步調升。\n\n② 組合貸款（如新青安 1,000 萬 + 一般房貸）：\n政府新青安貸款優惠額度上限為 1,000 萬元。若購屋總貸款額達 1,500 萬元，超出之 500 萬元需搭配承貸銀行的自營房貸專案。本計算機支援雙筆貸款獨立設定年限、寬限期與利率，精確計算合併月付負擔。',
+      },
+      {
+        q: '什麼是「實質總費用年率 (APR)」？為什麼房貸不能只看表面利率？',
+        a: '總費用年率（APR, Annual Percentage Rate）是將借款期間內的所有借貸成本納入折現計算出的真實年化負擔：\n\n① 包含相關規費與開辦費：\n包含銀行開辦手續費、徵信查詢費、帳管費及房屋鑑價設定費等前期支出。透過將前期固定費用攤提至各期還款現金流中，計算出實質年化利率。\n\n② 方案客觀比較：\n比較不同銀行的房貸專案時，以 APR 為統一標準，才能精確判斷「表面低利率但高額開辦費」與「表面利率略高但免手續費」哪一個更具成本效益。',
+      },
+      {
+        q: '房貸成數與自備款一般如何估算？影響銀行核貸成數的關鍵因素有哪些？',
+        a: '房貸成數與自備款通常依據銀行鑑價而非買賣合約價計算：\n\n① 一般成數標準：\n目前市場常態首購成數約為 7 ~ 8 成，購屋者需準備至少 2 ~ 3 成自備款，並預留約 30~50 萬元的契稅、印花稅、代書費、規費與裝修保證金。\n\n② 關鍵審核因素：\n包含房屋地段與屋齡、借款人聯徵信用分數、收支負債比（DTI 建議維持在 60% 以下）、在職公司規模與穩定財力證明，以及央行最新信用管制規定（如名下第二戶以上之成數限制）。',
+      },
+      {
+        q: '房貸可以提前大額還款或提前結清嗎？會有違約金嗎？',
+        a: '提前清償房貸之規定依各家銀行房貸合約而定：\n\n① 限制清償期（綁約期）：\n銀行常態綁約期約為 2 ~ 3 年。若在綁約期內提前大額還本或全額結清轉貸，銀行通常會依提前償還金額收取 0.5% ~ 1.5% 的提前清償違約金。\n\n② 滿期塗銷流程：\n綁約期滿後可隨時提前清償且免違約金。全額清償後，請向銀行申請「抵押權塗銷同意書」及「他項權利證明書」，並至地政事務所辦理抵押權塗銷登記。',
+      },
+      {
+        q: '本房貸計算機試算結果是否具備法律效力？（免責條款聲明）',
+        a: '本線上房屋貸款計算機所提供之各期月付額、本息攤還明細、利息總額與 APR 數值，均為依據標準金融複利數學公式所產出之理論估算結果，僅供消費者購屋財務規劃與比較參考，不構成任何融資承諾或法律要約。\n\n實際核貸金額、可貸成數、適用利率、寬限期年限、開辦手續費與最終每月繳款金額，均以各承貸銀行依申請人財務條件、信用評等與房屋鑑價審核之正式貸款合約為準。',
+      },
+    ],
   },
   en: {
     title: 'Mortgage Loan Calculator',
@@ -161,6 +196,40 @@ const TRANSLATIONS = {
     periodText: (num: number) => `Period ${num}`,
     defaultLoanName1: 'Policy Mortgage Loan',
     defaultLoanName2: 'Standard Bank Loan',
+
+    // FAQ
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Everything you need to know about mortgage payments, grace periods, stepped rates, and APR',
+    faqItems: [
+      {
+        q: 'What is the difference between Equal Monthly Payments (Amortization) and Equal Principal Payments?',
+        a: 'The two primary mortgage repayment methods serve different financial goals:\n\n① Equal Principal and Interest (Standard Amortization):\nYour total monthly payment remains constant throughout the loan term. Earlier payments consist mostly of interest, while later payments consist primarily of principal. This predictability is ideal for salaried employees and families budgeting monthly income.\n\n② Equal Principal Payment:\nA fixed amount of principal is repaid every month, while interest declines as the remaining balance shrinks. Monthly payments start at their highest and decline each month. Total interest expense is typically 15% to 25% lower than equal amortization, making it suitable for borrowers with strong initial cash flow.',
+      },
+      {
+        q: 'What is a Mortgage Grace Period, and what are the risks involved?',
+        a: 'A mortgage grace period is an initial window (typically 1 to 5 years) during which the borrower only pays interest and no principal:\n\n① Key Advantages:\nSubstantially lowers monthly cash outflow during the initial period, helping buyers allocate funds for renovations, furniture, and moving expenses.\n\n② Compressed Amortization Risk:\nOnce the grace period ends, the entire principal balance must be repaid over a shortened remaining term. For example, on a 30-year mortgage with a 5-year grace period, principal must be fully amortized in the remaining 25 years, causing monthly payments from year 6 onward to surge by 40% to 70%.',
+      },
+      {
+        q: 'What are Stepped Interest Rates and Combined Loan Schemes (e.g., Policy + Bank Loan)?',
+        a: 'Stepped interest rates and blended loan structures are common in residential property financing:\n\n① Stepped Interest Rates:\nThe loan term is divided into multiple stages. Lenders often provide discounted lower rates for the first 1 to 2 years, with rates stepping up based on benchmark indexes in later stages.\n\n② Combined Loans (e.g., Policy Loan capped at 10M + Commercial Mortgage):\nGovernment-subsidized policy loans (such as Taiwan Young Adult First-Time Homebuyer Loans) are capped at 10 million TWD. If you require 15 million TWD, the extra 5 million TWD is financed under a standard bank mortgage. This calculator supports separate terms, grace periods, and rates for both loans.',
+      },
+      {
+        q: 'What is Annual Percentage Rate (APR), and why should I look beyond nominal interest rates?',
+        a: 'Annual Percentage Rate (APR) measures the comprehensive annual cost of borrowing by factoring in the nominal interest rate alongside all upfront fees:\n\n① Inclusion of Origination Fees:\nOrigination fees, appraisal fees, credit check fees, and documentation charges are discounted into the periodic cash flows to reveal the true annualized rate.\n\n② Objective Comparison:\nWhen comparing loan quotes across different financial institutions, APR provides an apples-to-apples metric to identify whether a low-rate offer with hefty upfront fees is actually more expensive than a zero-fee standard rate loan.',
+      },
+      {
+        q: 'How are Loan-to-Value (LTV) ratios and down payments determined?',
+        a: 'Lenders determine maximum loan amounts based on professional property appraisals rather than contract purchase prices:\n\n① Typical Down Payment Ratios:\nStandard residential homebuyer loans generally offer 70% to 80% LTV, requiring buyers to prepare 20% to 30% in down payment capital plus an additional 300,000 to 500,000 TWD for deed taxes, escrow fees, insurance, and notary costs.\n\n② Underwriting Criteria:\nKey determinants include property location and age, credit history, debt-to-income (DTI) ratio (ideally under 60%), employment stability, and central bank macroprudential mortgage regulations.',
+      },
+      {
+        q: 'Can I pay off my mortgage early or make lump-sum prepayments? Are there penalty fees?',
+        a: 'Prepayment terms depend on your specific mortgage contract:\n\n① Lock-in / Prepayment Penalty Period:\nMost mortgage agreements include a 2 to 3 year lock-in period. Refinancing or settling the entire balance during this period may incur a 0.5% to 1.5% penalty on the prepaid amount.\n\n② Post-Lockout Discharge:\nOnce the lock-in period expires, partial or full prepayments are fee-free. After complete payoff, obtain the official Mortgage Discharge Certificate from your lender and cancel the registered property lien with the local land registry office.',
+      },
+      {
+        q: "Are the mortgage calculator's results legally binding? (Financial Disclaimer)",
+        a: 'All monthly repayment amounts, amortization schedules, total interest costs, and APR calculations generated by this tool are theoretical estimates based on standard compound interest mathematics for personal financial planning only.\n\nFinal approved loan amounts, LTV caps, interest rates, grace period eligibility, origination fees, and monthly payment obligations are subject to formal underwriting and contractual approval issued by your lending institution.',
+      },
+    ],
   },
 };
 
@@ -1666,6 +1735,16 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* 常見問題 FAQ 區塊 */}
+        <div className="mt-8">
+          <FaqSection
+            title={t.faqTitle}
+            subtitle={t.faqSubtitle}
+            items={t.faqItems}
+            accentColor="#00ffaa"
+          />
         </div>
       </ToolLayout>
 
