@@ -21,9 +21,14 @@
 
 'use client';
 
+import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/components/ThemeToggle';
+import { CATEGORIES } from '@/app/config/tools';
+import { generateBreadcrumbSchema, type BreadcrumbItem } from '@/app/utils/breadcrumbSchema';
+
+export type { BreadcrumbItem };
 
 interface ToolLayoutProps {
   title: string;
@@ -42,6 +47,7 @@ interface ToolLayoutProps {
   containerClassName?: string; // 可選傳入自訂外容器 class
   extraHeaderControls?: React.ReactNode; // 可選傳入頂欄右側自訂按鈕組
   extraFooterContent?: React.ReactNode;  // 可選傳入頁尾贊助旁邊自訂補充內容
+  breadcrumbs?: BreadcrumbItem[]; // 自訂或覆寫麵包屑階層
   children: React.ReactNode;
 }
 
@@ -62,6 +68,7 @@ export default function ToolLayout({
   containerClassName = '',
   extraHeaderControls,
   extraFooterContent,
+  breadcrumbs: customBreadcrumbs,
   children,
 }: ToolLayoutProps) {
   const pathname = usePathname();
@@ -71,6 +78,56 @@ export default function ToolLayout({
     ? (cleanPath ? `/en/#tool-${cleanPath}` : '/en/')
     : (cleanPath ? `/#tool-${cleanPath}` : '/');
   const targetBackHref = customBackHref || defaultBackHref;
+
+  // 1. 動態解析階層麵包屑 (Breadcrumbs)
+  const resolvedBreadcrumbs: BreadcrumbItem[] = useMemo(() => {
+    if (customBreadcrumbs && customBreadcrumbs.length > 0) {
+      return customBreadcrumbs;
+    }
+    const homeItem: BreadcrumbItem = {
+      name: isEn ? 'Home' : '首頁',
+      url: isEn ? '/en/' : '/',
+    };
+
+    // 尋找當前工具所屬分類
+    const matchedCategory = CATEGORIES.find((cat) =>
+      cat.tools.some((t) => {
+        const rootHref = t.href.replace(/^\/|\/$/g, '');
+        return cleanPath === rootHref || cleanPath.startsWith(`${rootHref}/`);
+      })
+    );
+
+    const items: BreadcrumbItem[] = [homeItem];
+
+    if (matchedCategory) {
+      items.push({
+        name: isEn ? matchedCategory.labelEn : matchedCategory.label,
+        url: isEn ? `/en/?category=${matchedCategory.id}` : `/?category=${matchedCategory.id}`,
+      });
+    }
+
+    items.push({
+      name: title,
+      url: pathname || (isEn ? `/${cleanPath}/en/` : `/${cleanPath}/`),
+    });
+
+    return items;
+  }, [customBreadcrumbs, isEn, cleanPath, title, pathname]);
+
+  // 2. 記錄最近造訪工具至 LocalStorage (供首頁最近使用工作台存取)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !cleanPath) return;
+    try {
+      const storageKey = 'smalltools_recent_tools';
+      const raw = localStorage.getItem(storageKey);
+      let recents: string[] = raw ? JSON.parse(raw) : [];
+      const toolHref = `/${cleanPath.split('/')[0]}/`;
+      if (toolHref && toolHref !== '//') {
+        recents = [toolHref, ...recents.filter((h) => h !== toolHref)].slice(0, 8);
+        localStorage.setItem(storageKey, JSON.stringify(recents));
+      }
+    } catch (e) {}
+  }, [cleanPath]);
 
   return (
     /*
@@ -94,8 +151,35 @@ export default function ToolLayout({
         ${containerClassName}
       `}
     >
+      {/* ── Schema.org BreadcrumbList 結構化資料 ── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateBreadcrumbSchema(resolvedBreadcrumbs)),
+        }}
+      />
+
       {/* ── 亮暗模式切換與頂欄右側功能按鈕組 ── */}
       <div className="absolute top-6 right-6 z-[20] flex items-center gap-2 max-sm:top-4 max-sm:right-4 max-sm:gap-1.5">
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('open-command-palette'));
+            }
+          }}
+          title={isEn ? 'Search tools (Cmd+K / Ctrl+K)' : '搜尋小工具 (Cmd+K / Ctrl+K)'}
+          aria-label={isEn ? 'Search tools (Cmd+K / Ctrl+K)' : '搜尋小工具 (Cmd+K / Ctrl+K)'}
+          className="inline-flex items-center gap-1.5 px-3 h-[42px] rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 backdrop-blur-md text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 transition-all text-xs font-medium cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+          </svg>
+          <span className="hidden sm:inline">{isEn ? 'Search' : '搜尋'}</span>
+          <kbd className="hidden sm:inline px-1.5 py-0.5 text-xs font-mono rounded bg-black/[.04] dark:bg-white/[.08] border border-black/10 dark:border-white/10 text-text-sub">
+            ⌘K
+          </kbd>
+        </button>
         {extraHeaderControls}
         {!hideThemeToggle && <ThemeToggle />}
       </div>
@@ -150,7 +234,53 @@ export default function ToolLayout({
       {/* ── 主標題 + 描述 (若 hideHeader 為 false 則渲染) ── */}
       {!hideHeader && (
         <>
-          <div className="text-center mb-2 mt-2">
+          {/* ── 階層麵包屑導航列 ── */}
+          <nav
+            aria-label="Breadcrumb"
+            className="tool-breadcrumb flex items-center justify-center gap-1.5 text-xs text-text-sub mb-3 flex-wrap select-none"
+          >
+            {resolvedBreadcrumbs.map((crumb, idx) => {
+              const isLast = idx === resolvedBreadcrumbs.length - 1;
+              return (
+                <div key={crumb.url + idx} className="inline-flex items-center gap-1.5">
+                  {idx > 0 && (
+                    <svg
+                      viewBox="0 0 24 24"
+                      width={12}
+                      height={12}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-text-sub/40 flex-shrink-0"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  )}
+                  {isLast ? (
+                    <span className="font-medium text-text-main" aria-current="page">
+                      {crumb.name}
+                    </span>
+                  ) : (
+                    <Link
+                      href={crumb.url}
+                      className="hover:text-text-main transition-colors no-underline text-text-sub inline-flex items-center gap-1"
+                    >
+                      {idx === 0 && (
+                        <svg viewBox="0 0 24 24" width={13} height={13} fill="currentColor" className="flex-shrink-0">
+                          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                        </svg>
+                      )}
+                      <span>{crumb.name}</span>
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          <div className="text-center mb-2 mt-1">
             <h1 className="tool-title font-light text-[2.2rem] tracking-[6px] text-text-main uppercase">
               {title}
             </h1>
