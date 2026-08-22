@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './ip-detector.module.css';
 
 interface CloudTarget {
@@ -58,44 +59,80 @@ const TRANSLATIONS = {
     geoLoc: '地理位置 (loc):',
     httpProto: '最高連線協定:',
     latency: '連線延遲 (Latency):',
+    tlsSecurity: '連線加密狀態:',
+    tlsSecured: 'TLS 傳輸加密 (安全)',
     browserUa: '瀏覽器 UA (User Agent):',
-    geoTitle: 'IP 地理位置與網路診斷',
-    geoLoading: '查詢地理位置資訊中...',
-    geoError: '地理位置查詢失敗，主備來源皆無回應',
-    ispOrg: '所屬機構 (ISP):',
-    asnLabel: 'ASN:',
-    cidrLabel: '網段 (CIDR):',
-    locationLabel: '地理位置:',
-    latlonLabel: '地理經緯度:',
-    timezoneLabel: '時區:',
-    currencyLabel: '貨幣:',
+    geoTitle: 'IP 地理位置與網路拓撲資訊',
+    geoLoading: '正在解析 IP 地理位置...',
+    geoError: '地理資訊查詢失敗，請稍後重試',
+    ispOrg: '電信商 / 機構 (ISP/Org):',
+    asnLabel: '自治系統號碼 (ASN):',
+    cidrLabel: '路由網路區段 (CIDR):',
+    locationLabel: '地理位置 (國家/城市):',
+    latlonLabel: '經緯度座標 (Lat/Lon):',
+    timezoneLabel: '時區 (Timezone):',
+    currencyLabel: '當地貨幣代碼:',
     dataSource: '資料來源:',
-    cloudTitle: '公有雲及重要服務連線延遲診斷 (Latency)',
-    retestBtn: '重新測速',
+    cloudTitle: '主流公有雲與 CDN 連線延遲診斷 (Latency Ping)',
+    retestBtn: '重新測試',
     testing: '測速中...',
-    failed: '連線失敗',
-    recheckAllBtn: '一鍵重新檢測全站網路連線',
-    copiedToast: '已複製',
+    failed: '連線逾時/失敗',
+    recheckAllBtn: '重新檢測所有網路診斷數據',
+    copiedToast: '已複製到剪貼簿',
     unknown: '未知',
+    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解 IPv4/IPv6 協定架構、Cloudflare 節點路由、公有雲延遲判定與隱私安全性',
+    faqItems: [
+      {
+        q: '什麼是 IPv4 與 IPv6？兩者有何核心技術差異？',
+        a: 'IPv4 與 IPv6 是網際網路通訊協定的不同世代標準：\n\n① IPv4（32 位元）：\n採用 4 組 0~255 的十進位數字組成（例如 `203.0.113.1`），全球總容量僅約 43 億個位址，目前已全數配發完畢，主要依賴 NAT（網路位址轉譯）共用 IP。\n\n② IPv6（128 位元）：\n採用 8 組十六進位數字組成（例如 `2001:db8::1`），可提供高達 3.4 × 10^38 個位址（近乎無限），具備原生端到端加密通訊、更簡化的封包標頭與更佳的路由傳輸效能。',
+      },
+      {
+        q: '為什麼我的設備只顯示 IPv4 而沒有檢測出 IPv6？',
+        a: '未偵測到 IPv6 通常有以下幾個常見原因：\n\n① 電信寬頻服務商 (ISP)：\n部分家用寬頻或行動網路業者尚未全面為用戶開啟原生 IPv6 雙棧 (Dual-Stack) 服務。\n\n② 家用路由器未啟用 IPv6：\n許多 Wi-Fi 分享器或路由器預設關閉 IPv6 DHCP/SLAAC 功能，需進入路由器後台開啟。\n\n③ VPN 或 Proxy 代理限制：\n若您正在使用 VPN 軟體，部分 VPN 伺服器僅轉發 IPv4 流量並停用 IPv6 以防 DNS/IP 洩漏。',
+      },
+      {
+        q: '什麼是 Cloudflare Trace 與邊緣節點 (Colo Data Center)？',
+        a: 'Cloudflare Trace 提供了用戶端連線至全球邊緣網路的第一手診斷數據：\n\n① 機房代碼 (Colo)：\n顯示離您最近且目前承接連線的 Cloudflare 國際機場代碼（例如 TPE 代表台北、HKG 代表香港、NRT 代表東京）。\n\n② 連線協定與安全性：\n檢測您與邊緣伺服器握手所採用的最高連線協議（如 HTTP/2、HTTP/3 QUIC）及 TLS 加密狀態。',
+      },
+      {
+        q: '公網 IP (Public IP) 與私有/虛擬 IP (Private IP) 有何區別？',
+        a: '兩者的網路路由範圍完全不同：\n\n① 私有區域 IP（如 `192.168.x.x`、`10.x.x.x`、`172.16.x.x`）：\n僅在您的家庭或公司內部區域網路 (LAN) 有效，外部網際網路無法直接存取。\n\n② 公網 IP（Public IP）：\n由電信業者配發給您對外連線的唯一全球識別碼，本工具檢測顯示的即是您的公網 IP 位址。',
+      },
+      {
+        q: 'IP 地理位置 (GeoIP) 與 ASN 自治系統編號是如何被判定的？精準度如何？',
+        a: '地理資訊來自全球 IP 分配資料庫（如 MaxMind、IPinfo 等）：\n\n① ASN (Autonomous System Number)：\n代表負責路由您網路流量的電信網路自治系統組織（如中華電信 AS3462、台灣固網 AS9924）。\n\n② 精準度說明：\nIP 地理定位通常精準對應至「國家」與「城市」級別，但因動態 IP 池調度，無法精確定位至特定街道或住家門牌，保障使用者實體安全。',
+      },
+      {
+        q: '為什麼要提供各大公有雲（AWS, GCP, Azure, Cloudflare）與常見服務的連線檢測？',
+        a: '提供一站式網路健康度與節點通暢性診斷：\n\n① 單一頁面快速檢測全球服務訪問能力：\n讓工程師、網管與使用者能快速透過單一儀表板，確認當前網路節點/IP 是否能正常無阻礙地連線各大主流雲端廠商、CDN 與核心服務（如 AWS, GCP, Cloudflare, GitHub 等），迅速排查是否遭遇路由繞遠路、服務異常或 DNS 污染。\n\n② 瀏覽器端直接請求、所有連線透明可見：\n本檢測完全由您的瀏覽器端向各大雲端業者端點發起真實請求，並非透過第三方中間代理伺服器代跑轉發。所有網路請求在瀏覽器 DevTools 開發者工具中皆清晰可見，數據百分之百真實且透明安全。',
+      },
+      {
+        q: '本 IP 檢測助手是否會記錄或儲存我的 IP 歷史隱私數據？',
+        a: '絕對不會！本檢測助手秉持極致隱私保護原則：\n\n① 純前端即時請求：\n所有 IP 查詢與延遲測速皆由瀏覽器向各端點即時發出，本站伺服器完全不記錄、不儲存亦不販售任何訪客的 IP 位址或歷史測速紀錄。\n\n② 診斷數據隨開隨測：\n所有資訊僅於您開啟網頁的當下於本地瀏覽器展示，關閉網頁後立即銷毀。',
+      },
+    ],
   },
   en: {
-    title: 'My IP Address & Diagnostics Tool',
+    title: 'My IP Address & Network Diagnostics',
     subtitle: 'MY IP ADDRESS & DIAGNOSTICS',
     description:
-      'Free online IP address detector & network diagnostic tool! Supports instant dual-stack IPv4/IPv6 lookup, Cloudflare Trace node analysis, IP geolocation, and cloud latency testing.',
+      'Professional free online IP address detector and diagnostic tool. Supports dual-stack IPv4/IPv6 lookup, Cloudflare Trace edge analysis, IP geolocation, and latency diagnostics for major cloud providers (AWS, GCP, Azure).',
     ipv4Title: 'IPv4 Address',
     ipv6Title: 'IPv6 Address',
     detecting: 'Detecting...',
-    unsupported: 'Not Supported',
+    unsupported: 'Unsupported',
     copyBtn: 'Copy',
     cfTraceTitle: 'Cloudflare Trace Diagnostics',
-    cfLoading: 'Reading connection info...',
-    cfError: 'Cloudflare trace failed / Network blocked',
-    connIp: 'Connection IP:',
-    coloNode: 'Data Center Node (colo):',
-    geoLoc: 'Location Code (loc):',
-    httpProto: 'Highest HTTP Protocol:',
-    latency: 'Connection Latency:',
+    cfLoading: 'Loading connection details...',
+    cfError: 'Cloudflare diagnosis failed / Connection blocked',
+    connIp: 'Connected IP:',
+    coloNode: 'Data Center (colo):',
+    geoLoc: 'Location (loc):',
+    httpProto: 'Highest Protocol:',
+    latency: 'Latency:',
+    tlsSecurity: 'Transport Security:',
+    tlsSecured: 'TLS Encrypted (Secure)',
     browserUa: 'User Agent (UA):',
     geoTitle: 'IP Geolocation & Network Info',
     geoLoading: 'Fetching geolocation data...',
@@ -115,6 +152,38 @@ const TRANSLATIONS = {
     recheckAllBtn: 'Re-run All Network Diagnostics',
     copiedToast: 'Copied',
     unknown: 'Unknown',
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Learn about IPv4/IPv6 architectures, Cloudflare edge routing, cloud latency benchmarks, and privacy protection',
+    faqItems: [
+      {
+        q: 'What is the technical difference between IPv4 and IPv6 addresses?',
+        a: 'IPv4 and IPv6 represent different generations of the Internet Protocol:\n\n① IPv4 (32-bit):\nFormatted as four decimal blocks (e.g. `203.0.113.1`), yielding ~4.3 billion unique addresses globally. The IPv4 pool is completely exhausted, requiring Network Address Translation (NAT) for shared access.\n\n② IPv6 (128-bit):\nFormatted as eight hexadecimal groups (e.g. `2001:db8::1`), providing 3.4 × 10^38 addresses (virtually inexhaustible), native end-to-end encryption support, and streamlined packet routing.',
+      },
+      {
+        q: 'Why does my device show a public IPv4 address but no IPv6 address?',
+        a: 'An undetected IPv6 address usually stems from several network factors:\n\n① ISP Configuration:\nYour Internet Service Provider (ISP) may not have provisioned dual-stack IPv6 connectivity on your broadband or mobile plan.\n\n② Home Router Settings:\nMany consumer Wi-Fi routers disable IPv6 DHCP/SLAAC routing by default; enabling IPv6 in the router admin panel resolves this.\n\n③ VPN or Proxy Restrictions:\nCertain VPN providers route only IPv4 traffic and deliberately disable IPv6 to prevent DNS and IPv6 leaks.',
+      },
+      {
+        q: 'What is Cloudflare Trace and what does the edge data center code (Colo) mean?',
+        a: 'Cloudflare Trace provides live diagnostic metadata from your nearest edge node:\n\n① Colo Airport Code:\nIdentifies the nearest Cloudflare data center handling your request (e.g., TPE for Taipei, HKG for Hong Kong, NRT for Tokyo, SFO for San Francisco).\n\n② Protocol & Security:\nDetects your client TLS cipher negotiation and the highest negotiated HTTP protocol (HTTP/2 or HTTP/3 QUIC).',
+      },
+      {
+        q: 'How does a Public IP address differ from a Private / Local IP address?',
+        a: 'Their routing scopes and network boundaries differ:\n\n① Private IP (`192.168.x.x`, `10.x.x.x`, `172.16.x.x`):\nUsed exclusively inside your local home or corporate network (LAN) and cannot be directly routed across the public Internet.\n\n② Public IP:\nA globally unique address assigned by your ISP that identifies your modem or gateway to the worldwide web. This tool displays your outward-facing Public IP.',
+      },
+      {
+        q: 'How are IP Geolocation (GeoIP) and ASN Autonomous System Numbers determined?',
+        a: 'Location data is derived from global IP allocation databases (MaxMind, IPinfo):\n\n① ASN (Autonomous System Number):\nIdentifies the carrier network routing your traffic (e.g. Chunghwa Telecom AS3462, Comcast AS7922).\n\n② Accuracy Overview:\nGeolocation is generally accurate to the country and metro city level. For privacy reasons, IP geolocation does not pinpoint individual street addresses.',
+      },
+      {
+        q: 'Why does this tool test latency to major public clouds (AWS, GCP, Azure, Cloudflare) and popular services?',
+        a: 'Providing comprehensive, single-page network reachability and health diagnostics:\n\n① Unified Global Service Reachability Audit:\nEngineers and users can verify from a single dashboard whether their current network node/IP can reach major cloud infrastructure, CDNs, and critical platforms (AWS, GCP, Cloudflare, GitHub, etc.) without routing sub-optimizations or ISP throttling.\n\n② Direct Browser Requests with Full Visibility:\nAll reachability tests are executed directly from your local browser to the target cloud provider endpoints—never routed through opaque third-party proxy relays. Every single request is fully inspectable in your browser Developer Tools (Network tab), guaranteeing 100% genuine and transparent metrics.',
+      },
+      {
+        q: 'Does this IP detection tool record, log, or track my IP history?',
+        a: 'Never! We strictly enforce a zero-logging privacy policy:\n\n① Direct Client-Side Requests:\nAll IP detection and ping measurements are dispatched in real-time by your browser. No IP addresses or test results are logged, stored, or monetized on our servers.\n\n② Ephemeral Session Data:\nAll diagnostics live solely in your browser memory and are permanently cleared when you close the tab.',
+      },
+    ],
   },
 };
 
@@ -580,6 +649,16 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
               {t.recheckAllBtn}
             </button>
           </div>
+        </div>
+
+        {/* 常見問題 FAQ 區塊 */}
+        <div className="mt-8">
+          <FaqSection
+            title={t.faqTitle}
+            subtitle={t.faqSubtitle}
+            items={t.faqItems}
+            accentColor="#00f0ff"
+          />
         </div>
       </div>
 

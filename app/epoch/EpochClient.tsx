@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './epoch.module.css';
 
 // === 時區與時間運算 Engine ===
@@ -62,37 +63,69 @@ const TRANSLATIONS = {
     tsResultSec: 'Unix 時間戳記 (秒 - 10位)',
     tsResultMs: 'Unix 時間戳記 (毫秒 - 13位)',
     historyTitle: '轉換歷史紀錄',
-    btnClearHistory: '清除所有歷史',
-    thRecordTime: '記錄時間',
-    thType: '轉換類型',
-    thInputRaw: '輸入原始值',
-    thLocal: '當地時間 (Local)',
+    btnClearHistory: '清空紀錄',
+    thRecordTime: '紀錄時間',
+    thType: '類型',
+    thInputRaw: '原始輸入',
+    thLocal: '當地時間',
     thUtc: '世界標準時間 (UTC)',
     thLa: '美西時間 (LA)',
     thAction: '操作',
     btnLoad: '載入',
     btnDelete: '刪除',
     toastCopied: '已複製:',
-    toastDeletedHistory: '已刪除歷史紀錄',
-    confirmClearHistory: '確定要清除所有歷史紀錄嗎？',
-    toastClearedHistory: '已清除歷史紀錄',
+    toastDeletedHistory: '已刪除此筆歷史紀錄',
+    confirmClearHistory: '確定要清空所有轉換歷史紀錄嗎？',
+    toastClearedHistory: '已清空所有歷史紀錄',
     toastLoadedTs: '已載入時間戳記:',
     toastLoadedDt: '已載入日期時間:',
-    toastFilledTsNow: '已帶入現在時間戳記',
-    toastFilledDtNow: '已帶入現在日期時間',
-    typeLabelTs2Date: 'Epoch ➜ 日期',
-    typeLabelDate2Ts: '日期 ➜ Epoch',
+    toastFilledTsNow: '已帶入當前時間戳記',
+    toastFilledDtNow: '已帶入當前日期時間',
+    typeLabelTs2Date: '時間戳記 ➜ 日期',
+    typeLabelDate2Ts: '日期 ➜ 時間戳記',
     weekDays: [
-      '星期日 (Sunday)',
-      '星期一 (Monday)',
-      '星期二 (Tuesday)',
-      '星期三 (Wednesday)',
-      '星期四 (Thursday)',
-      '星期五 (Friday)',
-      '星期六 (Saturday)',
+      '星期日',
+      '星期一',
+      '星期二',
+      '星期三',
+      '星期四',
+      '星期五',
+      '星期六',
     ],
     switchLangText: 'English',
     switchLangHref: '/epoch/en/',
+    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解 Unix Epoch 起點定義、秒與毫秒判定、2038年問題與多語系時間戳記處理',
+    faqItems: [
+      {
+        q: '什麼是 Unix Epoch 時間戳記？為什麼伺服器日誌 (Log) 與系統都廣泛採用它？',
+        a: 'Unix 時間戳記（Unix Timestamp / POSIX Time）是電腦系統追蹤時間的統一數值標準：\n\n① 起點定義：\n以「世界協調時間 (UTC) 1970 年 1 月 1 日 00:00:00」為原點（稱為 Unix Epoch），計算自該基準點以來所累積流逝的總秒數（不計閏秒）。\n\n② 系統與 Log 紀錄廣泛採用之原因：\n許多伺服器與資料庫 LOG 紀錄時間會優先採取 Unix Epoch 戳記，因為它完全不受伺服器所在時區、夏令時間影響。純整數既節省儲存空間、利於高速索引排序，更能方便隨時無歧義地轉換成全球各地區的當地時間，大幅簡化跨國日誌關聯與問題排查。',
+      },
+      {
+        q: '時間戳記「秒 (10 位數)」與「毫秒 (13 位數)」有何差別？本工具如何自動識別？',
+        a: '精確度級別與數值長度不同：\n\n① 10 位數時間戳記（秒級，例如 `1700000000`）：\n多數後端語言（如 Python 的 `time.time()`、PHP 的 `time()`、Linux 系統指令 `date +%s`）預設輸出 10 位整數秒。\n\n② 13 位數時間戳記（毫秒級，例如 `1700000000000`）：\nJavaScript（`Date.now()`）與 Java（`System.currentTimeMillis()`）預設精準至毫秒。\n\n③ 智能自動判定：\n本工具根據輸入數值位數與合理年份區間自動判斷單位，無須手動切換。',
+      },
+      {
+        q: '什麼是「2038 年問題 (Year 2038 Problem / Y2K38)」？會對系統造成什麼影響？',
+        a: '經典的 32 位元整數溢位危機：\n\n① 溢位臨界點：\n在傳統 32 位元有符號整數（Signed 32-bit Integer）架構中，最大可表示秒數為 `2,147,483,647`，該時刻將在 **UTC 2038 年 1 月 19 日 03:14:07** 到達。\n\n② 溢位後果：\n若未升級，下 1 秒數值將翻轉為負數 `-2,147,483,648`（即回到 1901 年 12 月 13 日），導致舊型嵌入式系統與資料庫計算混亂。現代 64 位元系統已將上限推進至 2920 億年後。',
+      },
+      {
+        q: '為什麼不同程式語言獲取當前時間戳記的指令與語法不同？',
+        a: '常見程式語言時間戳記語法速查：\n\n① JavaScript / TypeScript：`Date.now()`（輸出 13 位毫秒）或 `Math.floor(Date.now() / 1000)`（輸出 10 位秒）。\n\n② Python：`import time; int(time.time())`（輸出 10 位秒）。\n\n③ PHP：`time()`（輸出 10 位秒）。\n\n④ Go：`time.Now().Unix()`（輸出 10 位秒）。\n\n⑤ Java：`System.currentTimeMillis()`（輸出 13 位毫秒）。',
+      },
+      {
+        q: '時區 (Timezone) 與日光節約時間 (DST) 如何影響時間戳記的解讀？',
+        a: '時間戳記本身與時區無關，但換算為人類日期時會產生時差：\n\n① UTC 絕對值：\n同一個 Unix Timestamp 在全球任何角落都是同一個絕對時間點。\n\n② 當地日期呈現：\n當轉換為具體年月日時間時，需加上當地時區偏移（例如台北為 UTC+8、美西為 UTC-8 / 夏令時間 UTC-7）。本工具提供即時多時區對照。',
+      },
+      {
+        q: '什麼是 ISO 8601 與 RFC 3339 日期標準格式？',
+        a: '全球統一的文字日期格式規範：\n\n① 標準結構：\n格式如 `2026-08-22T08:30:00Z`（UTC 時間）或 `2026-08-22T16:30:00+08:00`（帶時區偏移）。\n\n② 優點：\n具備字串自然排序（Lexicographical Order）與零歧義特性，是 JSON Payload 與 OpenAPI 規範的推薦標準。',
+      },
+      {
+        q: '本 Epoch 時間戳記轉換器支援哪些實用操作與進階功能？',
+        a: '全方位時間工具箱：\n\n① 即時動態時鐘：\n提供秒級與毫秒級即時流動時間戳記，支援隨時暫停與一鍵複製。\n\n② 雙向雙向試算：\n支援時間戳記轉日期時間，以及自訂日期時間（含毫秒）反推時間戳記，並自動計算星期幾、當年第幾天與閏年判定。',
+      },
+    ],
   },
   en: {
     title: 'Epoch Timestamp Converter',
@@ -161,6 +194,38 @@ const TRANSLATIONS = {
     ],
     switchLangText: '繁體中文',
     switchLangHref: '/epoch/',
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Everything you need to know about Unix epoch origins, milliseconds, Y2K38 problem, and timezone conversions',
+    faqItems: [
+      {
+        q: 'What is Unix Epoch Time, and why do server logs and databases widely adopt it?',
+        a: 'Unix Timestamp (POSIX time) is a universal numeric standard for tracking time across computing systems:\n\n① Epoch Origin:\nDefined as the elapsed seconds since "00:00:00 UTC on January 1, 1970" (excluding leap seconds).\n\n② Why Server Logs Use Unix Timestamps:\nServer and system log records frequently use Unix Epoch timestamps because they are completely immune to local timezone shifts and Daylight Saving Time (DST). Pure integers conserve disk space, allow ultra-fast indexed range queries, and can be effortlessly converted into local time across global servers for simplified log correlation and debugging.',
+      },
+      {
+        q: 'What is the difference between 10-digit (seconds) and 13-digit (milliseconds) timestamps?',
+        a: 'Precision scale and unit length differ:\n\n① 10-Digit Seconds (e.g. `1700000000`):\nStandard in backend languages and system tools (Python `time.time()`, PHP `time()`, Linux `date +%s`).\n\n② 13-Digit Milliseconds (e.g. `1700000000000`):\nNative to JavaScript (`Date.now()`) and Java (`System.currentTimeMillis()`).\n\n③ Auto-Detection:\nOur tool automatically detects 10-digit vs 13-digit values based on digit length and valid epoch ranges.',
+      },
+      {
+        q: 'What is the Year 2038 Problem (Y2K38) and how does it affect computer systems?',
+        a: 'A classic 32-bit integer overflow milestone:\n\n① Overflow Moment:\nSigned 32-bit integers cap out at `2,147,483,647` seconds, which occurs on **January 19, 2038, at 03:14:07 UTC**.\n\n② Consequence:\nUnupdated legacy systems will roll over to `-2,147,483,648` (December 13, 1901), causing critical calculation faults. Modern 64-bit architectures expand the limit to 292 billion years in the future.',
+      },
+      {
+        q: 'How do you get current Unix timestamps in different programming languages?',
+        a: 'Language quick-reference snippets:\n\n① JavaScript / TypeScript: `Date.now()` (13-digit ms) or `Math.floor(Date.now() / 1000)` (10-digit sec).\n\n② Python: `import time; int(time.time())` (10-digit sec).\n\n③ PHP: `time()` (10-digit sec).\n\n④ Go: `time.Now().Unix()` (10-digit sec).\n\n⑤ Java: `System.currentTimeMillis()` (13-digit ms).',
+      },
+      {
+        q: 'How do Timezones and Daylight Saving Time (DST) interact with timestamps?',
+        a: 'Timestamps are absolute UTC values independent of geographic location:\n\n① UTC Universality:\nA given Unix timestamp represents the exact same physical instant everywhere on Earth.\n\n② Local Rendering:\nConverting to a human-readable date requires applying local timezone offsets (e.g., Taipei UTC+8, New York UTC-5 / DST UTC-4). This tool provides simultaneous multi-timezone views.',
+      },
+      {
+        q: 'What are the ISO 8601 and RFC 3339 date format standards?',
+        a: 'Globally standardized text timestamp specifications:\n\n① Standard Structure:\nFormatted as `2026-08-22T08:30:00Z` (UTC) or `2026-08-22T16:30:00+08:00` (with timezone offset).\n\n② Key Advantages:\nEnables natural alphabetical sorting and removes ambiguity, serving as the required standard for JSON payloads and REST APIs.',
+      },
+      {
+        q: 'What features and utilities does this online Epoch converter offer?',
+        a: 'An all-in-one time toolkit:\n\n① Live Dynamic Clock:\nDisplays live real-time second and millisecond timestamps with pause/resume and quick-copy.\n\n② Bidirectional Conversion:\nConvert timestamps to formatted dates, or pick custom dates/times with milliseconds to calculate timestamps, day-of-week, day-of-year, and leap year validation.',
+      },
+    ],
   },
 };
 
@@ -1137,6 +1202,16 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
             </div>
           </div>
         )}
+
+        {/* 常見問題 FAQ 區塊 */}
+        <div className="mt-8">
+          <FaqSection
+            title={t.faqTitle}
+            subtitle={t.faqSubtitle}
+            items={t.faqItems}
+            accentColor="#00ff99"
+          />
+        </div>
       </div>
 
       {toast && (

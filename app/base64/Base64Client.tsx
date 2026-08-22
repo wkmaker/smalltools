@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './base64.module.css';
 
 function utf8ToB64(str: string): string {
@@ -87,6 +88,40 @@ const TRANSLATIONS = {
     textDecodeFailed: '文字檔案預覽解碼失敗',
     previewTruncatedBadge: '文字預覽已截取前 3,000 字 (完整 Base64 已於下方生成)',
     truncatedSuffix: '\n\n... (檔案內容較長，此處僅顯示前 3,000 字元預覽 / 完整 Base64 數據已於下方生成)',
+
+    // FAQ
+    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解 Base64 編碼原理、UTF-8 中文防亂碼技術、URL-Safe 規範與 Data URL 應用',
+    faqItems: [
+      {
+        q: '什麼是 Base64 編碼？為什麼需要將二進位或文字轉換為 Base64？',
+        a: 'Base64 是一種基於 64 個可列印 ASCII 字元（A-Z, a-z, 0-9, +, /）的二進位轉文字編碼法：\n\n① 解決傳輸亂碼問題：\n網路早期許多通訊協議（如 Email MIME、HTTP Header、URL 參數）僅支援 7-bit 或 ASCII 文字傳輸。直接傳輸原始二進位數據（如圖片、音訊、憑證）容易因傳輸節點編碼轉換而損毀。\n\n② 安全傳輸媒介：\n透過 Base64 將任意二進位位元組流轉換為標準純文字，能確保在任何媒介與資料庫中 100% 完整無損地傳遞。',
+      },
+      {
+        q: '為什麼中文或特殊符號在 Base64 解碼時容易出現亂碼？本工具如何解決？',
+        a: '傳統解碼出現亂碼的主因與解決方案如下：\n\n① 原生 API 限制：\n瀏覽器傳統的 `btoa()` 與 `atob()` 僅原生支援 8-bit Latin1 字元集。當字串包含多位元組的 UTF-8 中文字元或 Emoji 表情符號時，會直接拋出 `InvalidCharacterError` 錯誤。\n\n② 本工具之 UTF-8 深度支援：\n本工具採用 `encodeURIComponent` 與 TypedArray 位元組流轉換演算法，原生支援繁體中文、各國多語系文字與 Emoji 表情符號之雙向正確編碼與解碼，徹底告別亂碼困擾。',
+      },
+      {
+        q: '什麼是「URL-Safe Base64」？它與標準 Base64 有何不同？',
+        a: 'URL-Safe Base64 是為適應網址與檔案路徑而衍生的標準變體（RFC 4648 §5）：\n\n① 替換特殊字元：\n標準 Base64 中的 `+` 與 `/` 在 URL 網址中具有特殊語意（如 `+` 代表空白、`/` 代表目錄路徑）。URL-Safe 格式將 `+` 替換為 `-`（減號）、將 `/` 替換為 `_`（底線）。\n\n② 移除補位符號：\nURL-Safe 格式通常會移除結尾的 `=` 補位字元，使其能直接安全嵌入 HTTP GET 網址參數、檔名或 JWT (JSON Web Token) 的 Token 字串中。',
+      },
+      {
+        q: '資料在經過 Base64 編碼後，為什麼檔案體積會膨脹約 33%？',
+        a: '體積膨脹是 Base64 的數學換算特性：\n\n① 3 位元組轉 4 字元：\nBase64 將每 3 個原始位元組（3 Bytes × 8 bits = 24 bits）重新切分為 4 個 6-bit 單位（4 × 6 = 24 bits），每個 6-bit 單位對應至一個 ASCII 字元。\n\n② 固定膨脹比率：\n編碼後的輸出字元數固定為原始位元組數的 4/3 倍（即約增加 33.3% 體積）。若原始數據長度無法被 3 整除，結尾會補上 1 至 2 個 `=` 作為填充符號。',
+      },
+      {
+        q: '什麼是「Data URL (data:image/png;base64,...)」？在前端開發有哪些應用場景？',
+        a: 'Data URL 是一種將小型檔案直接以 Base64 內聯嵌入 HTML/CSS 的前綴協議：\n\n① 語法結構：\n標準格式為 `data:[<MIME-type>][;base64],<data>`，例如 `data:image/svg+xml;base64,...`。\n\n② 應用場景與優缺點：\n適合將小於 10KB 的小圖標 (Icon)、SVG 或字型直接內嵌在單一 HTML/CSS 檔案中，減少 HTTP 網路連線請求次數以加速首屏渲染；但大於 50KB 的檔案建議仍以外部檔案載入以利瀏覽器快取。',
+      },
+      {
+        q: 'Base64 是一種加密演算法嗎？可以用來儲存機密密碼嗎？',
+        a: '絕對不是！Base64 僅是一種「公開透明的資料編碼格式」：\n\n① 零安全性：\nBase64 沒有密鑰概念，任何人都可以使用公開演算法直接反向解碼還原出原始內容。\n\n② 安全防護建議：\n切勿將 Base64 用於儲存或傳輸密碼、API 金鑰或敏感個人資料。若需資料保密，請採用 AES、RSA 等標準密碼學加密技術，或使用 SHA-256、bcrypt 等安全雜湊函數。',
+      },
+      {
+        q: '在線上進行檔案與圖片轉 Base64 是否有資料外洩風險？',
+        a: '完全沒有！本工具為 100% 純前端（Client-Side）運算架構：\n\n① 本機記憶體處理：\n透過瀏覽器 HTML5 FileReader API 直接在您的本機記憶體中完成檔案編碼與預覽。\n\n② 零雲端上傳：\n所有文字與檔案數據均不會上傳至任何伺服器或第三方平台，確保您的商業機密與隱私安全。',
+      },
+    ],
   },
   en: {
     title: 'Base64 Encoder & Decoder',
@@ -128,6 +163,40 @@ const TRANSLATIONS = {
     textDecodeFailed: 'Text file preview decoding failed',
     previewTruncatedBadge: 'Preview truncated to first 3,000 chars (Full Base64 ready below)',
     truncatedSuffix: '\n\n... (Content Truncated for Preview / Full Base64 available below)',
+
+    // FAQ
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Everything you need to know about Base64 principles, UTF-8 encoding, URL-Safe format, and Data URLs',
+    faqItems: [
+      {
+        q: 'What is Base64 encoding, and why is it necessary to convert binary data or text to Base64?',
+        a: 'Base64 is a binary-to-text encoding scheme that translates raw bytes into a radix-64 representation using 64 printable ASCII characters (A-Z, a-z, 0-9, +, /):\n\n① Preventing Data Corruption in Transit:\nEarly networking protocols (Email MIME, HTTP Headers, URL query strings) only supported 7-bit or ASCII character sets. Direct transmission of raw binary streams (images, audio, cryptographic keys) resulted in corrupt bytes due to system-level encoding translations.\n\n② Universal Compatibility:\nBase64 guarantees that arbitrary binary data travels safely and intact through text-only transmission channels and databases.',
+      },
+      {
+        q: 'Why do Chinese or special Unicode characters often get garbled during Base64 decoding, and how does this tool fix it?',
+        a: 'Garbled output arises from JavaScript legacy character set limitations:\n\n① Native JavaScript Limitations:\nThe browser built-in `btoa()` and `atob()` functions only support 8-bit Latin1 character ranges. Passing multibyte UTF-8 strings (Chinese characters, Japanese kanji, emojis) triggers an `InvalidCharacterError`.\n\n② Full UTF-8 Support:\nOur tool implements a robust `encodeURIComponent` and TypedArray byte-stream conversion pipeline, ensuring flawless, bidirectional encoding and decoding of Traditional Chinese, international scripts, and emoji characters without data loss.',
+      },
+      {
+        q: 'What is "URL-Safe Base64"? How does it differ from standard Base64?',
+        a: 'URL-Safe Base64 is an official standard variant (RFC 4648 §5) tailored for web addresses and filenames:\n\n① Character Substitutions:\nStandard Base64 contains `+` (which represents space in URLs) and `/` (which represents directory separators). URL-Safe Base64 replaces `+` with `-` (hyphen) and `/` with `_` (underscore).\n\n② Padding Stripping:\nURL-Safe Base64 typically omits trailing `=` padding characters, allowing strings to be directly and safely embedded in HTTP GET parameters, file names, or JWT (JSON Web Token) signatures.',
+      },
+      {
+        q: 'Why does file size increase by approximately 33% after Base64 encoding?',
+        a: 'Size expansion is an inherent mathematical property of the 6-bit encoding algorithm:\n\n① 3 Bytes to 4 Characters:\nBase64 groups 3 raw bytes (3 × 8 = 24 bits) into 4 chunks of 6 bits (4 × 6 = 24 bits), with each chunk mapped to an ASCII character.\n\n② Consistent 4/3 Ratio:\nThe encoded output is always exactly 4/3 (133.3%) the size of the original data. If the input byte length is not divisible by 3, 1 or 2 `=` padding characters are appended.',
+      },
+      {
+        q: 'What is a "Data URL (data:image/png;base64,...)" and when should it be used in web development?',
+        a: 'A Data URL is a URI scheme that embeds media files directly inline within HTML/CSS documents:\n\n① Syntax Structure:\nFormatted as `data:[<MIME-type>][;base64],<data>`, for example `data:image/svg+xml;base64,...`.\n\n② Use Cases & Trade-offs:\nIdeal for inlining small icons (<10KB), SVG graphics, or critical fonts directly into HTML/CSS to eliminate extra HTTP round-trips; larger files (>50KB) should remain external files to leverage browser caching.',
+      },
+      {
+        q: 'Is Base64 an encryption algorithm? Can it be used to store passwords securely?',
+        a: 'No! Base64 is strictly a "data representation encoding," not encryption:\n\n① Zero Confidentiality:\nBase64 has no secret keys or protection mechanisms; anyone can reverse the encoding with standard decoders in milliseconds.\n\n② Security Best Practices:\nNever use Base64 to store passwords, API secrets, or sensitive PII. For secure data storage and transit, always use authenticated encryption (AES-GCM, RSA) or cryptographic hashes (SHA-256, bcrypt, Argon2).',
+      },
+      {
+        q: 'Is there any data privacy risk when encoding or decoding files with this online Base64 tool?',
+        a: 'Zero Risk! This tool operates entirely within your local browser memory:\n\n① 100% Client-Side Execution:\nFiles are processed locally via the HTML5 FileReader API without being uploaded to remote servers.\n\n② Offline Compatibility:\nThe application functions fully even without an internet connection, guaranteeing total privacy for sensitive enterprise assets.',
+      },
+    ],
   },
 };
 
@@ -620,6 +689,16 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
               )}
             </div>
           )}
+        </div>
+
+        {/* 常見問題 FAQ 區塊 */}
+        <div className="mt-8">
+          <FaqSection
+            title={t.faqTitle}
+            subtitle={t.faqSubtitle}
+            items={t.faqItems}
+            accentColor="#00d2ff"
+          />
         </div>
       </ToolLayout>
 

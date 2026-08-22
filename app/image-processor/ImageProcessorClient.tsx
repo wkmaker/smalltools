@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import styles from './image-processor.module.css';
 
 interface BatchItem {
@@ -76,6 +77,40 @@ const TRANSLATIONS = {
     srQuality: '壓縮品質滑塊',
     srScale: '縮放百分比滑塊',
     srComp: '左右比對位置滑塊',
+
+    // FAQ
+    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解 WebP 現代圖片格式、純前端隱私安全、壓縮品質權衡與等比例縮放技巧',
+    faqItems: [
+      {
+        q: '為什麼推薦將網站圖片轉換為 WebP 格式？與傳統 JPG/PNG 相比有何優勢？',
+        a: 'WebP 是 Google 開發的新世代現代圖片格式：\n\n① 顯著縮減檔案體積：\n相較於同等畫質的 JPEG，WebP 體積通常可縮減 25% 至 35%；相較於無損 PNG，體積更可縮減 26% 以上。\n\n② 兼具透明通道與動畫支援：\nWebP 同時支援 PNG 的透明背景 (Alpha Channel) 與豐富色彩表現，大幅提升網頁載入速度與 Google PageSpeed 效能分數。',
+      },
+      {
+        q: '在線上處理個人生活照、身分證件或公司機密商品圖是否安全？',
+        a: '絕對安全！本工具為 100% 純前端（Client-Side）本地運算架構：\n\n① 零伺服器上傳：\n所有圖片解碼、Canvas 裁切、尺寸縮放與品質壓縮皆直接在您的瀏覽器記憶體中執行。\n\n② 零雲端留存：\n圖片資料從未離開您的裝置，不經任何後端伺服器轉發或儲存，即使拔掉網路線亦能正常使用。',
+      },
+      {
+        q: '圖片壓縮品質 (Quality) 建議設定多少？會不會造成肉眼可見的模糊？',
+        a: '建議的壓縮品質平衡點：\n\n① 網頁與社群推薦 (75% ~ 85%)：\n在 80% 左右的品質設定下，人眼幾乎無法察覺任何畫質損失，但檔案大小可縮減 60% ~ 80% 以上，為性價比最佳區間。\n\n② 高清印刷或攝影展示 (90% ~ 95%)：\n保留極致細節與色彩漸層。\n\n③ 內建即時滑動對比：\n本工具提供左右拖曳對比視窗，讓您即時檢驗壓縮前後的細節差異。',
+      },
+      {
+        q: '什麼是「保持等比例縮放」？如何自訂固定長寬像素 (Resolution)？',
+        a: '尺寸調整機制的彈性配置：\n\n① 保持等比例 (Keep Aspect Ratio)：\n勾選後只需輸入寬度（或高度），系統會自動換算對應數值，確保圖片不失真、不變形。\n\n② 自由調整與比例預設：\n取消勾選可自由指定長寬像素，或點選 1:1, 4:3, 16:9, 9:16 等常用比例預設範本。',
+      },
+      {
+        q: '本工具支援哪些圖片格式？是否支援多檔批次壓縮與 ZIP 打包下載？',
+        a: '支援廣泛的輸入格式與批次工作流：\n\n① 支援上傳格式：\n支援 PNG, JPG/JPEG, WebP, GIF, SVG, AVIF, BMP 等格式。\n\n② 批次處理與 ZIP 打包：\n可一次拖曳多張圖片匯入，套用相同的壓縮與尺寸規則後，一鍵生成並下載包含所有成果的 ZIP 壓縮包。',
+      },
+      {
+        q: '「裁切 (Crop)」與「旋轉/翻轉 (Rotate & Flip)」功能如何搭配操作？',
+        a: '直觀的可視化編輯介面：\n\n① 旋轉與翻轉：\n可即時進行 90 度順時針/逆時針旋轉，以及水平/垂直鏡像翻轉。\n\n② 視覺化自由裁切：\n在畫布上直接拖曳選取框微調裁切區域，系統會在下載時自動套用幾何變換與裁切邊界。',
+      },
+      {
+        q: '若介面提示「目標像素大於原圖，放大可能導致模糊」該如何處理？',
+        a: '點陣圖放大原理解析：\n\n① 插值放大限制：\n點陣圖片（點陣圖）在強制放大至超越原始解析度時，瀏覽器需透過內插演算法生成額外像素，可能產生鋸齒或模糊。\n\n② 最佳實踐：\n建議以縮小或等比例維持原圖尺寸為主；若確有放大需求，請評估是否改用向量格式 (SVG) 或更高解析度的原始素材。',
+      },
+    ],
   },
   en: {
     title: 'Universal Image Processor',
@@ -135,6 +170,40 @@ const TRANSLATIONS = {
     srQuality: 'Compression Quality Slider',
     srScale: 'Scale Percentage Slider',
     srComp: 'Comparison Slider Position',
+
+    // FAQ
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Learn about modern WebP advantages, local privacy security, compression ratios, and aspect ratio controls',
+    faqItems: [
+      {
+        q: 'Why is converting web images to WebP recommended over JPG/PNG?',
+        a: 'WebP is a modern next-generation image format developed by Google:\n\n① Significant File Size Reductions:\nWebP images are typically 25% to 35% smaller than comparable JPEGs and over 26% smaller than lossless PNGs.\n\n② Alpha Transparency & Animation Support:\nWebP supports transparent backgrounds (Alpha Channel) alongside rich color palettes, drastically speeding up page load speeds and improving Core Web Vitals.',
+      },
+      {
+        q: 'Is it safe to process personal portraits, ID cards, or commercial product photos online?',
+        a: '100% Private & Secure! The tool operates strictly client-side inside your local browser runtime:\n\n① Zero Cloud Uploads:\nAll image decodings, Canvas pixel operations, and compression algorithms execute in your computer memory.\n\n② Zero Server Storage:\nYour images are never transmitted to or archived on remote servers. It functions reliably even without an internet connection.',
+      },
+      {
+        q: 'What is the recommended compression quality setting for optimal results?',
+        a: 'Balanced recommendations based on deployment targets:\n\n① Web & Social Media (75% ~ 85%):\nAt around 80% quality, the human eye cannot detect compression artifacts while file sizes are reduced by 60% to 80%.\n\n② High-Res Print & Showcase (90% ~ 95%):\nPreserves maximum texture details and color gradation.\n\n③ Real-Time Comparison Slider:\nUse our built-in split-view comparison slider to inspect fine details before exporting.',
+      },
+      {
+        q: 'What is "Keep Aspect Ratio" and how do I specify custom pixel dimensions?',
+        a: 'Flexible dimension management tools:\n\n① Keep Aspect Ratio:\nWhen checked, modifying width or height automatically calculates the opposite dimension proportionally without distortion.\n\n② Freeform & Presets:\nUncheck to unlock arbitrary width/height dimensions, or select standard aspect ratio presets (1:1, 4:3, 16:9, 9:16).',
+      },
+      {
+        q: 'What input formats are supported? Can I batch-process multiple images into a ZIP archive?',
+        a: 'Broad format support with batch workflow:\n\n① Supported File Types:\nAccepts PNG, JPG/JPEG, WebP, GIF, SVG, AVIF, BMP, and more.\n\n② Batch ZIP Packaging:\nDrag and drop multiple images at once, apply unified resizing and compression parameters, and download a bundled ZIP file with one click.',
+      },
+      {
+        q: 'How do the Crop and Rotate / Flip tools integrate with the editing pipeline?',
+        a: 'Visual interactive canvas suite:\n\n① Rotation & Mirroring:\nPerform 90° clockwise/counter-clockwise rotations and horizontal/vertical flips instantaneously.\n\n② Interactive Cropping Box:\nDrag handles across the canvas to frame your subject; the geometric transformations and crop boundaries are combined cleanly upon export.',
+      },
+      {
+        q: 'What should I do when alerted that "Target resolution exceeds original, upscaling may cause blur"?',
+        a: 'Raster upscaling considerations:\n\n① Interpolation Limitations:\nEnlarging raster bitmap pixels beyond native sensor resolution forces browser algorithms to generate synthetic pixels, potentially causing softness.\n\n② Best Practices:\nPrioritize downscaling or preserving native resolution; for vector artwork, use SVG assets when infinite scalability is required.',
+      },
+    ],
   },
 };
 
@@ -1170,6 +1239,16 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
             </div>
           </div>
         )}
+
+        {/* 常見問題 FAQ 區塊 */}
+        <div className="mt-8">
+          <FaqSection
+            title={t.faqTitle}
+            subtitle={t.faqSubtitle}
+            items={t.faqItems}
+            accentColor="#d946ef"
+          />
+        </div>
       </div>
 
       {toast && (

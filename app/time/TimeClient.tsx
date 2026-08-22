@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
+import FaqSection from '../components/FaqSection';
 import { useTheme } from '@/components/ThemeProvider';
 import styles from './time.module.css';
 
@@ -48,6 +49,38 @@ const TRANSLATIONS = {
     browserTzLabel: '瀏覽器當前時區',
     switchLangText: 'English',
     switchLangHref: '/time/en/',
+    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqSubtitle: '深入了解倒數計時與累計運作原理、多維度時間單位換算、跨時區同步與全螢幕展示技巧',
+    faqItems: [
+      {
+        q: '目標計時器的「倒數計時」與「時間累計」雙向運作邏輯為何？',
+        a: '智能雙向時間流轉機制：\n\n① 未來目標（倒數計時 Remaining Time）：\n當設定的目標時間在當前時刻之後時，系統會自動啟動即時倒數，精準顯示距離目標尚餘幾天幾小時幾分幾秒。\n\n② 過去目標（時間累計 Time Elapsed）：\n當目標時間已過（如結婚紀念日、戒菸天數、專案上線日），計時器會無縫自動切換為時間累計模式，統計自該日起已累積流逝的時光。',
+      },
+      {
+        q: '如果設定的目標日期在過去，計時器會如何呈現？',
+        a: '自動切換為里程碑累計器：\n\n① 狀態標記：\n上方狀態列會由「REMAINING TIME」動態轉換為「TIME ELAPSED（時間累計中）」。\n\n② 適用情境：\n非常適合用來追蹤生活里程碑（例如：寶寶出生至今第幾天、已戒菸/健身幾個月、感情紀念日等）。',
+      },
+      {
+        q: '如何自訂計時器顯示的時間單位（年、月、日、時、分、秒）？',
+        a: '彈性的多單位自由組合：\n\n① 自由勾選單位：\n在設定面板中，您可以自由勾選欲呈現的時間維度（如僅勾選「天/時/分/秒」或「年/月/日」）。\n\n② 自動進位換算：\n系統會依據您勾選的單位組合，自動動態換算數值分配，確保時間總長度精確無誤。',
+      },
+      {
+        q: '如何將自訂的倒數計時器透過 URL 分享給朋友、學生或工作團隊？',
+        a: '零伺服器儲存的純參數分享技術：\n\n① 一鍵複製專屬連結：\n點擊「複製分享連結」，系統會將事件標題、目標時間與選用單位即時編碼至 URL 參數中。\n\n② 即開即用：\n接收者開啟連結後無需再次設定即可直接載入相同計時器畫面，甚至可加到瀏覽器書籤或設為儀表板首頁。',
+      },
+      {
+        q: '在大型電視螢幕、會議投影機或活動現場使用「全螢幕模式」有何特點？',
+        a: '專業沉浸式大螢幕體驗：\n\n① 沉浸視覺佈局：\n進入全螢幕後，系統會隱藏所有操作選單與捲軸，數字採用自適應 Fluid Typography 大字體動態縮放。\n\n② 亮暗主題切換：\n支援暗黑星空模式與清新亮色模式，滿足發表會、研討會、尾牙倒數或跨年活動之投影需求。',
+      },
+      {
+        q: '跨時區使用者開啟同一個分享連結時，倒數時間是否會自動校準？',
+        a: '精確的 UTC 時間絕對同步：\n\n① 絕對時間錨定：\n計時器分享連結記錄的是精確的時間戳記（ISO 8601 或 UTC 毫秒數）。\n\n② 當地時區轉換：\n無論對方身在台北、東京、倫敦或紐約，計時器皆會對齊同一個物理瞬間同步歸零，絕不因時區設定不同而產生時差倒數誤差。',
+      },
+      {
+        q: '在瀏覽器背景執行或切換分頁時，計時器是否會保持精準？',
+        a: '精確依賴系統時鐘校正：\n\n① 免除計時器漂移：\n本工具並非單純依賴 `setInterval` 累加計數，而是每次更新皆直接比對瀏覽器核心與目標時間的絕對時間差。\n\n② 喚醒即時校正：\n即使手機螢幕休眠或分頁切換至背景，在重新喚醒畫面時會瞬間精準同步至當下正確時間。',
+      },
+    ],
   },
   en: {
     title: 'Target Countdown Timer',
@@ -65,16 +98,16 @@ const TRANSLATIONS = {
     remainingTimeLabel: 'REMAINING TIME',
     timeElapsed: 'Time Elapsed',
     remainingTime: 'Remaining Time',
-    modifySettings: 'Modify Settings & Title',
+    modifySettings: 'Modify Settings',
     copyShareLink: 'Copy Share Link',
-    fullscreen: 'Fullscreen Display',
+    fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit Fullscreen',
-    switchToDark: 'Switch to Dark Mode',
-    switchToLight: 'Switch to Light Mode',
+    switchToDark: 'Switch to Dark',
+    switchToLight: 'Switch to Light',
     menuOptions: 'Menu Options',
-    toastCopied: 'Timer share link copied to clipboard',
+    toastCopied: 'Shareable link copied to clipboard',
     toastSelectUnit: 'Please select at least one time unit!',
-    toastSelectDate: 'Please select target date & time!',
+    toastSelectDate: 'Please select a target date & time!',
     unitLabels: {
       y: { full: 'YEARS', label: 'Years' },
       M: { full: 'MONTHS', label: 'Months' },
@@ -88,6 +121,38 @@ const TRANSLATIONS = {
     browserTzLabel: 'Browser Timezone',
     switchLangText: '繁體中文',
     switchLangHref: '/time/',
+    faqTitle: 'Frequently Asked Questions (FAQ)',
+    faqSubtitle: 'Learn about countdown & elapsed modes, flexible units, UTC timezone synchronization, and fullscreen setups',
+    faqItems: [
+      {
+        q: 'How does the dual-mode "Countdown" and "Time Elapsed" mechanism function?',
+        a: 'Seamless bidirectional timeline calculation:\n\n① Future Events (Countdown / Remaining Time):\nWhen the specified target datetime is set in the future, the timer counts down live in days, hours, minutes, and seconds.\n\n② Past Events (Time Elapsed Accumulator):\nWhen target datetime has passed (e.g. wedding anniversary, smoke-free days, project launch), the system automatically flips to elapsed mode to track accumulated time.',
+      },
+      {
+        q: 'What happens if I set a target date in the past?',
+        a: 'Automatic transition to a milestone tracker:\n\n① Status Badge:\nThe status indicator switches dynamically from "REMAINING TIME" to "TIME ELAPSED".\n\n② Use Cases:\nIdeal for celebrating milestones (baby age, sobriety tracker, workout streaks, relationship milestones).',
+      },
+      {
+        q: 'Can I customize which time units (years, months, days, hours, minutes, seconds) are displayed?',
+        a: 'Flexible custom unit combinations:\n\n① Multi-Unit Toggles:\nCheck or uncheck individual unit boxes in setup (e.g., show only Days/Hours/Mins/Secs or Years/Months/Days).\n\n② Automatic Rebalancing:\nThe math engine dynamically redistributes the remaining duration according to your active units.',
+      },
+      {
+        q: 'How do I share a customized countdown timer via URL with friends or a remote team?',
+        a: 'Stateless parameter sharing without account logins:\n\n① One-Click Share URL:\nClick "Copy Share Link" to generate an encoded URL containing event title, target timestamp, and display units.\n\n② Instant Loading:\nRecipients open the link to view the exact customized timer immediately, suitable for bookmarking or presentation dashboards.',
+      },
+      {
+        q: 'What features are optimized for Fullscreen Mode on large TVs or conference projectors?',
+        a: 'Built for stage, venue, and boardrooms:\n\n① Distraction-Free Layout:\nHides navigation bars and scrollbars with fluid typography responsive scaling.\n\n② Dark / Light Themes:\nSupports celestial dark mode and crisp light mode for high-contrast visibility under stage lighting.',
+      },
+      {
+        q: 'When users across different timezones open the same link, is the countdown synchronized?',
+        a: 'Strict absolute UTC synchronization:\n\n① Universal Anchor:\nShareable URLs carry an exact ISO 8601 UTC timestamp.\n\n② Timezone Agnostic:\nWhether viewers reside in Tokyo, London, or Los Angeles, all timers hit zero at the exact same physical instant.',
+      },
+      {
+        q: 'Does the timer maintain drift-free precision when running in background tabs or asleep devices?',
+        a: 'Protected against browser throttle drift:\n\n① System Epoch Diffing:\nRather than incrementally accumulating `setInterval` ticks, each tick recalculates against absolute system clock deltas.\n\n② Wakeup Calibration:\nWaking a device instantly resyncs the display to the exact current millisecond.',
+      },
+    ],
   },
 };
 
@@ -708,6 +773,18 @@ export default function TimeClient({ lang = 'zh-TW' }: TimeClientProps) {
                 {isPassed ? t.startTimeLabel : t.targetTimeLabel}：{formatTargetDateDisplay(targetDateStr, lang, userTz)}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* 常見問題 FAQ 區塊 (僅在設定模式且非全螢幕時顯示，寬度與上方設定框一致) */}
+        {!timerActive && !isFullscreen && (
+          <div className="w-full max-w-4xl md:max-w-5xl mx-auto mt-8">
+            <FaqSection
+              title={t.faqTitle}
+              subtitle={t.faqSubtitle}
+              items={t.faqItems}
+              accentColor="#00f0ff"
+            />
           </div>
         )}
       </div>
