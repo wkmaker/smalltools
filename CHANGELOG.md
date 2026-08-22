@@ -4,6 +4,42 @@
 
 ---
 
+## [1.5.0] - 2026-08-22
+
+### 🚀 新增功能 (Added)
+- **全新小工具：HAR 封包敏感資料清理器 (HAR File Sanitizer & Cleaner)**：
+  - 正式上線 `/har-cleaner/`（繁體中文）與 `/har-cleaner/en/`（英文）雙語版本。
+  - **100% 純前端沙箱防護**：檔案與資料全程於瀏覽器端本地解析與遮罩，絕不上傳任何伺服器，嚴格保障網路日誌與機密連線安全。
+  - **多維度智慧脫敏引擎 (Sanitizer Engine)**：
+    - 自動偵測並遮罩 Authorization Header (Bearer, Basic)、Cookies (Session ID, JWT)、API Keys、Token、密碼及私鑰（RSA/EC PEM）。
+    - 智慧識別個資與財務機密（身分證字號、信用卡號、電子郵件、手機電話等）。
+    - 支援 URL Query Params 敏感參數清除與自訂 Regex / 自訂欄位遮罩規則。
+  - **全功能封包檢視與審計套件**：
+    - **MetricsDashboard**：即時呈現總請求數、敏感欄位清除數、體積縮減率。
+    - **Header Audit**：全面審查並分級請求與回應標頭之資安風險。
+    - **Inspector Tab**：請求清單過濾、狀態碼色標、HTTP Method 篩選與敏感標籤提示。
+    - **Entry Detail Modal**：深層封包比對器（支援 Request / Response Headers、Cookies、Query String、POST Body JSON 樹狀摺疊與 Timing 瀑布流）。
+    - **Raw JSON & Summary**：提供即時乾淨 JSON 預覽、一鍵複製與匯出清理報告摘要。
+  - **完整 SEO 與結構化資料**：中英文頁面均配備 Schema.org `WebApplication` 與 `FAQPage` JSON-LD 結構化資料，並同步登錄至 `sitemap.ts`。
+- **網站首頁獨立英文版 (`/en`) 與多語系體驗全面升級**：
+  - 新增 `/en` 原生英文首頁路由（`app/en/page.tsx`），配置獨立英文 SEO Meta Tags 與語意化結構。
+  - 首頁客戶端邏輯重構為獨立 `HomeClient.tsx` 元件，無縫支援 `zh` 與 `en` 雙語搜尋、篩選與毛玻璃主題切換。
+  - `ToolLayout` 與 `not-found (404)` 頁面強化多語系路由記憶與導向體驗。
+
+### 🎨 架構與工程重構 (Refactored & Architecture)
+- **全站工具分類與多語系架構整合 (`app/config/tools.tsx`)**：
+  - 工具清單結構化升級，完整支援多語系分類標籤（開發工具、日常計算、生活娛樂、文字處理、資安與網路、財務與薪資等）。
+- **HAR 工具架構模組化分拆**：
+  - 將龐大的單檔邏輯拆解為 `engine/sanitizer.ts`、`DropzoneSection`、`HeaderAuditSection`、`InspectorTab`、`EntryDetailModal`、`RuleConfigPanel`、`MetricsDashboard`、`SummaryTab`、`RawJsonTab` 與 `constants.ts`。
+- **Agent 技能系統模組化解耦 (`.agents/skills`)**：
+  - 將原單一龐大 `toolbox-design-standards` 拆解重構為 4 大專注技能規範：
+    1. `smalltools-code-standards` (Tailwind v4、A11y、RWD)
+    2. `smalltools-design-system` (毛玻璃美學、亮暗雙主題、WCAG AA)
+    3. `smalltools-dev-architecture` (App Router、URL 同步、非阻塞運算)
+    4. `smalltools-i18n-seo` (雙語架構、FAQPage JSON-LD、Sitemap 規範)
+
+---
+
 ## [1.4.0] - 2026-08-22
 
 ### 🚀 新增功能與 SEO 升級 (Added & SEO)
