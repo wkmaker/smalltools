@@ -12,7 +12,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
     priority: number;
   }> = [
-    { url: '/', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 1.0 },
+    { url: '/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 1.0 },
+    { url: '/en/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 1.0 },
     { url: '/time/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/time/en/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/compound-interest/', lastModified: '2026-08-14', changeFrequency: 'monthly', priority: 0.8 },
@@ -71,6 +72,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/liars-dice/en/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/pregnancy-calculator/', lastModified: '2026-08-21', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/pregnancy-calculator/en/', lastModified: '2026-08-21', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/har-cleaner/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/har-cleaner/en/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   milestoneData.forEach((m) => {

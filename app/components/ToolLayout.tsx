@@ -65,11 +65,12 @@ export default function ToolLayout({
   children,
 }: ToolLayoutProps) {
   const pathname = usePathname();
-  const cleanPath = pathname ? pathname.replace(/^\/|\/$/g, '') : '';
-  const defaultBackHref = cleanPath ? `/#tool-${cleanPath}` : '/';
-  const targetBackHref = customBackHref || defaultBackHref;
-
   const isEn = pathname ? pathname.includes('/en/') || pathname.endsWith('/en') : false;
+  const cleanPath = pathname ? pathname.replace(/^\/|\/$/g, '').replace(/\/en$/, '') : '';
+  const defaultBackHref = isEn
+    ? (cleanPath ? `/en/#tool-${cleanPath}` : '/en/')
+    : (cleanPath ? `/#tool-${cleanPath}` : '/');
+  const targetBackHref = customBackHref || defaultBackHref;
 
   return (
     /*

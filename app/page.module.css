@@ -412,6 +412,11 @@
 .sslConverterCard:hover h3 { color: #00ffaa; text-shadow: 0 0 10px rgba(0, 255, 170, 0.4); }
 .sslConverterCard .cardAction { color: #00ffaa; }
 
+.harCleanerCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(6, 182, 212, 0.06), transparent 40%); }
+.harCleanerCard:hover { border-color: rgba(6, 182, 212, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(6, 182, 212, 0.15); }
+.harCleanerCard:hover h3 { color: #06b6d4; text-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
+.harCleanerCard .cardAction { color: #06b6d4; }
+
 .digCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(139, 92, 246, 0.06), transparent 40%); }
 .digCard:hover { border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(139, 92, 246, 0.15); }
 .digCard:hover h3 { color: #8b5cf6; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
@@ -665,6 +670,9 @@
 
 :global([data-theme='light']) .sslConverterCard:hover h3,
 :global([data-theme='light']) .sslConverterCard .cardAction { color: #0f766e; text-shadow: none; } /* 深海綠 */
+
+:global([data-theme='light']) .harCleanerCard:hover h3,
+:global([data-theme='light']) .harCleanerCard .cardAction { color: #0891b2; text-shadow: none; } /* 深青藍 (Cyan 600) */
 
 /* 網路工具區 - 4 個工具獨立配色 */
 :global([data-theme='light']) .digCard:hover h3,

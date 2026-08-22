@@ -6,10 +6,11 @@ import { CATEGORIES } from './config/tools';
 
 const CATEGORY_EN_LABELS: Record<string, string> = {
   finance: 'Financial Tools',
+  workplace: 'Workplace & Life',
   developer: 'Developer Tools',
   network: 'Network Utilities',
-  text: 'Text & Utilities',
-  utility: 'Practical Tools',
+  media: 'Media & Documents',
+  utility: 'Life & Entertainment',
 };
 
 export default function NotFound() {
