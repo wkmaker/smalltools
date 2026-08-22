@@ -279,6 +279,9 @@
     color: var(--text-primary);
     margin-bottom: 0.4rem;
     letter-spacing: 1.5px;
+    padding-right: 2.5rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
     transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
@@ -290,6 +293,9 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 1.2rem;
+    padding-right: 2.5rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
     display: block;
 }
 
@@ -721,6 +727,139 @@
 
 :global([data-theme='light']) .pregnancyCard:hover h3,
 :global([data-theme='light']) .pregnancyCard .cardAction { color: #e11d48; text-shadow: none; } /* 深玫瑰紅 */
+
+/* ====== 常用工具釘選按鈕 (Pin Button) ====== */
+.pinBtn {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    z-index: 5;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.pinBtn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+.pinBtnActive {
+    color: #ffb800;
+    background: rgba(255, 184, 0, 0.12);
+    border-color: rgba(255, 184, 0, 0.35);
+    box-shadow: 0 0 10px rgba(255, 184, 0, 0.2);
+}
+
+.pinBtnActive:hover {
+    color: #ffc72c;
+    background: rgba(255, 184, 0, 0.22);
+    border-color: rgba(255, 184, 0, 0.5);
+}
+
+:global([data-theme='light']) .pinBtn {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: var(--text-secondary);
+}
+
+:global([data-theme='light']) .pinBtn:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+}
+
+:global([data-theme='light']) .pinBtnActive {
+    color: #d97706;
+    background: rgba(217, 119, 6, 0.12);
+    border-color: rgba(217, 119, 6, 0.3);
+    box-shadow: 0 0 8px rgba(217, 119, 6, 0.15);
+}
+
+/* ====== 常用工具專屬頂欄卡片 ====== */
+.pinnedCategorySection {
+    margin-bottom: 3.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme='light']) .pinnedCategorySection {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ====== 最近使用快速存取列 (Recent Tools Bar) ====== */
+.recentBar {
+    width: 100%;
+    max-width: 1000px;
+    margin: -1.5rem auto 3rem;
+    padding: 0.85rem 1.25rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.recentChipsGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.recentChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.recentChip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-glow, rgba(0, 240, 255, 0.4));
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+:global([data-theme='light']) .recentBar {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+:global([data-theme='light']) .recentChip {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .recentChip:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: #0284c7;
+    box-shadow: 0 0 10px rgba(2, 132, 199, 0.15);
+}
+
 
 
 

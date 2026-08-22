@@ -3,6 +3,7 @@ import './globals.css';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import CommandPalette from '@/components/CommandPalette';
 
 const BASE_URL = 'https://tools.cjkuo.net';
 
@@ -90,6 +91,7 @@ export default function RootLayout({
           {/* 全站粒子背景動效 */}
           <ParticleCanvas />
           <ServiceWorkerRegister />
+          <CommandPalette />
           {children}
         </ThemeProvider>
       </body>

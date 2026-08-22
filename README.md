@@ -18,6 +18,9 @@
 * 🔒 **零隱私疑慮 (Client-side Privacy First)**：所有運算（含 PDF 壓縮、圖片轉檔處理、密碼產生、憑證轉換與金融計算）100% 於使用者瀏覽器端本地完成，檔案與敏感數據絕不上傳至任何伺服器。
 * ⚡ **靜態超速載入與非阻塞運算 (SSG & Non-Blocking Yielding)**：使用 Next.js App Router `output: 'export'` 靜態導出，結合 AWS S3 + CloudFront CDN 全球加速；高負載運算採用非同步時間片釋放與防抖技術，確保介面 60fps 滑順不卡死。
 * 🔗 **網址參數雙向同步 (URL State Sync)**：輸入資料即時無感同步至 URL Query 參數，方便複製網址隨時分享、備份計算結果或加入書籤。
+* ⚡ **全域快捷搜尋彈窗 (Command Palette `Cmd + K` / `Ctrl + K`)**：支援在全站任何頁面隨時喚出 Spotlight 搜尋面板，即時模糊搜尋 30+ 小工具與分類，並支援切換主題、雙語切換等快捷指令。
+* ⭐ **我的常用工具與最近使用工作台 (Favorites & Recent Tools)**：首頁支援一鍵釘選常用小工具與自動記錄最近使用歷程，資料 100% 留存於使用者瀏覽器本地 `localStorage`，兼顧便利與隱私。
+* 🧭 **階層式麵包屑導航與 Schema.org (Breadcrumb & Structured Data)**：全站工具頁面標題上方配置流暢毛玻璃麵包屑（`首頁 > 分類 > 工具名稱`），並自動注入 Google `BreadcrumbList` JSON-LD 結構化資料，提升搜尋結果呈現品質。
 * 🌐 **多語言支援 (i18n Ready)**：全站支援繁體中文（預設）與英文介面動態切換，兼具 SEO 結構化資料與語意標籤。
 * 📱 **全平台響應式設計 (Responsive Design)**：針對桌面端、平板與行動裝置深度優化，支援手機版「多欄表格自動自適應為直式小卡片」、橫向凍結表格與手勢互動，打造零橫向捲動的行動端流暢體驗。
 
