@@ -231,6 +231,20 @@ export const CATEGORIES: CategorySection[] = [
           </svg>
         ),
       },
+      {
+        name: 'HAR 敏感資料清理工具',
+        subtitle: 'HAR SANITIZER & PRIVACY CLEANER',
+        description: '專業純前端 HAR 封包脫敏與瘦身神器！一鍵清除 Cookie、授權 Token、JWT、API 密鑰與敏感個資，並可自動刪除肥大二進位媒體酬載，100% 本機運算守護資安。',
+        href: '/har-cleaner/',
+        cardClass: 'harCleanerCard',
+        category: 'developer',
+        keywords: 'har cleaner sanitizer privacy cookie token jwt api key redacted 敏感資料 脫敏 封包 清理 瘦身',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#06b6d4]">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+          </svg>
+        ),
+      },
     ],
   },
   {
