@@ -16,53 +16,56 @@
 
 * 🎨 **亮暗雙主題與毛玻璃 UI 美學 (Light/Dark Mode & Glassmorphism)**：全面支援深色與明亮模式切換（支援手動切換與隨系統自動同步）。深色模式採用質感極致純黑背景（`#030305`）結合霓虹微光；明亮模式提供清爽高對比的極簡毛玻璃視覺，兼具視覺美感與長時閱讀舒適度。
 * 🔒 **零隱私疑慮 (Client-side Privacy First)**：所有運算（含 PDF 壓縮、圖片轉檔處理、密碼產生、憑證轉換與金融計算）100% 於使用者瀏覽器端本地完成，檔案與敏感數據絕不上傳至任何伺服器。
-* ⚡ **靜態超速載入 (Static Export SSG)**：使用 Next.js App Router `output: 'export'` 靜態導出，結合 AWS S3 + CloudFront CDN 全球加速，實現零等待的極速載入。
+* ⚡ **靜態超速載入與非阻塞運算 (SSG & Non-Blocking Yielding)**：使用 Next.js App Router `output: 'export'` 靜態導出，結合 AWS S3 + CloudFront CDN 全球加速；高負載運算採用非同步時間片釋放與防抖技術，確保介面 60fps 滑順不卡死。
 * 🔗 **網址參數雙向同步 (URL State Sync)**：輸入資料即時無感同步至 URL Query 參數，方便複製網址隨時分享、備份計算結果或加入書籤。
 * 🌐 **多語言支援 (i18n Ready)**：全站支援繁體中文（預設）與英文介面動態切換，兼具 SEO 結構化資料與語意標籤。
-* 📱 **全平台響應式設計 (Responsive Design)**：針對桌面端、平板與行動裝置深度優化，支援手機版橫向凍結表格與手勢互動。
+* 📱 **全平台響應式設計 (Responsive Design)**：針對桌面端、平板與行動裝置深度優化，支援手機版「多欄表格自動自適應為直式小卡片」、橫向凍結表格與手勢互動，打造零橫向捲動的行動端流暢體驗。
 
 ---
 
 ## 🛠️ 收錄工具一覽
-
-### 🏦 金融理財
+ 
+### 🏦 金融理財 (Finance)
 * **[複利計算機](https://tools.cjkuo.net/compound-interest/)** (`/compound-interest`) - 支援年/月利率與定期定額，透過動態堆疊圖表呈現財富增長軌跡。
 * **[信貸計算機](https://tools.cjkuo.net/personal-loan/)** (`/personal-loan`) - 支援本息/本金平均攤還與實質年利率 (APR) 估算。
 * **[車貸計算機](https://tools.cjkuo.net/car-loan/)** (`/car-loan`) - 支援車價與自備款成數試算、寬限期設定與月付金分析。
 * **[房貸計算機](https://tools.cjkuo.net/mortgage-loan/)** (`/mortgage-loan`) - 支援自備款連動、寬限期試算與多段式階梯利率設定。
 * **[股票質押與維持率壓力測試器](https://tools.cjkuo.net/pledge-calculator/)** (`/pledge-calculator`) - 支援股價與張數雙向連動、追繳門檻與大跌幅壓力測試模擬。
 * **[台股期貨槓桿與逆風點數估算器](https://tools.cjkuo.net/futures-calculator/)** (`/futures-calculator`) - 即時計算大台/小台/微台實質槓桿倍數，模擬逆風損益與追繳強平臨界點。
+
+### 💼 職場與生活 (Workplace & Life)
 * **[薪資、勞保、健保、預扣稅計算機](https://tools.cjkuo.net/my-salary-calculator/)** (`/my-salary-calculator`) - 查表比對勞健保、勞退與預扣稅金額，呈現員工實領薪資與雇主總營運成本。
 * **[真實時薪計算器](https://tools.cjkuo.net/hourly-rate-calculator/)** (`/hourly-rate-calculator`) - 扣除通勤時間、無酬加班與額外支出，精準計算每小時生命真實淨收益並對照全台薪資 PR 排行。
 * **[離職時間與預告期計算機](https://tools.cjkuo.net/resignation-calculator/)** (`/resignation-calculator`) - 依台灣勞基法第 16 條與 38 條精準計算法定預告天數、離職生效日、最後在職日與特休排休/折現代金試算，並一鍵產生離職預告範本。
+* **[孕期與產檢假計算機](https://tools.cjkuo.net/pregnancy-calculator/)** (`/pregnancy-calculator`) - 支援 LMP、預產期、超音波 CRL 與試管推算，精算 40 週產檢里程碑、胎兒成長尺寸，並整合台灣勞基法試算 8 天產檢假、8 週產假、育嬰留停 8 成薪與勞保生育給付。
 
-### 💻 開發輔助
+### 💻 開發輔助 (Developer Tools)
 * **[Base64 編碼/解碼](https://tools.cjkuo.net/base64/)** (`/base64`) - 支援文字即時雙向編解碼（UTF-8 不亂碼）、檔案拖曳編碼與多媒體預覽。
 * **[URL 編碼/解碼](https://tools.cjkuo.net/url/)** (`/url`) - 支援 URI/URIComponent 模式，具備 Query 參數表格即時解析與雙向編輯。
 * **[安全密碼生成器](https://tools.cjkuo.net/password/)** (`/password`) - 密碼學安全強隨機數生成工具 (CSPRNG)，支援排除易混淆字元與強度評估。
 * **[JSON 格式化與美化器](https://tools.cjkuo.net/json/)** (`/json`) - 支援即時語法 Lint 驗證定位、多縮排格式美化、樹狀檢視與單行壓縮。
 * **[SSL 憑證格式轉換器](https://tools.cjkuo.net/ssl-converter/)** (`/ssl-converter`) - 支援 PFX/P12, PEM, DER 雙向轉換、金鑰雜湊匹配檢查與到期警示。
+* **[HAR 敏感資料清理工具](https://tools.cjkuo.net/har-cleaner/)** (`/har-cleaner`) - 專業純前端 HAR 封包脫敏與瘦身神器！支援自動清除 Cookie、Authorization 標頭、Bearer JWT、API 密鑰、敏感 Query 與 POST Payload，並可精準清理肥大二進位媒體酬載，100% 本地記憶體運算不外傳。
+* **[Epoch 時間戳記轉換](https://tools.cjkuo.net/epoch/)** (`/epoch`) - 支援秒與毫秒自動判定，即時在台北時間、UTC、美西時區之間雙向轉換。
 
-### 🌐 網路工具
+### 🌐 網路維運 (Network Utilities)
 * **[DIG 網路診斷工具](https://tools.cjkuo.net/dns-dig/)** (`/dns-dig`) - 支援 Cloudflare / Google 加密 DoH 切換、即時發送 DIG 請求查詢 A, CNAME, MX, TXT 等記錄。
 * **[IP 檢測助手](https://tools.cjkuo.net/ip-detector/)** (`/ip-detector`) - 支援 IPv4/IPv6 雙棧偵測、Cloudflare / Mullvad 節點查詢與公有雲連線延遲診斷。
 * **[DNS HTTPS 紀錄設定產生器](https://tools.cjkuo.net/https-dns-generator/)** (`/https-dns-generator`) - 線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄產生器與 DNS 代管商填寫對照指南。
 * **[IP 子網段計算器](https://tools.cjkuo.net/ip-calculator/)** (`/ip-calculator`) - 快速計算 IPv4 / CIDR 網段資訊、可用 IP 列表與極速 TXT/CSV 導出。
 
-### ✍️ 文字編輯
-* **[文字處理助手](https://tools.cjkuo.net/text-utility/)** (`/text-utility`) - 支援大小寫轉換、空白字元清理，並即時統計字元數、中英文字數與總行數。
-* **[Designer QR Code 產生器](https://tools.cjkuo.net/qr-generator/)** (`/qr-generator`) - 支援碼體與定位點樣式自訂、漸層色彩設定與置中 Logo 嵌入。
-* **[兩份文件比對工具](https://tools.cjkuo.net/diff-checker/)** (`/diff-checker`) - 純本機文本差異比對工具，支援 Split 雙窗格與 Unified 混合比對模式。
-
-### 🔧 實用小工具
-* **[目標計時器](https://tools.cjkuo.net/time/)** (`/time`) - 全螢幕極簡數位時鐘與目標計時器，支援多種時間格式與主題色設定。
-* **[Epoch 時間戳記轉換](https://tools.cjkuo.net/epoch/)** (`/epoch`) - 支援秒與毫秒自動判定，即時在台北時間、UTC、美西時區之間雙向轉換。
-* **[幸運轉盤抽獎小工具](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 支援自訂獎項、權重與色彩，提供全螢幕舞台、物理動畫與音效。
-* **[吹牛骰子搖骰器](https://tools.cjkuo.net/liars-dice/)** (`/liars-dice`) - 專為酒吧派對吹牛遊戲打造！具備防作弊計時器、中央手勢窺視、歷史 5 次紀錄、全螢幕舞台、擬真物理音效與手機觸覺震動。
-* **[孕期與產檢假計算機](https://tools.cjkuo.net/pregnancy-calculator/)** (`/pregnancy-calculator`) - 支援 LMP、預產期、超音波 CRL 與試管推算，精算 40 週產檢里程碑、胎兒成長尺寸，並整合台灣勞基法試算 8 天產檢假、8 週產假、育嬰留停 8 成薪與勞保生育給付。
+### 📄 圖片與文件 (Media & Documents)
 * **[光影裁剪 - 萬能圖片處理大師](https://tools.cjkuo.net/image-processor/)** (`/image-processor`) - 支援視覺化裁切、尺寸調整、jSquash WebAssembly 轉檔壓縮與多檔批次打包。
 * **[PDF 頁面組合器](https://tools.cjkuo.net/pdf-processor/)** (`/pdf-processor`) - 純前端 PDF 合併、拖曳頁面排序、單頁 90° 旋轉與頁面刪除。
 * **[PDF 壓縮大師](https://tools.cjkuo.net/pdf-compressor/)** (`/pdf-compressor`) - 針對 PDF 內嵌點陣圖深度壓縮與降採樣，保持向量文字清晰並大幅減少檔案體積。
+* **[兩份文件比對工具](https://tools.cjkuo.net/diff-checker/)** (`/diff-checker`) - 純本機文本差異比對工具，支援 Split 雙窗格與 Unified 混合比對模式。
+* **[文字處理助手](https://tools.cjkuo.net/text-utility/)** (`/text-utility`) - 支援大小寫轉換、空白字元清理，並即時統計字元數、中英文字數與總行數。
+
+### 🎲 生活娛樂 (Life & Entertainment)
+* **[Designer QR Code 產生器](https://tools.cjkuo.net/qr-generator/)** (`/qr-generator`) - 支援碼體與定位點樣式自訂、漸層色彩設定與置中 Logo 嵌入。
+* **[目標計時器](https://tools.cjkuo.net/time/)** (`/time`) - 全螢幕極簡數位時鐘與目標計時器，支援多種時間格式與主題色設定。
+* **[幸運轉盤抽獎小工具](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 支援自訂獎項、權重與色彩，提供全螢幕舞台、物理動畫與音效。
+* **[吹牛骰子搖骰器](https://tools.cjkuo.net/liars-dice/)** (`/liars-dice`) - 專為酒吧派對吹牛遊戲打造！具備防作弊計時器、中央手勢窺視、歷史 5 次紀錄、全螢幕舞台、擬真物理音效與手機觸覺震動。
 
 ---
 
