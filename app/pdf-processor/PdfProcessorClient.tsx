@@ -401,10 +401,10 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
 
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
         try {
-          const buffer = await file.arrayBuffer();
+          const rawBuffer = await file.arrayBuffer();
 
           await renderPdfPagesProgressive(
-            buffer,
+            rawBuffer.slice(0),
             (p) => {
               setPages((prev) => [
                 ...prev,
@@ -415,7 +415,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
                   pageIndex: p.pageIndex,
                   rotation: 0,
                   thumbnailUrl: p.thumbnailUrl,
-                  pdfArrayBuffer: buffer,
+                  pdfArrayBuffer: rawBuffer,
                   fileSize: file.size,
                 },
               ]);

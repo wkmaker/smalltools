@@ -74,7 +74,9 @@ export async function renderPdfPagesProgressive(
   await loadPdfScripts();
   const pdfjsLib = window.pdfjsLib;
 
-  const docParams: any = { data: arrayBuffer };
+  // 複製一份 ArrayBuffer 傳給 PDF.js Worker，防範 Worker Transferable 導致原主執行緒 ArrayBuffer 變成 Detached (byteLength 0)
+  const workerBuffer = arrayBuffer.slice(0);
+  const docParams: any = { data: workerBuffer };
   if (password) docParams.password = password;
   const loadingTask = pdfjsLib.getDocument(docParams);
   let pdfDoc: any;
@@ -194,6 +196,59 @@ export interface PdfComposerItem {
 }
 
 /**
+ * 輔助函數：將圖片 DataURL 嵌入至 targetPdf 中
+ */
+async function embedImageItemToPdf(
+  targetPdf: any,
+  dataUrl: string,
+  rotation: number,
+  quality: number
+): Promise<void> {
+  const img = new Image();
+  await new Promise<void>((res, rej) => {
+    img.onload = () => res();
+    img.onerror = () => rej(new Error('圖片載入失敗'));
+    img.src = dataUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  const isRotated = rotation === 90 || rotation === 270;
+  const w = img.width || 1200;
+  const h = img.height || 1600;
+
+  canvas.width = isRotated ? h : w;
+  canvas.height = isRotated ? w : h;
+  const ctx = canvas.getContext('2d');
+
+  if (ctx) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    ctx.restore();
+  }
+
+  const compressedJpegUrl = canvas.toDataURL('image/jpeg', quality);
+  const base64Data = compressedJpegUrl.split(',')[1];
+  const binaryStr = atob(base64Data);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let b = 0; b < binaryStr.length; b++) {
+    bytes[b] = binaryStr.charCodeAt(b);
+  }
+
+  const embeddedImg = await targetPdf.embedJpg(bytes);
+  const page = targetPdf.addPage([canvas.width, canvas.height]);
+  page.drawImage(embeddedImg, {
+    x: 0,
+    y: 0,
+    width: canvas.width,
+    height: canvas.height,
+  });
+}
+
+/**
  * 組合已排序、旋轉的頁面與圖片，並導出高畫質真 PDF Blob
  */
 export async function compilePagesToPdfBlob(
@@ -213,64 +268,48 @@ export async function compilePagesToPdfBlob(
 
     const item = items[i];
 
-    if (item.sourceType === 'PDF' && item.pdfArrayBuffer) {
-      let srcPdfDoc = pdfDocCache.get(item.pdfArrayBuffer);
-      if (!srcPdfDoc) {
-        const loadOpts: any = { ignoreEncryption: true };
-        if (item.password) loadOpts.password = item.password;
-        srcPdfDoc = await PDFLib.PDFDocument.load(item.pdfArrayBuffer, loadOpts);
-        pdfDocCache.set(item.pdfArrayBuffer, srcPdfDoc);
+    if (item.sourceType === 'PDF' && item.pdfArrayBuffer && item.pdfArrayBuffer.byteLength > 0) {
+      let pageCopied = false;
+      try {
+        let srcPdfDoc = pdfDocCache.get(item.pdfArrayBuffer);
+        if (!srcPdfDoc) {
+          const loadOpts: any = { ignoreEncryption: true };
+          if (item.password) loadOpts.password = item.password;
+          srcPdfDoc = await PDFLib.PDFDocument.load(item.pdfArrayBuffer.slice(0), loadOpts);
+          pdfDocCache.set(item.pdfArrayBuffer, srcPdfDoc);
+        }
+
+        const [copiedPage] = await targetPdf.copyPages(srcPdfDoc, [item.pageIndex]);
+        if (item.rotation > 0) {
+          const currRotObj = copiedPage.getRotation ? copiedPage.getRotation() : { angle: 0 };
+          const currRot = (typeof currRotObj === 'object' && currRotObj !== null ? currRotObj.angle : Number(currRotObj)) || 0;
+          copiedPage.setRotation(PDFLib.degrees((currRot + item.rotation) % 360));
+        }
+        targetPdf.addPage(copiedPage);
+        pageCopied = true;
+      } catch (copyErr) {
+        console.warn(`PDF 原生頁面拷貝失敗 (頁碼 #${item.pageIndex + 1})，自動降級啟用 300 DPI 超高清向量柵格化備份方案:`, copyErr);
       }
 
-      const [copiedPage] = await targetPdf.copyPages(srcPdfDoc, [item.pageIndex]);
-      if (item.rotation > 0) {
-        const currRot = copiedPage.getRotation().angle || 0;
-        copiedPage.setRotation(PDFLib.degrees((currRot + item.rotation) % 360));
+      // 若 pdf-lib 原生結構拷貝因特殊編碼/加密失敗，自動降級調用 PDF.js 300 DPI 無損渲染合成
+      if (!pageCopied) {
+        let highResUrl = '';
+        try {
+          highResUrl = await renderSinglePdfPageHighRes(
+            item.pdfArrayBuffer,
+            item.pageIndex,
+            2400,
+            item.password
+          );
+        } catch (e) {
+          highResUrl = item.thumbnailUrl;
+        }
+        const finalUrl = highResUrl || item.thumbnailUrl;
+        await embedImageItemToPdf(targetPdf, finalUrl, item.rotation, quality);
       }
-      targetPdf.addPage(copiedPage);
     } else {
       const dataUrl = item.imageDataUrl || item.thumbnailUrl;
-      const img = new Image();
-      await new Promise<void>((res) => {
-        img.onload = () => res();
-        img.src = dataUrl;
-      });
-
-      const canvas = document.createElement('canvas');
-      const isRotated = item.rotation === 90 || item.rotation === 270;
-      const w = img.width;
-      const h = img.height;
-
-      canvas.width = isRotated ? h : w;
-      canvas.height = isRotated ? w : h;
-      const ctx = canvas.getContext('2d');
-
-      if (ctx) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate((item.rotation * Math.PI) / 180);
-        ctx.drawImage(img, -w / 2, -h / 2, w, h);
-        ctx.restore();
-      }
-
-      const compressedJpegUrl = canvas.toDataURL('image/jpeg', quality);
-      const base64Data = compressedJpegUrl.split(',')[1];
-      const binaryStr = atob(base64Data);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let b = 0; b < binaryStr.length; b++) {
-        bytes[b] = binaryStr.charCodeAt(b);
-      }
-
-      const embeddedImg = await targetPdf.embedJpg(bytes);
-      const page = targetPdf.addPage([canvas.width, canvas.height]);
-      page.drawImage(embeddedImg, {
-        x: 0,
-        y: 0,
-        width: canvas.width,
-        height: canvas.height,
-      });
+      await embedImageItemToPdf(targetPdf, dataUrl, item.rotation, quality);
     }
   }
 
