@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Target Countdown Timer - Free Online Event Countdown & Accumulator',
     description: 'A beautiful online target countdown timer & time accumulator with customizable event titles and fullscreen mode.',
     url: 'https://tools.cjkuo.net/time/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-time.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Target Countdown Timer - Free Online Event Countdown & Accumulator',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Target Countdown Timer - Free Online Event Countdown & Accumulator',
     description: 'A beautiful online target countdown timer & time accumulator with customizable event titles and fullscreen mode.',
+    images: ['/img/og-time.webp'],
   },
 };
 

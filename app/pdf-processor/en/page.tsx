@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'PDF Page Composer - Free Online PDF Merge, Sort, Rotate & Delete Pages',
     description: '100% Client-side PDF Page Composer! Supports multi-file PDF merging, drag-and-drop page sorting, rotation, deletion, and image conversion.',
     url: 'https://tools.cjkuo.net/pdf-processor/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-pdf-processor.webp',
+        width: 1200,
+        height: 630,
+        alt: 'PDF Page Composer - Free Online PDF Merge & Organize',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Page Composer - Free Online PDF Merge, Sort, Rotate & Delete Pages',
     description: '100% Client-side PDF Page Composer! Supports multi-file PDF merging, drag-and-drop page sorting, rotation, deletion, and image conversion.',
+    images: ['/img/og-pdf-processor.webp'],
   },
 };
 

@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: '幸運轉盤抽獎小工具 - 免費線上自訂轉盤與機率抽獎',
     description: '免費線上轉盤抽獎工具，支援自訂獎項數量、權重比例與色彩，附帶真實物理旋轉動畫。',
     url: 'https://tools.cjkuo.net/lucky-wheel/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-lucky-wheel.webp',
+        width: 1200,
+        height: 630,
+        alt: '幸運轉盤抽獎小工具 - 免費線上自訂轉盤與機率抽獎',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '幸運轉盤抽獎小工具 - 免費線上自訂轉盤與機率抽獎',
     description: '免費線上轉盤抽獎工具，支援自訂獎項數量、權重比例與色彩，附帶真實物理旋轉動畫。',
+    images: ['/img/og-lucky-wheel.webp'],
   },
 };
 

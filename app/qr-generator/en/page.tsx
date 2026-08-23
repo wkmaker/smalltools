@@ -20,12 +20,20 @@ export const metadata: Metadata = {
     title: 'Designer QR Code Generator - Free Online Art QR Code, Logo Embedding & Vector SVG Output',
     description: 'Instantly design your artistic QR Code. Supports dot styles, gradients, center logo, and vector SVG output.',
     url: 'https://tools.cjkuo.net/qr-generator/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-qr-generator.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Designer QR Code Generator - Free Online Art QR Code & Vector SVG',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Designer QR Code Generator - Free Online Art QR Code, Logo Embedding & Vector SVG Output',
     description: 'Instantly design your artistic QR Code with custom gradients, center logo, and vector SVG output.',
+    images: ['/img/og-qr-generator.webp'],
   },
 };
 

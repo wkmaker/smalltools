@@ -16,15 +16,23 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Google Calendar ICS Splitter - Split Large .ics Calendar Files Online',
-    description: 'Free online iCalendar (.ics) Splitter! Split large calendar files into compliant chunks under 1MB with one-click ZIP download.',
+    title: 'ICS Calendar Splitter - Free Online Tool to Split Large .ics Files',
+    description: 'Free online iCalendar (.ics) Splitter! Overcome Google Calendar 1MB import limit, auto split large calendars into valid <1MB chunks with ZIP download.',
     url: 'https://tools.cjkuo.net/calendar-split/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-calendar-split.webp',
+        width: 1200,
+        height: 630,
+        alt: 'ICS Calendar Splitter - Free Online Tool to Split Large .ics Files',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Google Calendar ICS Splitter - Split Large .ics Calendar Files Online',
-    description: 'Free online iCalendar (.ics) Splitter! Split large calendar files into compliant chunks under 1MB with one-click ZIP download.',
+    title: 'ICS Calendar Splitter - Free Online Tool to Split Large .ics Files',
+    description: 'Free online iCalendar (.ics) Splitter! Overcome Google Calendar 1MB import limit, auto split large calendars into valid <1MB chunks with ZIP download.',
+    images: ['/img/og-calendar-split.webp'],
   },
 };
 

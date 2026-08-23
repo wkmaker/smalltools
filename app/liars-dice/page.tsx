@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: '吹牛骰子搖骰器 - 防作弊計時器與歷史 5 次紀錄工具',
     description: '專為酒吧派對打造的吹牛骰子搖骰器！顯示距離最後一次搖骰的時間與歷史 5 次紀錄。',
     url: 'https://tools.cjkuo.net/liars-dice/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-liars-dice.webp',
+        width: 1200,
+        height: 630,
+        alt: '吹牛骰子搖骰器 - 防作弊計時器與歷史 5 次紀錄',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '吹牛骰子搖骰器 - 防作弊計時器與歷史 5 次紀錄工具',
     description: '專為酒吧派對打造的吹牛骰子搖骰器！顯示距離最後一次搖骰的時間與歷史 5 次紀錄。',
+    images: ['/img/og-liars-dice.webp'],
   },
 };
 

@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'PDF 壓縮大師 - 免費線上瘦身與頂級隱私',
     description: '純前端極速 PDF 壓縮大師！支援多檔批次處理、即時預檢估算與圖片明細，100% 本地端運算。',
     url: 'https://tools.cjkuo.net/pdf-compressor/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-pdf-compressor.webp',
+        width: 1200,
+        height: 630,
+        alt: 'PDF 壓縮大師 - 免費線上瘦身與頂級隱私',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF 壓縮大師 - 免費線上瘦身與頂級隱私',
     description: '純前端極速 PDF 壓縮大師！支援多檔批次處理、即時預檢估算與圖片明細，100% 本地端運算。',
+    images: ['/img/og-pdf-compressor.webp'],
   },
 };
 

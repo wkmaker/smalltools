@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'JSON Formatter & Validator - Free Online JSON Beautifier & Minifier',
     description: 'Fast client-side JSON formatting tool with live syntax linting and interactive tree view.',
     url: 'https://tools.cjkuo.net/json/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-json.webp',
+        width: 1200,
+        height: 630,
+        alt: 'JSON Formatter & Validator - Free Online JSON Beautifier',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'JSON Formatter & Validator - Free Online JSON Beautifier & Minifier',
     description: 'Fast client-side JSON formatting tool with live syntax linting and interactive tree view.',
+    images: ['/img/og-json.webp'],
   },
 };
 

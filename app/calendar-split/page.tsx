@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: '日曆切割助手 - Google 行事曆 .ics 檔案自動分割與匯入工具',
     description: '免費線上 iCalendar (.ics) 日曆切割工具，解決 Google 行事曆 1MB 匯入限制，支援 ZIP 一鍵打包下載。',
     url: 'https://tools.cjkuo.net/calendar-split/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-calendar-split.webp',
+        width: 1200,
+        height: 630,
+        alt: '日曆切割助手 - Google 行事曆 .ics 檔案自動分割',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '日曆切割助手 - Google 行事曆 .ics 檔案自動分割與匯入工具',
     description: '免費線上 iCalendar (.ics) 日曆切割工具，解決 Google 行事曆 1MB 匯入限制，支援 ZIP 一鍵打包下載。',
+    images: ['/img/og-calendar-split.webp'],
   },
 };
 

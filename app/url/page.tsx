@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'URL 編碼解碼器 - 免費線上網址 encodeURIComponent 與 decodeURIComponent 工具',
     description: '極速純前端 URL 編解碼工具，支援中文字元與查詢參數轉換。',
     url: 'https://tools.cjkuo.net/url/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-url.webp',
+        width: 1200,
+        height: 630,
+        alt: 'URL 編碼解碼器 - 免費線上 URL 轉換',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'URL 編碼解碼器 - 免費線上網址 encodeURIComponent 與 decodeURIComponent 工具',
     description: '極速純前端 URL 編解碼工具，支援中文字元與查詢參數轉換。',
+    images: ['/img/og-url.webp'],
   },
 };
 
