@@ -21,13 +21,21 @@ export const metadata: Metadata = {
     description:
       '專業純前端 HAR 封包脫敏神器！自動清除 Cookie、Token、密鑰與機密個資，並可清理大檔圖片 Base64，100% 本地運算。',
     url: 'https://tools.cjkuo.net/har-cleaner/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-har-cleaner.webp',
+        width: 1200,
+        height: 630,
+        alt: 'HAR 敏感資料清理工具 - 本地脫敏與封包瘦身',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'HAR 敏感資料清理工具 - 免費線上 HTTP Archive 脫敏與大檔瘦身工具',
     description:
       '專業純前端 HAR 封包脫敏神器！自動清除 Cookie、Token、密鑰與機密個資，並可清理大檔圖片 Base64，100% 本地運算。',
+    images: ['/img/og-har-cleaner.webp'],
   },
 };
 

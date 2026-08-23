@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Futures Risk & Margin Calculator - Taiwan Index Futures Leverage Estimator',
     description: 'Essential risk control calculator for futures traders. Real-time adverse stress simulation, actual leverage, and margin call thresholds.',
     url: 'https://tools.cjkuo.net/futures-calculator/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-futures-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Futures Margin & Leverage Calculator - Liquidation Risk Simulator',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Futures Risk & Margin Calculator - Taiwan Index Futures Leverage Estimator',
     description: 'Essential risk control calculator for futures traders. Real-time adverse stress simulation, actual leverage, and margin call thresholds.',
+    images: ['/img/og-futures-calculator.webp'],
   },
 };
 

@@ -20,12 +20,20 @@ export const metadata: Metadata = {
     title: 'Real Hourly Rate Calculator - Deduct Commute & Overtime, Taiwan PR Percentile Rank',
     description: 'Deduct commute time, unpaid overtime, and work expenses to accurately calculate your true net hourly earnings.',
     url: 'https://tools.cjkuo.net/hourly-rate-calculator/en/',
-    images: [{ url: '/support.svg', width: 1200, height: 630, alt: 'Real Hourly Rate Calculator' }],
+    images: [
+      {
+        url: '/img/og-hourly-rate-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Real Hourly Rate Calculator - True Wage & Salary Percentile',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Real Hourly Rate Calculator - Deduct Commute & Overtime, Taiwan PR Percentile Rank',
     description: 'Deduct commute time, unpaid overtime, and work expenses to accurately calculate your true net hourly earnings.',
+    images: ['/img/og-hourly-rate-calculator.webp'],
   },
 };
 

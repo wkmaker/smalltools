@@ -55,20 +55,20 @@ export async function generateMetadata({ params }: RankPageProps): Promise<Metad
       locale: 'zh_TW',
       type: 'website',
       images: [
-        {
-          url: 'https://tools.cjkuo.net/support.svg',
-          width: 1200,
-          height: 630,
-          alt: `${milestoneLabel} (PR ${milestonePr}) 全台打工人薪資評定`,
-        },
-      ],
+      {
+        url: '/img/og-hourly-rate-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: '真實時薪計算器 - 薪資 PR 排行榜',
+      },
+    ],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://tools.cjkuo.net/support.svg'],
-    },
+      images: ['/img/og-hourly-rate-calculator.webp'],
+  },
   };
 }
 

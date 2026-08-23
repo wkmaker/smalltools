@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'IPv4 Subnet & CIDR Calculator - Free Online IP Range Calculator',
     description: 'Accurately calculate IPv4 / CIDR subnets, network & broadcast IPs, usable host ranges, and export TXT/CSV lists.',
     url: 'https://tools.cjkuo.net/ip-calculator/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-ip-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: 'IP Subnet Calculator - CIDR Subnet Mask & Usable IP Ranges',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'IPv4 Subnet & CIDR Calculator - Free Online IP Range Calculator',
     description: 'Accurately calculate IPv4 / CIDR subnets, network & broadcast IPs, usable host ranges, and export TXT/CSV lists.',
+    images: ['/img/og-ip-calculator.webp'],
   },
 };
 

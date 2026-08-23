@@ -55,20 +55,20 @@ export async function generateMetadata({ params }: RankPageProps): Promise<Metad
       locale: 'en_US',
       type: 'website',
       images: [
-        {
-          url: 'https://tools.cjkuo.net/support.svg',
-          width: 1200,
-          height: 630,
-          alt: `${milestoneLabel} (PR ${milestonePr}) Taiwan Worker Salary Rating`,
-        },
-      ],
+      {
+        url: '/img/og-hourly-rate-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Real Hourly Rate Calculator - Salary Percentile Benchmark',
+      },
+    ],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://tools.cjkuo.net/support.svg'],
-    },
+      images: ['/img/og-hourly-rate-calculator.webp'],
+  },
   };
 }
 

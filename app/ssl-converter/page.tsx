@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'SSL 憑證格式轉換器 - 免費線上 PFX/P12/PEM/DER 憑證轉換與效能驗證工具',
     description: '純前端 SSL 憑證格式轉換工具，一鍵雙向轉換 PFX, PEM, DER，具備憑證效期警告。',
     url: 'https://tools.cjkuo.net/ssl-converter/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-ssl-converter.webp',
+        width: 1200,
+        height: 630,
+        alt: 'SSL 憑證格式轉換器 - PFX/P12/PEM/DER 線上轉換工具',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SSL 憑證格式轉換器 - 免費線上 PFX/P12/PEM/DER 憑證轉換與效能驗證工具',
     description: '純前端 SSL 憑證格式轉換工具，一鍵雙向轉換 PFX, PEM, DER，具備憑證效期警告。',
+    images: ['/img/og-ssl-converter.webp'],
   },
 };
 

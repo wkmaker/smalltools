@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Resignation & Notice Period Calculator - Free Taiwan Labor Law Tool',
     description: 'Calculate official notice periods, last working days, and effective dates in Taiwan.',
     url: 'https://tools.cjkuo.net/resignation-calculator/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-resignation-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Resignation & Notice Period Calculator - Taiwan Labor Law',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Resignation & Notice Period Calculator - Taiwan Labor Law Tool',
     description: 'Calculate official notice periods, last working days, and effective dates in Taiwan.',
+    images: ['/img/og-resignation-calculator.webp'],
   },
 };
 

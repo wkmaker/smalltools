@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器',
     description: '工程師的線上 DNS 診斷利器。支援 Cloudflare/Google DoH 自由切換、自動網域清理與記錄檢索。',
     url: 'https://tools.cjkuo.net/dns-dig/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-dns-dig.webp',
+        width: 1200,
+        height: 630,
+        alt: 'DIG 網路診斷工具 - 線上 DNS 查詢與 DoH 檢測',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'DNS DIG 線上查詢工具 - 免費 Cloudflare/Google DoH 網域 DNS 記錄檢索器',
     description: '工程師的線上 DNS 診斷利器。支援 Cloudflare/Google DoH 自由切換、自動網域清理與記錄檢索。',
+    images: ['/img/og-dns-dig.webp'],
   },
 };
 

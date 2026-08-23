@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: '複利試算器 - 免費線上定期定額、存股ETF與投資複利計算機',
     description: '精算定期定額與單筆投資複利效應，提供年度資產成長圖表與本金利息佔比分析。',
     url: 'https://tools.cjkuo.net/compound-interest/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-compound-interest.webp',
+        width: 1200,
+        height: 630,
+        alt: '複利試算器 - 免費線上投資複利計算機',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '複利試算器 - 免費線上定期定額、存股ETF與投資複利計算機',
     description: '精算定期定額與單筆投資複利效應，提供年度資產成長圖表與本金利息佔比分析。',
+    images: ['/img/og-compound-interest.webp'],
   },
 };
 

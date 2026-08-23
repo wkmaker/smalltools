@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Pregnancy & Maternity Leave Calculator - Due Date & Benefits Estimator',
     description: 'Calculate due date, pregnancy milestones, fetal growth benchmarks, and statutory maternity benefits.',
     url: 'https://tools.cjkuo.net/pregnancy-calculator/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-pregnancy-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Pregnancy & Maternity Leave Calculator - Due Date & Milestones',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Pregnancy & Maternity Leave Calculator',
     description: 'Calculate due date, pregnancy milestones, fetal growth benchmarks, and statutory maternity benefits.',
+    images: ['/img/og-pregnancy-calculator.webp'],
   },
 };
 

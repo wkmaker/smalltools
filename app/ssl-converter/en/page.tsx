@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'SSL Certificate Converter - Free Online PFX/P12/PEM/DER Converter & Chain Fixer',
     description: 'Secure client-side SSL certificate format converter tool with certificate chain fixing and expiration analysis.',
     url: 'https://tools.cjkuo.net/ssl-converter/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-ssl-converter.webp',
+        width: 1200,
+        height: 630,
+        alt: 'SSL Certificate Converter - Convert PFX, PEM, and DER Online',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SSL Certificate Converter - Free Online PFX/P12/PEM/DER Converter & Chain Fixer',
     description: 'Secure client-side SSL certificate format converter tool with certificate chain fixing and expiration analysis.',
+    images: ['/img/og-ssl-converter.webp'],
   },
 };
 

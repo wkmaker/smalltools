@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Car Loan Calculator - Auto Loan Monthly Payment & Interest Rate',
     description: 'Calculate monthly auto loan payments, interest, APR, and complete amortization schedules.',
     url: 'https://tools.cjkuo.net/car-loan/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-car-loan.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Auto Loan Calculator - Car Financing & Monthly Installment',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Car Loan Calculator - Auto Loan Monthly Payment & Interest Rate',
     description: 'Calculate monthly auto loan payments, interest, APR, and complete amortization schedules.',
+    images: ['/img/og-car-loan.webp'],
   },
 };
 

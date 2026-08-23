@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Compound Interest Calculator - Free Investment, SIP & Stock Growth Calculator',
     description: 'Calculate compound interest for lump sum & recurring investments with visual growth charts.',
     url: 'https://tools.cjkuo.net/compound-interest/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-compound-interest.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Compound Interest Calculator - Investment & Wealth Growth',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Compound Interest Calculator - Free Investment, SIP & Stock Growth Calculator',
     description: 'Calculate compound interest for lump sum & recurring investments with visual growth charts.',
+    images: ['/img/og-compound-interest.webp'],
   },
 };
 

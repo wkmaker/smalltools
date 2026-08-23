@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Secure Password Generator - Free Online CSPRNG & Passphrase Tool',
     description: 'Cryptographically secure client-side password generator with live strength analysis.',
     url: 'https://tools.cjkuo.net/password/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-password.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Secure Password Generator - CSPRNG Strong Random Passwords',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Secure Password Generator - Free Online CSPRNG & Passphrase Tool',
     description: 'Cryptographically secure client-side password generator with live strength analysis.',
+    images: ['/img/og-password.webp'],
   },
 };
 

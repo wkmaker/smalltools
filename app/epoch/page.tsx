@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Epoch 時間戳記轉換器 - 免費線上 Unix Timestamp 與日期雙向轉換工具',
     description: '專業免費的 Unix 時間戳記轉換工具，支援雙向即時轉換、多時區比較與歷史紀錄。',
     url: 'https://tools.cjkuo.net/epoch/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-epoch.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Epoch 時間戳記轉換 - Unix Time 與多時區同步工具',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Epoch 時間戳記轉換器 - 免費線上 Unix Timestamp 與日期雙向轉換工具',
     description: '專業免費的 Unix 時間戳記轉換工具，支援雙向即時轉換、多時區比較與歷史紀錄。',
+    images: ['/img/og-epoch.webp'],
   },
 };
 

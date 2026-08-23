@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: 'Online DNS DIG Tool - Free Cloudflare & Google DoH DNS Record Lookup',
     description: 'Essential online DNS lookup tool for engineers. Supports Cloudflare/Google DoH, domain parsing, and RFC 9460 decoding.',
     url: 'https://tools.cjkuo.net/dns-dig/en/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-dns-dig.webp',
+        width: 1200,
+        height: 630,
+        alt: 'DNS DIG Web Tool - Encrypted DoH Lookup & DNS Diagnostics',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Online DNS DIG Tool - Free Cloudflare & Google DoH DNS Record Lookup',
     description: 'Essential online DNS lookup tool for engineers. Supports Cloudflare/Google DoH, domain parsing, and RFC 9460 decoding.',
+    images: ['/img/og-dns-dig.webp'],
   },
 };
 

@@ -19,12 +19,20 @@ export const metadata: Metadata = {
     title: '股票質押維持率計算機 - 免費線上台股斷頭價與壓力測試工具',
     description: '台股投資人的槓桿守護者。即時模擬大盤跌幅、維持率指針儀表板、追繳臨界價與補繳保證金試算。',
     url: 'https://tools.cjkuo.net/pledge-calculator/',
-    images: [{ url: '/support.svg' }],
+    images: [
+      {
+        url: '/img/og-pledge-calculator.webp',
+        width: 1200,
+        height: 630,
+        alt: '股票質押與維持率壓力測試器 - 風險與斷頭試算',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '股票質押維持率計算機 - 免費線上台股斷頭價與壓力測試工具',
     description: '台股投資人的槓桿守護者。即時模擬大盤跌幅、維持率指針儀表板、追繳臨界價與補繳保證金試算。',
+    images: ['/img/og-pledge-calculator.webp'],
   },
 };
 
