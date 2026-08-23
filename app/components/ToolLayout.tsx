@@ -45,6 +45,9 @@ interface ToolLayoutProps {
   backText?: string;         // 自訂返回按鈕顯示文案
   onBackClick?: (e: React.MouseEvent) => void; // 自訂點擊返回按鈕事件
   containerClassName?: string; // 可選傳入自訂外容器 class
+  langSwitchHref?: string;     // 自訂中英文切換連結 (未提供時自動依路由推導)
+  langSwitchLabel?: string;    // 自訂中英文切換按鈕文字
+  hideLangToggle?: boolean;    // 若為 true，隱藏語系切換按鈕
   extraHeaderControls?: React.ReactNode; // 可選傳入頂欄右側自訂按鈕組
   extraFooterContent?: React.ReactNode;  // 可選傳入頁尾贊助旁邊自訂補充內容
   breadcrumbs?: BreadcrumbItem[]; // 自訂或覆寫麵包屑階層
@@ -66,6 +69,9 @@ export default function ToolLayout({
   backText,
   onBackClick,
   containerClassName = '',
+  langSwitchHref: customLangSwitchHref,
+  langSwitchLabel: customLangSwitchLabel,
+  hideLangToggle = false,
   extraHeaderControls,
   extraFooterContent,
   breadcrumbs: customBreadcrumbs,
@@ -78,6 +84,26 @@ export default function ToolLayout({
     ? (cleanPath ? `/en/#tool-${cleanPath}` : '/en/')
     : (cleanPath ? `/#tool-${cleanPath}` : '/');
   const targetBackHref = customBackHref || defaultBackHref;
+
+  // 1. 自動推導或設定語系切換路徑
+  const resolvedLangSwitchHref = useMemo(() => {
+    if (hideLangToggle) return null;
+    if (customLangSwitchHref) return customLangSwitchHref;
+    if (!pathname) return null;
+
+    if (pathname === '/' || pathname === '') return '/en/';
+    if (pathname === '/en' || pathname === '/en/') return '/';
+
+    if (isEn) {
+      const zhPath = pathname.replace(/\/en\/?$/, '/');
+      return zhPath.endsWith('/') ? zhPath : `${zhPath}/`;
+    } else {
+      const trimmed = pathname.replace(/\/$/, '');
+      return `${trimmed}/en/`;
+    }
+  }, [hideLangToggle, customLangSwitchHref, pathname, isEn]);
+
+  const resolvedLangSwitchLabel = customLangSwitchLabel || (isEn ? '繁體中文' : 'English');
 
   // 1. 動態解析階層麵包屑 (Breadcrumbs)
   const resolvedBreadcrumbs: BreadcrumbItem[] = useMemo(() => {
@@ -180,6 +206,21 @@ export default function ToolLayout({
             ⌘K
           </kbd>
         </button>
+        {resolvedLangSwitchHref && !extraHeaderControls && (
+          <Link
+            href={resolvedLangSwitchHref}
+            title={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
+            aria-label={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
+            className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 select-none"
+          >
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span>{resolvedLangSwitchLabel}</span>
+          </Link>
+        )}
         {extraHeaderControls}
         {!hideThemeToggle && <ThemeToggle />}
       </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
-import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './lucky-wheel.module.css';
@@ -1149,20 +1148,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#f59e0b"
-      accentGlow="rgba(245, 158, 11, 0.6)"
-      extraHeaderControls={
-        <Link
-          href={lang === 'en' ? '/lucky-wheel/' : '/lucky-wheel/en/'}
-          className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#f59e0b)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(245,158,11,0.4))] select-none"
-        >
-          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="2" y1="12" x2="22" y2="12" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-          </svg>
-          <span>{lang === 'en' ? '繁體中文' : 'English'}</span>
-        </Link>
-      }
+      accentGlow="rgba(245, 158, 11, 0.6)"
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 頂部雙語切換與最新中獎動態公告列 */}

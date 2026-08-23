@@ -27,8 +27,9 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
         theme-toggle-btn
         relative inline-flex items-center justify-center gap-2
         h-[42px] px-3.5 rounded-xl
-        bg-white/[.06] border border-white/10
+        bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10
         text-text-sub hover:text-text-main
+        hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20
         backdrop-blur-md
         transition-all duration-300 ease-out
         hover:scale-105 active:scale-95

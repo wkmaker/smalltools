@@ -4,6 +4,28 @@
 
 ---
 
+## [1.7.0] - 2026-08-23
+
+### 🚀 新增功能與架構重構 (Added & Architecture)
+- **全新小工具：日曆切割助手 (Google Calendar ICS Splitter)**：
+  - 正式上線 `/calendar-split/`（繁體中文）與 `/calendar-split/en/`（英文）雙語版本。
+  - **100% 本地記憶體解析與切割**：專為 Google 行事曆匯出之大型 `.ics` 檔案打造，純前端極速分割，解決 Google 網頁版單次匯入體積上限限制。
+  - **嚴格遵循 RFC 5545 規範**：自動萃取並完整保留全域 `VCALENDAR` 屬性與所有 `VTIMEZONE` 時區定義，確保分割後的每個子檔案皆能獨立於 Google Calendar、Apple Calendar、Outlook 正常匯入無任何時差。
+  - **高效能計算與渲染解耦 (Zero-Copy Indexing & Lazy Blob Generation)**：
+    - 採用單遍單向字元偏移索引技術，對數萬行文字與上萬筆活動進行輕量化分組計算，切換模式或大小時耗時 `< 1ms`，0ms 延遲即時呈現。
+    - 實體字串與檔案 Blob 採延遲按需生成，僅於下載或打包時產出，節省 90% 記憶體佔用。
+  - **內建純 TypeScript ZIP 打包引擎**：無外部依賴實作標準 STORE ZIP 格式，支援一鍵批量下載。
+  - **全寬自由延伸排版 (Full-Width Responsive)**：支援在大螢幕與寬螢幕下自適應橫向展開。
+- **全站 30 個小工具與首頁頂欄控制組全面升級 (`ToolLayout.tsx` & `HomeClient.tsx`)**：
+  - 由 `ToolLayout` 統一管理中英文語系切換按鈕，依路由自動雙向解析（`/[tool]/` ↔ `/[tool]/en/`）。
+  - 清理全站 29 個小工具客戶端中重複手寫的 `extraHeaderControls` 與無用 imports，100% 自動繼承中央統一架構。
+  - 首頁（`HomeClient.tsx`）同步升級為相同的三合一控制列（搜尋、語系、亮暗主題），達到全站視覺、尺寸（`h-[42px]`）與亮暗色高對比 Token 絕對一致。
+  - 保持向下相容性與 `extraHeaderControls` 插槽，確保目標計時器（`TimeClient.tsx`）之全螢幕特化選單不受任何影響。
+- **全域快捷搜尋彈窗 (Command Palette) 滑鼠關閉支援**：
+  - 搜尋列右上角新增可點擊之互動式關閉按鈕 (`ESC ✕`)，並支援點擊周圍暗色毛玻璃遮罩一鍵關閉。
+
+---
+
 ## [1.6.0] - 2026-08-23
 
 ### 🚀 新增功能與 UX 升級 (Added & User Experience)

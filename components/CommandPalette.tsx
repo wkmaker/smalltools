@@ -319,9 +319,29 @@ export default function CommandPalette() {
               {isEn ? 'Clear' : '清除'}
             </button>
           )}
-          <span className={styles.escBadge}>
-            ESC
-          </span>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            title={isEn ? 'Close search (Esc)' : '關閉搜尋 (Esc)'}
+            aria-label={isEn ? 'Close search (Esc)' : '關閉搜尋 (Esc)'}
+            className={styles.closeBtn}
+          >
+            <span className={styles.escBadge}>ESC</span>
+            <svg
+              viewBox="0 0 24 24"
+              width={14}
+              height={14}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={styles.closeIcon}
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
         {/* ── 列表區域 ── */}

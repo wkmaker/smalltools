@@ -65,6 +65,7 @@
 * **[文字處理助手](https://tools.cjkuo.net/text-utility/)** (`/text-utility`) - 支援大小寫轉換、空白字元清理，並即時統計字元數、中英文字數與總行數。
 
 ### 🎲 生活娛樂 (Life & Entertainment)
+* **[日曆切割助手](https://tools.cjkuo.net/calendar-split/)** (`/calendar-split`) - 純前端 Google 行事曆 `.ics` 大檔案分割神器！支援 RFC 5545 規範、VTIMEZONE 完整繼承、多種檔案大小與筆數分割模式及一鍵 ZIP 打包下載。
 * **[Designer QR Code 產生器](https://tools.cjkuo.net/qr-generator/)** (`/qr-generator`) - 支援碼體與定位點樣式自訂、漸層色彩設定與置中 Logo 嵌入。
 * **[目標計時器](https://tools.cjkuo.net/time/)** (`/time`) - 全螢幕極簡數位時鐘與目標計時器，支援多種時間格式與主題色設定。
 * **[幸運轉盤抽獎小工具](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 支援自訂獎項、權重與色彩，提供全螢幕舞台、物理動畫與音效。

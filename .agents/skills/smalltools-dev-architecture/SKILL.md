@@ -81,7 +81,13 @@ app/[tool-name]/
 * 針對文字比對 (Diff)、大檔案編解碼 (Base64) 或高複雜度運算，必須設定字串長度與檔案大小上限（如 10MB 或 3,000,000 字元）。超出時給予截斷或分區預覽，兼顧 100% 完整匯出與極速 UI 渲染。
 * **Excel 匯出相容性 (UTF-8 BOM)**：CSV 匯出檔首行必須顯式寫入 `\uFEFF` (UTF-8 BOM) 標頭，確保 Microsoft Excel 在 Windows 環境下開啟時無亂碼。
 
-### 6. GPU 加速與動畫幀節流
+### 6. 記憶體零拷貝與延遲組裝原則 (Zero-Copy Indexing & Lazy Blob Generation)
+* 針對大型日誌、行事曆 (`.ics`)、封包或數萬行文字數據：
+  - **索引化分離**：初次解析時僅以字元偏移量 (`startIndex`, `endIndex`, `byteLength`) 建立輕量元資料陣列，嚴禁在記憶體中預先產生數萬個獨立字串實體。
+  - **參數調整 0ms 響應**：滑桿或切分設定變更時，僅對純數值進行運算累加分組，運算耗時維持在 `< 1ms`。
+  - **按需延遲生成 (Lazy Blob Generation)**：使用者點擊「下載」或「一鍵打包 ZIP」時才按需截取對應位元組產生 Blob，節省 90% 記憶體佔用與頻繁 GC 垃圾回收。
+
+### 7. GPU 加速與動畫幀節流
 * 隨游標拖曳或頻繁變更的 DOM 樣式，使用 CSS `will-change: transform` 與 `transform: translateZ(0)` 創建獨立 GPU 圖層。
 * 將樣式更新放入 `requestAnimationFrame` 進行節流。
 

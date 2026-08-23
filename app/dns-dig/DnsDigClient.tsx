@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useId } from 'react';
-import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './dns-dig.module.css';
@@ -493,20 +492,7 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#8b5cf6"
-      accentGlow="rgba(139, 92, 246, 0.6)"
-      extraHeaderControls={
-        <Link
-          href={lang === 'en' ? '/dns-dig/' : '/dns-dig/en/'}
-          className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-white/[.06] border border-white/10 text-text-sub hover:text-text-main backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-[var(--theme-color,#8b5cf6)] hover:shadow-[0_0_12px_var(--theme-glow,rgba(139,92,246,0.4))] select-none"
-        >
-          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="2" y1="12" x2="22" y2="12" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-          </svg>
-          <span>{lang === 'en' ? '繁體中文' : 'English'}</span>
-        </Link>
-      }
+      accentGlow="rgba(139, 92, 246, 0.6)"
     >
 
       <div className="grid grid-cols-[0.8fr_1.2fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">

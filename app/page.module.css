@@ -498,6 +498,11 @@
 .pregnancyCard:hover h3 { color: #ff4081; text-shadow: 0 0 10px rgba(255, 64, 129, 0.4); }
 .pregnancyCard .cardAction { color: #ff4081; }
 
+.calendarCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(6, 182, 212, 0.06), transparent 40%); }
+.calendarCard:hover { border-color: rgba(6, 182, 212, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(6, 182, 212, 0.15); }
+.calendarCard:hover h3 { color: #06b6d4; text-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
+.calendarCard .cardAction { color: #06b6d4; }
+
 .placeholderCard {
     border-style: dashed;
     border-color: rgba(255, 255, 255, 0.1);
@@ -727,6 +732,9 @@
 
 :global([data-theme='light']) .pregnancyCard:hover h3,
 :global([data-theme='light']) .pregnancyCard .cardAction { color: #e11d48; text-shadow: none; } /* 深玫瑰紅 */
+
+:global([data-theme='light']) .calendarCard:hover h3,
+:global([data-theme='light']) .calendarCard .cardAction { color: #0891b2; text-shadow: none; } /* 深青藍 */
 
 /* ====== 常用工具釘選按鈕 (Pin Button) ====== */
 .pinBtn {
