@@ -376,7 +376,10 @@ function extractAiaUrl(certObj: forge.pki.Certificate): string | null {
 
   const aiaRegex = /https?:\/\/[A-Za-z0-9\-\.\/_~%]+\.(cer|crt|p7b)/i;
   const match = derStr.match(aiaRegex);
-  return match ? match[0] : null;
+  if (!match) return null;
+
+  // 將 http:// 自動重寫升級為 https://，避免現代瀏覽器在 HTTPS 站點下因 Mixed Content 混合內容安全機制阻擋檔案下載
+  return match[0].replace(/^http:\/\//i, 'https://');
 }
 
 function getCertKeyAlgorithm(certObj: forge.pki.Certificate): string {
