@@ -27,8 +27,11 @@ const TRANSLATIONS = {
     addPdfImg: '新增 PDF / 圖片',
     parsingPages: '正在解析頁面...',
     totalCount: (n: number) => `共 ${n} 頁`,
-    exportQualityLabel: '匯出畫質：',
-    qHigh: '高畫質 (95%)',
+    exportEngineLabel: '引擎：',
+    engineWysiwyg: '300 DPI 所見即所得 (推薦・防空白頁)',
+    engineVector: '原生向量模式 (保留文字選取)',
+    exportQualityLabel: '畫質：',
+    qHigh: '極致清晰 (95%)',
     qBal: '平衡推薦 (85%)',
     qLow: '極速輕巧 (65%)',
     rotateAll: '全體旋轉 90°',
@@ -124,8 +127,11 @@ const TRANSLATIONS = {
     addPdfImg: 'Add PDF / Images',
     parsingPages: 'Parsing pages...',
     totalCount: (n: number) => `Total ${n} page(s)`,
-    exportQualityLabel: 'Export Quality:',
-    qHigh: 'High Quality (95%)',
+    exportEngineLabel: 'Engine:',
+    engineWysiwyg: '300 DPI WYSIWYG (Recommended)',
+    engineVector: 'Native Vector (Keep Text Selectable)',
+    exportQualityLabel: 'Quality:',
+    qHigh: 'Ultra High (95%)',
     qBal: 'Balanced Rec. (85%)',
     qLow: 'Compact Size (65%)',
     rotateAll: 'Rotate All 90°',
@@ -224,6 +230,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
   const [processingMsg, setProcessingMsg] = useState<string>('');
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportQuality, setExportQuality] = useState<number>(0.85);
+  const [exportEngine, setExportEngine] = useState<'wysiwyg' | 'vector'>('wysiwyg');
   const [isDraggingFile, setIsDraggingFile] = useState<boolean>(false);
   const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null);
   const [dropTargetCardIndex, setDropTargetCardIndex] = useState<number | null>(null);
@@ -246,6 +253,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
 
   const fileInputId = useId();
   const exportQualityId = useId();
+  const exportEngineId = useId();
   const pwdInputId = useId();
 
   useEffect(() => {
@@ -561,16 +569,21 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
     }
   };
 
-  // 真實高畫質 PDF 合成導出
+  // 真實高畫質 PDF 合成導出 (支援 300 DPI 所見即所得與原生向量雙軌引擎)
   const exportPdf = useCallback(async () => {
     if (pages.length === 0) return;
     setIsExporting(true);
     showToast(t.toastExporting);
 
     try {
-      const pdfBlob = await compilePagesToPdfBlob(pages, exportQuality, (curr, total) => {
-        setProcessingMsg(`Compiling (${curr}/${total})...`);
-      });
+      const pdfBlob = await compilePagesToPdfBlob(
+        pages,
+        exportQuality,
+        (curr, total) => {
+          setProcessingMsg(`Compiling (${curr}/${total})...`);
+        },
+        exportEngine
+      );
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -587,7 +600,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       setIsExporting(false);
       setProcessingMsg('');
     }
-  }, [pages, exportQuality, t]);
+  }, [pages, exportQuality, exportEngine, t]);
 
   const previewItem = previewPageIndex !== null ? pages[previewPageIndex] : null;
 
@@ -654,6 +667,22 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
 
           {pages.length > 0 && (
             <div className="flex items-center gap-3 flex-wrap">
+              {/* 匯出引擎模式選擇 */}
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm ${styles.innerBlock}`}>
+                <label htmlFor={exportEngineId} className="text-text-sub font-medium">
+                  {t.exportEngineLabel}
+                </label>
+                <select
+                  id={exportEngineId}
+                  value={exportEngine}
+                  onChange={(e) => setExportEngine(e.target.value as 'wysiwyg' | 'vector')}
+                  className={styles.selectInput}
+                >
+                  <option value="wysiwyg">{t.engineWysiwyg}</option>
+                  <option value="vector">{t.engineVector}</option>
+                </select>
+              </div>
+
               {/* 匯出品質選擇 */}
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm ${styles.innerBlock}`}>
                 <label htmlFor={exportQualityId} className="text-text-sub font-medium">

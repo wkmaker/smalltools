@@ -137,15 +137,14 @@ export async function renderPdfPagesProgressive(
 }
 
 /**
- * 為 Lightbox 大圖 Modal 動態渲染單頁「300 DPI 超高清晰度」無損畫質影像
- * 解決 A4 合約細小文字與 DocuSign 簽名變模糊的問題
+ * 為單頁動態渲染「300 DPI 超高清晰度 (A4: 2480x3508)」無損畫質影像
+ * 完整開啟 renderInteractiveForms 捕獲電子印章、DocuSign 簽名、表單欄位與 CropBox
  */
-export async function renderSinglePdfPageHighRes(
+export async function renderPdfPage300Dpi(
   arrayBuffer: ArrayBuffer,
   pageIndex: number,
-  targetWidth: number = 2400,
   password?: string
-): Promise<string> {
+): Promise<{ dataUrl: string; pointWidth: number; pointHeight: number }> {
   await loadPdfScripts();
   const pdfjsLib = window.pdfjsLib;
 
@@ -156,11 +155,12 @@ export async function renderSinglePdfPageHighRes(
   const page = await pdfDoc.getPage(pageIndex + 1);
 
   const unscaledViewport = page.getViewport({ scale: 1.0 });
+  const pointWidth = unscaledViewport.width || 595.28;
+  const pointHeight = unscaledViewport.height || 841.89;
 
-  // A4 point (595pt) 放大至 2400px (視為 ~300 DPI 超清解析度，scale 達 3.0 ~ 4.0)
-  const dpr = typeof window !== 'undefined' ? Math.max(1, window.devicePixelRatio || 1) : 1;
-  const desiredWidth = Math.max(1800, targetWidth * dpr);
-  const scale = Math.max(2.5, desiredWidth / unscaledViewport.width);
+  // 300 DPI: 標準 A4 寬度 595.28pt 放大至 2480px (scale ≈ 4.166)
+  const minDim = Math.min(pointWidth, pointHeight);
+  const scale = Math.max(2.5, Math.min(5.0, 2480 / minDim));
 
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
@@ -168,19 +168,38 @@ export async function renderSinglePdfPageHighRes(
   canvas.height = Math.floor(viewport.height);
 
   const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
+  if (!ctx) {
+    return { dataUrl: '', pointWidth, pointHeight };
+  }
 
-  // 開啟圖像平滑優化
+  // 預設白色背景，防止透明底 PDF 頁面在渲染後出現黑底
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
   await page.render({
     canvasContext: ctx,
     viewport: viewport,
+    renderInteractiveForms: true, // 100% 捕獲表單欄位、印章與電子簽名
   }).promise;
 
-  // 使用 0.96 高品質 JPEG 輸出，呈現無損纖毫畢現文字
-  return canvas.toDataURL('image/jpeg', 0.96);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+  return { dataUrl, pointWidth, pointHeight };
+}
+
+/**
+ * 為 Lightbox 大圖 Modal 動態渲染單頁「300 DPI 超高清晰度」無損畫質影像
+ * 解決 A4 合約細小文字與 DocuSign 簽名變模糊的問題
+ */
+export async function renderSinglePdfPageHighRes(
+  arrayBuffer: ArrayBuffer,
+  pageIndex: number,
+  targetWidth: number = 2400,
+  password?: string
+): Promise<string> {
+  const res = await renderPdfPage300Dpi(arrayBuffer, pageIndex, password);
+  return res.dataUrl;
 }
 
 export interface PdfComposerItem {
@@ -196,13 +215,15 @@ export interface PdfComposerItem {
 }
 
 /**
- * 輔助函數：將圖片 DataURL 嵌入至 targetPdf 中
+ * 輔助函數：將圖片 DataURL 嵌入至 targetPdf 中並設定標準 PDF 點數尺寸
  */
 async function embedImageItemToPdf(
   targetPdf: any,
   dataUrl: string,
   rotation: number,
-  quality: number
+  quality: number,
+  customPointWidth?: number,
+  customPointHeight?: number
 ): Promise<void> {
   const img = new Image();
   await new Promise<void>((res, rej) => {
@@ -239,22 +260,36 @@ async function embedImageItemToPdf(
   }
 
   const embeddedImg = await targetPdf.embedJpg(bytes);
-  const page = targetPdf.addPage([canvas.width, canvas.height]);
+
+  // 計算標準 PDF 點數尺寸 (預設 A4: 595.28 x 841.89 pt，或依據原始 point 比例)
+  let ptW = customPointWidth || 595.28;
+  let ptH = customPointHeight || 841.89;
+  if (isRotated && !customPointWidth) {
+    ptW = 841.89;
+    ptH = 595.28;
+  } else if (customPointWidth && isRotated) {
+    ptW = customPointHeight || 841.89;
+    ptH = customPointWidth || 595.28;
+  }
+
+  const page = targetPdf.addPage([ptW, ptH]);
   page.drawImage(embeddedImg, {
     x: 0,
     y: 0,
-    width: canvas.width,
-    height: canvas.height,
+    width: ptW,
+    height: ptH,
   });
 }
 
 /**
  * 組合已排序、旋轉的頁面與圖片，並導出高畫質真 PDF Blob
+ * 預設採用「300 DPI 所見即所得 (WYSIWYG)」模式，徹底杜絕因註解層或裁切框偏移造成的空白頁
  */
 export async function compilePagesToPdfBlob(
   items: PdfComposerItem[],
   quality: number = 0.9,
-  onProgress?: (current: number, total: number) => void
+  onProgress?: (current: number, total: number) => void,
+  exportEngine: 'wysiwyg' | 'vector' = 'wysiwyg'
 ): Promise<Blob> {
   await loadPdfScripts();
   const PDFLib = window.PDFLib;
@@ -268,7 +303,7 @@ export async function compilePagesToPdfBlob(
 
     const item = items[i];
 
-    if (item.sourceType === 'PDF' && item.pdfArrayBuffer && item.pdfArrayBuffer.byteLength > 0) {
+    if (exportEngine === 'vector' && item.sourceType === 'PDF' && item.pdfArrayBuffer && item.pdfArrayBuffer.byteLength > 0) {
       let pageCopied = false;
       try {
         let srcPdfDoc = pdfDocCache.get(item.pdfArrayBuffer);
@@ -288,25 +323,28 @@ export async function compilePagesToPdfBlob(
         targetPdf.addPage(copiedPage);
         pageCopied = true;
       } catch (copyErr) {
-        console.warn(`PDF 原生頁面拷貝失敗 (頁碼 #${item.pageIndex + 1})，自動降級啟用 300 DPI 超高清向量柵格化備份方案:`, copyErr);
+        console.warn(`PDF 原生頁面拷貝失敗 (頁碼 #${item.pageIndex + 1})，自動降級啟用 300 DPI 超高清備用方案:`, copyErr);
       }
 
-      // 若 pdf-lib 原生結構拷貝因特殊編碼/加密失敗，自動降級調用 PDF.js 300 DPI 無損渲染合成
+      // 若 pdf-lib 原生結構拷貝失敗，自動降級調用 300 DPI 所見即所得渲染
       if (!pageCopied) {
-        let highResUrl = '';
-        try {
-          highResUrl = await renderSinglePdfPageHighRes(
-            item.pdfArrayBuffer,
-            item.pageIndex,
-            2400,
-            item.password
-          );
-        } catch (e) {
-          highResUrl = item.thumbnailUrl;
-        }
-        const finalUrl = highResUrl || item.thumbnailUrl;
-        await embedImageItemToPdf(targetPdf, finalUrl, item.rotation, quality);
+        const pageRes = await renderPdfPage300Dpi(
+          item.pdfArrayBuffer,
+          item.pageIndex,
+          item.password
+        );
+        const finalUrl = pageRes.dataUrl || item.thumbnailUrl;
+        await embedImageItemToPdf(targetPdf, finalUrl, item.rotation, quality, pageRes.pointWidth, pageRes.pointHeight);
       }
+    } else if (item.sourceType === 'PDF' && item.pdfArrayBuffer && item.pdfArrayBuffer.byteLength > 0) {
+      // 300 DPI 所見即所得模式 (WYSIWYG) - 100% 確保預覽與匯出成品完全一致，零空白頁
+      const pageRes = await renderPdfPage300Dpi(
+        item.pdfArrayBuffer,
+        item.pageIndex,
+        item.password
+      );
+      const finalUrl = pageRes.dataUrl || item.thumbnailUrl;
+      await embedImageItemToPdf(targetPdf, finalUrl, item.rotation, quality, pageRes.pointWidth, pageRes.pointHeight);
     } else {
       const dataUrl = item.imageDataUrl || item.thumbnailUrl;
       await embedImageItemToPdf(targetPdf, dataUrl, item.rotation, quality);

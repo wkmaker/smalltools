@@ -1,4 +1,4 @@
-﻿# 更新日誌 (Changelog)
+# 更新日誌 (Changelog)
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
@@ -6,11 +6,13 @@
 
 ## [1.7.1] - 2026-08-23
 
-### 🐛 修復 (Fixed)
+### 🐛 修復與功能增強 (Fixed & Enhanced)
 
 - **PDF 頁面組合器 (`/pdf-processor/`)**：
+  - **全新 300 DPI 所見即所得 (WYSIWYG) 雙軌匯出引擎**：徹底解決多檔案合併時因註解層（`/Annots`）、電子簽名、公文印章、表單欄位（AcroForm）或掃描器 CropBox 裁切框偏移導致部分頁面匯出後變空白的問題。以出版級 300 DPI 超高清畫質（A4 達 2480×3508 像素）完整捕獲預覽圖層，保證「預覽看到什麼，下載出來就 100% 是什麼」。
+  - **介面新增雙軌引擎切換**：控制列提供「300 DPI 所見即所得（推薦・防空白頁）」與「原生向量模式（保留文字選取）」供使用者自由切換。
+  - **標準 A4 點數尺寸對齊**：精確校準嵌入頁面之 PDF 點數尺寸（`595.28 × 841.89 pt`），確保在任何 PDF 閱讀器中開啟或實體列印皆為 100% 標準 A4 紙張大小。
   - **修復 ArrayBuffer 記憶體 Detached 問題**：修復在傳遞二進位緩衝區至 PDF.js Web Worker 進行預覽拆解時，因瀏覽器 Transferable Objects 機制導致主執行緒 State 中 ArrayBuffer 被轉移清空（Detached Buffer），造成後續點擊「匯出合併 PDF」拋出 `TypeError: Cannot perform Construct on a detached ArrayBuffer` 且下載無反應之問題。
-  - **新增 300 DPI 超高清備用方案 (Fallback)**：在合成階段若遇特殊編碼、損毀字型或特殊加密權限的 PDF 頁面，系統自動無縫降級調用 300 DPI 渲染引擎，保證 100% 能順利重組並觸發下載。
   - **增強頁面旋轉相容性**：優化無 `/Rotate` 標籤頁面的旋轉角度解析防呆邏輯。
 
 - **SSL 憑證格式轉換器 (`/ssl-converter/`)**：
