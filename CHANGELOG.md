@@ -1,206 +1,34 @@
-# 📝 更新日誌 (Changelog)
+﻿# 更新日誌 (Changelog)
 
-本專案的所有重要變更皆會記錄於此檔案中。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
-
----
-
-## [1.7.0] - 2026-08-23
-
-### 🚀 新增功能與架構重構 (Added & Architecture)
-- **全新小工具：日曆切割助手 (Google Calendar ICS Splitter)**：
-  - 正式上線 `/calendar-split/`（繁體中文）與 `/calendar-split/en/`（英文）雙語版本。
-  - **100% 本地記憶體解析與切割**：專為 Google 行事曆匯出之大型 `.ics` 檔案打造，純前端極速分割，解決 Google 網頁版單次匯入體積上限限制。
-  - **嚴格遵循 RFC 5545 規範**：自動萃取並完整保留全域 `VCALENDAR` 屬性與所有 `VTIMEZONE` 時區定義，確保分割後的每個子檔案皆能獨立於 Google Calendar、Apple Calendar、Outlook 正常匯入無任何時差。
-  - **高效能計算與渲染解耦 (Zero-Copy Indexing & Lazy Blob Generation)**：
-    - 採用單遍單向字元偏移索引技術，對數萬行文字與上萬筆活動進行輕量化分組計算，切換模式或大小時耗時 `< 1ms`，0ms 延遲即時呈現。
-    - 實體字串與檔案 Blob 採延遲按需生成，僅於下載或打包時產出，節省 90% 記憶體佔用。
-  - **內建純 TypeScript ZIP 打包引擎**：無外部依賴實作標準 STORE ZIP 格式，支援一鍵批量下載。
-  - **全寬自由延伸排版 (Full-Width Responsive)**：支援在大螢幕與寬螢幕下自適應橫向展開。
-- **全站 30 個小工具與首頁頂欄控制組全面升級 (`ToolLayout.tsx` & `HomeClient.tsx`)**：
-  - 由 `ToolLayout` 統一管理中英文語系切換按鈕，依路由自動雙向解析（`/[tool]/` ↔ `/[tool]/en/`）。
-  - 清理全站 29 個小工具客戶端中重複手寫的 `extraHeaderControls` 與無用 imports，100% 自動繼承中央統一架構。
-  - 首頁（`HomeClient.tsx`）同步升級為相同的三合一控制列（搜尋、語系、亮暗主題），達到全站視覺、尺寸（`h-[42px]`）與亮暗色高對比 Token 絕對一致。
-  - 保持向下相容性與 `extraHeaderControls` 插槽，確保目標計時器（`TimeClient.tsx`）之全螢幕特化選單不受任何影響。
-- **全域快捷搜尋彈窗 (Command Palette) 滑鼠關閉支援**：
-  - 搜尋列右上角新增可點擊之互動式關閉按鈕 (`ESC ✕`)，並支援點擊周圍暗色毛玻璃遮罩一鍵關閉。
+本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
 ---
 
-## [1.6.0] - 2026-08-23
+## [1.0.1] - 2026-08-23
 
-### 🚀 新增功能與 UX 升級 (Added & User Experience)
-- **⚡ 全域快捷搜尋彈窗 (Command Palette `Cmd + K` / `Ctrl + K`)**：
-  - 在全站任何頁面按下 `Cmd + K` (Mac) 或 `Ctrl + K` (Windows) 即可喚出 Spotlight 搜尋面板。
-  - 支援中英文雙語關鍵字、分類與同義詞即時模糊搜尋，支援鍵盤 `↑` / `↓` 導航與 `Enter` 極速跳轉。
-  - 整合系統快捷指令：一鍵切換深色/淺色主題、切換中英文雙語系、返回首頁與贊助支持。
-  - 工具頁頂部導航列與首頁搜尋框皆配置 `⌘K` 快捷觸發按鈕，方便滑鼠與行動端點擊。
-- **⭐ 首頁「我的常用工具」自訂釘選模組 (Pinned Favorites Workbench)**：
-  - 首頁工具卡片右上角新增一鍵星號釘選按鈕，支援使用者自訂常用工具清單。
-  - 釘選資料透過純瀏覽器端 `localStorage` 本地儲存，100% 零後端、零資料收集、隱私第一。
-  - 當有釘選工具時，首頁自動於頂端呈現獨立的「⭐ 我的常用工具」毛玻璃展示區，方便使用者一鍵直達高頻工具。
-- **🕒 首頁「最近使用」快速存取導航列 (Recent Tools Quick Bar)**：
-  - 使用者進入任何工具頁面時，自動記錄最近使用歷程至本地記憶體。
-  - 首頁搜尋欄下方動態呈現「最近使用工具」膠囊標籤組與一鍵清除紀錄功能。
-- **🧭 全站工具頁面視覺化 Breadcrumb 麵包屑導航**：
-  - 各工具頂部標題上方新增毛玻璃階層式麵包屑導航（`首頁 > 分類 > 工具名稱`），支援點擊分類快速跳轉。
-  - 自動連動注入 Google Schema.org `BreadcrumbList` JSON-LD 結構化資料，提升搜尋結果頁 (SERP) 路徑展示品質與點擊率。
+### 🐛 修復 (Fixed)
+
+- **PDF 頁面組合器 (`/pdf-processor/`)**：
+  - **修復 ArrayBuffer 記憶體 Detached 問題**：修復在傳遞二進位緩衝區至 PDF.js Web Worker 進行預覽拆解時，因瀏覽器 Transferable Objects 機制導致主執行緒 State 中 ArrayBuffer 被轉移清空（Detached Buffer），造成後續點擊「匯出合併 PDF」拋出 `TypeError: Cannot perform Construct on a detached ArrayBuffer` 且下載無反應之問題。
+  - **新增 300 DPI 超高清備用方案 (Fallback)**：在合成階段若遇特殊編碼、損毀字型或特殊加密權限的 PDF 頁面，系統自動無縫降級調用 300 DPI 渲染引擎，保證 100% 能順利重組並觸發下載。
+  - **增強頁面旋轉相容性**：優化無 `/Rotate` 標籤頁面的旋轉角度解析防呆邏輯。
+
+- **SSL 憑證格式轉換器 (`/ssl-converter/`)**：
+  - **AIA 中繼憑證下載連結自動升級 HTTPS**：自動將 X.509 憑證擴充欄位中解析出的 `Authority Information Access` (AIA) 官方 CA 下載網址從 `http://` 重寫升級為 `https://`。
+  - **解決 Mixed Content 阻擋**：徹底解決現代瀏覽器在 HTTPS 頁面下因混合內容（Mixed Content）安全政策而靜默阻擋非安全 HTTP 檔案下載的問題。
 
 ---
 
-## [1.5.1] - 2026-08-22
+## [1.0.0] - 2026-08-23
 
-### 🔍 SEO 深度優化與文件完善 (SEO & Documentation)
-- **Sitemap 網站地圖全方位補完 (`app/sitemap.ts`)**：
-  - 新增真實時薪計算器之英文版 PR 排行里程碑動態路由 (`/hourly-rate-calculator/en/rank/{slug}/`) 至 Sitemap，達成全站 100% 靜態與動態路由完整索引覆蓋。
-- **全自動 SEO 與 FAQ 單元測試守門員 (Automated SEO Quality Gates)**：
-  - 新增 `tests/audit-seo.mjs` 腳本，自動檢查全站 30 個工具之中英文雙語 Metadata、Canonical URL、Hreflang 多語系標記、OpenGraph / Twitter 卡片與 Schema.org JSON-LD 規範。
-  - 將 SEO 與 FAQ 驗證整合至 `npm run prebuild` 與 `npm test`，確保上線建置前 100% 符合搜尋引擎標準。
-- **專案文件與架構指南升級 (`README.md`)**：
-  - 增設「SEO 與搜尋引擎最佳化架構」章節，詳述 Canonical、Hreflang、Schema.org (WebApplication / FAQPage / WebSite) 及 Sitemap 技術規範。
-  - 擴充測試與品質驗證指令清單 (`npm test`, `npm run test:seo`, `npm run test:faq`, `npm run test:ui`)。
+### ✨ 新增功能 (Added)
 
----
-
-## [1.5.0] - 2026-08-22
-
-### 🚀 新增功能 (Added)
-- **全新小工具：HAR 封包敏感資料清理器 (HAR File Sanitizer & Cleaner)**：
-  - 正式上線 `/har-cleaner/`（繁體中文）與 `/har-cleaner/en/`（英文）雙語版本。
-  - **100% 純前端沙箱防護**：檔案與資料全程於瀏覽器端本地解析與遮罩，絕不上傳任何伺服器，嚴格保障網路日誌與機密連線安全。
-  - **多維度智慧脫敏引擎 (Sanitizer Engine)**：
-    - 自動偵測並遮罩 Authorization Header (Bearer, Basic)、Cookies (Session ID, JWT)、API Keys、Token、密碼及私鑰（RSA/EC PEM）。
-    - 智慧識別個資與財務機密（身分證字號、信用卡號、電子郵件、手機電話等）。
-    - 支援 URL Query Params 敏感參數清除與自訂 Regex / 自訂欄位遮罩規則。
-  - **全功能封包檢視與審計套件**：
-    - **MetricsDashboard**：即時呈現總請求數、敏感欄位清除數、體積縮減率。
-    - **Header Audit**：全面審查並分級請求與回應標頭之資安風險。
-    - **Inspector Tab**：請求清單過濾、狀態碼色標、HTTP Method 篩選與敏感標籤提示。
-    - **Entry Detail Modal**：深層封包比對器（支援 Request / Response Headers、Cookies、Query String、POST Body JSON 樹狀摺疊與 Timing 瀑布流）。
-    - **Raw JSON & Summary**：提供即時乾淨 JSON 預覽、一鍵複製與匯出清理報告摘要。
-  - **完整 SEO 與結構化資料**：中英文頁面均配備 Schema.org `WebApplication` 與 `FAQPage` JSON-LD 結構化資料，並同步登錄至 `sitemap.ts`。
-- **網站首頁獨立英文版 (`/en`) 與多語系體驗全面升級**：
-  - 新增 `/en` 原生英文首頁路由（`app/en/page.tsx`），配置獨立英文 SEO Meta Tags 與語意化結構。
-  - 首頁客戶端邏輯重構為獨立 `HomeClient.tsx` 元件，無縫支援 `zh` 與 `en` 雙語搜尋、篩選與毛玻璃主題切換。
-  - `ToolLayout` 與 `not-found (404)` 頁面強化多語系路由記憶與導向體驗。
-
-### 🎨 架構與工程重構 (Refactored & Architecture)
-- **全站工具分類與多語系架構整合 (`app/config/tools.tsx`)**：
-  - 工具清單結構化升級，完整支援多語系分類標籤（開發工具、日常計算、生活娛樂、文字處理、資安與網路、財務與薪資等）。
-- **HAR 工具架構模組化分拆**：
-  - 將龐大的單檔邏輯拆解為 `engine/sanitizer.ts`、`DropzoneSection`、`HeaderAuditSection`、`InspectorTab`、`EntryDetailModal`、`RuleConfigPanel`、`MetricsDashboard`、`SummaryTab`、`RawJsonTab` 與 `constants.ts`。
-- **Agent 技能系統模組化解耦 (`.agents/skills`)**：
-  - 將原單一龐大 `toolbox-design-standards` 拆解重構為 4 大專注技能規範：
-    1. `smalltools-code-standards` (Tailwind v4、A11y、RWD)
-    2. `smalltools-design-system` (毛玻璃美學、亮暗雙主題、WCAG AA)
-    3. `smalltools-dev-architecture` (App Router、URL 同步、非阻塞運算)
-    4. `smalltools-i18n-seo` (雙語架構、FAQPage JSON-LD、Sitemap 規範)
-
----
-
-## [1.4.0] - 2026-08-22
-
-### 🚀 新增功能與 SEO 升級 (Added & SEO)
-- **全站 29 個工具 QA / FAQ 與 Google 結構化資料 100% 完整建置**：
-  - 全站 29 個工具的中英文雙語頁面（共 58 條工具主路由 + 53 條子頁面）全面導入 Google `FAQPage` JSON-LD 結構化資料標記，大幅提升搜尋結果中的富文本摘要（Rich Snippets）展示機會與 SEO 權重。
-  - 每個工具平均配置 7~9 則深入、專業且高實用價值的 FAQ 問答，涵蓋核心原理、操作技巧、產業法規、數學公式與資安防護說明。
-- **互動式毛玻璃手風琴 (FaqSection) 全站無縫整合**：
-  - 各工具依據獨立主題色（如金色、霓虹粉、青綠色、天藍色等）客製化外觀，支援流暢展開/收合、搜尋引擎友善語意結構與 WCAG AA 高對比度標準。
-- **自動化測試與檢驗工具**：
-  - 新增 `tests/verify-all-faqs.js` 單元檢驗腳本，自動掃描全站所有工具的 `page.tsx`、`en/page.tsx` 與客戶端組件，確保 FAQ 覆蓋率維持 100%。
-
-### 💡 工具問答內容與體驗強化 (Enhanced)
-- **信貸計算機 (`/personal-loan/`)**：
-  - 新增業務話術拆解問答，解析電話行銷常見包裝名目、總費用年百分率 (APR) 與資訊對稱重要性。
-- **薪資、勞保、健保、預扣稅計算機 (`/my-salary-calculator/`)**：
-  - 新增「3,000 元伙食津貼」免稅額度法規解析，釐清經常性給付必須如實計入勞保、健保投保級距之規範。
-- **真實時薪計算器 (`/hourly-rate-calculator/`)**：
-  - 深化真實時薪定義，強調「扣除通勤與工作隱形成本後的真實收入樣態」，說明與政府官方公開統計數據之對比價值。
-- **Unix Epoch 時間戳記轉換 (`/epoch/`)**：
-  - 補充伺服器與分散式系統日誌 (LOG) 為何全面採用 Unix Epoch 戳記（零時區偏移、利於 B-Tree 索引、跨伺服器無歧義轉換當地時間）。
-- **DNS HTTPS 紀錄設定產生器 (`/https-dns-generator/`)**：
-  - 新增 RFC 9460 Wire Format 二進位解碼問答，詳解為何終端機或舊版 DNS 工具查詢出來像十六進位亂碼（RFC 3597 Unknown RR），而本工具能結構化還原易讀參數。
-- **線上 IP 檢測助手 (`/ip-detector/`)**：
-  - 強化公有雲（AWS, GCP, Azure, Cloudflare）單一儀表板檢測價值，並強調瀏覽器端直接發起請求、所有連線在 DevTools 中透明可見且無第三方代理轉發之安全性。
-- **吹牛骰子搖骰器 (`/liars-dice/`)**：
-  - 新增線上連線問答，引導想進行遠端跨裝置開房的玩家前往專屬多人線上平台【Drink Games】。
-- **目標計時器 (`/time/`)**：
-  - 優化 FAQ 寬度使之與上方設定卡片嚴格對齊，並在啟動計時大看板時自動隱藏 FAQ，維持純粹沉浸的視覺大螢幕體驗。
-
-### ⚡ 網站地圖與規範同步 (Changed)
-- **Sitemap 更新**：更新 `app/sitemap.ts` 全站所有變更的工具頁面 `lastModified` 日期為 `2026-08-22`。
-
----
-
-## [1.3.0] - 2026-08-20
-
-### 🚀 新增功能 (Added)
-- **全新小工具：孕期與產檢假計算機 (Pregnancy & Maternity Leave Calculator)**：
-  - 正式上線 `/pregnancy-calculator/`（繁體中文）與 `/pregnancy-calculator/en/`（英文）雙語版本。
-  - **四大多向推算模式**：支援「最後月經首日 (LMP，可自訂週期)」、「醫師評估預產期 (EDD)」、「超音波週數 / CRL 頭臀長 (Hadlock 公式)」與「試管嬰兒 / 人工受孕 (IVF Day 5 囊胚 / Day 3 胚胎 / 取卵受精日)」精準推算。
-  - **孕期健康與進度看板**：即時呈現距離預產期倒數天數、當前週數與天數、預估受孕日、孕期階段（第一/二/三孕期）與 40 週進度條。
-  - **胎兒生長尺寸生動比喻**：依照當前週數動態展示對應的水果比喻（如覆盆莓、酪梨、木瓜、西瓜等）、預估身長 (cm) 與體重 (g)。
-  - **40 週關鍵產檢與里程碑時間軸**：精準標註第一孕期唐氏症篩檢、羊膜穿刺/羊水晶片、高層次超音波 (Level II)、妊娠糖尿病耐糖試驗 (OGTT)、乙型鏈球菌 (GBS) 及足月待產等公費與自費黃金時程。
-  - **台灣法定產檢假、產假與津貼試算**：
-    - 依法試算 8 天有薪產檢假、8 週（56 日曆天）法定產假休假區間與預計產後復職日。
-    - 試算配偶 7 天陪產檢及陪產假。
-    - 輸入月投保薪資一鍵精算勞保生育給付（2 個月投保薪資）與育嬰留職停薪津貼（8 成薪最長 6 個月）。
-  - **一鍵生成請假與交接範本**：提供一鍵複製至剪貼簿的完整 Email / 通訊軟體請假通知信與業務交接說明。
-  - **孕期重要準備與待產包 Checklist**：涵蓋第一至第三孕期營養補充、高層次預約、證件準備、產褥衛生用品與新生兒出院必備用品清單，支援本機互動勾選記錄。
-  - **50 週持久化儲存與動態分享連結**：支援 LocalStorage 50 週 (350天) TTL 狀態保存與自動刷新，並提供一鍵複製試算分享連結（動態組裝 Query String）。
-  - **完整 SEO 結構化資料**：全面導入 Schema.org `WebApplication` 與 `FAQPage` JSON-LD 標記。
-
-### 🎨 視覺與互動優化 (Changed)
-- **首頁工具卡片與霓虹主題樣式**：於 `app/config/tools.tsx` 註冊獨立 `pregnancyCard`，並於 `app/page.module.css` 新增暗色霓虹主題色 (`#ff4081`) 與亮色模式 WCAG AA 高對比深玫瑰紅 (`#e11d48`)。
-- **FAQ 元件圖示解析升級**：升級 `FaqSection` 支援題目標籤化向量 SVG 圖示解析。
-- **Sitemap 同步**：`app/sitemap.ts` 已登錄繁中與英文新路由。
-
----
-
-## [1.2.0] - 2026-08-20
-
-### 🚀 新增功能 (Added)
-- **全面注入 FAQ 結構化資料 (JSON-LD FAQPage Schema)**：
-  - 為 **IP 計算器 (`/ip-calculator`)**、**幸運大轉盤 (`/lucky-wheel`)**、**PDF 壓縮器 (`/pdf-compressor`)**、**PDF 頁面組合器 (`/pdf-processor`)** 與 **吹牛骰子遊戲 (`/liars-dice`)** 等中英文雙語頁面，全面導入語意化 FAQPage Schema，強化 Google 搜尋引擎 rich snippets 索引與排名效益。
-- **互動式 FAQ 手風琴元件 (FaqSection) 升級**：
-  - 支援外層主折疊與展開機制，並附帶動態狀態徽章（Badge）與快速收合按鈕。
-  - 採用 Glassmorphism 毛玻璃視覺風格與微交互動畫，維持工具主畫面清爽度。
-  - 答案文字內嵌關鍵詞與工具內部鏈結（如子網路計算、PDF 壓縮等），強化站內權重流動。
-- **ToolLayout 頁尾自訂插槽 (extraFooterContent)**：
-  - 新增頁尾自訂補充內容插槽，支援各工具頁面靈活延伸額外導航或說明資訊。
-
-### ⚡ 效能與體驗優化 (Changed)
-- **Sitemap 更新頻率與時間同步**：
-  - 更新 `sitemap.ts` 中完成 SEO 優化的工具頁面 `lastModified` 日期為 `2026-08-20`。
-
----
-
-## [1.1.0] - 2026-08-04
-
-### 🚀 新增功能 (Added)
-- **真實時薪計算器 (Hourly Rate Calculator)**：正式上線全新小工具！扣除每日通勤時間、無酬隱形加班、交通開銷與工作相關花費，精準計算每小時生命的真實淨收益。
-- **全台與全球薪資 PR 排行榜**：整合台灣主計處與全球最新薪資統計數據，利用分段線性插值演算法（Piecewise Linear Interpolation），精算年薪與真實時薪在全台及全球打工人中的 PR 百分位排名。
-- **國家與生活型態適性配對**：依據真實時薪落點，自動推薦適合的海外居住、打工度假或數位遊牧國家與區域。
-- **薪資 PR 排行榜動態 SEO 頁面**：新增 `/hourly-rate-calculator/rank/[slug]` 專屬排行榜頁面，支援 OpenGraph 社群分享卡片與語意化 JSON-LD 結構化資料。
-
----
-
-## [1.0.1] - 2026-08-04
-
-### 🚀 新增功能 (Added)
-- **ECC / ECDSA 演算法支援**：SSL 憑證轉換器新增對 ECC 橢圓曲線金鑰與憑證（如 `P-256 / prime256v1`、`P-384`、`P-521`）的剖析、轉檔與 PFX 私鑰解密支援。
-- **金鑰與簽章演算法自動感應**：憑證成果看板新增「金鑰與簽章演算法」標籤，可自動判定與標示 `RSA (2048/4096-bit)` 或 `ECDSA` 類型。
-
-### ⚡ 效能與體驗優化 (Changed)
-- **二進位檔案處理重構**：新增通用非同步 `readFileAsBinaryString` 讀取函式（利用 `node-forge` 原生編碼），大幅提升大型 PFX 與二進位 DER 檔案的轉換處理速度。
-- **AIA CA 補鏈連結擴充**：升級 AIA 網址擷取正則表達式，支援 `https://` 協定與包含複雜路徑字元（如 `_` 或 URL 編碼）的中繼憑證下載連結。
-- **憑證主體 (DN) 解析強化**：優化 Common Name (CN) 解析與發行機構比對邏輯，相容更多第三方 CA 產出的憑證格式。
-
-### 🛠️ 問題修復 (Fixed)
-- **非 RSA 金鑰比較防錯**：修正上傳 ECC 私鑰進行 Modulus 雜湊比較時存取 `undefined.n` 引發程式碼崩潰的問題。
-
----
-
-## [1.0.0] - 2026-08-01
-
-### 🚀 初始版本 (Initial Release)
-- 工具庫正式發布。
+- **全站 31 款純前端高效能實用工具上線**：
+  - **文件與圖片工具**：PDF 頁面組合器、PDF 壓縮大師、萬能圖片處理大師、兩份文件比對工具、文字處理助手、Google Calendar ICS 切割助手。
+  - **開發與編解碼工具**：JSON 格式化與驗證器、Base64 編解碼器、URL 編碼解碼器、高強度密碼產生器、SSL 憑證格式轉換器、HAR 敏感資訊清理器、Unix 時間戳 (Epoch) 轉換器。
+  - **網路維運工具**：DNS Dig 查詢、本機 IP 檢測、HTTPS 專用 DNS 產生器、IP 子網路計算機。
+  - **生活與娛樂工具**：Designer QR Code 產生器、目標倒數計時器、幸運轉盤抽獎、吹牛骰子搖骰器、產假/育嬰假計算機。
+  - **金融與薪資計算**：房貸計算機、信貸計算機、車貸計算機、複利試算、股票質押計算機、期貨保證金計算機、台灣實領薪資計算機、時薪與所得 PR 值計算機、離職預告期計算機。
+- **全站 3D 毛玻璃科技風 OpenGraph (OG) 專屬 WebP 預覽圖**。
+- **全站 31 款工具頂欄三合一控制列 (ToolLayout) 統一重構**。
+- **100% 瀏覽器本地運算 (Zero-Server Architecture)**，保護使用者資料安全與隱私。
