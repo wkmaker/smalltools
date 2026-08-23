@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useId, useMemo } from 'react';
-import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './pregnancy-calculator.module.css';
@@ -903,15 +902,7 @@ Date: ${formatDate(new Date())}`;
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#ff4081"
-      accentGlow="rgba(255, 64, 129, 0.6)"
-      extraHeaderControls={
-        <Link
-          href={t.langToggleUrl}
-          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
-        >
-          {t.langToggle}
-        </Link>
-      }
+      accentGlow="rgba(255, 64, 129, 0.6)"
     >
       <div className={styles.container}>
         {/* 上方左右雙欄排版 */}

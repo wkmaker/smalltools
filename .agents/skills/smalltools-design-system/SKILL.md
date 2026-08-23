@@ -98,11 +98,16 @@ description: 適用於 Smalltools 專案的視覺設計系統、毛玻璃 (Glass
 
 ## 四、 版面外框、粒子背景與微元件規範
 
-### 1. `ToolLayout` 外框與全寬響應規範
+### 1. `ToolLayout` 外框與頂欄三合一控制列規範
 * 所有工具頁面統一引用 `app/components/ToolLayout.tsx` 作為最外層容器。
-* 右上方整合 `ThemeToggle` 元件，提供太陽 (☀️) 與月亮 (🌙) 向量 SVG 雙向切換微動畫。
+* **頂欄右側功能按鈕組 (Header Controls)**：
+  - `ToolLayout` 預設自動組裝三大頂欄按鈕：**`[ 🔍 搜尋 (⌘K) ]` `[ 🌐 語系切換 ]` `[ 🌓 主題切換 ]`**。
+  - 按鈕組全域統一採用高度 `h-[42px]`、`px-3.5`、`rounded-xl` 與 `backdrop-blur-md`。
+  - 雙主題配色 Token：`bg-black/[.04] dark:bg-white/[.06]`、`border-black/10 dark:border-white/10`、`text-text-sub hover:text-text-main`、`hover:bg-black/[.08] dark:hover:bg-white/[.08]`，徹底消除亮色模式下按鈕發白或泥黑失真。
+  - **語系自動推導**：`ToolLayout` 依路由自動對應雙語連結（`/[tool]/` ↔ `/[tool]/en/`），各工具無需再手動編寫 `extraHeaderControls` 重複代碼。
+  - **特殊選單擴充**：保留 `extraHeaderControls` 插槽（如計時器全螢幕設定選單），具有最高覆蓋優先權。
 * **呼吸留白 (Breathing Room)**：外層容器寬度維持 `max-w-[90%]`（電腦版），標題下方自帶發光橫線與漸層。
-* **主體內容區寬度規範 (Full-Width Responsive Rule)**：工具主體內容（左右雙欄 Grid、輸入面板、結果看板）必須隨螢幕自然延伸，**嚴禁在主體 `<div>` 上寫死 `max-w-xxx` 或固定寬度**，改以 `w-full` + 斷點 Grid 響應式排版（如 `grid-cols-[1.1fr_1.9fr] max-[1024px]:grid-cols-1`）。
+* **主體內容區寬度規範 (Full-Width Responsive Rule)**：工具主體內容（左右雙欄 Grid、輸入面板、結果看板、Dropzone）必須隨螢幕自然延伸，**嚴禁在主體容器或內部子層級寫死 `max-w-[xxxxpx]` 或固定寬度**，一律改以 `w-full` + 斷點 Grid 響應式排版（如 `grid-cols-[1.1fr_1.9fr] max-[1024px]:grid-cols-1`），確保寬螢幕視圖大器舒適。
 
 ### 2. 背景晶體幾何星網 (Constellation Network & Particle Canvas)
 全站粒子背景 (`ParticleCanvas.tsx`) 啟用動態連線星網 `connectParticles()`：

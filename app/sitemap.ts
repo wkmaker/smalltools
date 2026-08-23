@@ -74,6 +74,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/pregnancy-calculator/en/', lastModified: '2026-08-21', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/har-cleaner/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/har-cleaner/en/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/calendar-split/', lastModified: '2026-08-23', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/calendar-split/en/', lastModified: '2026-08-23', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   milestoneData.forEach((m) => {

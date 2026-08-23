@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useId, useCallback, useRef } from 'react';
-import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import {
@@ -322,15 +321,7 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#06b6d4"
-      accentGlow="rgba(6, 182, 212, 0.6)"
-      extraHeaderControls={
-        <Link
-          href={t.langToggleUrl}
-          className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
-        >
-          {t.langToggleLabel}
-        </Link>
-      }
+      accentGlow="rgba(6, 182, 212, 0.6)"
     >
       <div className="w-full space-y-6">
         {/* 上傳與已載入檔案狀態控制列 */}

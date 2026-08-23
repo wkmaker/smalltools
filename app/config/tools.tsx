@@ -645,6 +645,25 @@ export const CATEGORIES: CategorySection[] = [
           </svg>
         ),
       },
+      {
+        name: '日曆切割助手',
+        nameEn: 'Calendar ICS Splitter',
+        subtitle: 'GOOGLE CALENDAR ICS SPLITTER',
+        subtitleEn: 'GOOGLE CALENDAR ICS SPLITTER',
+        description: '解決 Google 行事曆匯入 1MB 大小限制！智慧將大型 .ics 檔案自動切割為多個小於 1MB 的合法日曆檔案，100% 瀏覽器本地運算，支援 ZIP 一鍵打包下載。',
+        descriptionEn: 'Solve Google Calendar 1MB import limit by automatically splitting large .ics files into compliant chunks under 1MB with 100% local processing and ZIP download.',
+        href: '/calendar-split/',
+        hrefEn: '/calendar-split/en/',
+        cardClass: 'calendarCard',
+        category: 'utility',
+        keywords: '日曆切割 行事曆分割 ics分割 google calendar ics splitter 1mb 限制 匯入 匯出',
+        keywordsEn: 'calendar ics splitter google calendar split import limit 1mb chunks icalendar',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#06b6d4]">
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z" />
+          </svg>
+        ),
+      },
     ],
   },
 ];
