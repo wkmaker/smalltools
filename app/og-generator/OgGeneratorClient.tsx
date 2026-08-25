@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useId, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import Link from 'next/link';
 import ToolLayout from '@/app/components/ToolLayout';
 import FaqSection from '@/app/components/FaqSection';
 import styles from './og-generator.module.css';
@@ -328,14 +327,6 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
       description={t.description}
       accentColor="#6366f1"
       accentGlow="rgba(99, 102, 241, 0.6)"
-      extraHeaderControls={
-        <Link
-          href={t.langToggleUrl}
-          className="text-sm font-medium px-3.5 py-2 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
-        >
-          {t.langToggleLabel}
-        </Link>
-      }
     >
       <div className={`space-y-8 ${styles.ogContainer}`}>
         {/* Toast 提示浮動通知 */}
