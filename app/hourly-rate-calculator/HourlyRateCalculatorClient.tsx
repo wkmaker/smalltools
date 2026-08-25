@@ -877,6 +877,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                   <div className="pt-2">
                     <Link
                       href={`/hourly-rate-calculator/${isEn ? 'en/' : ''}rank/${formatPrCode(matchedMilestone.pr)}/?${queryParamsString}`}
+                      prefetch={false}
                       className={styles.milestoneCardCTA}
                     >
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">

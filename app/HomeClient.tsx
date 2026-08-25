@@ -330,6 +330,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
 
         <Link
           href={t.langToggleUrl}
+          prefetch={false}
           title={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
           aria-label={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
           className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 select-none"
@@ -416,6 +417,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                 <Link
                   key={`recent-${tool.href}`}
                   href={targetHref}
+                  prefetch={false}
                   className={styles.recentChip}
                 >
                   <span className="flex-shrink-0 inline-flex items-center">{tool.svg}</span>
@@ -462,6 +464,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                 <Link
                   key={`pinned-${tool.href}`}
                   href={targetHref}
+                  prefetch={false}
                   className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
                   onMouseMove={handleCardMouseMove}
                   onClick={() => {
@@ -522,6 +525,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                     key={tool.href}
                     id={toolId}
                     href={targetHref}
+                    prefetch={false}
                     className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
                     onMouseMove={handleCardMouseMove}
                     onClick={() => {

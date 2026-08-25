@@ -209,6 +209,7 @@ export default function ToolLayout({
         {resolvedLangSwitchHref && !extraHeaderControls && (
           <Link
             href={resolvedLangSwitchHref}
+            prefetch={false}
             title={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
             aria-label={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
             className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 select-none"
@@ -228,6 +229,7 @@ export default function ToolLayout({
       {/* ── 返回按鈕 ── */}
       <Link
         href={targetBackHref}
+        prefetch={false}
         title={backTitle || backText || (isEn ? 'Back to Home' : '返回首頁')}
         aria-label={backTitle || backText || (isEn ? 'Back to Home' : '返回首頁')}
         onClick={(e) => {
@@ -306,6 +308,7 @@ export default function ToolLayout({
                   ) : (
                     <Link
                       href={crumb.url}
+                      prefetch={false}
                       className="hover:text-text-main transition-colors no-underline text-text-sub inline-flex items-center gap-1"
                     >
                       {idx === 0 && (
