@@ -46,6 +46,7 @@ export interface OgTranslation {
   langToggleUrl: string;
   langToggleLabel: string;
   templateLabel: string;
+  templateCountLabel: string;
   templates: Record<TemplateType, OgTranslationTemplate>;
   presetsLabel: string;
   presets: {
@@ -74,6 +75,7 @@ export interface OgTranslation {
   logoDisabled: string;
   logoUpload: string;
   logoUploadHint: string;
+  logoLoaded: string;
   logoShape: string;
   shapeCircle: string;
   shapeRounded: string;
@@ -86,6 +88,7 @@ export interface OgTranslation {
   bgDisabled: string;
   bgImageUpload: string;
   bgImageHint: string;
+  bgLoaded: string;
   bgImageOptionalHint: string;
   bgOpacity: string;
   bgBlur: string;

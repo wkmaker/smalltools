@@ -378,7 +378,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
             <div className="p-6 rounded-2xl bg-surface-glass border border-border-glass space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-text-main">{t.templateLabel}</span>
-                <span className="text-xs text-text-sub">4 Professional Templates</span>
+                <span className="text-xs text-text-sub">{t.templateCountLabel}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(['minimal', 'gradient', 'split', 'impact'] as const).map((tempKey) => (
@@ -542,7 +542,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
                         }}
                       />
                       <div className="text-sm font-medium text-text-main">
-                        {logoImage ? '已載入自訂 Logo (點擊更換)' : t.logoUploadHint}
+                        {logoImage ? t.logoLoaded : t.logoUploadHint}
                       </div>
                     </div>
 
@@ -667,7 +667,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
                         }}
                       />
                       <div className="text-sm font-medium text-text-main">
-                        {bgImage ? '已載入特色/背景圖片 (點擊更換)' : t.bgImageHint}
+                        {bgImage ? t.bgLoaded : t.bgImageHint}
                       </div>
                     </div>
 
