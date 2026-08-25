@@ -467,6 +467,25 @@ export const CATEGORIES: CategorySection[] = [
     emoji: '📄',
     tools: [
       {
+        name: 'OG 圖片產生器',
+        nameEn: 'Open Graph Image Generator',
+        subtitle: 'OPEN GRAPH & SOCIAL IMAGE GENERATOR',
+        subtitleEn: 'OPEN GRAPH & SOCIAL IMAGE GENERATOR',
+        description: '專業的 Open Graph 與社群封面圖片產生器。提供四款精緻模板、自訂文字、拖曳上傳 Logo 與特色背景圖，支援多社群尺寸及 PNG/JPEG/WEBP/SVG 多格式高速匯出。',
+        descriptionEn: 'Professional Open Graph and social media cover image generator. Features 4 templates, custom typography, drag-and-drop Logo and image uploads, and PNG/JPEG/WEBP/SVG exports.',
+        href: '/og-generator/',
+        hrefEn: '/og-generator/en/',
+        cardClass: 'ogGeneratorCard',
+        category: 'media',
+        keywords: 'og generator open graph social image card template twitter facebook linkedin 圖片 產生器 封面 模板 向量',
+        keywordsEn: 'og generator open graph image social card template twitter facebook linkedin export',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#6366f1]">
+            <path d="M21 3H3C2 3 1 4 1 5v14c0 1.1.9 2 2 2h18c1 0 2-.9 2-2V5c0-1-1-2-2-2zm0 15.92c-.02.03-.06.06-.08.08H3.08L3 18.92V5.08L3.08 5h17.84l.08.08v13.84zM11 15.51l-2.5-3.01L5 17h14l-4.5-6-3.5 4.51z" />
+          </svg>
+        ),
+      },
+      {
         name: '光影裁剪 - 萬能圖片處理大師',
         nameEn: 'Universal Image Processor',
         subtitle: 'UNIVERSAL IMAGE PROCESSOR',

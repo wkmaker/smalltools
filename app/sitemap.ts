@@ -76,6 +76,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/har-cleaner/en/', lastModified: '2026-08-22', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/calendar-split/', lastModified: '2026-08-23', changeFrequency: 'monthly', priority: 0.8 },
     { url: '/calendar-split/en/', lastModified: '2026-08-23', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/og-generator/', lastModified: '2026-08-25', changeFrequency: 'monthly', priority: 0.8 },
+    { url: '/og-generator/en/', lastModified: '2026-08-25', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   milestoneData.forEach((m) => {

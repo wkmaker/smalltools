@@ -1,0 +1,97 @@
+/* OG 圖片產生器專屬樣式模組 */
+.ogContainer {
+  width: 100%;
+  min-width: 0;
+}
+
+.previewWrapper {
+  position: relative;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvasElement {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.5rem;
+}
+
+.templateCard {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.templateCard:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.08);
+  transform: translateY(-2px);
+}
+
+.templateCardActive {
+  border-color: #6366f1 !important;
+  background: rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+}
+
+.dropzone {
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  transition: all 0.2s ease;
+}
+
+.dropzone:hover,
+.dropzoneActive {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.themeAccentText {
+  color: #818cf8;
+}
+
+/* ====== 亮色模式高對比度降階特化 (WCAG 2.1 AA) ====== */
+:global([data-theme='light']) .previewWrapper {
+  background: rgba(241, 245, 249, 0.8);
+  border-color: rgba(203, 213, 225, 0.8);
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+}
+
+:global([data-theme='light']) .templateCard {
+  border-color: rgba(203, 213, 225, 0.6);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+:global([data-theme='light']) .templateCard:hover {
+  border-color: rgba(79, 70, 229, 0.5);
+  background: rgba(238, 242, 255, 0.7);
+}
+
+:global([data-theme='light']) .templateCardActive {
+  border-color: #4f46e5 !important;
+  background: rgba(224, 231, 255, 0.85) !important;
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+}
+
+:global([data-theme='light']) .dropzone {
+  border-color: rgba(203, 213, 225, 0.8);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+:global([data-theme='light']) .dropzone:hover,
+:global([data-theme='light']) .dropzoneActive {
+  border-color: #4f46e5;
+  background: rgba(238, 242, 255, 0.6);
+}
+
+:global([data-theme='light']) .themeAccentText {
+  color: #4338ca; /* Indigo 700 高對比度 */
+}
