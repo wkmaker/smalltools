@@ -95,6 +95,8 @@ export interface OgTranslation {
   themeDark: string;
   themeLight: string;
   presetColors: string;
+  gradientStartColor: string;
+  gradientEndColor: string;
   accentColor: string;
   fontFamily: string;
   fontSans: string;

@@ -793,27 +793,45 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
               {/* 自訂顏色選擇器 */}
               <div className="grid grid-cols-3 gap-3 pt-2">
                 <div>
-                  <label htmlFor={colorPicker1Id} className="block text-[12px] text-text-sub mb-1">Color 1</label>
+                  <label htmlFor={colorPicker1Id} className="block text-[12px] text-text-sub mb-1">
+                    {t.gradientStartColor}
+                  </label>
                   <input
                     id={colorPicker1Id}
                     type="color"
-                    value={color1}
-                    onChange={(e) => setColor1(e.target.value)}
+                    value={themeMode === 'dark' ? color1 : lightColor1}
+                    onChange={(e) => {
+                      if (themeMode === 'dark') {
+                        setColor1(e.target.value);
+                      } else {
+                        setLightColor1(e.target.value);
+                      }
+                    }}
                     className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
                   />
                 </div>
                 <div>
-                  <label htmlFor={colorPicker2Id} className="block text-[12px] text-text-sub mb-1">Color 2</label>
+                  <label htmlFor={colorPicker2Id} className="block text-[12px] text-text-sub mb-1">
+                    {t.gradientEndColor}
+                  </label>
                   <input
                     id={colorPicker2Id}
                     type="color"
-                    value={color2}
-                    onChange={(e) => setColor2(e.target.value)}
+                    value={themeMode === 'dark' ? color2 : lightColor2}
+                    onChange={(e) => {
+                      if (themeMode === 'dark') {
+                        setColor2(e.target.value);
+                      } else {
+                        setLightColor2(e.target.value);
+                      }
+                    }}
                     className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
                   />
                 </div>
                 <div>
-                  <label htmlFor={accentPickerId} className="block text-[12px] text-text-sub mb-1">{t.accentColor}</label>
+                  <label htmlFor={accentPickerId} className="block text-[12px] text-text-sub mb-1">
+                    {t.accentColor}
+                  </label>
                   <input
                     id={accentPickerId}
                     type="color"
