@@ -70,6 +70,7 @@ jobs:
             echo "ENABLE_NOINDEX=false" >> $GITHUB_ENV
             echo "DOMAIN_NAME=${PROD_DOMAIN}" >> $GITHUB_ENV
             echo "WEB_ACL_ARN=arn:aws:wafv2:us-east-1:114571653217:global/webacl/CreatedByCloudFront-1368b7c6/b33d948b-c516-498c-afb7-cbb14fce7501" >> $GITHUB_ENV
+            echo "SITE_URL=https://${PROD_DOMAIN}" >> $GITHUB_ENV
             echo "🚀 Setting up Production Deployment (main branch)"
           else
             echo "ENV_NAME=dev" >> $GITHUB_ENV
@@ -88,6 +89,7 @@ jobs:
             echo "ENABLE_NOINDEX=true" >> $GITHUB_ENV
             echo "DOMAIN_NAME=" >> $GITHUB_ENV
             echo "WEB_ACL_ARN=" >> $GITHUB_ENV
+            echo "SITE_URL=https://d1dospb4wbh383.cloudfront.net" >> $GITHUB_ENV
             echo "🧪 Setting up Development Test Deployment (${{ github.ref_name }} branch)"
           fi
 
@@ -137,6 +139,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          NEXT_PUBLIC_SITE_URL: ${{ env.SITE_URL }}
 
       # ── 6.5. 注入動態版本號至 sw.js (確保每版 sw.js 必定有字位元差異) ────
       - name: Inject Version Stamp to Service Worker

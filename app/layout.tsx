@@ -5,7 +5,7 @@ import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import CommandPalette from '@/components/CommandPalette';
 
-const BASE_URL = 'https://tools.cjkuo.net';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tools.cjkuo.net';
 
 export const viewport: Viewport = {
   themeColor: '#0f172a',
