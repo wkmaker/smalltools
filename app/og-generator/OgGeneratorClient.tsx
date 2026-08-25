@@ -98,8 +98,12 @@ const TRANSLATIONS = {
     shapeNone: '無框',
     logoSize: 'Logo 尺寸大小',
     presetIconLabel: '或選擇內建精選圖示',
+    bgSectionTitle: '特色圖片 / 背景圖 (選填)',
+    bgEnabled: '已開啟',
+    bgDisabled: '已關閉 (隱藏)',
     bgImageUpload: '特色圖片 / 背景圖 (Feature / Background Image)',
-    bgImageHint: '點擊或拖曳上傳圖片 (右欄展示或背景覆蓋)',
+    bgImageHint: '點擊或拖曳上傳圖片 (選填：右欄展示或背景覆蓋)',
+    bgImageOptionalHint: '提示：圖片為自由選填項目。未上傳或關閉時，將自動呈現純幾何漸層與質感光影。',
     bgOpacity: '背景圖片不透明度',
     bgBlur: '背景模糊度',
     clearImage: '移除圖片',
@@ -202,8 +206,12 @@ const TRANSLATIONS = {
     shapeNone: 'Original',
     logoSize: 'Logo Size',
     presetIconLabel: 'Or Choose Built-in Icon',
+    bgSectionTitle: 'Feature & Background Image (Optional)',
+    bgEnabled: 'Enabled',
+    bgDisabled: 'Disabled (Hidden)',
     bgImageUpload: 'Feature / Background Image',
-    bgImageHint: 'Click or drag image (showcase visual or background cover)',
+    bgImageHint: 'Click or drag image (Optional: showcase visual or background cover)',
+    bgImageOptionalHint: 'Tip: Image upload is optional. Sleek gradients and ambient lighting will be used if omitted.',
     bgOpacity: 'Background Image Opacity',
     bgBlur: 'Background Blur',
     clearImage: 'Remove Image',
@@ -305,6 +313,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
   const [logoShape, setLogoShape] = useState<LogoShape>('rounded');
   const [logoSize, setLogoSize] = useState<number>(64);
 
+  const [enableBgImage, setEnableBgImage] = useState<boolean>(true);
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
   const [bgOpacity, setBgOpacity] = useState<number>(40);
   const [bgBlur, setBgBlur] = useState<number>(0);
@@ -529,8 +538,8 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
       ctx.fill();
     }
 
-    // 3. Draw Background Image if uploaded
-    if (bgImage && template !== 'split') {
+    // 3. Draw Background Image if uploaded and enabled
+    if (enableBgImage && bgImage && template !== 'split') {
       ctx.save();
       ctx.globalAlpha = bgOpacity / 100;
       if (bgBlur > 0) {
@@ -659,7 +668,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      if (bgImage) {
+      if (enableBgImage && bgImage) {
         ctx.save();
         drawRoundedRect(ctx, imgColX + 2, imgY + 2, imgColW - 4, imgH - 4, 18);
         ctx.clip();
@@ -680,15 +689,44 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
         ctx.drawImage(bgImage, dx, dy, dw, dh);
         ctx.restore();
       } else {
-        // Feature Mockup Placeholder
+        // Modern Stylized Showcase Card Placeholder
         ctx.save();
-        ctx.strokeStyle = accentColor + '40';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(imgColX + 25, imgY + 25, imgColW - 50, imgH - 50);
-        ctx.fillStyle = accentColor;
-        ctx.font = `700 18px ${fontPrimary}`;
-        ctx.textAlign = 'center';
-        ctx.fillText(lang === 'zh-TW' ? '特色展示圖片區域' : 'Feature Visual Showcase', imgColX + imgColW / 2, imgY + imgH / 2);
+        const orbGrad = ctx.createRadialGradient(imgColX + imgColW * 0.5, imgY + imgH * 0.4, 10, imgColX + imgColW * 0.5, imgY + imgH * 0.4, imgColW * 0.5);
+        orbGrad.addColorStop(0, accentColor + (isDark ? '35' : '20'));
+        orbGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = orbGrad;
+        ctx.fillRect(imgColX, imgY, imgColW, imgH);
+
+        const mockPad = 32;
+        const mockW = imgColW - mockPad * 2;
+        const mockH = imgH - mockPad * 2;
+        drawRoundedRect(ctx, imgColX + mockPad, imgY + mockPad, mockW, mockH, 14);
+        ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.65)';
+        ctx.fill();
+        ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.08)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Window Dot Indicators
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(imgColX + mockPad + 20, imgY + mockPad + 22, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.arc(imgColX + mockPad + 36, imgY + mockPad + 22, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath(); ctx.arc(imgColX + mockPad + 52, imgY + mockPad + 22, 5, 0, Math.PI * 2); ctx.fill();
+
+        // Code / Content Mock Visual Bars
+        ctx.fillStyle = accentColor + (isDark ? '70' : '60');
+        drawRoundedRect(ctx, imgColX + mockPad + 20, imgY + mockPad + 50, mockW * 0.45, 8, 4);
+        ctx.fill();
+
+        ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(15, 23, 42, 0.2)';
+        drawRoundedRect(ctx, imgColX + mockPad + 20, imgY + mockPad + 74, mockW * 0.72, 6, 3);
+        ctx.fill();
+        drawRoundedRect(ctx, imgColX + mockPad + 20, imgY + mockPad + 92, mockW * 0.6, 6, 3);
+        ctx.fill();
+        drawRoundedRect(ctx, imgColX + mockPad + 20, imgY + mockPad + 110, mockW * 0.5, 6, 3);
+        ctx.fill();
         ctx.restore();
       }
     } else {
@@ -809,6 +847,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
     color2,
     accentColor,
     enableLogo,
+    enableBgImage,
     logoImage,
     selectedIconId,
     logoShape,
@@ -1225,64 +1264,90 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
 
               {/* Background Upload Section */}
               <div className="space-y-3 pt-4 border-t border-border-glass">
-                <span className="block text-sm font-medium text-text-sub">{t.bgImageUpload}</span>
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (e.dataTransfer.files?.[0]) handleBgUpload(e.dataTransfer.files[0]);
-                  }}
-                  className={`p-4 rounded-xl text-center cursor-pointer ${styles.dropzone}`}
-                  onClick={() => document.getElementById(bgUploadId)?.click()}
-                >
-                  <input
-                    id={bgUploadId}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) handleBgUpload(e.target.files[0]);
-                    }}
-                  />
-                  <div className="text-sm font-medium text-text-main">
-                    {bgImage ? '已載入特色/背景圖片 (點擊更換)' : t.bgImageHint}
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="block text-sm font-medium text-text-sub">{t.bgSectionTitle}</span>
+                  <button
+                    type="button"
+                    onClick={() => setEnableBgImage(!enableBgImage)}
+                    className={`px-2.5 py-1 text-xs rounded-lg border transition-all ${
+                      enableBgImage
+                        ? 'border-[#6366f1] bg-[#6366f1]/20 text-text-main font-semibold'
+                        : 'border-border-glass bg-select-bg text-text-sub'
+                    }`}
+                  >
+                    {enableBgImage ? t.bgEnabled : t.bgDisabled}
+                  </button>
                 </div>
 
-                {bgImage && (
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-text-sub">{t.bgOpacity}</span>
-                      <button
-                        type="button"
-                        onClick={() => setBgImage(null)}
-                        className="text-xs text-[#f43f5e] hover:underline"
-                      >
-                        {t.clearImage}
-                      </button>
+                <div className="text-[12px] text-text-sub leading-relaxed">
+                  {t.bgImageOptionalHint}
+                </div>
+
+                {enableBgImage ? (
+                  <>
+                    <div
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (e.dataTransfer.files?.[0]) handleBgUpload(e.dataTransfer.files[0]);
+                      }}
+                      className={`p-4 rounded-xl text-center cursor-pointer ${styles.dropzone}`}
+                      onClick={() => document.getElementById(bgUploadId)?.click()}
+                    >
+                      <input
+                        id={bgUploadId}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) handleBgUpload(e.target.files[0]);
+                        }}
+                      />
+                      <div className="text-sm font-medium text-text-main">
+                        {bgImage ? '已載入特色/背景圖片 (點擊更換)' : t.bgImageHint}
+                      </div>
                     </div>
-                    <input
-                      id={bgOpacityId}
-                      type="range"
-                      min="10"
-                      max="100"
-                      value={bgOpacity}
-                      onChange={(e) => setBgOpacity(Number(e.target.value))}
-                      className="w-full accent-[#6366f1]"
-                    />
-                    <div className="flex items-center justify-between text-xs text-text-sub">
-                      <label htmlFor={bgBlurId}>{t.bgBlur}</label>
-                      <span>{bgBlur}px</span>
-                    </div>
-                    <input
-                      id={bgBlurId}
-                      type="range"
-                      min="0"
-                      max="20"
-                      value={bgBlur}
-                      onChange={(e) => setBgBlur(Number(e.target.value))}
-                      className="w-full accent-[#6366f1]"
-                    />
+
+                    {bgImage && (
+                      <div className="space-y-3 pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-text-sub">{t.bgOpacity}</span>
+                          <button
+                            type="button"
+                            onClick={() => setBgImage(null)}
+                            className="text-xs text-[#f43f5e] hover:underline"
+                          >
+                            {t.clearImage}
+                          </button>
+                        </div>
+                        <input
+                          id={bgOpacityId}
+                          type="range"
+                          min="10"
+                          max="100"
+                          value={bgOpacity}
+                          onChange={(e) => setBgOpacity(Number(e.target.value))}
+                          className="w-full accent-[#6366f1]"
+                        />
+                        <div className="flex items-center justify-between text-xs text-text-sub">
+                          <label htmlFor={bgBlurId}>{t.bgBlur}</label>
+                          <span>{bgBlur}px</span>
+                        </div>
+                        <input
+                          id={bgBlurId}
+                          type="range"
+                          min="0"
+                          max="20"
+                          value={bgBlur}
+                          onChange={(e) => setBgBlur(Number(e.target.value))}
+                          className="w-full accent-[#6366f1]"
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-3 rounded-xl bg-select-bg/50 border border-border-glass text-xs text-text-sub text-center">
+                    {lang === 'zh-TW' ? '已關閉特色/背景圖片功能，頁面將維持純粹極簡幾何漸層。' : 'Background & feature image is disabled. Clean geometric gradients will be used.'}
                   </div>
                 )}
               </div>
