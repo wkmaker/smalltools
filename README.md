@@ -58,6 +58,7 @@
 * **[IP 子網段計算器](https://tools.cjkuo.net/ip-calculator/)** (`/ip-calculator`) - 快速計算 IPv4 / CIDR 網段資訊、可用 IP 列表與極速 TXT/CSV 導出。
 
 ### 📄 圖片與文件 (Media & Documents)
+* **[OG 圖片產生器](https://tools.cjkuo.net/og-generator/)** (`/og-generator`) - 專業 Open Graph 與社群封面圖片產生器，支援 4 款精緻模板、純前端 2x 視網膜超採樣、自訂 Logo 與特色背景圖、多比例自動適應及 PNG/JPEG/WebP/SVG 高速匯出。
 * **[光影裁剪 - 萬能圖片處理大師](https://tools.cjkuo.net/image-processor/)** (`/image-processor`) - 支援視覺化裁切、尺寸調整、jSquash WebAssembly 轉檔壓縮與多檔批次打包。
 * **[PDF 頁面組合器](https://tools.cjkuo.net/pdf-processor/)** (`/pdf-processor`) - 純前端 PDF 合併、拖曳頁面排序、單頁 90° 旋轉與頁面刪除。
 * **[PDF 壓縮大師](https://tools.cjkuo.net/pdf-compressor/)** (`/pdf-compressor`) - 針對 PDF 內嵌點陣圖深度壓縮與降採樣，保持向量文字清晰並大幅減少檔案體積。
