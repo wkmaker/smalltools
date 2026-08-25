@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node tests/check-ui-standards.mjs && node tests/audit-seo.mjs && node tests/verify-all-faqs.js",
+    "prebuild": "node tests/check-ui-standards.mjs && node tests/audit-seo.mjs && node tests/verify-all-faqs.js && node tests/test-og-translations.mjs && node tests/test-og-constants.mjs",
     "test:ui": "node tests/check-ui-standards.mjs",
     "test:seo": "node tests/audit-seo.mjs",
     "test:faq": "node tests/verify-all-faqs.js",
-    "test": "npm run test:ui && npm run test:seo && npm run test:faq",
+    "test:og": "node tests/test-og-translations.mjs && node tests/test-og-constants.mjs",
+    "test": "npm run test:ui && npm run test:seo && npm run test:faq && npm run test:og",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
