@@ -4,6 +4,29 @@
 
 ---
 
+## [1.8.0] - 2026-08-25
+
+### ✨ 新增功能 (Added)
+
+- **全新上線：Open Graph (OG) 社群封面圖片產生器 (`/og-generator/`)**：
+  - **4 大專業設計模板**：現代極簡 (Modern Minimal)、科技光流 (Cyber Glow)、雜誌專欄 (Split Showcase) 與醒目大字 (Bold Impact)。
+  - **純前端極速 Canvas 2D 渲染引擎**：無後端延遲、零個資隱私洩漏風險，支援純前端 2x 視網膜 (Retina) 超高清採樣輸出。
+  - **多社群長寬比一鍵自適應重排**：標準 OG (1200×630)、Twitter 16:9 (1200×675)、Square 1:1 (1080×1080)、Stories / Mobile 9:16 (1080×1920) 與 LinkedIn Post (1200×627)。
+  - **多格式高速匯出**：支援 PNG（無損清晰）、JPEG（高壓縮）、WebP（現代網頁）與 SVG（向量封裝）一鍵下載，以及直接複製圖片至系統剪貼簿。
+  - **高畫質 Lightbox 大圖檢視視窗**：點擊畫布即刻透過 React Portal 呼叫高解析度全螢幕檢視彈窗，支援 ESC 鍵與彈窗內直接複製/下載。
+  - **主題配色與自訂雙模色彩**：提供 6 大雙語主題色、支援雙色線性漸層與單色純底切換、Hex 色碼鍵盤直接輸入與 8 款發光 Accent 快捷色票。
+  - **高度自由媒體自訂**：支援自訂 Logo/頭像上傳（外框形狀與尺寸自訂，具備自動留白防貼邊安全距離）、自訂特色背景圖上傳（可調節不透明度與模糊度）或自由一鍵關閉。
+  - **4 組雙語實用預設範例 (Presets)**：技術專欄、產品發表、開發日誌與社群快訊，預設輸入值全面深度在地化。
+  - **雙語中英文路由與 6 組深度 FAQ 結構化資料 (`FAQPage` JSON-LD)**。
+
+### 🏗️ 架構與工程規範 (Architecture & Standards)
+
+- **大型複雜工具 6 大模組化拆分架構**：`types.ts`、`constants.ts`、`translations.ts`、`canvasRenderer.ts`、`exportHelpers.ts`、`OgGeneratorClient.tsx`。
+- **專屬自動化測試套件**：建立 `tests/test-og-translations.mjs` 與 `tests/test-og-constants.mjs`，並整合至 `npm run test` CI 管線。
+- **更新專案 3 大開發標準技能文件 (SKILLS)**：`smalltools-i18n-seo`（ToolLayout 共用頂欄規範、繁中純淨在地化）、`smalltools-dev-architecture`（大型工具模組化拆分與測試標準）、`smalltools-code-standards`（色彩輸入雙模交互標準、Canvas 排版留白）。
+
+---
+
 ## [1.7.1] - 2026-08-23
 
 ### 🐛 修復與功能增強 (Fixed & Enhanced)
