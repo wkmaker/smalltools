@@ -65,45 +65,35 @@ export const metadata: Metadata = {
 
 ---
 
-## 三、 `ToolLayout` 語系切換按鈕統一放置規範 (`extraHeaderControls`)
+## 三、 `ToolLayout` 語系切換與全站頂部導航共用規範 (Built-in Header Controls)
 
-### 1. 統一放置於 Header 右側控制區
-* 全站所有具備多語系版本（含 `/en/` 子路由）的工具，語系切換按鈕必須統一放置於 `ToolLayout` 的 **`extraHeaderControls`** prop 中，使其固定顯示於 Header 右側控制區（與深色/淺色模式切換按鈕同排）。
-* **嚴禁散落放置**：**嚴禁**將語系切換按鈕以 inline `<div>` 形式放置於頁面主要內容區頂部（如 `<div className="flex justify-end mb-4">`）。
-
+### 1. 嚴禁手動覆寫語系按鈕 (Use Built-in ToolLayout Toolbar)
+* `ToolLayout` 元件已內建完整的頂部功能列（包含「⟵ 返回首頁」、「🔍 搜尋 ⌘K」、「🌐 語系切換 (帶地球向量圖示與手機自適應)」及「🌓 亮暗主題切換」）。
+* **嚴禁手動注入語系按鈕**：**嚴禁**在 `ToolLayout` 的 `extraHeaderControls` 中手動傳入 `<Link href="/.../en/">`，這會導致 `ToolLayout` 內建的標準語系切換按鈕被隱藏並破壞全站頂欄的一致性。
+* 標準呼叫範例：
 ```tsx
 <ToolLayout
   title={t.title}
   subtitle={t.subtitle}
   description={t.description}
-  accentColor="#00f5a0"
-  accentGlow="rgba(0, 245, 160, 0.6)"
-  extraHeaderControls={
-    <Link
-      href={t.langToggleUrl}
-      className="text-sm font-medium px-3 py-1.5 rounded-xl bg-select-bg border border-border-glass text-text-sub hover:text-text-main transition-colors"
-    >
-      {t.langToggleLabel}
-    </Link>
-  }
+  accentColor="#6366f1"
+  accentGlow="rgba(99, 102, 241, 0.6)"
 >
   {/* 工具主體內容 */}
 </ToolLayout>
 ```
+* `ToolLayout` 會依據當前 URL 自動推導 `/en/` 雙向切換路徑 (`resolvedLangSwitchHref`) 並渲染標準地球圖示按鈕。
 
-### 2. 多控制項共存處理
-若同一位置需要切換多個控制項（如倒數計時啟動時顯示設定選單，平時顯示語系切換），可使用條件三元運算式處理：
-```tsx
-extraHeaderControls={
-  timerActive ? (
-    <button ...>{/* 設定選單 */}</button>
-  ) : (
-    <Link href={t.switchLangHref} className="...">{t.switchLangText}</Link>
-  )
-}
-```
+### 2. 繁體中文介面純淨在地化規範 (No Redundant Parentheses)
+* 在繁體中文 (`zh-TW`) 介面中，欄位標籤與按鈕文案**嚴禁附帶冗餘的英文括號註釋**（如 `主標題 (Title)`、`網站名稱 / 網域 (Site Name / Domain)`、`強調發光色 (Accent)`）。
+* 一律採用乾淨俐落的純繁體中文在地化用詞（如 `主標題`、`網站名稱或網域`、`強調發光色`、`雙色漸層`、`單色純底`）。
 
-### 3. `ToolLayout` 外圍 UI 語系自動感應
+### 3. 範例預載 (Sample Presets) 雙語深度在地化
+* 若工具具備快速範本載入 (Presets) 或預設填入值：
+  - 中文版 (`lang === 'zh-TW'`) 必須提供道地的繁體中文預設標題、描述、分類標籤與日期格式。
+  - 英文版 (`lang === 'en'`) 則提供標準英文範例，嚴禁中文版預載英文內容。
+
+### 4. `ToolLayout` 外圍 UI 語系自動感應
 全站共用 `ToolLayout` 內部會自動讀取 `usePathname()`。當路徑包含 `/en/` 時，頁面外圍 UI 將自動切換：
 * 返回首頁按鈕 ➔ **`Back to Home`**
 * 頁尾贊助疑問句 ➔ **`Enjoying this tool?`**

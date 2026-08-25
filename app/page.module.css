@@ -473,6 +473,11 @@
 .luckyWheelCard:hover h3 { color: #ffb800; text-shadow: 0 0 10px rgba(255, 184, 0, 0.4); }
 .luckyWheelCard .cardAction { color: #ffb800; }
 
+.ogGeneratorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(99, 102, 241, 0.06), transparent 40%); }
+.ogGeneratorCard:hover { border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(99, 102, 241, 0.15); }
+.ogGeneratorCard:hover h3 { color: #818cf8; text-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+.ogGeneratorCard .cardAction { color: #818cf8; }
+
 .imageProcessorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(217, 70, 239, 0.06), transparent 40%); }
 .imageProcessorCard:hover { border-color: rgba(217, 70, 239, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(217, 70, 239, 0.15); }
 .imageProcessorCard:hover h3 { color: #d946ef; text-shadow: 0 0 10px rgba(217, 70, 239, 0.4); }
@@ -717,6 +722,9 @@
 
 :global([data-theme='light']) .luckyWheelCard:hover h3,
 :global([data-theme='light']) .luckyWheelCard .cardAction { color: #b45309; text-shadow: none; } /* 深琥珀金 */
+
+:global([data-theme='light']) .ogGeneratorCard:hover h3,
+:global([data-theme='light']) .ogGeneratorCard .cardAction { color: #4338ca; text-shadow: none; } /* 深靛藍 */
 
 :global([data-theme='light']) .imageProcessorCard:hover h3,
 :global([data-theme='light']) .imageProcessorCard .cardAction { color: #a21caf; text-shadow: none; } /* 深紫紅 */

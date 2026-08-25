@@ -127,3 +127,26 @@ app/[tool-name]/
 ### 4. 中央工具註冊與 404 動態推薦機制
 * 全站所有工具之路由、分類、主題向量 SVG 圖示與簡介統一收錄於 `app/config/tools.tsx`。
 * 404 頁面 (`app/not-found.tsx`) 根據請求路徑自動判斷分類，優先推薦同類型工具，若不足 6 個則隨機補充填滿至 6 個。
+
+---
+
+## 七、 大型複雜工具模組化拆分與測試規範 (Modularization & Dedicated Testing)
+
+當單一小工具之程式碼行數龐大（超過 1,000 行）或包含複雜排版/繪圖引擎（如 Canvas 產生器、圖表模擬器）時，**嚴禁將所有邏輯塞在單一 Client.tsx 檔案中**，必須依據職責模組化拆分為獨立子檔案：
+
+```text
+app/[complex-tool]/
+├── types.ts                 # 1. 完整 TypeScript 型態定義 (Props, Config, Entity)
+├── constants.ts             # 2. 靜態常數、預設色票、尺寸規格、內建 SVG 向量資料
+├── translations.ts          # 3. 雙語字典 (TRANSLATIONS)、FAQ 清單與文案
+├── [canvas/engine]Renderer.ts # 4. 純運算/繪圖引擎 (純粹函式，無 React Hook 依賴，易於測試)
+├── exportHelpers.ts         # 5. 檔案下載、2x 超採樣、格式轉換、剪貼簿複製等輔助函式
+├── [ToolName]Client.tsx     # 6. 精簡主組件 (專注於 React 狀態管理與 UI 組裝)
+└── [tool-name].module.css   # 7. 專屬樣式模組
+```
+
+### 專屬單元測試套件規範 (`tests/test-[tool]-*.mjs`)
+* 針對模組化工具，需於 `tests/` 目錄建立獨立的單元測試腳本（如 `tests/test-og-translations.mjs` 與 `tests/test-og-constants.mjs`）。
+* 測試範疇必須包含：雙語鍵值 100% 對稱性、FAQ 結構格式正確性、色碼 Hex 與尺寸規範完整性。
+* 整合至 `package.json` 的 `npm run test` 管線中，確保每次 CI/CD 與部署前 100% 通過。
+

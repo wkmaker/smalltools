@@ -60,6 +60,7 @@ const CARD_ACCENT_COLORS: Record<string, string> = {
   luckyWheelCard: '#c026d3', // 深洋紅
   diceCard: '#ea580c', // 深橘
   liarsDiceCard: '#ea580c', // 深橘
+  ogGeneratorCard: '#4f46e5', // 湛藍靛青
 };
 
 const CATEGORY_NAMES_ZH: Record<string, string> = {
