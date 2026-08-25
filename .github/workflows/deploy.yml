@@ -258,6 +258,13 @@ jobs:
             --delete \
             --cache-control "public, max-age=86400"
 
+          # opengraph-image 動態圖片（無副檔名檔案）：強制正確 MIME image/png + 快取 1 天
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
+            --exclude "*" \
+            --include "*opengraph-image*" \
+            --content-type "image/png" \
+            --cache-control "public, max-age=86400"
+
           # SVG 圖片（support.svg 等）：強制正確 MIME + 快取 600 秒
           aws s3 sync ./out "s3://${S3_BUCKET}" \
             --exclude "*" \

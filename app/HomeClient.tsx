@@ -320,7 +320,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
           className="inline-flex items-center gap-1.5 px-3 h-[42px] rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 backdrop-blur-md text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 transition-all text-xs font-medium cursor-pointer"
         >
           <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z" />
+            <path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5S11.99 14 9.5 14z" />
           </svg>
           <span className="hidden sm:inline">{isEn ? 'Search' : '搜尋'}</span>
           <kbd className="hidden sm:inline px-1.5 py-0.5 text-xs font-mono rounded bg-black/[.04] dark:bg-white/[.08] border border-black/10 dark:border-white/10 text-text-sub">
