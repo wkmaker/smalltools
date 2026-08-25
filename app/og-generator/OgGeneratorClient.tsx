@@ -606,7 +606,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
         ctx.font = `700 15px ${fontPrimary}`;
         const tagMetrics = ctx.measureText(tag);
         const tagW = tagMetrics.width + 24;
-        drawRoundedRect(ctx, innerPadX, curY, tagW, 30, 8);
+        drawRoundedRect(ctx, innerPadX, curY, tagW, 32, 8);
         ctx.fillStyle = accentColor + (isDark ? '25' : '20');
         ctx.fill();
         ctx.strokeStyle = accentColor + '60';
@@ -614,21 +614,24 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
         ctx.stroke();
 
         ctx.fillStyle = accentColor;
-        ctx.fillText(tag, innerPadX + 12, curY + 20);
-        curY += 50;
+        ctx.fillText(tag, innerPadX + 12, curY + 21);
+        curY += 32 + 32; // Tag height (32) + comfortable spacing (32)
       }
 
       // Title
       ctx.fillStyle = primaryTextColor;
-      ctx.font = `800 ${height > 800 ? '42px' : '36px'} ${fontPrimary}`;
-      curY = wrapText(ctx, title, innerPadX, curY + 10, colW, height > 800 ? 50 : 44, 3);
+      const titleFontSize = height > 800 ? 44 : 38;
+      ctx.font = `800 ${titleFontSize}px ${fontPrimary}`;
+      const titleLineHeight = titleFontSize * 1.25;
+      curY = wrapText(ctx, title, innerPadX, curY + titleFontSize * 0.85, colW, titleLineHeight, 3);
 
       // Subtitle
       if (subtitle) {
-        curY += 10;
+        curY += 20;
         ctx.fillStyle = secondaryTextColor;
-        ctx.font = `400 ${height > 800 ? '20px' : '17px'} ${fontPrimary}`;
-        curY = wrapText(ctx, subtitle, innerPadX, curY, colW, height > 800 ? 28 : 24, 3);
+        const subFontSize = height > 800 ? 20 : 17;
+        ctx.font = `400 ${subFontSize}px ${fontPrimary}`;
+        curY = wrapText(ctx, subtitle, innerPadX, curY, colW, subFontSize * 1.45, 3);
       }
 
       // Footer (Author & Site)
@@ -689,7 +692,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
         ctx.font = `700 15px ${fontPrimary}`;
         const tagMetrics = ctx.measureText(tag);
         const tagW = tagMetrics.width + 24;
-        drawRoundedRect(ctx, innerPadX, curY, tagW, 32, 8);
+        drawRoundedRect(ctx, innerPadX, curY, tagW, 34, 8);
         ctx.fillStyle = accentColor + (isDark ? '25' : '20');
         ctx.fill();
         ctx.strokeStyle = accentColor + '60';
@@ -697,7 +700,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
         ctx.stroke();
 
         ctx.fillStyle = accentColor;
-        ctx.fillText(tag, innerPadX + 12, curY + 21);
+        ctx.fillText(tag, innerPadX + 12, curY + 22);
       }
 
       // Site Name on Top Right
@@ -705,24 +708,25 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
         ctx.font = `600 16px ${fontPrimary}`;
         ctx.fillStyle = secondaryTextColor;
         ctx.textAlign = 'right';
-        ctx.fillText(siteName, innerPadX + cardW - Math.min(width, height) * 0.1, curY + 22);
+        ctx.fillText(siteName, innerPadX + cardW - Math.min(width, height) * 0.1, curY + 23);
       }
       ctx.restore();
 
-      curY += 65;
+      // Increased breathing room between tag and title
+      curY += tag ? 34 + 38 : 10;
 
       // 2. Title Typography
       ctx.fillStyle = primaryTextColor;
-      let titleFontSize = height > 800 ? 56 : 48;
-      if (template === 'impact') titleFontSize = height > 800 ? 64 : 54;
+      let titleFontSize = height > 800 ? 54 : 46;
+      if (template === 'impact') titleFontSize = height > 800 ? 60 : 52;
       ctx.font = `800 ${titleFontSize}px ${fontPrimary}`;
 
       const titleLineHeight = titleFontSize * 1.25;
-      curY = wrapText(ctx, title, innerPadX, curY + 15, cardW - Math.min(width, height) * 0.1, titleLineHeight, 3);
+      curY = wrapText(ctx, title, innerPadX, curY + titleFontSize * 0.85, cardW - Math.min(width, height) * 0.1, titleLineHeight, 3);
 
       // 3. Subtitle / Description
       if (subtitle) {
-        curY += 15;
+        curY += 22;
         ctx.fillStyle = secondaryTextColor;
         const subFontSize = height > 800 ? 22 : 19;
         ctx.font = `400 ${subFontSize}px ${fontPrimary}`;
