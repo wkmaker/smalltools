@@ -233,7 +233,7 @@ jobs:
       - name: Sync to S3
         if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
-          # HTML 檔案：短快取 300 秒（確保更新後用戶能快速看到新版）
+          # 1. HTML 與其他一般靜態檔案（排除專屬處理的資產）
           aws s3 sync ./out "s3://${S3_BUCKET}" \
             --delete \
             --exclude "*.css" \
@@ -243,36 +243,46 @@ jobs:
             --exclude "_next/static/*" \
             --exclude "img/*" \
             --exclude "sw.js" \
+            --exclude "*opengraph-image*" \
+            --exclude "*.svg" \
             --cache-control "public, max-age=300, s-maxage=300"
 
-          # Service Worker (sw.js) & PWA 清單：完全不快取，確保版本即時感應與更新
-          aws s3 sync ./out "s3://${S3_BUCKET}" \
+          # 2. Service Worker (sw.js) & PWA 清單：完全不快取，確保版本即時感應與更新
+          aws s3 cp ./out "s3://${S3_BUCKET}" \
+            --recursive \
             --exclude "*" \
             --include "sw.js" \
             --include "manifest.webmanifest" \
-            --cache-control "no-cache, no-store, must-revalidate"
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --metadata-directive "REPLACE"
 
-          # JS / CSS / 字型：Next.js 會生成 content hash 檔名，可長快取 1 年
+          # 3. JS / CSS / 字型：Next.js 會生成 content hash 檔名，可長快取 1 年
           aws s3 sync ./out/_next/static "s3://${S3_BUCKET}/_next/static" \
             --cache-control "public, max-age=31536000, immutable"
 
-          # img/ 靜態圖片：快取 1 天
+          # 4. img/ 靜態圖片：快取 1 天
           aws s3 sync ./out/img "s3://${S3_BUCKET}/img" \
             --delete \
             --cache-control "public, max-age=86400"
 
-          # opengraph-image 動態圖片（無副檔名檔案）：強制正確 MIME image/png + 快取 1 天
-          aws s3 sync ./out "s3://${S3_BUCKET}" \
+          # 5. opengraph-image 動態圖片（無副檔名檔案）：強制 image/png MIME + inline 顯示 + 快取 1 天
+          aws s3 cp ./out "s3://${S3_BUCKET}" \
+            --recursive \
             --exclude "*" \
             --include "*opengraph-image*" \
             --content-type "image/png" \
+            --content-disposition "inline" \
+            --metadata-directive "REPLACE" \
             --cache-control "public, max-age=86400"
 
-          # SVG 圖片（support.svg 等）：強制正確 MIME + 快取 600 秒
-          aws s3 sync ./out "s3://${S3_BUCKET}" \
+          # 6. SVG 圖片（support.svg 等）：強制 image/svg+xml MIME + inline 顯示 + 快取 600 秒
+          aws s3 cp ./out "s3://${S3_BUCKET}" \
+            --recursive \
             --exclude "*" \
             --include "*.svg" \
             --content-type "image/svg+xml" \
+            --content-disposition "inline" \
+            --metadata-directive "REPLACE" \
             --cache-control "public, max-age=600"
 
       # ── 11. 清除 CloudFront 快取 ─────────────────────────────
