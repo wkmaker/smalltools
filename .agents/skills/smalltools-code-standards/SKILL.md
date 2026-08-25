@@ -136,3 +136,19 @@ description: 適用於 Smalltools 專案的 Tailwind v4 樣式規範、W3C 無�
 
 ### 2. Windows UTF-8 編碼保護避坑原則
 * 在 Windows 環境下避免使用 PowerShell 預設管道（如 `Get-Content | Set-Content`），防止將 TypeScript/JSX 中的繁體中文字串轉為 ANSI/OEM 亂碼 (`?`)。必須確保所有原始碼檔案儲存為無 BOM 之 UTF-8 編碼。
+
+---
+
+## 七、 顏色選色器雙模交互與 Canvas 排版留白規範
+
+### 1. 色彩控制項雙模輸入標準 (Color Swatch + Hex Text Input)
+* 凡具備色彩/色碼自訂功能的表單，**嚴禁僅提供生硬的原生 `<input type="color">` 或純文字框**。
+* 統一採用「雙模一體化」結構：
+  - **左側色彩方塊 (Color Swatch)**：顯示目前色彩，點擊直接呼叫系統調色盤。
+  - **右側等寬字文字輸入框 (Hex Text Input)**：支援鍵盤直接輸入與貼上十六進位色碼（如 `#6366f1` 或 `6366f1`），自動轉為大寫並正規化。
+  - **精選快捷色票 (Quick Preset Chips)**：提供一鍵切換之高頻常用色票，大幅提升操作效率與體驗。
+
+### 2. Canvas / 動態圖形排版安全呼吸留白 (Canvas Safe Margins & Dynamic Spacing)
+* 在 Canvas 2D / SVG 等動態排版場景中，頁尾元素（如 Logo、作者署名、發布日期）：
+  - 必須動態依據 Logo 尺寸與畫布高度計算安全底邊距：`Math.max(innerPad * 0.75, logoSize * 0.5 + 32)`。
+  - **嚴禁使用靜態微縮邊距**（如 5px~10px），防範大尺寸 Logo 或頭像貼齊外框邊界造成視覺擁擠。
