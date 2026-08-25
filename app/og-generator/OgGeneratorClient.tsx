@@ -830,92 +830,217 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
                       </div>
                     </div>
 
-                    {/* 自訂雙色漸層選擇器 */}
+                    {/* 自訂雙色漸層選擇器 (支援色盤與手動色碼輸入) */}
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       <div>
-                        <label htmlFor={colorPicker1Id} className="block text-[12px] text-text-sub mb-1">
+                        <label htmlFor={colorPicker1Id} className="block text-[12px] font-medium text-text-sub mb-1.5">
                           {t.gradientStartColor}
                         </label>
-                        <input
-                          id={colorPicker1Id}
-                          type="color"
-                          value={themeMode === 'dark' ? color1 : lightColor1}
-                          onChange={(e) => {
-                            if (themeMode === 'dark') {
-                              setColor1(e.target.value);
-                            } else {
-                              setLightColor1(e.target.value);
-                            }
-                          }}
-                          className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
-                        />
+                        <div className="flex items-center gap-2 p-1.5 rounded-xl bg-select-bg border border-border-glass focus-within:border-[#6366f1] transition-all">
+                          <div
+                            className="relative w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-border-glass shadow-inner"
+                            style={{ backgroundColor: themeMode === 'dark' ? color1 : lightColor1 }}
+                          >
+                            <input
+                              type="color"
+                              value={
+                                (themeMode === 'dark' ? color1 : lightColor1).startsWith('#') &&
+                                (themeMode === 'dark' ? color1 : lightColor1).length === 7
+                                  ? themeMode === 'dark'
+                                    ? color1
+                                    : lightColor1
+                                  : '#0f172a'
+                              }
+                              onChange={(e) => {
+                                if (themeMode === 'dark') {
+                                  setColor1(e.target.value);
+                                } else {
+                                  setLightColor1(e.target.value);
+                                }
+                              }}
+                              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                              aria-label={t.gradientStartColor}
+                            />
+                          </div>
+                          <input
+                            id={colorPicker1Id}
+                            type="text"
+                            value={themeMode === 'dark' ? color1 : lightColor1}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (themeMode === 'dark') {
+                                setColor1(val);
+                              } else {
+                                setLightColor1(val);
+                              }
+                            }}
+                            placeholder="#000000"
+                            maxLength={7}
+                            className="w-full text-xs font-mono font-medium text-text-main bg-transparent outline-none uppercase"
+                          />
+                        </div>
                       </div>
+
                       <div>
-                        <label htmlFor={colorPicker2Id} className="block text-[12px] text-text-sub mb-1">
+                        <label htmlFor={colorPicker2Id} className="block text-[12px] font-medium text-text-sub mb-1.5">
                           {t.gradientEndColor}
                         </label>
-                        <input
-                          id={colorPicker2Id}
-                          type="color"
-                          value={themeMode === 'dark' ? color2 : lightColor2}
-                          onChange={(e) => {
-                            if (themeMode === 'dark') {
-                              setColor2(e.target.value);
-                            } else {
-                              setLightColor2(e.target.value);
-                            }
-                          }}
-                          className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
-                        />
+                        <div className="flex items-center gap-2 p-1.5 rounded-xl bg-select-bg border border-border-glass focus-within:border-[#6366f1] transition-all">
+                          <div
+                            className="relative w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-border-glass shadow-inner"
+                            style={{ backgroundColor: themeMode === 'dark' ? color2 : lightColor2 }}
+                          >
+                            <input
+                              type="color"
+                              value={
+                                (themeMode === 'dark' ? color2 : lightColor2).startsWith('#') &&
+                                (themeMode === 'dark' ? color2 : lightColor2).length === 7
+                                  ? themeMode === 'dark'
+                                    ? color2
+                                    : lightColor2
+                                  : '#1e1b4b'
+                              }
+                              onChange={(e) => {
+                                if (themeMode === 'dark') {
+                                  setColor2(e.target.value);
+                                } else {
+                                  setLightColor2(e.target.value);
+                                }
+                              }}
+                              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                              aria-label={t.gradientEndColor}
+                            />
+                          </div>
+                          <input
+                            id={colorPicker2Id}
+                            type="text"
+                            value={themeMode === 'dark' ? color2 : lightColor2}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (themeMode === 'dark') {
+                                setColor2(val);
+                              } else {
+                                setLightColor2(val);
+                              }
+                            }}
+                            placeholder="#000000"
+                            maxLength={7}
+                            className="w-full text-xs font-mono font-medium text-text-main bg-transparent outline-none uppercase"
+                          />
+                        </div>
                       </div>
                     </div>
                   </>
                 ) : (
                   /* 自訂單色純底選擇器 */
                   <div className="pt-1">
-                    <label htmlFor={colorPicker1Id} className="block text-[12px] text-text-sub mb-1">
+                    <label htmlFor={colorPicker1Id} className="block text-[12px] font-medium text-text-sub mb-1.5">
                       {t.solidBgColor}
                     </label>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 p-1.5 rounded-xl bg-select-bg border border-border-glass focus-within:border-[#6366f1] transition-all max-w-[200px]">
+                      <div
+                        className="relative w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-border-glass shadow-inner"
+                        style={{ backgroundColor: themeMode === 'dark' ? color1 : lightColor1 }}
+                      >
+                        <input
+                          type="color"
+                          value={
+                            (themeMode === 'dark' ? color1 : lightColor1).startsWith('#') &&
+                            (themeMode === 'dark' ? color1 : lightColor1).length === 7
+                              ? themeMode === 'dark'
+                                ? color1
+                                : lightColor1
+                              : '#0f172a'
+                          }
+                          onChange={(e) => {
+                            if (themeMode === 'dark') {
+                              setColor1(e.target.value);
+                              setColor2(e.target.value);
+                            } else {
+                              setLightColor1(e.target.value);
+                              setLightColor2(e.target.value);
+                            }
+                          }}
+                          className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                          aria-label={t.solidBgColor}
+                        />
+                      </div>
                       <input
                         id={colorPicker1Id}
-                        type="color"
+                        type="text"
                         value={themeMode === 'dark' ? color1 : lightColor1}
                         onChange={(e) => {
+                          const val = e.target.value;
                           if (themeMode === 'dark') {
-                            setColor1(e.target.value);
-                            setColor2(e.target.value);
+                            setColor1(val);
+                            setColor2(val);
                           } else {
-                            setLightColor1(e.target.value);
-                            setLightColor2(e.target.value);
+                            setLightColor1(val);
+                            setLightColor2(val);
                           }
                         }}
-                        className="w-16 h-10 rounded-lg cursor-pointer bg-transparent border border-border-glass"
+                        placeholder="#000000"
+                        maxLength={7}
+                        className="w-full text-xs font-mono font-medium text-text-main bg-transparent outline-none uppercase"
                       />
-                      <span className="text-xs font-mono px-3 py-2 rounded-lg bg-select-bg border border-border-glass text-text-main">
-                        {themeMode === 'dark' ? color1 : lightColor1}
-                      </span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* 強調發光色 (Accent Color) */}
-              <div className="pt-3 border-t border-border-glass">
-                <label htmlFor={accentPickerId} className="block text-xs font-semibold text-text-main mb-1.5">
-                  {t.accentColor}
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    id={accentPickerId}
-                    type="color"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    className="w-16 h-10 rounded-lg cursor-pointer bg-transparent border border-border-glass"
-                  />
-                  <span className="text-xs font-mono px-3 py-2 rounded-lg bg-select-bg border border-border-glass text-text-main">
+              {/* 強調發光色 (Accent Glow Color) 專屬精緻區塊 */}
+              <div className="space-y-2.5 pt-3 border-t border-border-glass">
+                <div className="flex items-center justify-between">
+                  <span className="block text-xs font-semibold text-text-main">
+                    {t.accentColor}
+                  </span>
+                  <span className="text-[12px] text-text-sub font-mono uppercase">
                     {accentColor}
                   </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 p-1.5 rounded-xl bg-select-bg border border-border-glass focus-within:border-[#6366f1] transition-all w-36 shrink-0">
+                    <div
+                      className="relative w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-border-glass shadow-inner"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      <input
+                        type="color"
+                        value={accentColor.startsWith('#') && accentColor.length === 7 ? accentColor : '#6366f1'}
+                        onChange={(e) => setAccentColor(e.target.value)}
+                        className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                        aria-label={t.accentColor}
+                      />
+                    </div>
+                    <input
+                      id={accentPickerId}
+                      type="text"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      placeholder="#6366F1"
+                      maxLength={7}
+                      className="w-full text-xs font-mono font-medium text-text-main bg-transparent outline-none uppercase"
+                    />
+                  </div>
+
+                  {/* 常用 Accent 快捷色票 */}
+                  <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                    {['#6366f1', '#818cf8', '#10b981', '#f43f5e', '#f59e0b', '#0284c7', '#06b6d4', '#ec4899'].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setAccentColor(c)}
+                        title={c}
+                        className={`w-6 h-6 rounded-lg border transition-all cursor-pointer ${
+                          accentColor.toLowerCase() === c.toLowerCase()
+                            ? 'border-white scale-110 shadow-[0_0_8px_rgba(255,255,255,0.6)] ring-2 ring-[#6366f1]'
+                            : 'border-border-glass/60 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 
