@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'DNS HTTPS 紀錄 (Type 65) 設定產生器與教學',
     description: '視覺化勾選與填空即時產生符合 RFC 9460 規範的 DNS HTTPS (Type 65) 紀錄。',
     url: 'https://tools.cjkuo.net/https-dns-generator/',
-    images: [
-      {
-        url: '/img/og-https-dns-generator.webp',
-        width: 1200,
-        height: 630,
-        alt: 'DNS HTTPS 紀錄設定產生器 - Type 65 / SVCB 參數產生與教學',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'DNS HTTPS 紀錄 (Type 65) 設定產生器與教學',
     description: '視覺化勾選與填空即時產生符合 RFC 9460 規範的 DNS HTTPS (Type 65) 紀錄。',
-    images: ['/img/og-https-dns-generator.webp'],
   },
 };
 

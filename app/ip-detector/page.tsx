@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'IP 檢測助手 - 免費線上 IPv4/IPv6 查詢與連線延遲診斷',
     description: '即時檢測您的 IPv4/IPv6，解析 Cloudflare Trace 與隱私狀態，並診斷各大公有雲與 CDN 之連線延遲。',
     url: 'https://tools.cjkuo.net/ip-detector/',
-    images: [
-      {
-        url: '/img/og-ip-detector.webp',
-        width: 1200,
-        height: 630,
-        alt: 'IP 檢測助手 - IPv4/IPv6 雙棧與雲端連線延遲診斷',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'IP 檢測助手 - 免費線上 IPv4/IPv6 查詢與連線延遲診斷',
     description: '即時檢測您的 IPv4/IPv6，解析 Cloudflare Trace 與隱私狀態，並診斷各大公有雲與 CDN 之連線延遲。',
-    images: ['/img/og-ip-detector.webp'],
   },
 };
 

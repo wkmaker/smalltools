@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Liar\'s Dice Roller - Anti-Cheat Timer & Top 5 History Logs',
     description: 'Online Liar\'s Dice roller with anti-cheat timer showing time elapsed since last roll and top 5 history records.',
     url: 'https://tools.cjkuo.net/liars-dice/en/',
-    images: [
-      {
-        url: '/img/og-liars-dice.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Liar\'s Dice Roller - Anti-Cheat Timer & Top 5 History Logs',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Liar\'s Dice Roller - Anti-Cheat Timer & Top 5 History Logs',
     description: 'Online Liar\'s Dice roller with anti-cheat timer showing time elapsed since last roll and top 5 history records.',
-    images: ['/img/og-liars-dice.webp'],
   },
 };
 

@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Mortgage Loan Calculator - Free Online House Loan & APR Solver',
     description: 'Calculate monthly mortgage payments, grace period amortization, stepped interest rates, and APR.',
     url: 'https://tools.cjkuo.net/mortgage-loan/en/',
-    images: [
-      {
-        url: '/img/og-mortgage-loan.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Mortgage Calculator - Home Loan & Amortization Breakdown',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Mortgage Loan Calculator - Free Online House Loan & APR Solver',
     description: 'Calculate monthly mortgage payments, grace period amortization, stepped interest rates, and APR.',
-    images: ['/img/og-mortgage-loan.webp'],
   },
 };
 

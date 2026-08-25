@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Base64 Encoder & Decoder - Free Online Text & URL-Safe Base64 Converter',
     description: 'Fast client-side Base64 encoder and decoder tool supporting UTF-8 & URL-Safe modes.',
     url: 'https://tools.cjkuo.net/base64/en/',
-    images: [
-      {
-        url: '/img/og-base64.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Base64 Encoder & Decoder - Free Online Base64 Converter',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Base64 Encoder & Decoder - Free Online Text & URL-Safe Base64 Converter',
     description: 'Fast client-side Base64 encoder and decoder tool supporting UTF-8 & URL-Safe modes.',
-    images: ['/img/og-base64.webp'],
   },
 };
 

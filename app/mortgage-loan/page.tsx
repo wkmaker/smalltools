@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '房屋貸款試算器 - 免費線上房貸月付額、寬限期與 APR 計算機',
     description: '專業免費的線上房屋貸款計算機，支援寬限期、多段式利率與實質年利率試算。',
     url: 'https://tools.cjkuo.net/mortgage-loan/',
-    images: [
-      {
-        url: '/img/og-mortgage-loan.webp',
-        width: 1200,
-        height: 630,
-        alt: '房貸試算器 - 房屋貸款與多段階梯利率計算機',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '房屋貸款試算器 - 免費線上房貸月付額、寬限期與 APR 計算機',
     description: '專業免費的線上房屋貸款計算機，支援寬限期、多段式利率與實質年利率試算。',
-    images: ['/img/og-mortgage-loan.webp'],
   },
 };
 

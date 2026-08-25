@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '文字處理助手 - 免費線上字數統計、大小寫轉換與文字排版工具',
     description: '即時進行文字大小寫轉換、空白字元處理，與多維度中英文統計。',
     url: 'https://tools.cjkuo.net/text-utility/',
-    images: [
-      {
-        url: '/img/og-text-utility.webp',
-        width: 1200,
-        height: 630,
-        alt: '文字處理助手 - 免費線上字數統計與文字排版',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '文字處理助手 - 免費線上字數統計、大小寫轉換與文字排版工具',
     description: '即時進行文字大小寫轉換、空白字元處理，與多維度中英文統計。',
-    images: ['/img/og-text-utility.webp'],
   },
 };
 

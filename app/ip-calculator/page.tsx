@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 計算工具',
     description: '毫秒級精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址與可用 IP 列表。',
     url: 'https://tools.cjkuo.net/ip-calculator/',
-    images: [
-      {
-        url: '/img/og-ip-calculator.webp',
-        width: 1200,
-        height: 630,
-        alt: 'IP 子網段計算器 - CIDR 遮罩與可用 IP 範圍試算',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 計算工具',
     description: '毫秒級精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址與可用 IP 列表。',
-    images: ['/img/og-ip-calculator.webp'],
   },
 };
 

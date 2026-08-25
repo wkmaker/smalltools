@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Taiwan Salary & Tax Calculator - Free Online Net Pay & Employer Cost Calculator',
     description: 'Calculate Taiwan labor insurance, health insurance, tax withholding, net salary, and total employer labor cost.',
     url: 'https://tools.cjkuo.net/my-salary-calculator/en/',
-    images: [
-      {
-        url: '/img/og-salary.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Salary, Tax & Insurance Calculator - Taiwan Net Take-Home Pay',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Taiwan Salary & Tax Calculator - Free Online Net Pay & Employer Cost Calculator',
     description: 'Calculate Taiwan labor insurance, health insurance, tax withholding, net salary, and total employer labor cost.',
-    images: ['/img/og-salary.webp'],
   },
 };
 

@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '離職時間與預告期計算機 - 免費線上勞基法預告期、離職生效日與特休試算工具',
     description: '一鍵精準試算台灣勞基法定預告期、離職生效日、最後出勤日與特休假不休假工資代金。',
     url: 'https://tools.cjkuo.net/resignation-calculator/',
-    images: [
-      {
-        url: '/img/og-resignation-calculator.webp',
-        width: 1200,
-        height: 630,
-        alt: '離職時間與預告期計算機 - 勞基法預告期與特休折現試算',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '離職時間與預告期計算機 - 免費線上勞基法預告期與離職生效日試算',
     description: '一鍵精準試算台灣勞基法定預告期、離職生效日、最後出勤日與特休假不休假工資代金。',
-    images: ['/img/og-resignation-calculator.webp'],
   },
 };
 

@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '台股期貨槓桿計算機 - 免費線上大台/小台/微台保證金與逆風點數估算器',
     description: '期貨交易者的風控警示器。即時模擬大盤逆風、實質資金槓桿、追繳與斷頭臨界點試算。',
     url: 'https://tools.cjkuo.net/futures-calculator/',
-    images: [
-      {
-        url: '/img/og-futures-calculator.webp',
-        width: 1200,
-        height: 630,
-        alt: '台股期貨槓桿與逆風點數估算器 - 風控與強平臨界試算',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '台股期貨槓桿計算機 - 免費線上大台/小台/微台保證金與逆風點數估算器',
     description: '期貨交易者的風控警示器。即時模擬大盤逆風、實質資金槓桿、追繳與斷頭臨界點試算。',
-    images: ['/img/og-futures-calculator.webp'],
   },
 };
 

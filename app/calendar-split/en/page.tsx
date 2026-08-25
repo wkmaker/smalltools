@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'ICS Calendar Splitter - Free Online Tool to Split Large .ics Files',
     description: 'Free online iCalendar (.ics) Splitter! Overcome Google Calendar 1MB import limit, auto split large calendars into valid <1MB chunks with ZIP download.',
     url: 'https://tools.cjkuo.net/calendar-split/en/',
-    images: [
-      {
-        url: '/img/og-calendar-split.webp',
-        width: 1200,
-        height: 630,
-        alt: 'ICS Calendar Splitter - Free Online Tool to Split Large .ics Files',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ICS Calendar Splitter - Free Online Tool to Split Large .ics Files',
     description: 'Free online iCalendar (.ics) Splitter! Overcome Google Calendar 1MB import limit, auto split large calendars into valid <1MB chunks with ZIP download.',
-    images: ['/img/og-calendar-split.webp'],
   },
 };
 

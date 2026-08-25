@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '兩份文件比對工具 - 免費線上 Text Diff Checker 與程式碼文字差異分析工具',
     description: '純前端安全文本比對工具，提供 Split 與 Unified 模式，支援大文字與忽略大小寫設定。',
     url: 'https://tools.cjkuo.net/diff-checker/',
-    images: [
-      {
-        url: '/img/og-diff-checker.webp',
-        width: 1200,
-        height: 630,
-        alt: '兩份文件比對工具 - 免費線上 Text Diff Checker',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '兩份文件比對工具 - 免費線上 Text Diff Checker 與程式碼文字差異分析工具',
     description: '純前端安全文本比對工具，提供 Split 與 Unified 模式，支援大文字與忽略大小寫設定。',
-    images: ['/img/og-diff-checker.webp'],
   },
 };
 

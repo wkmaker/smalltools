@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Stock Margin & Pledge Calculator - Margin Call & Stress Test Tool',
     description: 'Calculate stock pledge margin ratios, 130% margin call price thresholds, and market drop stress test.',
     url: 'https://tools.cjkuo.net/pledge-calculator/en/',
-    images: [
-      {
-        url: '/img/og-pledge-calculator.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Stock Pledging & Risk Calculator - Margin Maintenance Stress Test',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Stock Margin & Pledge Calculator - Margin Call & Stress Test Tool',
     description: 'Calculate stock pledge margin ratios, 130% margin call price thresholds, and market drop stress test.',
-    images: ['/img/og-pledge-calculator.webp'],
   },
 };
 

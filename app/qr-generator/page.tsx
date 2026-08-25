@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'QR Code 產生器 - 免費線上藝術設計、Logo 內嵌與向量 SVG 輸出工具',
     description: '即時設計您專屬的藝術 QR Code。支援液態點、漸層、Logo 置中與向量 SVG 輸出。',
     url: 'https://tools.cjkuo.net/qr-generator/',
-    images: [
-      {
-        url: '/img/og-qr-generator.webp',
-        width: 1200,
-        height: 630,
-        alt: 'QR Code 產生器 - 免費線上藝術設計與向量輸出',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'QR Code 產生器 - 免費線上藝術設計、Logo 內嵌與向量 SVG 輸出工具',
     description: '即時設計專屬藝術 QR Code，支援漸層、Logo 置中與向量 SVG 輸出。',
-    images: ['/img/og-qr-generator.webp'],
   },
 };
 

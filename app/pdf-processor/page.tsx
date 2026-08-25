@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'PDF 頁面組合器 - 免費線上多檔合併、頁面排序、刪除與旋轉',
     description: '純前端強大 PDF 頁面組合器！支援多檔合併、拖曳排序、單頁旋轉與刪除、圖片插入與轉檔。',
     url: 'https://tools.cjkuo.net/pdf-processor/',
-    images: [
-      {
-        url: '/img/og-pdf-processor.webp',
-        width: 1200,
-        height: 630,
-        alt: 'PDF 頁面組合器 - 免費線上多檔合併與排序',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF 頁面組合器 - 免費線上多檔合併、頁面排序、刪除與旋轉',
     description: '純前端強大 PDF 頁面組合器！支援多檔合併、拖曳排序、單頁旋轉與刪除、圖片插入與轉檔。',
-    images: ['/img/og-pdf-processor.webp'],
   },
 };
 

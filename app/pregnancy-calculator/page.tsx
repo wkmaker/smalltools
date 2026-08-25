@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '孕期與產檢假計算機 - 免費線上預產期、40週產檢時程與法定產假津貼試算工具',
     description: '一鍵精算預產期、懷孕週數、40 週產檢里程碑與台灣法定產假/產檢假/育嬰津貼。',
     url: 'https://tools.cjkuo.net/pregnancy-calculator/',
-    images: [
-      {
-        url: '/img/og-pregnancy-calculator.webp',
-        width: 1200,
-        height: 630,
-        alt: '孕期與產檢假計算機 - 預產期與法定產檢產假規劃',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '孕期與產檢假計算機 - 免費線上預產期與法定產假津貼試算',
     description: '一鍵精算預產期、懷孕週數、40 週產檢里程碑與台灣法定產假/產檢假/育嬰津貼。',
-    images: ['/img/og-pregnancy-calculator.webp'],
   },
 };
 

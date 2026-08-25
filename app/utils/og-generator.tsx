@@ -17,34 +17,49 @@ const CARD_ACCENT_COLORS: Record<string, string> = {
   carCard: '#dc2626', // 深紅
   mortgageCard: '#059669', // 深翠綠
   interestCard: '#d97706', // 深琥珀金
+  loanCard: '#059669', // 深翠綠
+  personalLoanCard: '#059669', // 深翠綠
   salaryCard: '#0284c7', // 深海天藍
   hourlyCard: '#0284c7', // 深海天藍
-  personalLoanCard: '#c026d3', // 深洋紅
+  hourlyRateCard: '#0284c7', // 深海天藍
   futuresCard: '#ea580c', // 深橘
   pledgeCard: '#d97706', // 深琥珀金
   qrCard: '#4f46e5', // 湛藍靛青
   imageCard: '#0d9488', // 深藍綠
+  imageProcessorCard: '#0d9488', // 深藍綠
   pdfCard: '#dc2626', // 深紅
+  pdfProcessorCard: '#dc2626', // 深紅
   pdfCompressCard: '#dc2626', // 深紅
+  pdfCompressorCard: '#dc2626', // 深紅
   jsonCard: '#0284c7', // 深天藍
   diffCard: '#4f46e5', // 湛藍靛青
+  diffCheckerCard: '#4f46e5', // 湛藍靛青
   base64Card: '#0d9488', // 深藍綠
   passwordCard: '#059669', // 深翠綠
   sslCard: '#4f46e5', // 湛藍靛青
+  sslConverterCard: '#4f46e5', // 湛藍靛青
   epochCard: '#d97706', // 深琥珀金
   dnsCard: '#0284c7', // 深天藍
+  digCard: '#0284c7', // 深天藍
   ipCard: '#0284c7', // 深天藍
   ipDetectCard: '#0284c7', // 深天藍
+  ipDetectorCard: '#0284c7', // 深天藍
+  ipCalculatorCard: '#0284c7', // 深天藍
   httpsDnsCard: '#4f46e5', // 湛藍靛青
   harCard: '#ea580c', // 深橘
+  harCleanerCard: '#ea580c', // 深橘
   timeCard: '#0284c7', // 深天藍
+  timerCard: '#0284c7', // 深天藍
   textCard: '#059669', // 深翠綠
+  textUtilityCard: '#059669', // 深翠綠
   urlCard: '#0d9488', // 深藍綠
   pregnancyCard: '#e11d48', // 玫瑰深紅
   resignationCard: '#0284c7', // 深天藍
   calendarCard: '#059669', // 深翠綠
   wheelCard: '#c026d3', // 深洋紅
+  luckyWheelCard: '#c026d3', // 深洋紅
   diceCard: '#ea580c', // 深橘
+  liarsDiceCard: '#ea580c', // 深橘
 };
 
 const CATEGORY_NAMES_ZH: Record<string, string> = {

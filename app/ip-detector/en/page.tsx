@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'My IP Address & Network Diagnostics Tool - Free IPv4/IPv6 & Cloud Latency Test',
     description: 'Instant public IPv4/IPv6 lookup, Cloudflare Trace analysis, IP geolocation, and cloud latency diagnostics.',
     url: 'https://tools.cjkuo.net/ip-detector/en/',
-    images: [
-      {
-        url: '/img/og-ip-detector.webp',
-        width: 1200,
-        height: 630,
-        alt: 'IP & Connection Diagnostic Tool - Dual-Stack & Latency Check',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'My IP Address & Network Diagnostics Tool - Free IPv4/IPv6 & Cloud Latency Test',
     description: 'Instant public IPv4/IPv6 lookup, Cloudflare Trace analysis, IP geolocation, and cloud latency diagnostics.',
-    images: ['/img/og-ip-detector.webp'],
   },
 };
 

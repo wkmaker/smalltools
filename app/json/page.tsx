@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'JSON 格式化與驗證器 - 免費線上 JSON Formatter & Validator',
     description: '極速純前端 JSON 格式化工具，支援語法高亮與精準錯誤定位。',
     url: 'https://tools.cjkuo.net/json/',
-    images: [
-      {
-        url: '/img/og-json.webp',
-        width: 1200,
-        height: 630,
-        alt: 'JSON 格式化與驗證器 - 免費線上 JSON Formatter',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'JSON 格式化與驗證器 - 免費線上 JSON Formatter & Validator',
     description: '極速純前端 JSON 格式化工具，支援語法高亮與精準錯誤定位。',
-    images: ['/img/og-json.webp'],
   },
 };
 

@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'PDF Compressor Master - Free Online PDF Compression & Privacy Protection',
     description: '100% Client-side PDF Compressor Master! Supports multi-file batch processing, instant structure inspection, and ZIP download.',
     url: 'https://tools.cjkuo.net/pdf-compressor/en/',
-    images: [
-      {
-        url: '/img/og-pdf-compressor.webp',
-        width: 1200,
-        height: 630,
-        alt: 'PDF Compressor Master - Free Online PDF Compression',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Compressor Master - Free Online PDF Compression & Privacy Protection',
     description: '100% Client-side PDF Compressor Master! Supports multi-file batch processing, instant structure inspection, and ZIP download.',
-    images: ['/img/og-pdf-compressor.webp'],
   },
 };
 

@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '薪資勞健保計算機 - 免費線上實領薪水、勞退自提與雇主成本算薪水工具',
     description: '一鍵精準試算台灣勞保、健保與勞退提繳金額。同時呈現員工薪資明細與雇主總營運勞務成本。',
     url: 'https://tools.cjkuo.net/my-salary-calculator/',
-    images: [
-      {
-        url: '/img/og-salary.webp',
-        width: 1200,
-        height: 630,
-        alt: '薪資、勞保、健保、預扣稅計算機 - 實領薪資與雇主成本試算',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '薪資勞健保計算機 - 免費線上實領薪水、勞退自提與雇主成本算薪水工具',
     description: '一鍵精準試算台灣勞保、健保與勞退提繳金額。同時呈現員工薪資明細與雇主總營運勞務成本。',
-    images: ['/img/og-salary.webp'],
   },
 };
 

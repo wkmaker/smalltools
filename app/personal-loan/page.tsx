@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '個人信貸試算器 - 免費線上信用貸款與 APR 實質年利率計算機',
     description: '專業免費的線上信貸計算機，支援手續費攤提與 APR 實質年利率試算。',
     url: 'https://tools.cjkuo.net/personal-loan/',
-    images: [
-      {
-        url: '/img/og-personal-loan.webp',
-        width: 1200,
-        height: 630,
-        alt: '個人信貸試算器 - 實質年利率 APR 與還款明細計算機',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '個人信貸試算器 - 免費線上信用貸款與 APR 實質年利率計算機',
     description: '專業免費的線上信貸計算機，支援手續費攤提與 APR 實質年利率試算。',
-    images: ['/img/og-personal-loan.webp'],
   },
 };
 

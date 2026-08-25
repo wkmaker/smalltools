@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Universal Image Processor - Free Online Image Crop, Resize & Compress',
     description: 'Pure client-side image editor supporting cropping, resizing, quality compression, and batch ZIP export.',
     url: 'https://tools.cjkuo.net/image-processor/en/',
-    images: [
-      {
-        url: '/img/og-image-processor.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Universal Image Processor - Free Online Image Crop & Compress',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Universal Image Processor - Free Online Image Crop, Resize & Compress',
     description: 'Pure client-side image editor supporting cropping, resizing, quality compression, and batch ZIP export.',
-    images: ['/img/og-image-processor.webp'],
   },
 };
 
