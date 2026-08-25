@@ -68,6 +68,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
   );
 
   // 配色狀態
+  const [bgFillType, setBgFillType] = useState<'gradient' | 'solid'>('gradient');
   const [color1, setColor1] = useState(PRESET_COLORS[0].color1);
   const [color2, setColor2] = useState(PRESET_COLORS[0].color2);
   const [lightColor1, setLightColor1] = useState(PRESET_COLORS[0].lightColor1);
@@ -753,92 +754,168 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
                 </div>
               </div>
 
-              {/* 預設主題漸層色 */}
-              <div className="space-y-2">
-                <span className="block text-xs font-medium text-text-sub">{t.presetColors}</span>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {PRESET_COLORS.map((pc) => {
-                    const colorName = lang === 'zh-TW' ? pc.nameZh : pc.name;
-                    return (
-                      <button
-                        key={pc.id}
-                        type="button"
-                        onClick={() => {
-                          setColor1(pc.color1);
-                          setColor2(pc.color2);
-                          setLightColor1(pc.lightColor1);
-                          setLightColor2(pc.lightColor2);
-                          setAccentColor(pc.accent);
-                        }}
-                        className="p-2 rounded-xl border border-border-glass bg-select-bg flex flex-col items-center gap-1.5 hover:scale-105 transition-transform"
-                      >
-                        <div
-                          className="w-full h-5 rounded-md border border-border-glass/40 shadow-inner"
-                          style={{
-                            background:
-                              themeMode === 'dark'
-                                ? `linear-gradient(135deg, ${pc.color1}, ${pc.color2})`
-                                : `linear-gradient(135deg, ${pc.lightColor1}, ${pc.lightColor2})`,
-                          }}
-                        />
-                        <span className="text-[12px] text-text-sub truncate w-full text-center" title={colorName}>
-                          {colorName}
-                        </span>
-                      </button>
-                    );
-                  })}
+              {/* 畫布背景底色設定 */}
+              <div className="space-y-3 pt-3 border-t border-border-glass">
+                <div className="flex items-center justify-between">
+                  <span className="block text-xs font-semibold text-text-main">{t.bgColorSection}</span>
+                  <div className="flex items-center gap-1.5 p-0.5 rounded-lg bg-select-bg border border-border-glass">
+                    <button
+                      type="button"
+                      onClick={() => setBgFillType('gradient')}
+                      className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                        bgFillType === 'gradient'
+                          ? 'bg-[#6366f1] text-white font-semibold shadow-sm'
+                          : 'text-text-sub hover:text-text-main'
+                      }`}
+                    >
+                      {t.fillGradient.split(' ')[0]}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBgFillType('solid');
+                        if (themeMode === 'dark') {
+                          setColor2(color1);
+                        } else {
+                          setLightColor2(lightColor1);
+                        }
+                      }}
+                      className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                        bgFillType === 'solid'
+                          ? 'bg-[#6366f1] text-white font-semibold shadow-sm'
+                          : 'text-text-sub hover:text-text-main'
+                      }`}
+                    >
+                      {t.fillSolid.split(' ')[0]}
+                    </button>
+                  </div>
                 </div>
+
+                {bgFillType === 'gradient' ? (
+                  <>
+                    {/* 預設主題漸層色 */}
+                    <div className="space-y-2">
+                      <span className="block text-xs font-medium text-text-sub">{t.presetColors}</span>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        {PRESET_COLORS.map((pc) => {
+                          const colorName = lang === 'zh-TW' ? pc.nameZh : pc.name;
+                          return (
+                            <button
+                              key={pc.id}
+                              type="button"
+                              onClick={() => {
+                                setColor1(pc.color1);
+                                setColor2(pc.color2);
+                                setLightColor1(pc.lightColor1);
+                                setLightColor2(pc.lightColor2);
+                                setAccentColor(pc.accent);
+                              }}
+                              className="p-2 rounded-xl border border-border-glass bg-select-bg flex flex-col items-center gap-1.5 hover:scale-105 transition-transform"
+                            >
+                              <div
+                                className="w-full h-5 rounded-md border border-border-glass/40 shadow-inner"
+                                style={{
+                                  background:
+                                    themeMode === 'dark'
+                                      ? `linear-gradient(135deg, ${pc.color1}, ${pc.color2})`
+                                      : `linear-gradient(135deg, ${pc.lightColor1}, ${pc.lightColor2})`,
+                                }}
+                              />
+                              <span className="text-[12px] text-text-sub truncate w-full text-center" title={colorName}>
+                                {colorName}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 自訂雙色漸層選擇器 */}
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label htmlFor={colorPicker1Id} className="block text-[12px] text-text-sub mb-1">
+                          {t.gradientStartColor}
+                        </label>
+                        <input
+                          id={colorPicker1Id}
+                          type="color"
+                          value={themeMode === 'dark' ? color1 : lightColor1}
+                          onChange={(e) => {
+                            if (themeMode === 'dark') {
+                              setColor1(e.target.value);
+                            } else {
+                              setLightColor1(e.target.value);
+                            }
+                          }}
+                          className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={colorPicker2Id} className="block text-[12px] text-text-sub mb-1">
+                          {t.gradientEndColor}
+                        </label>
+                        <input
+                          id={colorPicker2Id}
+                          type="color"
+                          value={themeMode === 'dark' ? color2 : lightColor2}
+                          onChange={(e) => {
+                            if (themeMode === 'dark') {
+                              setColor2(e.target.value);
+                            } else {
+                              setLightColor2(e.target.value);
+                            }
+                          }}
+                          className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* 自訂單色純底選擇器 */
+                  <div className="pt-1">
+                    <label htmlFor={colorPicker1Id} className="block text-[12px] text-text-sub mb-1">
+                      {t.solidBgColor}
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        id={colorPicker1Id}
+                        type="color"
+                        value={themeMode === 'dark' ? color1 : lightColor1}
+                        onChange={(e) => {
+                          if (themeMode === 'dark') {
+                            setColor1(e.target.value);
+                            setColor2(e.target.value);
+                          } else {
+                            setLightColor1(e.target.value);
+                            setLightColor2(e.target.value);
+                          }
+                        }}
+                        className="w-16 h-10 rounded-lg cursor-pointer bg-transparent border border-border-glass"
+                      />
+                      <span className="text-xs font-mono px-3 py-2 rounded-lg bg-select-bg border border-border-glass text-text-main">
+                        {themeMode === 'dark' ? color1 : lightColor1}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* 自訂顏色選擇器 */}
-              <div className="grid grid-cols-3 gap-3 pt-2">
-                <div>
-                  <label htmlFor={colorPicker1Id} className="block text-[12px] text-text-sub mb-1">
-                    {t.gradientStartColor}
-                  </label>
-                  <input
-                    id={colorPicker1Id}
-                    type="color"
-                    value={themeMode === 'dark' ? color1 : lightColor1}
-                    onChange={(e) => {
-                      if (themeMode === 'dark') {
-                        setColor1(e.target.value);
-                      } else {
-                        setLightColor1(e.target.value);
-                      }
-                    }}
-                    className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
-                  />
-                </div>
-                <div>
-                  <label htmlFor={colorPicker2Id} className="block text-[12px] text-text-sub mb-1">
-                    {t.gradientEndColor}
-                  </label>
-                  <input
-                    id={colorPicker2Id}
-                    type="color"
-                    value={themeMode === 'dark' ? color2 : lightColor2}
-                    onChange={(e) => {
-                      if (themeMode === 'dark') {
-                        setColor2(e.target.value);
-                      } else {
-                        setLightColor2(e.target.value);
-                      }
-                    }}
-                    className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
-                  />
-                </div>
-                <div>
-                  <label htmlFor={accentPickerId} className="block text-[12px] text-text-sub mb-1">
-                    {t.accentColor}
-                  </label>
+              {/* 強調發光色 (Accent Color) */}
+              <div className="pt-3 border-t border-border-glass">
+                <label htmlFor={accentPickerId} className="block text-xs font-semibold text-text-main mb-1.5">
+                  {t.accentColor}
+                </label>
+                <div className="flex items-center gap-3">
                   <input
                     id={accentPickerId}
                     type="color"
                     value={accentColor}
                     onChange={(e) => setAccentColor(e.target.value)}
-                    className="w-full h-9 rounded-lg cursor-pointer bg-transparent border border-border-glass"
+                    className="w-16 h-10 rounded-lg cursor-pointer bg-transparent border border-border-glass"
                   />
+                  <span className="text-xs font-mono px-3 py-2 rounded-lg bg-select-bg border border-border-glass text-text-main">
+                    {accentColor}
+                  </span>
                 </div>
               </div>
 

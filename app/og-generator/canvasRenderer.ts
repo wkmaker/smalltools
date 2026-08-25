@@ -287,7 +287,7 @@ export function renderCanvas(params: DrawCanvasParams): void {
     }
 
     // 頁尾 (網址、作者與日期)
-    const footerY = pad + cardH - 35;
+    const footerY = pad + cardH - 44;
     ctx.fillStyle = secondaryTextColor;
     ctx.font = `600 16px ${fontPrimary}`;
     ctx.fillText(`${siteName}  •  ${author}  •  ${dateStr}`, innerPadX, footerY);
@@ -412,8 +412,8 @@ export function renderCanvas(params: DrawCanvasParams): void {
       curY = wrapText(ctx, subtitle, innerPadX, curY, cardW - Math.min(width, height) * 0.1, subFontSize * 1.45, 3);
     }
 
-    // 4. 底部資訊列 (Logo/頭像 + 作者 + 發布日期)
-    const footerY = pad + cardH - innerPadY * 0.45;
+    // 4. 底部資訊列 (Logo/頭像 + 作者 + 發布日期) - 提供充足底部安全留白
+    const footerY = pad + cardH - Math.max(innerPadY * 0.75, logoSize * 0.5 + 32);
     let textStartX = innerPadX;
 
     if (enableLogo) {

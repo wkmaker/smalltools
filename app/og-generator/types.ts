@@ -91,6 +91,11 @@ export interface OgTranslation {
   bgBlur: string;
   clearImage: string;
   styleSettings: string;
+  bgColorSection: string;
+  bgFillType: string;
+  fillGradient: string;
+  fillSolid: string;
+  solidBgColor: string;
   themeMode: string;
   themeDark: string;
   themeLight: string;
