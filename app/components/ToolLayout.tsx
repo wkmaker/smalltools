@@ -171,7 +171,7 @@ export default function ToolLayout({
         backdrop-blur-[24px] [-webkit-backdrop-filter:blur(24px)]
         shadow-[var(--glass-shadow)]
         px-12 pt-16 pb-14
-        max-sm:px-5 max-sm:pt-12 max-sm:pb-10
+        max-md:pt-20 max-sm:px-5 max-sm:pt-20 max-sm:pb-10
         max-[768px]:max-w-[98%]
         transition-[max-width,width,padding,margin,border-radius] duration-500 ease-in-out
         ${containerClassName}
@@ -196,10 +196,10 @@ export default function ToolLayout({
           }}
           title={isEn ? 'Search tools (Cmd+K / Ctrl+K)' : '搜尋小工具 (Cmd+K / Ctrl+K)'}
           aria-label={isEn ? 'Search tools (Cmd+K / Ctrl+K)' : '搜尋小工具 (Cmd+K / Ctrl+K)'}
-          className="inline-flex items-center gap-1.5 px-3 h-[42px] rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 backdrop-blur-md text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 transition-all text-xs font-medium cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 px-3 max-sm:w-[42px] max-sm:px-0 h-[42px] rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 backdrop-blur-md text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 transition-all text-xs font-medium cursor-pointer"
         >
           <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+            <path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5S11.99 14 9.5 14z" />
           </svg>
           <span className="hidden sm:inline">{isEn ? 'Search' : '搜尋'}</span>
           <kbd className="hidden sm:inline px-1.5 py-0.5 text-xs font-mono rounded bg-black/[.04] dark:bg-white/[.08] border border-black/10 dark:border-white/10 text-text-sub">
@@ -209,25 +209,28 @@ export default function ToolLayout({
         {resolvedLangSwitchHref && !extraHeaderControls && (
           <Link
             href={resolvedLangSwitchHref}
+            prefetch={false}
             title={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
             aria-label={isEn ? 'Switch to Traditional Chinese' : '切換至英文版'}
-            className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 text-xs font-semibold rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 select-none"
+            className="relative inline-flex items-center justify-center gap-1.5 h-[42px] px-3.5 max-sm:px-2.5 text-xs font-semibold rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 backdrop-blur-md transition-all duration-300 ease-out hover:scale-105 active:scale-95 select-none"
           >
             <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
               <circle cx="12" cy="12" r="10" />
               <line x1="2" y1="12" x2="22" y2="12" />
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
             </svg>
-            <span>{resolvedLangSwitchLabel}</span>
+            <span className="max-sm:hidden">{resolvedLangSwitchLabel}</span>
+            <span className="hidden max-sm:inline font-bold">{isEn ? '中' : 'EN'}</span>
           </Link>
         )}
         {extraHeaderControls}
-        {!hideThemeToggle && <ThemeToggle />}
+        {!hideThemeToggle && <ThemeToggle className="max-sm:w-[42px] max-sm:px-0" />}
       </div>
 
       {/* ── 返回按鈕 ── */}
       <Link
         href={targetBackHref}
+        prefetch={false}
         title={backTitle || backText || (isEn ? 'Back to Home' : '返回首頁')}
         aria-label={backTitle || backText || (isEn ? 'Back to Home' : '返回首頁')}
         onClick={(e) => {
@@ -248,7 +251,7 @@ export default function ToolLayout({
           absolute top-6 left-6 z-[11]
           inline-flex items-center gap-1.5 text-xs font-semibold
           h-[42px] rounded-xl
-          ${compactBackBtn ? 'w-[42px] px-0 justify-center' : 'px-3.5'}
+          ${compactBackBtn ? 'w-[42px] px-0 justify-center' : 'px-3.5 max-sm:w-[42px] max-sm:px-0 max-sm:justify-center'}
           bg-white/[.06] border border-white/10 backdrop-blur-md
           text-text-sub no-underline select-none
           transition-all duration-300 ease-out
@@ -269,7 +272,7 @@ export default function ToolLayout({
           className="transition-transform duration-300 group-hover:-translate-x-1 flex-shrink-0">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
         </svg>
-        {!compactBackBtn && <span>{backText || (isEn ? 'Back to Home' : '返回首頁')}</span>}
+        {!compactBackBtn && <span className="max-sm:hidden">{backText || (isEn ? 'Back to Home' : '返回首頁')}</span>}
       </Link>
 
       {/* ── 主標題 + 描述 (若 hideHeader 為 false 則渲染) ── */}
@@ -278,12 +281,12 @@ export default function ToolLayout({
           {/* ── 階層麵包屑導航列 ── */}
           <nav
             aria-label="Breadcrumb"
-            className="tool-breadcrumb flex items-center justify-center gap-1.5 text-xs text-text-sub mb-3 flex-wrap select-none"
+            className="tool-breadcrumb flex items-center justify-center gap-x-1.5 gap-y-1 text-xs text-text-sub mb-3 flex-wrap select-none leading-relaxed text-center"
           >
             {resolvedBreadcrumbs.map((crumb, idx) => {
               const isLast = idx === resolvedBreadcrumbs.length - 1;
               return (
-                <div key={crumb.url + idx} className="inline-flex items-center gap-1.5">
+                <div key={crumb.url + idx} className="inline-flex items-center gap-1.5 max-w-full">
                   {idx > 0 && (
                     <svg
                       viewBox="0 0 24 24"
@@ -300,13 +303,14 @@ export default function ToolLayout({
                     </svg>
                   )}
                   {isLast ? (
-                    <span className="font-medium text-text-main" aria-current="page">
+                    <span className="font-medium text-text-main break-words" aria-current="page">
                       {crumb.name}
                     </span>
                   ) : (
                     <Link
                       href={crumb.url}
-                      className="hover:text-text-main transition-colors no-underline text-text-sub inline-flex items-center gap-1"
+                      prefetch={false}
+                      className="hover:text-text-main transition-colors no-underline text-text-sub inline-flex items-center gap-1 py-0.5"
                     >
                       {idx === 0 && (
                         <svg viewBox="0 0 24 24" width={13} height={13} fill="currentColor" className="flex-shrink-0">

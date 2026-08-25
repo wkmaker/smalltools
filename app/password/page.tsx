@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '高強度亂數密碼產生器 - 免費線上 CSPRNG 安全密碼與 Passphrase 生成工具',
     description: '安全純前端亂數密碼產生器，支援強度熵值評估與自訂字元組合。',
     url: 'https://tools.cjkuo.net/password/',
-    images: [
-      {
-        url: '/img/og-password.webp',
-        width: 1200,
-        height: 630,
-        alt: '安全密碼生成器 - CSPRNG 強隨機數密碼工具',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '高強度亂數密碼產生器 - 免費線上 CSPRNG 安全密碼與 Passphrase 生成工具',
     description: '安全純前端亂數密碼產生器，支援強度熵值評估與自訂字元組合。',
-    images: ['/img/og-password.webp'],
   },
 };
 

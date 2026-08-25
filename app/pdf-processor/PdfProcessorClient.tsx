@@ -803,7 +803,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-1.5 text-white backdrop-blur-[2px]">
                         <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor">
-                          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                          <path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5S11.99 14 9.5 14z" />
                         </svg>
                         <span className="text-xs font-bold tracking-wide">{t.clickToZoom}</span>
                       </div>

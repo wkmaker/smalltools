@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'DNS HTTPS Record (Type 65) Generator & Tutorial',
     description: 'Interactive generator for standard RFC 9460 DNS HTTPS (Type 65) records with provider guides.',
     url: 'https://tools.cjkuo.net/https-dns-generator/en/',
-    images: [
-      {
-        url: '/img/og-https-dns-generator.webp',
-        width: 1200,
-        height: 630,
-        alt: 'DNS HTTPS Record Generator - Type 65 / RFC 9460 Builder',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'DNS HTTPS Record (Type 65) Generator & Tutorial',
     description: 'Interactive generator for standard RFC 9460 DNS HTTPS (Type 65) records with provider guides.',
-    images: ['/img/og-https-dns-generator.webp'],
   },
 };
 

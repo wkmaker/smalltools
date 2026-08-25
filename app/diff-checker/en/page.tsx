@@ -20,20 +20,11 @@ export const metadata: Metadata = {
     title: 'Document Diff Checker - Free Online Code & Text Comparison Tool',
     description: '100% private and secure text diff tool supporting Split and Unified view modes.',
     url: 'https://tools.cjkuo.net/diff-checker/en/',
-    images: [
-      {
-        url: '/img/og-diff-checker.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Document Diff Checker - Free Online Code & Text Comparison',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Document Diff Checker - Free Online Code & Text Comparison Tool',
     description: '100% private and secure text diff tool supporting Split and Unified view modes.',
-    images: ['/img/og-diff-checker.webp'],
   },
 };
 

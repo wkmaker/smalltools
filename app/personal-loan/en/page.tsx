@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Personal Loan Calculator - Free Online Loan & APR Solver',
     description: 'Calculate monthly personal loan payments, total interest, and effective APR.',
     url: 'https://tools.cjkuo.net/personal-loan/en/',
-    images: [
-      {
-        url: '/img/og-personal-loan.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Personal Loan Calculator - APR & Amortization Schedule',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Personal Loan Calculator - Free Online Loan & APR Solver',
     description: 'Calculate monthly personal loan payments, total interest, and effective APR.',
-    images: ['/img/og-personal-loan.webp'],
   },
 };
 

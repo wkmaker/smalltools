@@ -21,21 +21,12 @@ export const metadata: Metadata = {
     description:
       'Professional client-side HAR privacy scrubber! Strip cookies, tokens, API keys, and heavy base64 media with 100% local processing.',
     url: 'https://tools.cjkuo.net/har-cleaner/en/',
-    images: [
-      {
-        url: '/img/og-har-cleaner.webp',
-        width: 1200,
-        height: 630,
-        alt: 'HAR Sanitizer & Privacy Cleaner - Redact Sensitive Packet Data',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'HAR Sensitive Data Sanitizer - Free Online HTTP Archive Privacy Scrubber & Size Reducer',
     description:
       'Professional client-side HAR privacy scrubber! Strip cookies, tokens, API keys, and heavy base64 media with 100% local processing.',
-    images: ['/img/og-har-cleaner.webp'],
   },
 };
 

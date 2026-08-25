@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '線上目標計時器 - 免費倒數計時與時間累計工具',
     description: '唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。',
     url: 'https://tools.cjkuo.net/time/',
-    images: [
-      {
-        url: '/img/og-time.webp',
-        width: 1200,
-        height: 630,
-        alt: '線上目標計時器 - 免費倒數計時與時間累計',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '線上目標計時器 - 免費倒數計時與時間累計工具',
     description: '唯美精緻的線上目標計時器與倒數工具，支援自訂事件名稱、顯示格式選擇與全螢幕展示。',
-    images: ['/img/og-time.webp'],
   },
 };
 

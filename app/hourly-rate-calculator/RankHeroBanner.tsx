@@ -764,6 +764,7 @@ export default function RankHeroBanner({
       <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border-glass">
         <Link
           href={`/hourly-rate-calculator/${isEn ? 'en/' : ''}?${queryParamsString}`}
+          prefetch={false}
           className={`${styles.actionBtn} text-sm flex items-center gap-2`}
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">

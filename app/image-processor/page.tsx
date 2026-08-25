@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '萬能圖片處理大師 - 免費線上圖片裁切、壓縮、尺寸縮放與 WebP 批次轉檔工具',
     description: '純前端萬能圖片處理工具，支援裁切、尺寸調整與高速壓縮轉檔。',
     url: 'https://tools.cjkuo.net/image-processor/',
-    images: [
-      {
-        url: '/img/og-image-processor.webp',
-        width: 1200,
-        height: 630,
-        alt: '萬能圖片處理大師 - 免費線上圖片裁切與壓縮',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '萬能圖片處理大師 - 免費線上圖片裁切、壓縮、尺寸縮放與 WebP 批次轉檔工具',
     description: '純前端萬能圖片處理工具，支援裁切、尺寸調整與高速壓縮轉檔。',
-    images: ['/img/og-image-processor.webp'],
   },
 };
 

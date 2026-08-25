@@ -47,6 +47,7 @@ export default function NotFound() {
           {/* 返回首頁按鈕 */}
           <Link
             href="/"
+            prefetch={false}
             className="mt-2 bg-[#ff0055] hover:bg-[#e0004c] rounded-xl border border-[#ff0055] px-7 py-3 text-xs sm:text-sm font-bold text-white transition-all cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(255,0,85,0.6)] flex items-center gap-2"
           >
             <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
@@ -97,6 +98,7 @@ export default function NotFound() {
                     <Link
                       key={tool.href}
                       href={tool.href}
+                      prefetch={false}
                       className="group flex items-center gap-2.5 p-2.5 rounded-xl bg-select-bg border border-border-glass transition-all hover:scale-[1.02] hover:border-[#ff0055]/40 hover:shadow-sm"
                     >
                       <div className="shrink-0 transition-transform group-hover:scale-110">

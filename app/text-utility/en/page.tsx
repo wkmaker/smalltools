@@ -20,20 +20,11 @@ export const metadata: Metadata = {
     title: 'Text Utility & Stats - Free Online Character Counter, Case Converter & Text Formatter',
     description: 'Instant text case conversion, space removal, and multi-dimensional text statistics.',
     url: 'https://tools.cjkuo.net/text-utility/en/',
-    images: [
-      {
-        url: '/img/og-text-utility.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Text Utility & Stats - Free Online Character Counter & Formatter',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Text Utility & Stats - Free Online Character Counter, Case Converter & Text Formatter',
     description: 'Instant text case conversion, space removal, and multi-dimensional text statistics.',
-    images: ['/img/og-text-utility.webp'],
   },
 };
 

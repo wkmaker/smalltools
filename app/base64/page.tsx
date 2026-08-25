@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Base64 編碼解碼器 - 免費線上文字與 URL 安全 Base64 轉換工具',
     description: '極速純前端 Base64 編解碼工具，支援中文字元 UTF-8 與 URL-Safe 模式。',
     url: 'https://tools.cjkuo.net/base64/',
-    images: [
-      {
-        url: '/img/og-base64.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Base64 編碼解碼器 - 免費線上 Base64 轉換',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Base64 編碼解碼器 - 免費線上文字與 URL 安全 Base64 轉換工具',
     description: '極速純前端 Base64 編解碼工具，支援中文字元 UTF-8 與 URL-Safe 模式。',
-    images: ['/img/og-base64.webp'],
   },
 };
 

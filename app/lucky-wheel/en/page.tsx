@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Lucky Wheel & Slot Spinner - Free Online Random Picker & Prize Draw',
     description: 'Free online prize wheel and slot spinner with customizable items, probability weights, physics rotation animation, sound effects, and TXT import/export.',
     url: 'https://tools.cjkuo.net/lucky-wheel/en/',
-    images: [
-      {
-        url: '/img/og-lucky-wheel.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Lucky Wheel & Slot Spinner - Free Online Random Picker & Prize Draw',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Lucky Wheel & Slot Spinner - Free Online Random Picker & Prize Draw',
     description: 'Free online prize wheel and slot spinner with customizable items, probability weights, physics rotation animation, sound effects, and TXT import/export.',
-    images: ['/img/og-lucky-wheel.webp'],
   },
 };
 

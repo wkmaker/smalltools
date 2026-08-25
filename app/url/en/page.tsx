@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'URL Encoder & Decoder - Free Online encodeURIComponent Tool',
     description: 'Fast client-side URL encoder and decoder supporting Unicode & query parameter breakdown.',
     url: 'https://tools.cjkuo.net/url/en/',
-    images: [
-      {
-        url: '/img/og-url.webp',
-        width: 1200,
-        height: 630,
-        alt: 'URL Encoder & Decoder - Free Online URL Converter',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'URL Encoder & Decoder - Free Online encodeURIComponent Tool',
     description: 'Fast client-side URL encoder and decoder supporting Unicode & query parameter breakdown.',
-    images: ['/img/og-url.webp'],
   },
 };
 

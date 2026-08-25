@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: '車貸試算器 - 免費線上汽車貸款月付金與利息計算機',
     description: '精算車貸月付金與利息總額，提供完整月度還款本金與利息攤還明細表。',
     url: 'https://tools.cjkuo.net/car-loan/',
-    images: [
-      {
-        url: '/img/og-car-loan.webp',
-        width: 1200,
-        height: 630,
-        alt: '車貸試算器 - 汽車貸款與實質年利率試算',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '車貸試算器 - 免費線上汽車貸款月付金與利息計算機',
     description: '精算車貸月付金與利息總額，提供完整月度還款本金與利息攤還明細表。',
-    images: ['/img/og-car-loan.webp'],
   },
 };
 
@@ -89,4 +80,3 @@ export default function CarLoanPage() {
     </>
   );
 }
-

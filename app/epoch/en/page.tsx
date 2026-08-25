@@ -19,20 +19,11 @@ export const metadata: Metadata = {
     title: 'Epoch Timestamp Converter - Free Online Unix Timestamp & Date Converter',
     description: 'Free online Unix Epoch timestamp converter with multi-timezone comparison and history.',
     url: 'https://tools.cjkuo.net/epoch/en/',
-    images: [
-      {
-        url: '/img/og-epoch.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Epoch Timestamp Converter - Unix Time & Timezone Conversion',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Epoch Timestamp Converter - Free Online Unix Timestamp & Date Converter',
     description: 'Free online Unix Epoch timestamp converter with multi-timezone comparison and history.',
-    images: ['/img/og-epoch.webp'],
   },
 };
 
