@@ -64,15 +64,26 @@ PRESET_COLORS.forEach((color, idx) => {
   if (
     !color.id ||
     !color.name ||
+    !color.nameZh ||
     !hexColorRegex.test(color.color1) ||
     !hexColorRegex.test(color.color2) ||
+    !hexColorRegex.test(color.lightColor1) ||
+    !hexColorRegex.test(color.lightColor2) ||
     !hexColorRegex.test(color.accent)
   ) {
     allColorsValid = false;
     console.error(`   PRESET_COLORS[${idx}] 格式錯誤:`, color);
   }
 });
-assert(allColorsValid, 'PRESET_COLORS 每一組均包含合法之 id, name, color1, color2 與 accent 十六進位色碼');
+assert(allColorsValid, 'PRESET_COLORS 每一組均包含合法之 id, name, nameZh, color1, color2, lightColor1, lightColor2 與 accent 十六進位色碼');
+
+const expectedColorIds = ['slate', 'cyber', 'emerald', 'sunset', 'amber', 'sky'];
+const actualColorIds = (PRESET_COLORS || []).map((c) => c.id);
+assert(
+  expectedColorIds.every((id) => actualColorIds.includes(id)),
+  'PRESET_COLORS 必須精確包含 slate, cyber, emerald, sunset, amber, sky 6 大主題配色',
+  `實際包含: [${actualColorIds.join(', ')}]`
+);
 
 // 2. 測試 PRESET_ICONS 常數
 assert(

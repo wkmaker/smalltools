@@ -8,8 +8,11 @@ export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'svg';
 export interface PresetColor {
   id: string;
   name: string;
+  nameZh: string;
   color1: string;
   color2: string;
+  lightColor1: string;
+  lightColor2: string;
   accent: string;
 }
 
@@ -137,6 +140,8 @@ export interface DrawCanvasParams {
   dateStr: string;
   color1: string;
   color2: string;
+  lightColor1?: string;
+  lightColor2?: string;
   accentColor: string;
   enableLogo: boolean;
   enableBgImage: boolean;

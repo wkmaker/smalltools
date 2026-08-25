@@ -82,6 +82,8 @@ export function renderCanvas(params: DrawCanvasParams): void {
     dateStr,
     color1,
     color2,
+    lightColor1,
+    lightColor2,
     accentColor,
     enableLogo,
     enableBgImage,
@@ -109,8 +111,8 @@ export function renderCanvas(params: DrawCanvasParams): void {
   }
 
   const isDark = themeMode === 'dark';
-  const bgColor1 = isDark ? color1 : '#ffffff';
-  const bgColor2 = isDark ? color2 : '#f8fafc';
+  const bgColor1 = isDark ? color1 : (lightColor1 || '#f8fafc');
+  const bgColor2 = isDark ? color2 : (lightColor2 || '#e2e8f0');
   const primaryTextColor = isDark ? '#ffffff' : '#0f172a';
   const secondaryTextColor = isDark ? '#94a3b8' : '#475569';
   const glassCardBg = isDark ? 'rgba(15, 23, 42, 0.65)' : 'rgba(255, 255, 255, 0.85)';

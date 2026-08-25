@@ -48,17 +48,31 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('og');
   const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
   const [fontFamily, setFontStyle] = useState<FontStyle>('sans');
-  const [title, setTitle] = useState('How to Build Lightning-Fast Web Applications');
-  const [subtitle, setSubtitle] = useState('Explore modern frontend architecture, state synchronization, and zero-latency rendering techniques.');
-  const [tag, setTag] = useState('NEXT.JS · ARCHITECTURE');
+  const [title, setTitle] = useState(
+    lang === 'zh-TW'
+      ? '深入解析 Next.js 16 App Router 高效架構'
+      : 'How to Build Lightning-Fast Web Applications'
+  );
+  const [subtitle, setSubtitle] = useState(
+    lang === 'zh-TW'
+      ? '掌握零延遲渲染、伺服器組件與流體式狀態同步的架構實踐。'
+      : 'Explore modern frontend architecture, state synchronization, and zero-latency rendering techniques.'
+  );
+  const [tag, setTag] = useState(
+    lang === 'zh-TW' ? '開發者工具箱 · 精選推薦' : 'NEXT.JS · ARCHITECTURE'
+  );
   const [siteName, setSiteName] = useState('tools.cjkuo.net');
   const [author, setAuthor] = useState('C.J. Kuo');
-  const [dateStr, setDateStr] = useState('2026-08-25 · 5 min read');
+  const [dateStr, setDateStr] = useState(
+    lang === 'zh-TW' ? '2026-08-25 · 5 分鐘閱讀' : '2026-08-25 · 5 min read'
+  );
 
   // 配色狀態
-  const [color1, setColor1] = useState('#0f172a');
-  const [color2, setColor2] = useState('#1e1b4b');
-  const [accentColor, setAccentColor] = useState('#6366f1');
+  const [color1, setColor1] = useState(PRESET_COLORS[0].color1);
+  const [color2, setColor2] = useState(PRESET_COLORS[0].color2);
+  const [lightColor1, setLightColor1] = useState(PRESET_COLORS[0].lightColor1);
+  const [lightColor2, setLightColor2] = useState(PRESET_COLORS[0].lightColor2);
+  const [accentColor, setAccentColor] = useState(PRESET_COLORS[0].accent);
 
   // 媒體與圖示
   const [enableLogo, setEnableLogo] = useState<boolean>(true);
@@ -108,38 +122,58 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
     if (presetKey === 'tech') {
       setTitle(lang === 'zh-TW' ? '深入解析 Next.js 16 App Router 高效架構' : 'Deep Dive: Next.js 16 App Router Architecture');
       setSubtitle(lang === 'zh-TW' ? '掌握零延遲渲染、伺服器組件與流體式狀態同步的架構實踐。' : 'Master zero-latency rendering, server components, and fluid state management.');
-      setTag('DEVELOPER · ARCHITECTURE');
+      setTag(lang === 'zh-TW' ? '架構思維 · 技術專欄' : 'DEVELOPER · ARCHITECTURE');
+      setAuthor('C.J. Kuo');
+      setDateStr(lang === 'zh-TW' ? '2026-08-25 · 5 分鐘閱讀' : '2026-08-25 · 5 min read');
       setTemplate('minimal');
-      setColor1('#0f172a');
-      setColor2('#1e1b4b');
-      setAccentColor('#6366f1');
+      const slate = PRESET_COLORS.find((c) => c.id === 'slate') || PRESET_COLORS[0];
+      setColor1(slate.color1);
+      setColor2(slate.color2);
+      setLightColor1(slate.lightColor1);
+      setLightColor2(slate.lightColor2);
+      setAccentColor(slate.accent);
       setSelectedIconId('code');
     } else if (presetKey === 'product') {
       setTitle(lang === 'zh-TW' ? 'Smalltools 2.0 震撼發布：開源極致工具箱' : 'Smalltools 2.0 Released: The Ultimate Open-Source Suite');
       setSubtitle(lang === 'zh-TW' ? '超過 28 款純前端強大工具，無廣告、無後端、100% 隱私安全。' : 'Over 28 powerful client-side utilities with zero tracking and pure speed.');
-      setTag('PRODUCT LAUNCH · 2026');
+      setTag(lang === 'zh-TW' ? '產品發布 · 全新改版' : 'PRODUCT LAUNCH · 2026');
+      setAuthor(lang === 'zh-TW' ? '產品團隊' : 'Product Team');
+      setDateStr(lang === 'zh-TW' ? '2026-08-25 · 重大更新' : '2026-08-25 · Major Update');
       setTemplate('gradient');
-      setColor1('#022c22');
-      setColor2('#064e3b');
-      setAccentColor('#10b981');
+      const emerald = PRESET_COLORS.find((c) => c.id === 'emerald') || PRESET_COLORS[2];
+      setColor1(emerald.color1);
+      setColor2(emerald.color2);
+      setLightColor1(emerald.lightColor1);
+      setLightColor2(emerald.lightColor2);
+      setAccentColor(emerald.accent);
       setSelectedIconId('rocket');
     } else if (presetKey === 'devlog') {
       setTitle(lang === 'zh-TW' ? '工程師的效能調優手記：Canvas 與 WebAssembly' : 'Engineer DevLog: WebAssembly & Canvas Performance');
       setSubtitle(lang === 'zh-TW' ? '如何利用非阻塞時間片與記憶體零拷貝技術打造 60 FPS 極速體驗。' : 'Unlocking 60 FPS with non-blocking slicing and zero-copy indexing.');
-      setTag('ENGINEERING · PERFORMANCE');
+      setTag(lang === 'zh-TW' ? '工程日誌 · 效能調校' : 'ENGINEERING · PERFORMANCE');
+      setAuthor(lang === 'zh-TW' ? '技術架構師' : 'Lead Architect');
+      setDateStr(lang === 'zh-TW' ? '2026-08-25 · 效能專欄' : '2026-08-25 · Performance');
       setTemplate('split');
-      setColor1('#082f49');
-      setColor2('#0c4a6e');
-      setAccentColor('#0284c7');
+      const sky = PRESET_COLORS.find((c) => c.id === 'sky') || PRESET_COLORS[5];
+      setColor1(sky.color1);
+      setColor2(sky.color2);
+      setLightColor1(sky.lightColor1);
+      setLightColor2(sky.lightColor2);
+      setAccentColor(sky.accent);
       setSelectedIconId('terminal');
     } else {
       setTitle(lang === 'zh-TW' ? '重大更新：全站無障礙 WCAG 2.1 AA 與雙主題特化' : 'Major Update: WCAG 2.1 AA & Fluid Dual Themes');
       setSubtitle(lang === 'zh-TW' ? '重塑視覺體驗，為所有使用者提供高對比度且細緻的毛玻璃美學。' : 'Reimagined visual experience with high contrast glassmorphism design.');
-      setTag('ANNOUNCEMENT · DESIGN');
+      setTag(lang === 'zh-TW' ? '趨勢觀察 · 深度報告' : 'ANNOUNCEMENT · DESIGN');
+      setAuthor(lang === 'zh-TW' ? '編輯部精選' : 'Editorial Team');
+      setDateStr(lang === 'zh-TW' ? '2026-08-25 · 特刊專題' : '2026-08-25 · Special Report');
       setTemplate('impact');
-      setColor1('#31102e');
-      setColor2('#4a044e');
-      setAccentColor('#f43f5e');
+      const sunset = PRESET_COLORS.find((c) => c.id === 'sunset') || PRESET_COLORS[3];
+      setColor1(sunset.color1);
+      setColor2(sunset.color2);
+      setLightColor1(sunset.lightColor1);
+      setLightColor2(sunset.lightColor2);
+      setAccentColor(sunset.accent);
       setSelectedIconId('sparkles');
     }
   };
@@ -190,6 +224,8 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
       dateStr,
       color1,
       color2,
+      lightColor1,
+      lightColor2,
       accentColor,
       enableLogo,
       enableBgImage,
@@ -214,6 +250,8 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
     dateStr,
     color1,
     color2,
+    lightColor1,
+    lightColor2,
     accentColor,
     enableLogo,
     enableBgImage,
@@ -719,24 +757,36 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
               <div className="space-y-2">
                 <span className="block text-xs font-medium text-text-sub">{t.presetColors}</span>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {PRESET_COLORS.map((pc) => (
-                    <button
-                      key={pc.id}
-                      type="button"
-                      onClick={() => {
-                        setColor1(pc.color1);
-                        setColor2(pc.color2);
-                        setAccentColor(pc.accent);
-                      }}
-                      className="p-2 rounded-xl border border-border-glass bg-select-bg flex flex-col items-center gap-1.5 hover:scale-105 transition-transform"
-                    >
-                      <div
-                        className="w-full h-5 rounded-md"
-                        style={{ background: `linear-gradient(135deg, ${pc.color1}, ${pc.color2})` }}
-                      />
-                      <span className="text-[12px] text-text-sub truncate w-full text-center">{pc.name.split(' ')[0]}</span>
-                    </button>
-                  ))}
+                  {PRESET_COLORS.map((pc) => {
+                    const colorName = lang === 'zh-TW' ? pc.nameZh : pc.name;
+                    return (
+                      <button
+                        key={pc.id}
+                        type="button"
+                        onClick={() => {
+                          setColor1(pc.color1);
+                          setColor2(pc.color2);
+                          setLightColor1(pc.lightColor1);
+                          setLightColor2(pc.lightColor2);
+                          setAccentColor(pc.accent);
+                        }}
+                        className="p-2 rounded-xl border border-border-glass bg-select-bg flex flex-col items-center gap-1.5 hover:scale-105 transition-transform"
+                      >
+                        <div
+                          className="w-full h-5 rounded-md border border-border-glass/40 shadow-inner"
+                          style={{
+                            background:
+                              themeMode === 'dark'
+                                ? `linear-gradient(135deg, ${pc.color1}, ${pc.color2})`
+                                : `linear-gradient(135deg, ${pc.lightColor1}, ${pc.lightColor2})`,
+                          }}
+                        />
+                        <span className="text-[12px] text-text-sub truncate w-full text-center" title={colorName}>
+                          {colorName}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
