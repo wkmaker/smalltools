@@ -85,6 +85,10 @@ const TRANSLATIONS = {
     dateField: '附註 / 發布日期 (Date / Note)',
     datePlaceholder: '例: 2026-08-25 · 5 分鐘閱讀',
     mediaSettings: '媒體與圖示設定',
+    logoSectionTitle: 'Logo 與頭像圖示',
+    enableLogo: '顯示 Logo / 圖示',
+    logoEnabled: '已開啟',
+    logoDisabled: '已關閉 (隱藏)',
     logoUpload: '自訂 Logo / 頭像',
     logoUploadHint: '點擊或拖曳上傳 PNG, JPG, SVG, WebP',
     logoShape: 'Logo 形狀',
@@ -185,6 +189,10 @@ const TRANSLATIONS = {
     dateField: 'Note / Publish Date',
     datePlaceholder: 'e.g. 2026-08-25 · 5 min read',
     mediaSettings: 'Media & Icon Settings',
+    logoSectionTitle: 'Logo & Avatar Icon',
+    enableLogo: 'Display Logo / Icon',
+    logoEnabled: 'Enabled',
+    logoDisabled: 'Disabled (Hidden)',
     logoUpload: 'Custom Logo / Avatar',
     logoUploadHint: 'Click or drag & drop PNG, JPG, SVG, WebP',
     logoShape: 'Logo Shape',
@@ -291,6 +299,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
   const [accentColor, setAccentColor] = useState('#6366f1');
 
   // Media
+  const [enableLogo, setEnableLogo] = useState<boolean>(true);
   const [logoImage, setLogoImage] = useState<HTMLImageElement | null>(null);
   const [selectedIconId, setSelectedIconId] = useState<string>('code');
   const [logoShape, setLogoShape] = useState<LogoShape>('rounded');
@@ -735,44 +744,48 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
 
       // 4. Bottom Footer Bar (Logo + Author + Date)
       const footerY = pad + cardH - innerPadY * 0.45;
-      const logoX = innerPadX;
-      const logoY = footerY - logoSize / 2;
+      let textStartX = innerPadX;
 
-      // Draw Logo or Preset Icon
-      if (logoImage) {
-        ctx.save();
-        if (logoShape === 'circle') {
-          ctx.beginPath();
-          ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
-          ctx.clip();
-        } else if (logoShape === 'rounded') {
+      if (enableLogo) {
+        const logoX = innerPadX;
+        const logoY = footerY - logoSize / 2;
+
+        // Draw Logo or Preset Icon
+        if (logoImage) {
+          ctx.save();
+          if (logoShape === 'circle') {
+            ctx.beginPath();
+            ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
+            ctx.clip();
+          } else if (logoShape === 'rounded') {
+            drawRoundedRect(ctx, logoX, logoY, logoSize, logoSize, 12);
+            ctx.clip();
+          }
+          ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
+          ctx.restore();
+        } else {
+          // Draw Built-in Vector Icon Box
           drawRoundedRect(ctx, logoX, logoY, logoSize, logoSize, 12);
-          ctx.clip();
-        }
-        ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
-        ctx.restore();
-      } else {
-        // Draw Built-in Vector Icon Box
-        drawRoundedRect(ctx, logoX, logoY, logoSize, logoSize, 12);
-        ctx.fillStyle = accentColor + (isDark ? '33' : '20');
-        ctx.fill();
-        ctx.strokeStyle = accentColor + '60';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+          ctx.fillStyle = accentColor + (isDark ? '33' : '20');
+          ctx.fill();
+          ctx.strokeStyle = accentColor + '60';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
 
-        const iconObj = PRESET_ICONS.find((i) => i.id === selectedIconId) || PRESET_ICONS[0];
-        ctx.save();
-        ctx.translate(logoX + logoSize * 0.2, logoY + logoSize * 0.2);
-        const scale = (logoSize * 0.6) / 24;
-        ctx.scale(scale, scale);
-        ctx.fillStyle = accentColor;
-        const path2d = new Path2D(iconObj.path);
-        ctx.fill(path2d);
-        ctx.restore();
+          const iconObj = PRESET_ICONS.find((i) => i.id === selectedIconId) || PRESET_ICONS[0];
+          ctx.save();
+          ctx.translate(logoX + logoSize * 0.2, logoY + logoSize * 0.2);
+          const scale = (logoSize * 0.6) / 24;
+          ctx.scale(scale, scale);
+          ctx.fillStyle = accentColor;
+          const path2d = new Path2D(iconObj.path);
+          ctx.fill(path2d);
+          ctx.restore();
+        }
+        textStartX = logoX + logoSize + 18;
       }
 
-      // Author & Date beside Logo
-      const textStartX = logoX + logoSize + 18;
+      // Author & Date
       ctx.fillStyle = primaryTextColor;
       ctx.font = `700 18px ${fontPrimary}`;
       ctx.fillText(author, textStartX, footerY - 4);
@@ -795,6 +808,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
     color1,
     color2,
     accentColor,
+    enableLogo,
     logoImage,
     selectedIconId,
     logoShape,
@@ -1090,101 +1104,123 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
 
               {/* Logo Section */}
               <div className="space-y-3">
-                <span className="block text-sm font-medium text-text-sub">{t.logoUpload}</span>
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (e.dataTransfer.files?.[0]) handleLogoUpload(e.dataTransfer.files[0]);
-                  }}
-                  className={`p-4 rounded-xl text-center cursor-pointer ${styles.dropzone}`}
-                  onClick={() => document.getElementById(logoUploadId)?.click()}
-                >
-                  <input
-                    id={logoUploadId}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]);
-                    }}
-                  />
-                  <div className="text-sm font-medium text-text-main">
-                    {logoImage ? '已載入自訂 Logo (點擊更換)' : t.logoUploadHint}
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="block text-sm font-medium text-text-sub">{t.logoSectionTitle}</span>
+                  <button
+                    type="button"
+                    onClick={() => setEnableLogo(!enableLogo)}
+                    className={`px-2.5 py-1 text-xs rounded-lg border transition-all ${
+                      enableLogo
+                        ? 'border-[#6366f1] bg-[#6366f1]/20 text-text-main font-semibold'
+                        : 'border-border-glass bg-select-bg text-text-sub'
+                    }`}
+                  >
+                    {enableLogo ? t.logoEnabled : t.logoDisabled}
+                  </button>
                 </div>
 
-                {logoImage && (
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-sub">{t.logoShape}:</span>
-                      {(['rounded', 'circle', 'square', 'none'] as const).map((shape) => (
-                        <button
-                          key={shape}
-                          type="button"
-                          onClick={() => setLogoShape(shape)}
-                          className={`px-2.5 py-1 text-xs rounded-lg border ${
-                            logoShape === shape
-                              ? 'border-[#6366f1] bg-[#6366f1]/20 text-text-main font-semibold'
-                              : 'border-border-glass bg-select-bg text-text-sub'
-                          }`}
-                        >
-                          {shape === 'circle' ? t.shapeCircle : shape === 'rounded' ? t.shapeRounded : shape === 'square' ? t.shapeSquare : t.shapeNone}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setLogoImage(null)}
-                      className="text-xs text-[#f43f5e] hover:underline"
+                {enableLogo ? (
+                  <>
+                    <div
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (e.dataTransfer.files?.[0]) handleLogoUpload(e.dataTransfer.files[0]);
+                      }}
+                      className={`p-4 rounded-xl text-center cursor-pointer ${styles.dropzone}`}
+                      onClick={() => document.getElementById(logoUploadId)?.click()}
                     >
-                      {t.clearImage}
-                    </button>
-                  </div>
-                )}
-
-                {/* Built-in Preset Icons */}
-                {!logoImage && (
-                  <div className="space-y-2 pt-2">
-                    <span className="text-xs text-text-sub">{t.presetIconLabel}:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {PRESET_ICONS.map((icon) => (
-                        <button
-                          key={icon.id}
-                          type="button"
-                          onClick={() => setSelectedIconId(icon.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
-                            selectedIconId === icon.id
-                              ? 'border-[#6366f1] bg-[#6366f1]/20 text-text-main font-bold'
-                              : 'border-border-glass bg-select-bg text-text-sub hover:text-text-main'
-                          }`}
-                        >
-                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d={icon.path} />
-                          </svg>
-                          <span>{icon.label}</span>
-                        </button>
-                      ))}
+                      <input
+                        id={logoUploadId}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]);
+                        }}
+                      />
+                      <div className="text-sm font-medium text-text-main">
+                        {logoImage ? '已載入自訂 Logo (點擊更換)' : t.logoUploadHint}
+                      </div>
                     </div>
+
+                    {logoImage && (
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-text-sub">{t.logoShape}:</span>
+                          {(['rounded', 'circle', 'square', 'none'] as const).map((shape) => (
+                            <button
+                              key={shape}
+                              type="button"
+                              onClick={() => setLogoShape(shape)}
+                              className={`px-2.5 py-1 text-xs rounded-lg border ${
+                                logoShape === shape
+                                  ? 'border-[#6366f1] bg-[#6366f1]/20 text-text-main font-semibold'
+                                  : 'border-border-glass bg-select-bg text-text-sub'
+                              }`}
+                            >
+                              {shape === 'circle' ? t.shapeCircle : shape === 'rounded' ? t.shapeRounded : shape === 'square' ? t.shapeSquare : t.shapeNone}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setLogoImage(null)}
+                          className="text-xs text-[#f43f5e] hover:underline"
+                        >
+                          {t.clearImage}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Built-in Preset Icons */}
+                    {!logoImage && (
+                      <div className="space-y-2 pt-2">
+                        <span className="text-xs text-text-sub">{t.presetIconLabel}:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {PRESET_ICONS.map((icon) => (
+                            <button
+                              key={icon.id}
+                              type="button"
+                              onClick={() => setSelectedIconId(icon.id)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
+                                selectedIconId === icon.id
+                                  ? 'border-[#6366f1] bg-[#6366f1]/20 text-text-main font-bold'
+                                  : 'border-border-glass bg-select-bg text-text-sub hover:text-text-main'
+                              }`}
+                            >
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d={icon.path} />
+                              </svg>
+                              <span>{icon.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Logo Size Slider */}
+                    <div className="pt-2">
+                      <div className="flex items-center justify-between text-xs text-text-sub mb-1">
+                        <label htmlFor={logoSizeId}>{t.logoSize}</label>
+                        <span>{logoSize}px</span>
+                      </div>
+                      <input
+                        id={logoSizeId}
+                        type="range"
+                        min="40"
+                        max="100"
+                        value={logoSize}
+                        onChange={(e) => setLogoSize(Number(e.target.value))}
+                        className="w-full accent-[#6366f1]"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-3 rounded-xl bg-select-bg/50 border border-border-glass text-xs text-text-sub text-center">
+                    {lang === 'zh-TW' ? '已關閉底部 Logo 與圖示顯示，點擊右上角「已關閉」可隨時重新開啟。' : 'Logo & Icon display is disabled. Click the button above to re-enable.'}
                   </div>
                 )}
-
-                {/* Logo Size Slider */}
-                <div className="pt-2">
-                  <div className="flex items-center justify-between text-xs text-text-sub mb-1">
-                    <label htmlFor={logoSizeId}>{t.logoSize}</label>
-                    <span>{logoSize}px</span>
-                  </div>
-                  <input
-                    id={logoSizeId}
-                    type="range"
-                    min="40"
-                    max="100"
-                    value={logoSize}
-                    onChange={(e) => setLogoSize(Number(e.target.value))}
-                    className="w-full accent-[#6366f1]"
-                  />
-                </div>
               </div>
 
               {/* Background Upload Section */}
