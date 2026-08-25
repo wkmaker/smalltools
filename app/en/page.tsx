@@ -24,21 +24,12 @@ export const metadata: Metadata = {
     siteName: 'Online Toolbox',
     locale: 'en_US',
     type: 'website',
-    images: [
-      {
-        url: '/img/StockSnap_00F7DB5857.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Online Toolbox - Free Web Utilities',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Online Toolbox | Free Developer & Daily Utilities - 20+ Utilities',
     description:
       'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 20+ utilities with 100% local privacy.',
-    images: ['/img/StockSnap_00F7DB5857.webp'],
   },
 };
 
