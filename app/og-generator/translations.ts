@@ -80,6 +80,10 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', OgTranslation> = {
     previewTitle: '即時視覺預覽',
     previewDesc: '支援即時互動編輯與高解析度超採樣渲染',
     retinaMode: '2x 視網膜超採樣 (匯出時生成雙倍高清解析度)',
+    clickToEnlarge: '點擊檢視高解析度大圖',
+    modalTitle: '高解析度 OG 圖片預覽',
+    closeModal: '關閉檢視',
+    actualDimensions: '實際輸出尺寸',
     faqTitle: '常見問題與使用指南',
     faqSubtitle: '深入了解 Open Graph 圖片最佳實踐、規格與社群分享優化技巧',
     faqItems: [
@@ -188,6 +192,10 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', OgTranslation> = {
     previewTitle: 'Real-Time Visual Preview',
     previewDesc: 'Interactive editing with high-res supersampling rendering',
     retinaMode: '2x Retina Supersampling (Double resolution on export)',
+    clickToEnlarge: 'Click to view high-res preview',
+    modalTitle: 'High-Resolution OG Image Preview',
+    closeModal: 'Close Preview',
+    actualDimensions: 'Output Dimensions',
     faqTitle: 'Frequently Asked Questions & Guide',
     faqSubtitle: 'Master Open Graph image best practices, social card dimensions, and SEO optimization',
     faqItems: [

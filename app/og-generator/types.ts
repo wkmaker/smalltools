@@ -110,6 +110,10 @@ export interface OgTranslation {
   previewTitle: string;
   previewDesc: string;
   retinaMode: string;
+  clickToEnlarge: string;
+  modalTitle: string;
+  closeModal: string;
+  actualDimensions: string;
   faqTitle: string;
   faqSubtitle: string;
   faqItems: FaqItem[];

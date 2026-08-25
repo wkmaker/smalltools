@@ -58,6 +58,99 @@
   color: #818cf8;
 }
 
+.previewClickable {
+  cursor: zoom-in;
+  transition: all 0.2s ease;
+}
+
+.previewClickable:hover {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 20px 45px rgba(99, 102, 241, 0.2);
+}
+
+.zoomBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.85;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.previewClickable:hover .zoomBadge {
+  opacity: 1;
+  background: rgba(99, 102, 241, 0.85);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Lightbox Modal */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(3, 3, 5, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: modalFadeIn 0.22s ease-out;
+}
+
+.modalCard {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.25rem;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+  max-width: 92vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.modalImage {
+  max-width: 100%;
+  max-height: 68vh;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalScaleIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 /* ====== 亮色模式高對比度降階特化 (WCAG 2.1 AA) ====== */
 :global([data-theme='light']) .previewWrapper {
   background: rgba(241, 245, 249, 0.8);
@@ -94,4 +187,27 @@
 
 :global([data-theme='light']) .themeAccentText {
   color: #4338ca; /* Indigo 700 高對比度 */
+}
+
+:global([data-theme='light']) .modalBackdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+:global([data-theme='light']) .modalCard {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.15);
+}
+
+:global([data-theme='light']) .modalBody {
+  background: rgba(241, 245, 249, 0.8);
+}
+
+:global([data-theme='light']) .modalImage {
+  border-color: rgba(203, 213, 225, 0.8);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+:global([data-theme='light']) .zoomBadge {
+  background: rgba(15, 23, 42, 0.75);
 }

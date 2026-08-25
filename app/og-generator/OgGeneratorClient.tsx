@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useId, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import ToolLayout from '@/app/components/ToolLayout';
 import FaqSection from '@/app/components/FaqSection';
@@ -18,7 +19,7 @@ import {
 import { PRESET_COLORS, PRESET_ICONS, RATIO_DIMENSIONS } from './constants';
 import { TRANSLATIONS } from './translations';
 import { renderCanvas } from './canvasRenderer';
-import { exportImage, copyCanvasToClipboard } from './exportHelpers';
+import { exportImage, copyCanvasToClipboard, getExportCanvas } from './exportHelpers';
 
 export type { OgGeneratorClientProps } from './types';
 
@@ -75,9 +76,26 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
   const [retinaSupersample, setRetinaSupersample] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string>('');
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalImageUrl, setModalImageUrl] = useState<string>('');
 
   // Canvas 參照
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // 監聽 Modal 開啟時鎖定頁面滾動與 ESC 快捷鍵
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setIsModalOpen(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isModalOpen]);
 
   // 設定主題 CSS 變數
   useEffect(() => {
@@ -252,6 +270,16 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
     } catch {
       showToast(t.copyError);
     }
+  };
+
+  // 開啟高解析度大圖預覽懸浮視窗 (Lightbox Modal)
+  const openLargePreview = () => {
+    const params = getDrawParams();
+    if (!params) return;
+    const exportCanvas = getExportCanvas(params, retinaSupersample);
+    const dataUrl = exportCanvas.toDataURL('image/png');
+    setModalImageUrl(dataUrl);
+    setIsModalOpen(true);
   };
 
   return (
@@ -801,8 +829,18 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
                 ))}
               </div>
 
-              {/* Canvas 畫布容器 */}
-              <div className={styles.previewWrapper}>
+              {/* Canvas 畫布容器 (支援點擊彈出高解析度大圖) */}
+              <div
+                onClick={openLargePreview}
+                title={t.clickToEnlarge}
+                className={`${styles.previewWrapper} ${styles.previewClickable}`}
+              >
+                <div className={styles.zoomBadge}>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
+                  <span>{t.clickToEnlarge}</span>
+                </div>
                 <canvas ref={canvasRef} className={styles.canvasElement} />
               </div>
 
@@ -883,6 +921,78 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
           accentColor="#6366f1"
           items={t.faqItems}
         />
+
+        {/* 4. 高解析度大圖懸浮視窗 (Lightbox Modal - DOM Portal 頂層隔離) */}
+        {isModalOpen && typeof document !== 'undefined' && createPortal(
+          <div
+            className={styles.modalBackdrop}
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div
+              className={styles.modalCard}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal 頂部控制列 */}
+              <div className="px-6 py-4 border-b border-border-glass flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#6366f1] shadow-[0_0_10px_#6366f1]" />
+                  <span className="text-sm font-bold text-text-main">{t.modalTitle}</span>
+                  <span className="text-xs font-mono px-2.5 py-1 rounded-md bg-select-bg border border-border-glass text-text-sub">
+                    {retinaSupersample
+                      ? `${RATIO_DIMENSIONS[aspectRatio].width * 2} x ${RATIO_DIMENSIONS[aspectRatio].height * 2} px (2x Retina HD)`
+                      : `${RATIO_DIMENSIONS[aspectRatio].width} x ${RATIO_DIMENSIONS[aspectRatio].height} px (1x)`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyToClipboard}
+                    className="px-3 py-1.5 rounded-xl text-xs font-medium bg-select-bg border border-border-glass text-text-sub hover:text-text-main hover:border-[#6366f1] transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    <span>{t.copyClipboard}</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isExporting}
+                    onClick={() => handleDownload('png')}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#6366f1] text-white hover:bg-[#4f46e5] transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>PNG</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-1.5 rounded-xl text-text-sub hover:text-text-main hover:bg-select-bg border border-transparent hover:border-border-glass transition-colors cursor-pointer"
+                    aria-label={t.closeModal}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal 圖片展示主體 */}
+              <div className={styles.modalBody}>
+                {modalImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={modalImageUrl}
+                    alt={t.modalTitle}
+                    className={styles.modalImage}
+                  />
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
       </div>
     </ToolLayout>
   );
