@@ -1,11 +1,11 @@
 ---
 name: smalltools-code-standards
-description: 適用於 Smalltools 專案的 Tailwind v4 樣式規範、W3C 無障礙 (A11y)、React useId()、行動端 RWD (表格轉直式卡片) 與表單輸入格式化編碼細節。
+description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行動端「表格轉直式卡片」與首欄凍結、表單即時千分位與 number|'' 狀態、字級階層與 iOS Auto-Zoom 防護、APR 二分求解與 Windows UTF-8 編碼防護、Canvas 排版留白。
 ---
 
-# Smalltools 編碼細節、無障礙與行動端 RWD 規範 (Coding & Accessibility Standards)
+# Smalltools 編碼細節、行動端 RWD 與工具運算規範
 
-本文件定義 Smalltools 工具庫專案在 Tailwind v4 CSS 架構、W3C 無障礙標籤、行動端流體響應（包含多欄表格轉直式卡片）以及表單輸入格式化等前端編碼標準。
+> 通用規範（A11y `useId()` 對稱綁定、零原生 Emoji、雙模色彩控制項、防禦性程式設計、效能與主執行緒防護）見 `C:\PG\AGENTS.md` 與 `C:\PG\skills\frontend-architecture-ui`。本手冊只列 Smalltools 專屬細節。
 
 ---
 
@@ -19,28 +19,12 @@ description: 適用於 Smalltools 專案的 Tailwind v4 樣式規範、W3C 無�
 
 ---
 
-## 二、 W3C 無障礙 (Accessibility) 與 React `useId()` 規範
+## 二、 A11y `<label>` 語意嚴格性（專案補充）
 
-### 1. Label 與 Input 嚴格成對
-* 所有表單控制項之 `<label>` 必須設置 `htmlFor={inputId}`，且對應的 `<input>` / `<select>` / `<textarea>` 必須宣告 `id={inputId}`。
-* 為防範 SSR 與 React Client Hydration 時產生 ID 不一致警告，必須統一使用 React 的 `useId()` 鉤子生成唯一元素 ID：
-  ```typescript
-  const inputId = useId();
-  ```
+通用的 `useId()` + `<label htmlFor>` 對稱綁定、圖示按鈕 `aria-label` / `.sr-only` 見全域規範。本專案額外注意：
 
-### 2. `<label>` 語意嚴格性防錯
-* `<label>` 必須且只能搭配具備對應 `id` 的輸入控制項。
-* 若區域僅為標籤標題、按鈕組（如多選模式切換、預設 Preset 按鈕、Checkbox 列表），**嚴禁使用 `<label>` 包裹無 `id` 的區塊**，否則會破壞 DOM accessibility 樹。應統一改用 `<span>` 或 `<legend>`，並配置字色 `text-text-sub`。
-
-### 3. 無障礙隱藏標籤規範 (`sr-only` Label Pattern)
-* 若卡片或工具列為保持極簡 UI 未顯示視覺文字標籤（如表格列內動態下拉選單、縮放控制鈕）：
-  ```tsx
-  const selectId = useId();
-  // ...
-  <label htmlFor={selectId} className="sr-only">選擇操作類型</label>
-  <select id={selectId} ...>
-  ```
-* 兼顧極簡視覺設計與 W3C Accessibility 螢幕閱讀器友善標準。
+* `<label>` 必須且只能搭配具備對應 `id` 的輸入控制項。**若區域僅為標籤標題、按鈕組（多選模式切換、Preset 按鈕、Checkbox 列表），嚴禁用 `<label>` 包裹無 `id` 的區塊**，否則破壞 DOM accessibility 樹；統一改用 `<span>` 或 `<legend>`，字色 `text-text-sub`。
+* 極簡 UI 未顯示視覺文字標籤時（表格列內動態下拉、縮放控制鈕），用 `sr-only` label：`<label htmlFor={selectId} className="sr-only">選擇操作類型</label>`。
 
 ---
 
@@ -52,7 +36,7 @@ description: 適用於 Smalltools 專案的 Tailwind v4 樣式規範、W3C 無�
 ### 2. 手機版「表格轉直式卡片」大原則 (Responsive Table-to-Card Standard)
 * **電腦 / 平板端 (`sm:` 斷點以上)**：採用標準多欄語意表格 (`<table className="hidden sm:table w-full...">`)，提供宏觀完整的數據對照。
 * **手機窄螢幕端 (`<sm`)**：**轉為垂直直式小卡片清單** (`<div className="block sm:hidden space-y-2">`)，將「欄位名稱 / 類型徽章 / 數值內容 / 操作按鈕」改為由上而下直式堆疊排列。
-* **優點**：徹底免除手機使用者在窄螢幕上必須反覆左右滑動多欄表格的挫折感，提供單手即可自然下滑瀏覽的極致行動端體驗。
+* **優點**：徹底免除手機使用者在窄螢幕上反覆左右滑動多欄表格的挫折感，提供單手下滑瀏覽的行動端體驗。
 
 ### 3. 大型固定表格橫向滾動與首欄凍結
 若特定大型複雜報表必須維持表格結構：
@@ -115,16 +99,11 @@ description: 適用於 Smalltools 專案的 Tailwind v4 樣式規範、W3C 無�
 1. **表單輸入框 14px 規範 (iOS Safari Auto-Zoom 防護)**：
    - 所有表單輸入框 (`<input>` / `<textarea>`)、下拉選單、Monospace 代碼字級一律保持 **14px (`text-sm` / `0.875rem`)**。
    - **嚴禁將輸入框字級設為 `< 13px`**，防範 iOS Safari 聚焦輸入框時觸發視埠自動強行放大 (Auto-zoom Bug)。
-2. **表單標籤 (Form Labels)**：
-   - 統一採用 **`text-sm font-medium text-text-sub`** (14px)，符合 WCAG 2.1 行動端可讀性標準。
-3. **指標看板標題 (Stat Card Titles)**：
-   - 核心數據或統計看板之卡片標題一律採用 **`text-sm font-semibold text-text-sub`** (14px 粗體醒目化)，嚴禁使用 12px 微縮字級。
-4. **按鈕與模式切換 (Buttons & Tabs)**：
-   - 操作按鈕、模式切換鈕與語系切換鈕一律維持 **13px~14px (`0.8125rem`~`0.875rem` / `text-sm font-semibold` 或 `font-medium`)**，提升觸碰熱區。
-5. **描述文案與次要備註**：
-   - 頁面說明文案採用 **16px (`text-base text-text-sub`)**；次要備註至少保持 **12px (`text-xs text-text-sub`)**。
-6. **時鐘與 Monospace 動態數據防爆框**：
-   - 父層容器宣告 `min-width: 0`；文字包裹 `truncate`，防止窄螢幕橫向爆框。
+2. **表單標籤 (Form Labels)**：統一採用 **`text-sm font-medium text-text-sub`** (14px)，符合 WCAG 2.1 行動端可讀性標準。
+3. **指標看板標題 (Stat Card Titles)**：一律採用 **`text-sm font-semibold text-text-sub`** (14px 粗體醒目化)，嚴禁使用 12px 微縮字級。
+4. **按鈕與模式切換 (Buttons & Tabs)**：一律維持 **13px~14px (`0.8125rem`~`0.875rem` / `text-sm font-semibold` 或 `font-medium`)**，提升觸碰熱區。
+5. **描述文案與次要備註**：頁面說明文案採用 **16px (`text-base text-text-sub`)**；次要備註至少保持 **12px (`text-xs text-text-sub`)**。
+6. **時鐘與 Monospace 動態數據防爆框**：父層容器宣告 `min-width: 0`；文字包裹 `truncate`，防止窄螢幕橫向爆框。
 
 ---
 
@@ -133,22 +112,15 @@ description: 適用於 Smalltools 專案的 Tailwind v4 樣式規範、W3C 無�
 ### 1. 金融/計算工具求解標準 (APR Bisection Solver)
 * 凡包含手續費/開辦費攤提之貸款試算，必須提供實質年利率 (APR) 試算。採用 **二分搜尋法 (Bisection Method)** 求解折現淨現值 (NPV = 0) 之內含報酬率 (IRR)。
 * 本息/本金均攤模擬計算時，最後一期期末餘額需手動強制設定為 `0`，消弭 JS 底層浮點數殘留誤差。
+* 金額運算依全域規範走 `bignumber.js` 鏈式運算，見 `C:\PG\skills\precision-finance-timezone`。
 
 ### 2. Windows UTF-8 編碼保護避坑原則
 * 在 Windows 環境下避免使用 PowerShell 預設管道（如 `Get-Content | Set-Content`），防止將 TypeScript/JSX 中的繁體中文字串轉為 ANSI/OEM 亂碼 (`?`)。必須確保所有原始碼檔案儲存為無 BOM 之 UTF-8 編碼。
 
 ---
 
-## 七、 顏色選色器雙模交互與 Canvas 排版留白規範
+## 七、 Canvas / 動態圖形排版安全呼吸留白 (Canvas Safe Margins)
 
-### 1. 色彩控制項雙模輸入標準 (Color Swatch + Hex Text Input)
-* 凡具備色彩/色碼自訂功能的表單，**嚴禁僅提供生硬的原生 `<input type="color">` 或純文字框**。
-* 統一採用「雙模一體化」結構：
-  - **左側色彩方塊 (Color Swatch)**：顯示目前色彩，點擊直接呼叫系統調色盤。
-  - **右側等寬字文字輸入框 (Hex Text Input)**：支援鍵盤直接輸入與貼上十六進位色碼（如 `#6366f1` 或 `6366f1`），自動轉為大寫並正規化。
-  - **精選快捷色票 (Quick Preset Chips)**：提供一鍵切換之高頻常用色票，大幅提升操作效率與體驗。
-
-### 2. Canvas / 動態圖形排版安全呼吸留白 (Canvas Safe Margins & Dynamic Spacing)
 * 在 Canvas 2D / SVG 等動態排版場景中，頁尾元素（如 Logo、作者署名、發布日期）：
   - 必須動態依據 Logo 尺寸與畫布高度計算安全底邊距：`Math.max(innerPad * 0.75, logoSize * 0.5 + 32)`。
   - **嚴禁使用靜態微縮邊距**（如 5px~10px），防範大尺寸 Logo 或頭像貼齊外框邊界造成視覺擁擠。

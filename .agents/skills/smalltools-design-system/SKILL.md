@@ -124,12 +124,8 @@ description: 適用於 Smalltools 專案的視覺設計系統、毛玻璃 (Glass
 
 ---
 
-## 五、 向量 SVG 圖示標準 (SVG Icons over Emojis)
+## 五、 向量 SVG 圖示（專案補充）
 
-1. **全面禁用原生 Emoji**：
-   - 嚴禁在按鈕、區塊標題、上傳 Dropzone、標籤、控制介面或 FAQ 內文中直接使用作業系統原生 Emoji（如 ⚠️, 📈, ⚡, ☕, ☀️, 🌙 等）。
-   - 原生 Emoji 在不同 OS（Windows、macOS、iOS、Android）呈現效果不一，且無法適配主題發光與顏色連動。
-2. **採用極簡向量 Inline SVG**：
-   - 介面圖示一律採用精簡原生 Inline SVG 或 Lucide/Heroicons 規格之向量圖示。
-3. **主題色動態連動 (Theme-aware SVG)**：
-   - SVG 之 `fill` 或 `stroke` 屬性統一採用 `currentColor` 或連動主題色 `text-[var(--theme-color)]`，使其能自動隨主題色與亮暗模式流暢變換。
+「全面禁用原生 Emoji、改用向量 SVG」為全域鐵則，見 `C:\PG\skills\frontend-architecture-ui`。本專案額外要求：
+
+* **主題色動態連動 (Theme-aware SVG)**：SVG 之 `fill` / `stroke` 統一採用 `currentColor` 或連動主題色 `text-[var(--theme-color)]`，使圖示能自動隨各工具 signature 主題發光色與亮暗模式流暢變換。
