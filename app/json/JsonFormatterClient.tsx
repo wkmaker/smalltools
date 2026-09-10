@@ -44,7 +44,7 @@ function TreeNode({ data, isLast, name }: { data: any; isLast: boolean; name?: s
     return (
       <div className="font-mono text-sm leading-6">
         {name && <span className={styles.treeKey}>{name}: </span>}
-        <span className={styles.treeString}>"{data}"</span>
+        <span className={styles.treeString}>&quot;{data}&quot;</span>
         {!isLast && <span className="text-text-sub">,</span>}
       </div>
     );
@@ -376,7 +376,7 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
         subtitle={t.subtitle}
         description={t.description}
         accentColor="#ff00aa"
-        accentGlow="rgba(255,0,170,0.5)"
+        accentGlow="rgba(255,0,170,0.5)"
       >
         <div className={styles.mainLayout}>
 

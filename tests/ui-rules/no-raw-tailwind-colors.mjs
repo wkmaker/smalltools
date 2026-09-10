@@ -2,7 +2,7 @@
 // 一律套用語意化 Token (text-text-main, text-text-sub, bg-surface-glass, border-border-glass, styles.themeAccentText)
 const rawTailwindColorRegex = /\b(?:text|bg|border)-(?:emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|orange|yellow|green)-(?:300|400|500|600)(?:\/\d+)?\b/i;
 
-export default {
+const rule = {
   id: 'no-raw-tailwind-colors',
   name: '硬編碼 Tailwind 色彩 Utility 檢測',
   description: '發現硬編碼 Tailwind 色彩類別 (請改用語意化 Token 如 text-text-main, text-text-sub, bg-surface-glass, border-border-glass 或 styles.themeAccentText)',
@@ -40,3 +40,5 @@ export default {
     return null;
   }
 };
+
+export default rule;

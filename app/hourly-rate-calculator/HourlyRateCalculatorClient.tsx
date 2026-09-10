@@ -408,7 +408,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
       accentGlow="rgba(0, 245, 160, 0.6)"
       backHref={heroMilestone ? `/hourly-rate-calculator/${isEn ? 'en/' : ''}?${queryParamsString}` : undefined}
       backText={heroMilestone ? (isEn ? 'Back to Calculator' : '返回時薪計算器') : undefined}
-      backTitle={heroMilestone ? (isEn ? 'Back to Calculator Home' : '返回時薪計算器首頁') : undefined}
+      backTitle={heroMilestone ? (isEn ? 'Back to Calculator Home' : '返回時薪計算器首頁') : undefined}
     >
 
       <div className={styles.container}>
@@ -932,7 +932,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                     >
                       DGBAS Executive Yuan
                     </a>
-                    "Employee Annual Earnings Distribution & Percentile Statistics" & Ministry of Labor Minimum Wage Announcements.
+                    {' "Employee Annual Earnings Distribution & Percentile Statistics" & Ministry of Labor Minimum Wage Announcements.'}
                   </>
                 ) : (
                   <>

@@ -4,6 +4,33 @@
 
 ---
 
+## [1.8.2] - 2026-09-11
+
+### 🔧 變更 (Changed)
+
+- **建置工具鏈改用 ESLint Flat Config**：Next 16 已移除 `next lint`（原 `npm run lint` 靜默失效、回傳退出碼 0），改新增 `eslint.config.mjs`（`eslint-config-next/core-web-vitals` 原生扁平設定），`npm run lint` 改為 `eslint .`。`eslint` 暫鎖 `^9`：`eslint-config-next@16.3` 內建的 `eslint-plugin-react` 尚未相容 ESLint 10（`context.getFilename` 已移除會直接 crash）。
+- **`app/sitemap.ts` 改為註冊表推導**：所有工具 URL 一律由中央工具註冊表 `app/config/tools.tsx`（`ALL_TOOLS`）衍生，`lastModified` 取建置當下時間；移除原先逐條手工維護的 64 筆網址與早已過期的固定日期。新增工具不再需要同步改 sitemap。
+- **CI／部署 Node.js 由 22 升至 24**（`.github/workflows/deploy.yml`），並於 `package.json` 補上 `engines.node >= 22`。
+- **依賴升級**：`next` / `eslint-config-next` `16.3.0 → 16.3.4`、`react` / `react-dom` `19.2 → 19.3`、`@types/react` / `@types/react-dom` `→ 19.3`、`@types/node` `26 → 24`（對齊部署 runtime 大版本）。`typescript` 維持 `6.x`（7.x 發布未滿觀察期）。升級後 `npm audit` 由 2 項（1 high、1 critical）降為 0。
+- **`tests/audit-seo.mjs`**：sitemap 涵蓋率檢查改為驗證「工具是否登記於中央註冊表 `app/config/tools.tsx`」，配合上述 sitemap 重構。
+- **Lint 現存告警**：啟用 lint 後尚有 56 條 warning（絕大多數為 `'use client'` 工具頁於 `useEffect` 內同步 `window` / `localStorage` / 動態 `import` 狀態，即 `isMountedRef` 既有慣例）。已將 `eslint-plugin-react-hooks` v7 新增的 React Compiler 建議規則（`set-state-in-effect`、`immutability`）降為 warning，並關閉不適用於靜態匯出的 `@next/next/no-img-element`；`eslint .` 現為 0 error，不阻斷 CI。
+
+### 🐛 修復 (Fixed)
+
+- **`/.well-known/security.txt` 404**：該檔先前置於專案根目錄 `.well-known/` 而非 `public/`，`output: 'export'` 靜態匯出未包含，導致檔案自身宣告的 `Canonical: https://tools.cjkuo.net/.well-known/security.txt` 實際無法存取（違反 RFC 9116）。已移至 `public/.well-known/security.txt`。
+- 移除專案根目錄未被部署流程使用的重複 `robots.txt` 與 `security.txt`（實際服務的為 `public/robots.txt`）。
+- 修正 `react/no-unescaped-entities`（JSON 樹狀檢視的引號、時薪計算機資料來源標註）與 4 支 UI 規範測試模組（`tests/ui-rules/*.mjs`）的匿名預設匯出。
+
+---
+
+## [1.8.1] - 2026-09-10
+
+### 🐛 修復 (Fixed)
+
+- **首頁 (`/`)**：修復手機版右上角功能按鈕組（搜尋、語言、亮暗模式）因絕對定位脫離文件流、而 `.homeContainer` 在 `max-width: 600px` 斷點的頂部內距不足，導致按鈕與「工具庫」主標題重疊、遮住標題文字的問題。將手機版容器頂部內距由 `2.5rem` 提高至 `5rem`，讓按鈕組完整位於標題上方。
+
+---
+
 ## [1.8.0] - 2026-08-25
 
 ### ✨ 新增功能 (Added)

@@ -1,4 +1,4 @@
-export default {
+const rule = {
   id: 'no-direct-theme-color',
   name: '亮色模式對比度檢測',
   description: '發現未適配亮色模式高對比度之語法',
@@ -9,3 +9,5 @@ export default {
     return null;
   }
 };
+
+export default rule;
