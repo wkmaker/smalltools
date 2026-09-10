@@ -4,41 +4,7 @@ import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './personal-loan.module.css';
-
-interface LoanScheduleRow {
-  month: number;
-  payment: number;
-  principal: number;
-  interest: number;
-  remaining: number;
-}
-
-/**
- * 採用二分搜尋法 (Bisection Method) 精確求解折現淨現值 (NPV = 0) 之 APR 實質年利率
- */
-function calculateAPR(loanAmount: number, fee: number, payments: number[]): number {
-  const netAmount = loanAmount - fee;
-  if (netAmount <= 0 || payments.length === 0) return 0;
-
-  let low = 0;
-  let high = 2; // 月折現率上限 200%
-  let mid = 0;
-
-  for (let iter = 0; iter < 80; iter++) {
-    mid = (low + high) / 2;
-    let npv = -netAmount;
-    for (let t = 0; t < payments.length; t++) {
-      npv += payments[t] / Math.pow(1 + mid, t + 1);
-    }
-    if (npv > 0) {
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-
-  return parseFloat((mid * 12 * 100).toFixed(2));
-}
+import { calculatePersonalLoan, type LoanScheduleRow, type RepayMethod } from './engine';
 
 interface Props {
   lang?: 'zh-TW' | 'en';
@@ -192,7 +158,7 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
   const [loanYears, setLoanYears] = useState<number | ''>(7);
   const [annualRate, setAnnualRate] = useState<number | ''>(3.25); // %
   const [fee, setFee] = useState<number | ''>(6000); // 元手續費
-  const [method, setMethod] = useState<'equal-payment' | 'equal-principal'>('equal-payment');
+  const [method, setMethod] = useState<RepayMethod>('equal-payment');
 
   const [monthlyPayment, setMonthlyPayment] = useState<number>(0);
   const [totalInterest, setTotalInterest] = useState<number>(0);
@@ -259,73 +225,25 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
     return () => clearTimeout(timer);
   }, [loanAmount, loanYears, annualRate, fee, method]);
 
-  // 個人信貸主試算邏輯
-  const calculatePersonalLoan = useCallback(() => {
-    const numAmount = loanAmount === '' ? 0 : loanAmount;
-    const numYears = loanYears === '' ? 0 : loanYears;
-    const numRate = annualRate === '' ? 0 : annualRate;
-    const numFee = fee === '' ? 0 : fee;
+  // 個人信貸主試算邏輯（純函數引擎，見 ./engine.ts）
+  const runCalculation = useCallback(() => {
+    const result = calculatePersonalLoan({
+      amountInTenThousands: loanAmount === '' ? 0 : loanAmount,
+      years: loanYears === '' ? 0 : loanYears,
+      annualRatePercent: annualRate === '' ? 0 : annualRate,
+      fee: fee === '' ? 0 : fee,
+      method,
+    });
 
-    const loanAmt = numAmount * 10000;
-    const totalMonths = numYears * 12;
-    const monthlyRate = numRate / 100 / 12;
-
-    let remaining = loanAmt;
-    let sumInterest = 0;
-    const rows: LoanScheduleRow[] = [];
-
-    if (totalMonths > 0 && loanAmt > 0) {
-      for (let m = 1; m <= totalMonths; m++) {
-        let interest = Math.round(remaining * monthlyRate);
-        let principal = 0;
-
-        if (method === 'equal-payment') {
-          if (monthlyRate === 0) {
-            principal = Math.round(loanAmt / totalMonths);
-          } else {
-            const pow = Math.pow(1 + monthlyRate, totalMonths);
-            const pmt = (loanAmt * monthlyRate * pow) / (pow - 1);
-            principal = Math.round(pmt - interest);
-          }
-        } else {
-          principal = Math.round(loanAmt / totalMonths);
-        }
-
-        // 最後一期清算剩餘本金，避免 JS 浮點數誤差殘留
-        if (m === totalMonths) {
-          principal = remaining;
-        }
-
-        const payment = principal + interest;
-        remaining = Math.max(0, remaining - principal);
-        if (m === totalMonths) {
-          remaining = 0;
-        }
-        sumInterest += interest;
-
-        rows.push({
-          month: m,
-          payment,
-          principal,
-          interest,
-          remaining,
-        });
-      }
-    }
-
-    setMonthlyPayment(rows[0]?.payment || 0);
-    setTotalInterest(sumInterest);
-    setSchedule(rows);
-
-    // 金融級二分搜尋法求解 APR (實質總費用年率)
-    const paymentsList = rows.map(r => r.payment);
-    const calculatedApr = calculateAPR(loanAmt, numFee, paymentsList);
-    setAprRate(calculatedApr > 0 ? calculatedApr : numRate);
+    setMonthlyPayment(result.monthlyPayment);
+    setTotalInterest(result.totalInterest);
+    setSchedule(result.schedule);
+    setAprRate(result.aprPercent);
   }, [loanAmount, loanYears, annualRate, fee, method]);
 
   useEffect(() => {
-    calculatePersonalLoan();
-  }, [calculatePersonalLoan]);
+    runCalculation();
+  }, [runCalculation]);
 
   // 繪製 賸餘本金遞減趨勢圖 (Theme-Aware Canvas)
   useEffect(() => {
@@ -418,7 +336,7 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#00f5a0"
-      accentGlow="rgba(0, 245, 160, 0.6)"
+      accentGlow="rgba(0, 245, 160, 0.6)"
     >
 
       <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
