@@ -490,7 +490,7 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#8b5cf6"
-      accentGlow="rgba(139, 92, 246, 0.6)"
+      accentGlow="rgba(139, 92, 246, 0.6)"
     >
       <div className="flex flex-col gap-6 text-left w-full px-4 max-sm:px-0">
 

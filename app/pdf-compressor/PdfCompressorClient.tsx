@@ -651,7 +651,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#eab308"
-      accentGlow="rgba(234, 179, 8, 0.6)"
+      accentGlow="rgba(234, 179, 8, 0.6)"
     >
       <div
         onDragOver={handleDragOver}

@@ -492,7 +492,7 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#8b5cf6"
-      accentGlow="rgba(139, 92, 246, 0.6)"
+      accentGlow="rgba(139, 92, 246, 0.6)"
     >
 
       <div className="grid grid-cols-[0.8fr_1.2fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">

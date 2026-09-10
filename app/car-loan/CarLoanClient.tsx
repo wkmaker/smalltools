@@ -832,7 +832,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
         subtitle={t.subtitle}
         description={t.description}
         accentColor="#ff0055"
-        accentGlow="rgba(255,0,85,0.6)"
+        accentGlow="rgba(255,0,85,0.6)"
       >
 
         {/* 負攤還警示 Banner */}

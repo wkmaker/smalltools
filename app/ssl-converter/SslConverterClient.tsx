@@ -1143,7 +1143,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         subtitle={t.subtitle}
         description={t.description}
         accentColor="#00ffaa"
-        accentGlow="rgba(0, 255, 170, 0.6)"
+        accentGlow="rgba(0, 255, 170, 0.6)"
       >
         <div className={styles.mainLayout}>
 

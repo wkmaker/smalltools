@@ -926,7 +926,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
         subtitle={t.subtitle}
         description={t.description}
         accentColor="#00f5a0"
-        accentGlow="rgba(0, 245, 160, 0.6)"
+        accentGlow="rgba(0, 245, 160, 0.6)"
       >
 
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">

@@ -1180,7 +1180,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#00ff66"
-      accentGlow="rgba(0, 255, 102, 0.6)"
+      accentGlow="rgba(0, 255, 102, 0.6)"
     >
       {/* 頂部功能條：包含複製設計網址 */}
       <div className="flex justify-end items-center mb-6 w-full px-4 max-sm:px-0">

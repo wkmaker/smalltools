@@ -180,7 +180,7 @@ export default function TextUtilityClient({ lang = 'zh-TW' }: TextUtilityClientP
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#ff007f"
-      accentGlow="rgba(255, 0, 127, 0.6)"
+      accentGlow="rgba(255, 0, 127, 0.6)"
     >
       <div className="flex flex-col gap-6 text-left">
 

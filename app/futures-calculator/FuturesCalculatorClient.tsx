@@ -464,7 +464,7 @@ export default function FuturesCalculatorClient({ lang = 'zh-TW' }: FuturesCalcu
         subtitle={t.subtitle}
         description={t.description}
         accentColor="#ff3b30"
-        accentGlow="rgba(255, 59, 48, 0.6)"
+        accentGlow="rgba(255, 59, 48, 0.6)"
       >
 
         <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">

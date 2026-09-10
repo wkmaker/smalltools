@@ -446,7 +446,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
         subtitle={t.subtitle}
         description={t.description}
         accentColor="#00ff66"
-        accentGlow="rgba(0,255,102,0.6)"
+        accentGlow="rgba(0,255,102,0.6)"
       >
         <div className={styles.mainLayout}>
 

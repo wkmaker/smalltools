@@ -703,7 +703,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#d946ef"
-      accentGlow="rgba(217, 70, 239, 0.6)"
+      accentGlow="rgba(217, 70, 239, 0.6)"
     >
       {/* 全域拖曳浮層 Overlay */}
       {isDraggingGlobal && (
