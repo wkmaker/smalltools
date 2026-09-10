@@ -10,6 +10,9 @@ interface QrGeneratorClientProps {
 }
 
 type ContentType = 'text' | 'wifi' | 'vcard' | 'event' | 'email' | 'sms' | 'tel';
+type WifiEncryption = 'WPA' | 'WPA3' | 'WPA-EAP' | 'WEP' | 'nopass';
+type GradientType = 'linear' | 'radial';
+type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
 const TRANSLATIONS = {
   'zh-TW': {
@@ -356,7 +359,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   // WiFi 連線設定
   const [wifiSsid, setWifiSsid] = useState<string>('');
   const [wifiPass, setWifiPass] = useState<string>('');
-  const [wifiEncryption, setWifiEncryption] = useState<'WPA' | 'WPA3' | 'WPA-EAP' | 'WEP' | 'nopass'>('WPA');
+  const [wifiEncryption, setWifiEncryption] = useState<WifiEncryption>('WPA');
   const [wifiHidden, setWifiHidden] = useState<boolean>(false);
 
   // vCard 數位名片設定
@@ -403,14 +406,14 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const [bgColor, setBgColor] = useState<string>('#ffffff');
   const [bgTransparent, setBgTransparent] = useState<boolean>(false);
   const [useGradient, setUseGradient] = useState<boolean>(true);
-  const [gradientType, setGradientType] = useState<'linear' | 'radial'>('linear');
+  const [gradientType, setGradientType] = useState<GradientType>('linear');
   const [color1, setColor1] = useState<string>('#00ff66');
   const [color2, setColor2] = useState<string>('#0077ff');
   const [gradientRotation, setGradientRotation] = useState<number>(0);
   const [singleColor, setSingleColor] = useState<string>('#000000');
 
   // 容錯率與置中 Logo
-  const [errorCorrection, setErrorCorrection] = useState<'L' | 'M' | 'Q' | 'H'>('Q');
+  const [errorCorrection, setErrorCorrection] = useState<ErrorCorrectionLevel>('Q');
   const [logoBase64, setLogoBase64] = useState<string>('');
   const [logoName, setLogoName] = useState<string>('');
   const [logoSize, setLogoSize] = useState<number>(20);
@@ -773,7 +776,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
       if (wp) setWifiPass(wp);
       const we = params.get('we');
       if (we === 'WPA' || we === 'WPA3' || we === 'WPA-EAP' || we === 'WEP' || we === 'nopass') {
-        setWifiEncryption(we as any);
+        setWifiEncryption(we);
       }
       const wh = params.get('wh');
       if (wh) setWifiHidden(wh === '1');
@@ -824,7 +827,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
 
     const ec = params.get('ec');
     if (ec === 'L' || ec === 'M' || ec === 'Q' || ec === 'H') {
-      setErrorCorrection(ec as any);
+      setErrorCorrection(ec);
     }
 
     const bc = params.get('bc');
@@ -844,7 +847,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
 
     const gt = params.get('gt');
     if (gt === 'linear' || gt === 'radial') {
-      setGradientType(gt as any);
+      setGradientType(gt);
     }
 
     const rot = params.get('rot');
@@ -1712,7 +1715,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
                   <select
                     id={wifiEncryptionId}
                     value={wifiEncryption}
-                    onChange={(e) => setWifiEncryption(e.target.value as any)}
+                    onChange={(e) => setWifiEncryption(e.target.value as WifiEncryption)}
                     className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
                   >
                     <option value="WPA">{t.wpaOption}</option>
@@ -2062,7 +2065,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
               <select
                 id={errorCorrectionId}
                 value={logoBase64 ? 'H' : errorCorrection}
-                onChange={(e) => setErrorCorrection(e.target.value as any)}
+                onChange={(e) => setErrorCorrection(e.target.value as ErrorCorrectionLevel)}
                 disabled={!!logoBase64}
                 className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-base font-medium cursor-pointer disabled:opacity-50"
               >
@@ -2098,7 +2101,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
                     <select
                       id={gradientTypeId}
                       value={gradientType}
-                      onChange={(e) => setGradientType(e.target.value as any)}
+                      onChange={(e) => setGradientType(e.target.value as GradientType)}
                       className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-base font-medium cursor-pointer"
                     >
                       <option value="linear">{t.linearGradient}</option>
