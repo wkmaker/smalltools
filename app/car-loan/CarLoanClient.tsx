@@ -4,44 +4,11 @@ import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './car-loan.module.css';
-
-interface LoanRow {
-  period: number;
-  startBalance: number;
-  principalPaid: number;
-  interestPaid: number;
-  totalPayment: number;
-  endBalance: number;
-  statusTag: string;
-}
+import { calculateCarLoan, type LoanRow, type RepayType, type LoanScheme } from './engine';
 
 function formatNumber(val: number): string {
   if (isNaN(val) || val === 0) return '0';
   return Math.round(val).toLocaleString('zh-TW');
-}
-
-function calculateAPR(loanAmount: number, fee: number, payments: number[]): number {
-  const netAmount = loanAmount - fee;
-  if (netAmount <= 0 || payments.length === 0) return 0;
-
-  let low = 0;
-  let high = 2; // 月折現率上限 200%
-  let mid = 0;
-
-  for (let iter = 0; iter < 80; iter++) {
-    mid = (low + high) / 2;
-    let npv = -netAmount;
-    for (let t = 0; t < payments.length; t++) {
-      npv += payments[t] / Math.pow(1 + mid, t + 1);
-    }
-    if (npv > 0) {
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-
-  return mid * 12 * 100;
 }
 
 interface Props {
@@ -247,8 +214,8 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
   const [interestRate, setInterestRate] = useState<number | ''>(2.5);
   const [periodVal, setPeriodVal] = useState<number | ''>(5);
   const [periodUnit, setPeriodUnit] = useState<'year' | 'month'>('year');
-  const [repayType, setRepayType] = useState<'equal-total' | 'equal-principal'>('equal-total');
-  const [loanScheme, setLoanScheme] = useState<'standard' | 'grace' | 'stepped' | 'balloon'>('standard');
+  const [repayType, setRepayType] = useState<RepayType>('equal-total');
+  const [loanScheme, setLoanScheme] = useState<LoanScheme>('standard');
   const [fee, setFee] = useState<number | ''>(3500);
 
   // 條件方案欄位
@@ -330,8 +297,8 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
     if (pRate && !isNaN(Number(pRate))) setInterestRate(Number(pRate));
     if (pPeriod && !isNaN(Number(pPeriod))) setPeriodVal(Number(pPeriod));
     if (pUnit && (pUnit === 'year' || pUnit === 'month')) setPeriodUnit(pUnit);
-    if (pScheme && ['standard', 'grace', 'stepped', 'balloon'].includes(pScheme)) setLoanScheme(pScheme as any);
-    if (pRepay && (pRepay === 'equal-total' || pRepay === 'equal-principal')) setRepayType(pRepay as any);
+    if (pScheme && ['standard', 'grace', 'stepped', 'balloon'].includes(pScheme)) setLoanScheme(pScheme as LoanScheme);
+    if (pRepay && (pRepay === 'equal-total' || pRepay === 'equal-principal')) setRepayType(pRepay as RepayType);
     if (pFee && !isNaN(Number(pFee))) setFee(Number(pFee));
     if (pGrace && !isNaN(Number(pGrace))) setGracePeriod(Number(pGrace));
     if (pStepPmt && !isNaN(Number(pStepPmt))) setStepPayment(Number(pStepPmt));
@@ -435,296 +402,35 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
 
   // 主計算邏輯
   const runCalculation = useCallback(() => {
-    const numLoanAmount = loanAmount === '' ? 0 : loanAmount;
-    const numPeriodVal = periodVal === '' ? 0 : periodVal;
-    const numInterestRate = interestRate === '' ? 0 : interestRate;
-    const numGracePeriod = gracePeriod === '' ? 0 : gracePeriod;
-    const numStepPayment = stepPayment === '' ? 0 : stepPayment;
-    const numStepPeriods = stepPeriods === '' ? 0 : stepPeriods;
-    const numBalloonAmount = balloonAmount === '' ? 0 : balloonAmount;
-    const numFee = fee === '' ? 0 : fee;
-
-    const totalMonths = Math.max(0, periodUnit === 'year' ? numPeriodVal * 12 : numPeriodVal);
-    if (totalMonths <= 0 || numLoanAmount <= 0) {
-      setMonthlyPayment(0);
-      setAfterSpecialPayment(0);
-      setTotalInterest(0);
-      setTotalPayment(0);
-      setApr(0);
-      setIsNegAmort(false);
-      setSchedule([]);
-      return;
-    }
-
-    const monthlyRate = numInterestRate / 100 / 12;
-    const paymentArray: number[] = [];
-    const rows: LoanRow[] = [];
-    let remBalance = numLoanAmount;
-    let interestSum = 0;
-    let firstPay = 0;
-    let afterPay = 0;
-    let negAmortFlag = false;
-
-    rows.push({
-      period: 0,
-      startBalance: 0,
-      principalPaid: 0,
-      interestPaid: 0,
-      totalPayment: 0,
-      endBalance: numLoanAmount,
-      statusTag: '',
+    const result = calculateCarLoan({
+      loanAmount: loanAmount === '' ? 0 : loanAmount,
+      periodVal: periodVal === '' ? 0 : periodVal,
+      periodUnit,
+      interestRatePercent: interestRate === '' ? 0 : interestRate,
+      repayType,
+      loanScheme,
+      fee: fee === '' ? 0 : fee,
+      gracePeriod: gracePeriod === '' ? 0 : gracePeriod,
+      stepPayment: stepPayment === '' ? 0 : stepPayment,
+      stepPeriods: stepPeriods === '' ? 0 : stepPeriods,
+      balloonAmount: balloonAmount === '' ? 0 : balloonAmount,
+      labels: {
+        grace: t.tagGrace,
+        amort: t.tagAmort,
+        step: t.tagStep,
+        normal: t.tagNormal,
+        balloon: t.tagBalloon,
+      },
     });
 
-    if (loanScheme === 'standard') {
-      if (repayType === 'equal-total') {
-        let pmt = 0;
-        if (monthlyRate === 0) {
-          pmt = numLoanAmount / totalMonths;
-        } else {
-          pmt = (numLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths))) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
-        }
-        firstPay = pmt;
-
-        for (let m = 1; m <= totalMonths; m++) {
-          const start = remBalance;
-          const interest = start * monthlyRate;
-          const principal = pmt - interest;
-          remBalance -= principal;
-          if (m === totalMonths) remBalance = 0;
-
-          interestSum += interest;
-          paymentArray.push(pmt);
-          rows.push({
-            period: m,
-            startBalance: start,
-            principalPaid: principal,
-            interestPaid: interest,
-            totalPayment: pmt,
-            endBalance: Math.max(0, remBalance),
-            statusTag: '',
-          });
-        }
-      } else {
-        const principalPerMonth = numLoanAmount / totalMonths;
-        for (let m = 1; m <= totalMonths; m++) {
-          const start = remBalance;
-          const interest = start * monthlyRate;
-          const pmt = principalPerMonth + interest;
-          remBalance -= principalPerMonth;
-          if (m === totalMonths) remBalance = 0;
-
-          if (m === 1) firstPay = pmt;
-          interestSum += interest;
-          paymentArray.push(pmt);
-          rows.push({
-            period: m,
-            startBalance: start,
-            principalPaid: principalPerMonth,
-            interestPaid: interest,
-            totalPayment: pmt,
-            endBalance: Math.max(0, remBalance),
-            statusTag: '',
-          });
-        }
-      }
-    } else if (loanScheme === 'grace') {
-      const validGrace = totalMonths > 0 ? Math.max(0, Math.min(numGracePeriod, totalMonths - 1)) : 0;
-      const remMonths = totalMonths - validGrace;
-
-      for (let m = 1; m <= validGrace; m++) {
-        const start = remBalance;
-        const interest = start * monthlyRate;
-        interestSum += interest;
-        paymentArray.push(interest);
-        rows.push({
-          period: m,
-          startBalance: start,
-          principalPaid: 0,
-          interestPaid: interest,
-          totalPayment: interest,
-          endBalance: remBalance,
-          statusTag: t.tagGrace,
-        });
-      }
-
-      firstPay = validGrace > 0 ? remBalance * monthlyRate : 0;
-
-      let postPmt = 0;
-      if (remMonths > 0) {
-        if (repayType === 'equal-total') {
-          if (monthlyRate === 0) {
-            postPmt = remBalance / remMonths;
-          } else {
-            postPmt = (remBalance * (monthlyRate * Math.pow(1 + monthlyRate, remMonths))) / (Math.pow(1 + monthlyRate, remMonths) - 1);
-          }
-        }
-      }
-      afterPay = postPmt;
-
-      const postPrincipalPerMonth = repayType === 'equal-principal' && remMonths > 0 ? remBalance / remMonths : 0;
-
-      for (let m = validGrace + 1; m <= totalMonths; m++) {
-        const start = remBalance;
-        const interest = start * monthlyRate;
-        let pmt = 0;
-        let principal = 0;
-
-        if (repayType === 'equal-total') {
-          pmt = postPmt;
-          principal = pmt - interest;
-        } else {
-          principal = postPrincipalPerMonth;
-          pmt = principal + interest;
-        }
-        remBalance -= principal;
-        if (m === totalMonths) remBalance = 0;
-
-        interestSum += interest;
-        paymentArray.push(pmt);
-        rows.push({
-          period: m,
-          startBalance: start,
-          principalPaid: principal,
-          interestPaid: interest,
-          totalPayment: pmt,
-          endBalance: Math.max(0, remBalance),
-          statusTag: t.tagAmort,
-        });
-      }
-    } else if (loanScheme === 'stepped') {
-      const validStepMonths = totalMonths > 0 ? Math.max(0, Math.min(numStepPeriods, totalMonths - 1)) : 0;
-      const remMonths = totalMonths - validStepMonths;
-
-      const firstMonthInterest = numLoanAmount * monthlyRate;
-      if (numStepPayment < firstMonthInterest && validStepMonths > 0) {
-        negAmortFlag = true;
-      }
-
-      for (let m = 1; m <= validStepMonths; m++) {
-        const start = remBalance;
-        const interest = start * monthlyRate;
-        const pmt = numStepPayment;
-        const principal = pmt - interest;
-        remBalance -= principal;
-        interestSum += interest;
-        paymentArray.push(pmt);
-        rows.push({
-          period: m,
-          startBalance: start,
-          principalPaid: principal,
-          interestPaid: interest,
-          totalPayment: pmt,
-          endBalance: Math.max(0, remBalance),
-          statusTag: t.tagStep,
-        });
-      }
-
-      firstPay = validStepMonths > 0 ? numStepPayment : 0;
-
-      let postPmt = 0;
-      if (remMonths > 0) {
-        if (repayType === 'equal-total') {
-          if (monthlyRate === 0) {
-            postPmt = remBalance / remMonths;
-          } else {
-            postPmt = (remBalance * (monthlyRate * Math.pow(1 + monthlyRate, remMonths))) / (Math.pow(1 + monthlyRate, remMonths) - 1);
-          }
-        }
-      }
-      afterPay = postPmt;
-
-      const postPrincipalPerMonth = repayType === 'equal-principal' && remMonths > 0 ? remBalance / remMonths : 0;
-
-      for (let m = validStepMonths + 1; m <= totalMonths; m++) {
-        const start = remBalance;
-        const interest = start * monthlyRate;
-        let pmt = 0;
-        let principal = 0;
-
-        if (repayType === 'equal-total') {
-          pmt = postPmt;
-          principal = pmt - interest;
-        } else {
-          principal = postPrincipalPerMonth;
-          pmt = principal + interest;
-        }
-        remBalance -= principal;
-        if (m === totalMonths) remBalance = 0;
-
-        interestSum += interest;
-        paymentArray.push(pmt);
-        rows.push({
-          period: m,
-          startBalance: start,
-          principalPaid: principal,
-          interestPaid: interest,
-          totalPayment: pmt,
-          endBalance: Math.max(0, remBalance),
-          statusTag: t.tagNormal,
-        });
-      }
-    } else if (loanScheme === 'balloon') {
-      const validBalloon = Math.min(numBalloonAmount, numLoanAmount);
-      const amortizePrincipal = numLoanAmount - validBalloon;
-
-      let pmt = 0;
-      if (repayType === 'equal-total') {
-        if (monthlyRate === 0) {
-          pmt = amortizePrincipal / totalMonths;
-        } else {
-          pmt = (amortizePrincipal * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths))) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
-        }
-      }
-
-      const principalPerMonth = repayType === 'equal-principal' ? amortizePrincipal / totalMonths : 0;
-
-      for (let m = 1; m <= totalMonths; m++) {
-        const start = remBalance;
-        const interest = start * monthlyRate;
-        let curPmt = 0;
-        let principal = 0;
-
-        if (repayType === 'equal-total') {
-          principal = pmt - (amortizePrincipal * monthlyRate);
-          curPmt = pmt + (validBalloon * monthlyRate);
-        } else {
-          principal = principalPerMonth;
-          curPmt = principal + interest;
-        }
-
-        if (m === totalMonths) {
-          principal += validBalloon;
-          curPmt += validBalloon;
-        }
-
-        remBalance -= principal;
-        if (m === totalMonths) remBalance = 0;
-
-        if (m === 1) firstPay = curPmt;
-        interestSum += interest;
-        paymentArray.push(curPmt);
-        rows.push({
-          period: m,
-          startBalance: start,
-          principalPaid: principal,
-          interestPaid: interest,
-          totalPayment: curPmt,
-          endBalance: Math.max(0, remBalance),
-          statusTag: m === totalMonths ? t.tagBalloon : '',
-        });
-      }
-    }
-
-    setMonthlyPayment(firstPay);
-    setAfterSpecialPayment(afterPay);
-    setTotalInterest(interestSum);
-    setTotalPayment(numLoanAmount + interestSum + numFee);
-    setIsNegAmort(negAmortFlag);
-    setSchedule(rows);
-
-    const calculatedApr = calculateAPR(numLoanAmount, numFee, paymentArray);
-    setApr(calculatedApr);
-  }, [carPrice, loanAmount, interestRate, periodVal, periodUnit, repayType, loanScheme, fee, gracePeriod, stepPayment, stepPeriods, balloonAmount, t]);
+    setMonthlyPayment(result.monthlyPayment);
+    setAfterSpecialPayment(result.afterSpecialPayment);
+    setTotalInterest(result.totalInterest);
+    setTotalPayment(result.totalPayment);
+    setIsNegAmort(result.isNegAmort);
+    setSchedule(result.schedule);
+    setApr(result.apr);
+  }, [loanAmount, interestRate, periodVal, periodUnit, repayType, loanScheme, fee, gracePeriod, stepPayment, stepPeriods, balloonAmount, t]);
 
   useEffect(() => {
     runCalculation();
