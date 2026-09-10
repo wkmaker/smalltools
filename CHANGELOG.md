@@ -4,6 +4,40 @@
 
 ---
 
+## [1.9.0] - 2026-09-11
+
+### 🔧 變更 (Changed)
+
+- **金融試算全面改用 BigNumber.js 定點數，並抽離為無副作用純函數引擎**：
+  8 支金融 / 職場工具（複利、信貸、車貸、房貸、股票質押、台指期、薪資勞健保、
+  真實時薪）原本在 `*Client.tsx` 內以原生浮點運算子累加金額，長攤還迴圈會累積
+  分位以下誤差、且散見 `Math.round(x + 1e-9)` 之類的修正 hack（違反全域鐵則 5、6）。
+  - 每支工具的計算邏輯抽離至 `app/[tool]/engine.ts`（薪資與時薪併入既有
+    `salaryConfig.ts` / `utils.ts`），全部金額加減乘除改走 `bignumber.js` 鏈式運算，
+    UI 顯示前才落地為 `number`（鐵則 9 領域邏輯與 UI 分層）。
+  - 新增共用模組 `app/utils/decimal.ts`（BigNumber 全域組態與換算入口）與
+    `app/utils/finance.ts`（APR 二分求解：折現因子逐期遞乘、收斂提前結束）。
+  - 業務層級數值（元、APR%、投保級距金額）與重構前完全一致；僅修正原本
+    浮點累加造成的分位以下漂移。
+- **`tsconfig.json`**：開啟 `allowImportingTsExtensions`，引擎以 `.ts` 副檔名互相引入，
+  供 Node 原生 `node:test` 直接載入 TypeScript。
+- **正規化全站 29 支原始碼檔案的換行符**：既有檔案含殘留 lone CR（`\r\r\n`），
+  Git 判定為二進位、任何一行修改都產生整檔 diff；統一收斂為乾淨 CRLF
+  （`git diff --ignore-all-space` 驗證零內容變動）。
+- **`.gitignore`**：新增 `tsconfig.tsbuildinfo`（TS 增量建置快取，改為不追蹤）。
+
+### ✨ 新增功能 (Added)
+
+- **`npm run test:engine` 引擎單元測試套件**（`node:test`，51 項）：涵蓋各金融引擎的
+  歷期攤還表、總額、APR、投保級距與稅額，並對「凍結的浮點基準演算法」做批次交叉
+  驗證，確保定點數改寫在整數元層級零回歸。併入 `npm test` 與 `prebuild` 阻斷關卡。
+
+### 📦 依賴 (Dependencies)
+
+- 新增 `bignumber.js` `^9`。
+
+---
+
 ## [1.8.2] - 2026-09-11
 
 ### 🔧 變更 (Changed)
