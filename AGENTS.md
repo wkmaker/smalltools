@@ -1,6 +1,6 @@
 # Smalltools 專案開發準則 (Project Rules & Definition of Done)
 
-本專案**完整遵循** `C:\PG\AGENTS.md` 的「永遠適用鐵則」與「任務交付閉環 (DoD)」，以及 `C:\PG\skills\` 底下 6 份深入細則（繁中純淨介面、前端分層架構與六分拆解、零原生 Emoji、雙模色彩控制項、A11y 對稱綁定、效能與主執行緒防護、彈出層 Portal 隔離、非同步競態防護、測試架構等）。
+本專案**完整遵循** `C:\PG\AGENTS.md` 的「永遠適用鐵則」與「任務交付閉環 (DoD)」，以及 `C:\PG\skills\` 底下 8 份深入細則（繁中純淨介面、前端分層架構與六分拆解、零原生 Emoji、雙模色彩控制項、A11y 對稱綁定、效能與主執行緒防護、彈出層 Portal 隔離、非同步競態防護、測試架構、Web 安全與 OWASP Top 10、SEO 與可發現性等）。
 
 本檔**只列 Smalltools 專屬的補充與差異**，不重複上層已涵蓋的通用規範。細節見 `.agents/skills/` 四份專案手冊：
 
@@ -41,3 +41,13 @@
 2. **`README.md`**：同步更新收錄工具清單、分類連結與功能簡介。
 3. **技能沉澱**：本次踩到的專案專屬雷 / 模式，寫回 **`.agents/skills/`** 對應手冊（跨專案通用的則沉澱回 `C:\PG\skills\`）。
 4. **`npm run test` 完整驗證**：`test:ui`（UI 規範 + WCAG 亮暗對比）+ `test:seo`（SEO 深度審計）+ `test:faq`（FAQ 結構化資料）+ `test:og`（雙語字典 / 常數）四套件 100% 通過。`npm run build` 會先跑 `prebuild` 執行同一批檢查，任何工具遺漏 SEO 標記、未配置 FAQ 或違反 UI 規範將**自動中斷建置**。
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

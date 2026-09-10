@@ -111,11 +111,11 @@ jobs:
           echo "Overwrote ./public/robots.txt with Disallow: / for Dev"
 
       # ── 4. 設定 Node.js 環境（含 npm 快取） ──────────────────
-      - name: Setup Node.js 22
+      - name: Setup Node.js 24
         if: steps.changes.outputs.build_and_deploy == 'true'
         uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       # ── 4.5. 設定 Next.js Build 快取 ────────────────────────

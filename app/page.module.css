@@ -547,7 +547,7 @@
 }
 
 @media (max-width: 600px) {
-    .homeContainer { padding: 2.5rem 1.5rem; }
+    .homeContainer { padding: 5rem 1.5rem 2.5rem; }
     .toolsGrid { grid-template-columns: 1fr; gap: 1.5rem; }
     .homeTitle { font-size: 1.8rem; }
 }

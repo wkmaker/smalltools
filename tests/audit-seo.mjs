@@ -22,16 +22,33 @@ console.log(`📦 偵測到 ${toolDirs.length} 個主要工具模組\n`);
 const issues = [];
 
 // 2. 檢查 sitemap.ts 涵蓋率
+// sitemap.ts 已改為由中央註冊表 app/config/tools.tsx 推導，故此處改驗「工具是否登記於註冊表」與「sitemap 確實引用註冊表」。
 const sitemapContent = fs.readFileSync(path.join(appDir, 'sitemap.ts'), 'utf-8');
+const toolsRegistry = fs.readFileSync(path.join(appDir, 'config', 'tools.tsx'), 'utf-8');
+
+const sitemapUsesRegistry =
+  /from '\.\/config\/tools'/.test(sitemapContent) &&
+  (sitemapContent.includes('ALL_TOOLS') || sitemapContent.includes('CATEGORIES'));
+
+if (!sitemapUsesRegistry) {
+  issues.push({
+    type: 'SITEMAP',
+    severity: 'HIGH',
+    message: `sitemap.ts 未由中央註冊表 app/config/tools.tsx 推導工具清單（應 import ALL_TOOLS / CATEGORIES）`,
+  });
+}
 
 toolDirs.forEach(tool => {
-  const zhUrl = `/${tool}/`;
-  const enUrl = `/${tool}/en/`;
-  if (!sitemapContent.includes(`'${zhUrl}'`) && !sitemapContent.includes(`"${zhUrl}"`)) {
-    issues.push({ type: 'SITEMAP', severity: 'HIGH', message: `sitemap.ts 缺少中文頁面路徑: ${zhUrl}` });
-  }
-  if (!sitemapContent.includes(`'${enUrl}'`) && !sitemapContent.includes(`"${enUrl}"`)) {
-    issues.push({ type: 'SITEMAP', severity: 'HIGH', message: `sitemap.ts 缺少英文頁面路徑: ${enUrl}` });
+  const hasPage = fs.existsSync(path.join(appDir, tool, 'page.tsx'));
+  if (!hasPage) return;
+  const registered =
+    toolsRegistry.includes(`'/${tool}/'`) || toolsRegistry.includes(`"/${tool}/"`);
+  if (!registered) {
+    issues.push({
+      type: 'SITEMAP',
+      severity: 'HIGH',
+      message: `工具 ${tool} 未登記於 app/config/tools.tsx，sitemap 與首頁將同時遺漏`,
+    });
   }
 });
 

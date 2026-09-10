@@ -1,6 +1,6 @@
 const emojiRegex = /\p{Extended_Pictographic}/u;
 
-export default {
+const rule = {
   id: 'no-raw-emoji',
   name: '裸露 Emoji 檢測',
   description: '發現裸露 Emoji 符號（請替換為向量 SVG Icon）',
@@ -18,3 +18,5 @@ export default {
     return null;
   }
 };
+
+export default rule;
