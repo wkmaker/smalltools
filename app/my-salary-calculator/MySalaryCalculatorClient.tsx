@@ -3,12 +3,8 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
-import {
-  YEAR_CONFIGS_JSON,
-  SUPPORTED_YEARS,
-  findInsuredAmount,
-  calculateTaxFromConfig,
-} from './salaryConfig';
+import { YEAR_CONFIGS_JSON, SUPPORTED_YEARS } from './salaryConfig';
+import { calculateSalary } from './engine';
 import styles from './my-salary-calculator.module.css';
 
 interface Props {
@@ -310,51 +306,34 @@ export default function MySalaryCalculatorClient({ lang = 'zh-TW' }: Props) {
   const numSalary = monthlySalary === '' ? 0 : monthlySalary;
   const numBase = customInsuranceBase === '' ? numSalary : customInsuranceBase;
 
-  // 1. 查投保級距金額 (直接對照 JSON brackets)
-  const insuredLabor = findInsuredAmount(numBase, config.labor_insurance.brackets);
-  const insuredHealth = findInsuredAmount(numBase, config.health_insurance.brackets);
-  const insuredPension = findInsuredAmount(numBase, config.labor_pension.brackets);
-
-  // 2. 員工自負額計算
-  const empLabor = Math.round(
-    insuredLabor * config.labor_insurance.rate * config.labor_insurance.employee_ratio + 1e-9
+  // 薪資勞健保 / 勞退 / 預扣稅主試算邏輯（純函數引擎，見 ./engine.ts）
+  const {
+    insuredLabor,
+    insuredHealth,
+    insuredPension,
+    empLabor,
+    singleHealth,
+    empHealth,
+    empPension,
+    empTax,
+    takeHomePay,
+    emprLabor,
+    emprHealth,
+    emprPension,
+    emprTotalCost,
+    minSalary,
+  } = calculateSalary(
+    {
+      year: selectedYear,
+      salary: numSalary,
+      insuranceBase: customInsuranceBase === '' ? numSalary : customInsuranceBase,
+      dependents,
+      selfPensionRatio,
+      taxMethod,
+      taxDependents,
+    },
+    config,
   );
-  const singleHealth = Math.round(
-    insuredHealth * config.health_insurance.rate * config.health_insurance.employee_ratio + 1e-9
-  );
-  const empHealth = singleHealth * (1 + dependents);
-  const empPension = Math.round(insuredPension * (selfPensionRatio / 100) + 1e-9);
-
-  let empTax = 0;
-  if (taxMethod === 'rate_5') {
-    const calcTax = numSalary * 0.05;
-    if (calcTax >= 2000) {
-      empTax = Math.round(calcTax + 1e-9);
-    }
-  } else if (taxMethod === 'matrix') {
-    empTax = calculateTaxFromConfig(numSalary, taxDependents, config, selectedYear);
-  }
-
-  const takeHomePay = Math.max(0, Math.round(numSalary - empLabor - empHealth - empPension - empTax));
-
-  // 3. 雇主負擔計算
-  const emprLabor = Math.round(
-    insuredLabor * config.labor_insurance.rate * config.labor_insurance.employer_ratio + 1e-9
-  );
-  const emprHealth = Math.round(
-    insuredHealth *
-      config.health_insurance.rate *
-      config.health_insurance.employer_ratio *
-      (1 + (config.health_insurance.employer_average_dependents ?? 0.56)) +
-      1e-9
-  );
-  const emprPension = Math.round(
-    insuredPension * config.labor_pension.employer_rate + 1e-9
-  );
-  const emprTotalCost = Math.round(numSalary + emprLabor + emprHealth + emprPension);
-
-  // 最小基本工資級距
-  const minSalary = config.labor_insurance.brackets[0]?.insured || 29500;
 
   // 複製試算分享連結
   const copyShareLink = () => {
