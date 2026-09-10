@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './futures-calculator.module.css';
+import { calculateFutures } from './engine';
 
 interface Preset {
   id: 'tx' | 'mtx' | 'tmf' | 'custom';
@@ -397,39 +398,35 @@ export default function FuturesCalculatorClient({ lang = 'zh-TW' }: FuturesCalcu
   const numInit = initialMargin === '' ? 0 : initialMargin;
   const numMaint = maintMargin === '' ? 0 : maintMargin;
 
-  const contractValue = numIndex * numQty * numPtVal;
-  const totalInitMargin = numInit * numQty;
-  const totalMaintMargin = numMaint * numQty;
-  const actualLeverage = numCapital > 0 ? contractValue / numCapital : 0;
+  // 期貨槓桿與逆風主試算邏輯（純函數引擎，見 ./engine.ts）
+  const {
+    contractValue,
+    totalInitMargin,
+    totalMaintMargin,
+    actualLeverage,
+    marginCallPoints: marginCallPts,
+    marginCallPrice,
+    liquidationPoints: liqPts,
+    liquidationPrice: liqPrice,
+    dropPoints,
+    simIndex,
+    simLoss,
+    simCapital,
+    riskRatio,
+    isBelowInit,
+    topupCash,
+  } = calculateFutures({
+    indexPrice: numIndex,
+    quantity: numQty,
+    capital: numCapital,
+    multiplier: numPtVal,
+    initialMargin: numInit,
+    maintMargin: numMaint,
+    position,
+    stressDropPercent: stressDropPct,
+  });
 
-  // A. 追繳與斷頭臨界點估算
-  let marginCallPts = 0;
-  let marginCallPrice = 0;
-  let liqPts = 0;
-  let liqPrice = 0;
-
-  if (numCapital > 0 && numQty > 0 && numPtVal > 0) {
-    const warnLoss = numCapital - totalMaintMargin;
-    marginCallPts = warnLoss / (numQty * numPtVal);
-    marginCallPrice = position === 'long' ? numIndex - marginCallPts : numIndex + marginCallPts;
-
-    const liqLoss = numCapital - totalInitMargin * 0.25;
-    liqPts = liqLoss / (numQty * numPtVal);
-    liqPrice = position === 'long' ? numIndex - liqPts : numIndex + liqPts;
-  }
-
-  // B. 大跌壓力測試
-  const dropPoints = numIndex * (stressDropPct / 100);
-  const simIndex = position === 'long' ? numIndex - dropPoints : numIndex + dropPoints;
-  const simLoss = dropPoints * numQty * numPtVal;
-  const simCapital = numCapital - simLoss;
-
-  // C. SVG 風險指標儀表板 (-90deg ~ +90deg)
-  let riskRatio = 0;
-  if (totalInitMargin > 0) {
-    riskRatio = (simCapital / totalInitMargin) * 100;
-  }
-
+  // SVG 風險指標指針角度（-90deg ~ +90deg，純 UI 幾何）
   let needleDeg = -90;
   if (totalInitMargin === 0 && simCapital > 0) {
     needleDeg = 90;
@@ -440,10 +437,6 @@ export default function FuturesCalculatorClient({ lang = 'zh-TW' }: FuturesCalcu
   } else {
     needleDeg = -90 + riskRatio * 0.9;
   }
-
-  // D. 保證金安全回補金額試算 (補足至 100% 原始保證金)
-  const isBelowInit = totalInitMargin > 0 && simCapital < totalInitMargin;
-  const topupCash = isBelowInit ? Math.max(0, totalInitMargin - simCapital) : 0;
 
   // 快捷本金設定
   const setCapitalPreset = (multiplierRatio: number) => {
