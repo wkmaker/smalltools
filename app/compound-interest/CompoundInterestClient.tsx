@@ -4,16 +4,7 @@ import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './compound-interest.module.css';
-
-interface InterestRow {
-  label: string;
-  startBalance: number;
-  contribution: number;
-  interest: number;
-  cumulativeInterest: number;
-  totalPrincipal: number;
-  total: number;
-}
+import { calculateCompoundInterest, type InterestRow } from './engine';
 
 function formatNumber(val: number): string {
   if (isNaN(val) || !isFinite(val) || val === 0) return '0';
@@ -342,136 +333,28 @@ export default function CompoundInterestClient({ lang = 'zh-TW' }: Props) {
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [principal, contribution, contribUnit, ratePercent, rateUnit, periodVal, periodUnit, compoundFreq]);
 
-  // 主計算邏輯
+  // 主計算邏輯（純函數引擎，見 ./engine.ts）
   const runCalculation = useCallback(() => {
-    const numPrincipal = principal === '' ? 0 : Math.max(0, principal);
-    const numContrib = contribution === '' ? 0 : Math.max(0, contribution);
-    const numRate = ratePercent === '' ? 0 : Math.min(1000, Math.max(0, ratePercent));
-    const numPeriod = periodVal === '' ? 0 : Math.min(100, Math.max(0, periodVal));
-
-    const totalMonths = Math.max(0, periodUnit === 'year' ? numPeriod * 12 : numPeriod);
-    const monthlyRate = rateUnit === 'year' ? numRate / 100 / 12 : numRate / 100;
-
-    let currentBal = numPrincipal;
-    let currentPrin = numPrincipal;
-    let currentAccruedInterest = 0;
-    let totalInterestEarned = 0;
-
-    const monthlyData: { month: number; totalPrincipal: number; totalInterest: number; balance: number }[] = [];
-
-    for (let month = 1; month <= totalMonths; month++) {
-      let addedContrib = 0;
-      if (contribUnit === 'month') {
-        addedContrib = numContrib;
-      } else if (contribUnit === 'year') {
-        if ((month - 1) % 12 === 0) {
-          addedContrib = numContrib;
-        }
-      }
-
-      currentBal += addedContrib;
-      currentPrin += addedContrib;
-
-      let interestThisMonth = 0;
-      if (compoundFreq === 0) {
-        interestThisMonth = currentPrin * monthlyRate;
-        totalInterestEarned += interestThisMonth;
-        currentBal += interestThisMonth;
-      } else {
-        interestThisMonth = currentBal * monthlyRate;
-        currentAccruedInterest += interestThisMonth;
-        totalInterestEarned += interestThisMonth;
-
-        const isCompoundingTerm =
-          compoundFreq === 12 ||
-          (compoundFreq === 4 && month % 3 === 0) ||
-          (compoundFreq === 1 && month % 12 === 0) ||
-          month === totalMonths;
-
-        if (isCompoundingTerm) {
-          currentBal += currentAccruedInterest;
-          currentAccruedInterest = 0;
-        }
-      }
-
-      monthlyData.push({
-        month,
-        totalPrincipal: currentPrin,
-        totalInterest: totalInterestEarned,
-        balance: currentBal + currentAccruedInterest,
-      });
-    }
-
-    const rows: InterestRow[] = [];
-    rows.push({
-      label: t.initialLabel,
-      startBalance: 0,
-      contribution: 0,
-      interest: 0,
-      cumulativeInterest: 0,
-      totalPrincipal: numPrincipal,
-      total: numPrincipal,
+    const result = calculateCompoundInterest({
+      principal: principal === '' ? 0 : principal,
+      contribution: contribution === '' ? 0 : contribution,
+      contribUnit,
+      ratePercent: ratePercent === '' ? 0 : ratePercent,
+      rateUnit,
+      periodVal: periodVal === '' ? 0 : periodVal,
+      periodUnit,
+      compoundFreq,
+      labels: {
+        initial: t.initialLabel,
+        year: t.yearLabel,
+        month: t.monthLabel,
+      },
     });
 
-    if (periodUnit === 'year') {
-      let prevTotal = numPrincipal;
-      let prevInterest = 0;
-      for (let year = 1; year <= numPeriod; year++) {
-        const idx = Math.min(year * 12 - 1, monthlyData.length - 1);
-        if (idx < 0) break;
-        const currentTotal = monthlyData[idx].balance;
-        const currentP = monthlyData[idx].totalPrincipal;
-        const currentI = monthlyData[idx].totalInterest;
-
-        const prevP = year === 1 ? numPrincipal : monthlyData[(year - 1) * 12 - 1].totalPrincipal;
-        const contribThisYear = currentP - prevP;
-        const interestThisYear = currentI - prevInterest;
-
-        rows.push({
-          label: t.yearLabel(year),
-          startBalance: prevTotal,
-          contribution: contribThisYear,
-          interest: interestThisYear,
-          cumulativeInterest: currentI,
-          totalPrincipal: currentP,
-          total: currentTotal,
-        });
-
-        prevTotal = currentTotal;
-        prevInterest = currentI;
-      }
-    } else {
-      let prevTotal = numPrincipal;
-      let prevInterest = 0;
-      monthlyData.forEach(item => {
-        const currentTotal = item.balance;
-        const currentP = item.totalPrincipal;
-        const currentI = item.totalInterest;
-
-        const prevP = item.month === 1 ? numPrincipal : monthlyData[item.month - 2].totalPrincipal;
-        const contribThisMonth = currentP - prevP;
-        const interestThisMonth = currentI - prevInterest;
-
-        rows.push({
-          label: t.monthLabel(item.month),
-          startBalance: prevTotal,
-          contribution: contribThisMonth,
-          interest: interestThisMonth,
-          cumulativeInterest: currentI,
-          totalPrincipal: currentP,
-          total: currentTotal,
-        });
-
-        prevTotal = currentTotal;
-        prevInterest = currentI;
-      });
-    }
-
-    const finalState = rows[rows.length - 1];
-    setTotalAsset(finalState ? finalState.total : numPrincipal);
-    setTotalPrincipal(finalState ? finalState.totalPrincipal : numPrincipal);
-    setTotalInterest(finalState ? finalState.cumulativeInterest : 0);
-    setSchedule(rows);
+    setTotalAsset(result.totalAsset);
+    setTotalPrincipal(result.totalPrincipal);
+    setTotalInterest(result.totalInterest);
+    setSchedule(result.schedule);
   }, [principal, contribution, contribUnit, ratePercent, rateUnit, periodVal, periodUnit, compoundFreq, t]);
 
   useEffect(() => {
