@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './pledge-calculator.module.css';
+import { calculatePledge } from './engine';
 
 function formatNumber(val: number): string {
   if (isNaN(val) || !isFinite(val)) return '0';
@@ -352,43 +353,39 @@ export default function PledgeCalculatorClient({ lang = 'zh-TW' }: Props) {
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [stockPrice, stockQty, qtyUnit, loanAmount, thresholdWarn, thresholdSafe]);
 
-  // 計算股數與總市值
+  // 質押維持率主試算邏輯（純函數引擎，見 ./engine.ts）
   const numPrice = stockPrice === '' ? 0 : stockPrice;
   const numQty = stockQty === '' ? 0 : stockQty;
-  const totalShares = numQty * qtyUnit;
-  const marketValue = numPrice * totalShares;
-
-  const maxLoan60 = marketValue * 0.6;
-  const maxLoan50 = marketValue * 0.5;
-
   const numLoan = loanAmount === '' ? 0 : loanAmount;
   const numWarnRate = thresholdWarn === '' ? 130 : thresholdWarn;
   const numSafeRate = thresholdSafe === '' ? 160 : thresholdSafe;
 
-  // A. 臨界點計算
-  let warnPrice = 0;
-  let warnDrop = 0;
-  let safePrice = 0;
-  let safeDrop = 0;
+  const {
+    totalShares,
+    marketValue,
+    maxLoan60,
+    maxLoan50,
+    warnPrice,
+    warnDrop,
+    safePrice,
+    safeDrop,
+    simPrice,
+    simMarketValue: simMarketVal,
+    ratio,
+    repayAmount: repayAmt,
+    cashAmount: cashAmt,
+    isBelowSafe,
+  } = calculatePledge({
+    stockPrice: numPrice,
+    stockQty: numQty,
+    qtyUnit,
+    loanAmount: numLoan,
+    thresholdWarnPercent: numWarnRate,
+    thresholdSafePercent: numSafeRate,
+    stressDropPercent: stressDropPct,
+  });
 
-  if (numLoan > 0 && totalShares > 0 && numPrice > 0) {
-    warnPrice = ((numWarnRate / 100) * numLoan) / totalShares;
-    warnDrop = Math.max(0, ((numPrice - warnPrice) / numPrice) * 100);
-
-    safePrice = ((numSafeRate / 100) * numLoan) / totalShares;
-    safeDrop = Math.max(0, ((numPrice - safePrice) / numPrice) * 100);
-  }
-
-  // B. 大跌壓力測試模擬
-  const simPrice = numPrice * (1 - stressDropPct / 100);
-  const simMarketVal = marketValue * (1 - stressDropPct / 100);
-
-  // C. 維持率與儀表板動態旋轉角度 (-90deg ~ +90deg)
-  let ratio = 0;
-  if (numLoan > 0) {
-    ratio = (simMarketVal / numLoan) * 100;
-  }
-
+  // 儀表板指針角度（-90deg ~ +90deg，純 UI 幾何）
   let needleDeg = -90;
   if (numLoan === 0 && simMarketVal > 0) {
     needleDeg = 90;
@@ -398,17 +395,6 @@ export default function PledgeCalculatorClient({ lang = 'zh-TW' }: Props) {
     needleDeg = -90;
   } else {
     needleDeg = -90 + (ratio - 100) * 1.8;
-  }
-
-  // D. 保證金安全回補金額試算 (方案 A 償還本金 / 方案 B 補繳現金)
-  let repayAmt = 0;
-  let cashAmt = 0;
-  const isBelowSafe = numLoan > 0 && ratio < numSafeRate;
-
-  if (isBelowSafe) {
-    const targetSec = numSafeRate / 100;
-    repayAmt = Math.max(0, numLoan - simMarketVal / targetSec);
-    cashAmt = Math.max(0, numLoan * targetSec - simMarketVal);
   }
 
   // 快捷帶入本金金額
