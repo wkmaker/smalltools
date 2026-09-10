@@ -1,6 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useId, useMemo } from 'react';
+import {
+  calculateDueDate,
+  calculateGestationalAge,
+  calculateMaternityBenefits,
+  crlToGestationalAge,
+  addDays,
+  formatDate,
+} from './engine';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './pregnancy-calculator.module.css';
@@ -346,19 +354,6 @@ function getBabySizeInfo(gestationalWeeks: number): BabySizeInfo {
   return FETAL_GROWTH_DATA[closestWeek] || FETAL_GROWTH_DATA[40];
 }
 
-// 輔助函式：日期加減
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date.getTime());
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
-function formatDate(d: Date): string {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 'en' }) {
   const t = TRANSLATIONS[lang];
@@ -399,16 +394,8 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const [ivfDate, setIvfDate] = useState<string>(() => formatDate(new Date()));
   const [ivfType, setIvfType] = useState<'d5' | 'd3' | 'egg'>('d5');
 
-  // 依 CRL (mm) 換算胎兒天數與週數 (Hadlock Formula)
-  const crlConvertedAge = useMemo(() => {
-    if (typeof crlValue !== 'number' || crlValue <= 0) return { totalDays: 84, weeks: 12, days: 0 };
-    // Hadlock Formula: Days = 52.37 + 1.315 * CRL - 0.0022 * CRL^2
-    const d = Math.round(52.37 + 1.315 * crlValue - 0.0022 * crlValue * crlValue);
-    const totalDays = Math.max(35, Math.min(110, d)); // 約 5~15 週
-    const weeks = Math.floor(totalDays / 7);
-    const remDays = totalDays % 7;
-    return { totalDays, weeks, days: remDays };
-  }, [crlValue]);
+  // 依 CRL (mm) 換算胎兒天數與週數（純函數引擎，見 ./engine.ts）
+  const crlConvertedAge = useMemo(() => crlToGestationalAge(crlValue), [crlValue]);
 
   // 薪資、產假與摺疊設定
   const [monthlySalary, setMonthlySalary] = useState<number | ''>(45800);
@@ -622,80 +609,32 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   };
 
   // 核心計算：推算預產期 (EDD Date) 與 受孕日 (Conception Date)
-  const { estimatedDueDate, conceptionDate } = useMemo(() => {
-    let edd: Date = new Date();
-    let conception: Date = new Date();
-
-    if (calcMode === 'lmp') {
-      const lmp = new Date(lmpDate);
-      if (!isNaN(lmp.getTime())) {
-        // Naegele's Rule: 280 days + (cycleDays - 28)
-        const cycleAdjustment = (cycleDays || 28) - 28;
-        edd = addDays(lmp, 280 + cycleAdjustment);
-        conception = addDays(lmp, 14 + cycleAdjustment);
-      }
-    } else if (calcMode === 'edd') {
-      const parsedEdd = new Date(eddDateInput || defaultLmp);
-      if (!isNaN(parsedEdd.getTime())) {
-        edd = parsedEdd;
-        conception = addDays(parsedEdd, -266);
-      }
-    } else if (calcMode === 'ultrasound') {
-      const scanD = new Date(scanDate);
-      if (!isNaN(scanD.getTime())) {
-        const totalScanDays = scanInputType === 'crl'
-          ? crlConvertedAge.totalDays
-          : ((scanWeeks || 0) * 7 + (scanDays || 0));
-        const remainingDaysToEdd = 280 - totalScanDays;
-        edd = addDays(scanD, remainingDaysToEdd);
-        conception = addDays(edd, -266);
-      }
-    } else if (calcMode === 'ivf') {
-      const ivfD = new Date(ivfDate);
-      if (!isNaN(ivfD.getTime())) {
-        if (ivfType === 'd5') {
-          edd = addDays(ivfD, 280 - 19); // 261 days
-          conception = addDays(ivfD, -5);
-        } else if (ivfType === 'd3') {
-          edd = addDays(ivfD, 280 - 17); // 263 days
-          conception = addDays(ivfD, -3);
-        } else {
-          // egg retrieval / IUI
-          edd = addDays(ivfD, 280 - 14); // 266 days
-          conception = ivfD;
-        }
-      }
-    }
-
-    return { estimatedDueDate: edd, conceptionDate: conception };
-  }, [calcMode, lmpDate, cycleDays, eddDateInput, defaultLmp, scanDate, scanWeeks, scanDays, ivfDate, ivfType]);
+  // 預產期 (EDD) 與受孕日推算（純函數引擎，見 ./engine.ts）
+  const { estimatedDueDate, conceptionDate } = useMemo(
+    () =>
+      calculateDueDate({
+        calcMode,
+        lmpDate,
+        cycleDays,
+        eddDateInput,
+        fallbackDate: defaultLmp,
+        scanDate,
+        scanInputType,
+        scanWeeks,
+        scanDays,
+        crlValue,
+        ivfDate,
+        ivfType,
+      }),
+    [calcMode, lmpDate, cycleDays, eddDateInput, defaultLmp, scanDate, scanInputType, scanWeeks, scanDays, crlValue, ivfDate, ivfType],
+  );
 
   // 當前懷孕週數與倒數計算
-  const { currentGestationalDays, currentWeeks, currentDays, daysRemaining, progressPercent, trimester } = useMemo(() => {
-    const today = new Date();
-    // 預產期為滿 40 週 (280 天)
-    const msDiff = estimatedDueDate.getTime() - today.getTime();
-    const daysLeft = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
-    
-    // 累計懷孕天數 = 280 - 剩餘天數
-    const totalDays = Math.max(0, Math.min(300, 280 - daysLeft));
-    const weeks = Math.floor(totalDays / 7);
-    const days = totalDays % 7;
-    const progress = Math.min(100, Math.max(0, Math.round((totalDays / 280) * 100)));
-
-    let trim = t.trimester1;
-    if (weeks >= 28) trim = t.trimester3;
-    else if (weeks >= 13) trim = t.trimester2;
-
-    return {
-      currentGestationalDays: totalDays,
-      currentWeeks: weeks,
-      currentDays: days,
-      daysRemaining: daysLeft,
-      progressPercent: progress,
-      trimester: trim,
-    };
-  }, [estimatedDueDate, t]);
+  // 當前懷孕週數與倒數（純函數引擎，見 ./engine.ts）
+  const gestational = useMemo(() => calculateGestationalAge(estimatedDueDate), [estimatedDueDate]);
+  const { currentGestationalDays, currentWeeks, currentDays, daysRemaining, progressPercent } = gestational;
+  const trimester =
+    gestational.trimesterIndex === 3 ? t.trimester3 : gestational.trimesterIndex === 2 ? t.trimester2 : t.trimester1;
 
   // 胎兒成長比喻
   const babyGrowth = useMemo(() => {
@@ -806,31 +745,11 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     ];
   }, [estimatedDueDate, currentWeeks]);
 
-  // 產假與津貼試算
-  const benefits = useMemo(() => {
-    // 產假開始日：預產期前 X 週
-    const leaveStart = addDays(estimatedDueDate, -(leaveStartWeeksOption * 7));
-    // 產假共 8 週 (56天)
-    const leaveEnd = addDays(leaveStart, 55);
-    // 復職日：產假結束隔日
-    const returnDate = addDays(leaveEnd, 1);
-
-    const salary = typeof monthlySalary === 'number' ? monthlySalary : 0;
-    // 勞保生育給付：2個月平均月投保薪資
-    const laborBenefit = salary * 2;
-    // 育嬰留停津貼：8成薪 * 6個月
-    const parentalAllowanceMonthly = Math.round(salary * 0.8);
-    const parentalAllowanceTotal = parentalAllowanceMonthly * 6;
-
-    return {
-      leaveStart,
-      leaveEnd,
-      returnDate,
-      laborBenefit,
-      parentalAllowanceMonthly,
-      parentalAllowanceTotal,
-    };
-  }, [estimatedDueDate, leaveStartWeeksOption, monthlySalary]);
+  // 產假與津貼試算（純函數引擎，見 ./engine.ts）
+  const benefits = useMemo(
+    () => calculateMaternityBenefits(estimatedDueDate, leaveStartWeeksOption, monthlySalary),
+    [estimatedDueDate, leaveStartWeeksOption, monthlySalary],
+  );
 
   // 一鍵複製範本文字
   const leaveApplicationTemplate = useMemo(() => {
