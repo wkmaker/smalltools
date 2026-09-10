@@ -106,3 +106,27 @@ test('calculateAPR：淨額 <= 0 或無現金流時回傳 0', () => {
   assert.equal(calculateAPR(10000, 10000, [100, 100]), 0);
   assert.equal(calculateAPR(10000, 0, []), 0);
 });
+
+test('定點數不漂移：償還本金總和 === 原始貸款本金（各期為整數）', () => {
+  for (const method of ['equal-payment', 'equal-principal']) {
+    for (const [amt, yr, rate] of [
+      [123, 4, 2.06],
+      [500, 20, 1.31],
+    ]) {
+      const r = calculatePersonalLoan({
+        amountInTenThousands: amt,
+        years: yr,
+        annualRatePercent: rate,
+        fee: 0,
+        method,
+      });
+      const sumPrincipal = r.schedule.reduce((s, row) => s + row.principal, 0);
+      assert.equal(sumPrincipal, amt * 10000, `method=${method} amt=${amt} yr=${yr}`);
+      for (const row of r.schedule) {
+        assert.ok(Number.isInteger(row.principal), 'principal 應為整數元');
+        assert.ok(Number.isInteger(row.interest), 'interest 應為整數元');
+        assert.ok(Number.isInteger(row.payment), 'payment 應為整數元');
+      }
+    }
+  }
+});
