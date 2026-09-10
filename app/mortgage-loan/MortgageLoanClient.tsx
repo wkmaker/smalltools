@@ -4,26 +4,14 @@ import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './mortgage-loan.module.css';
-
-interface Stage {
-  durationValue: number | '' | null;
-  durationUnit: 'year' | 'month' | null;
-  rate: number | '';
-}
-
-interface SingleLoanDetailRow {
-  period: number;
-  startBalance: number;
-  principalPaid: number;
-  interestPaid: number;
-  totalPayment: number;
-  endBalance: number;
-}
-
-interface CombinedDetailRow extends SingleLoanDetailRow {
-  detail1?: SingleLoanDetailRow;
-  detail2?: SingleLoanDetailRow;
-}
+import {
+  calculateMortgage,
+  type Stage,
+  type SingleLoanDetailRow,
+  type CombinedDetailRow,
+  type RepayType,
+  type RateType,
+} from './engine';
 
 interface Props {
   lang?: 'zh-TW' | 'en';
@@ -232,150 +220,6 @@ const TRANSLATIONS = {
   },
 };
 
-function calculateAPR(loanAmount: number, fee: number, payments: number[]): number {
-  const netAmount = loanAmount - fee;
-  if (netAmount <= 0 || payments.length === 0) return 0;
-
-  let low = 0;
-  let high = 2; // 月折現率上限設為 200%
-  let mid = 0;
-
-  for (let iter = 0; iter < 80; iter++) {
-    mid = (low + high) / 2;
-    let npv = -netAmount;
-    for (let t = 0; t < payments.length; t++) {
-      npv += payments[t] / Math.pow(1 + mid, t + 1);
-    }
-    if (npv > 0) {
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-
-  return mid * 12 * 100;
-}
-
-function calculateSingleLoanDetail(
-  loanAmount: number,
-  periodVal: number,
-  periodUnit: 'year' | 'month',
-  graceVal: number,
-  graceUnit: 'year' | 'month',
-  rateType: 'single' | 'multi',
-  singleRate: number,
-  stageList: Stage[],
-  repayType: 'equal-total' | 'equal-principal'
-) {
-  const totalMonths = Math.max(0, periodUnit === 'year' ? Math.round(periodVal * 12) : Math.round(periodVal));
-  let graceMonths = Math.max(0, graceUnit === 'year' ? Math.round(graceVal * 12) : Math.round(graceVal));
-  if (graceMonths > totalMonths) graceMonths = totalMonths;
-
-  const stageRates: number[] = [];
-  if (rateType === 'single') {
-    for (let k = 0; k < totalMonths; k++) stageRates.push(singleRate);
-  } else {
-    let consumed = 0;
-    for (let si = 0; si < stageList.length - 1; si++) {
-      const s = stageList[si];
-      const durationVal = s.durationValue === '' || s.durationValue === null ? 0 : s.durationValue;
-      const sMonths = s.durationUnit === 'year' ? Math.round(durationVal * 12) : Math.round(durationVal);
-      const sRate = s.rate === '' ? 0 : s.rate;
-      for (let k = 0; k < sMonths; k++) {
-        stageRates.push(sRate);
-      }
-      consumed += sMonths;
-    }
-    const lastStage = stageList[stageList.length - 1];
-    const lastRate = lastStage && lastStage.rate !== '' ? lastStage.rate : 0;
-    for (let k = consumed; k < totalMonths; k++) {
-      stageRates.push(lastRate);
-    }
-  }
-
-  const resultData: SingleLoanDetailRow[] = [];
-  const paymentArray: number[] = [];
-  let totalInterest = 0;
-
-  resultData.push({
-    period: 0,
-    startBalance: 0,
-    principalPaid: 0,
-    interestPaid: 0,
-    totalPayment: 0,
-    endBalance: loanAmount,
-  });
-
-  if (totalMonths > 0 && loanAmount > 0) {
-    let remainingBalance = loanAmount;
-    const graceBal = loanAmount;
-    const repayMonths = totalMonths - graceMonths;
-    const principalPerMonth = repayMonths > 0 ? graceBal / repayMonths : 0;
-
-    for (let m = 1; m <= totalMonths; m++) {
-      const startBal = remainingBalance;
-      const currentAnnualRate = stageRates[m - 1] !== undefined ? stageRates[m - 1] : 0;
-      const r_m = currentAnnualRate / 100 / 12;
-
-      let principalPaid = 0;
-      let interestPaid = 0;
-      let totalPayment = 0;
-
-      if (m <= graceMonths) {
-        interestPaid = startBal * r_m;
-        principalPaid = 0;
-        totalPayment = interestPaid;
-        remainingBalance = startBal;
-      } else {
-        const activeRepayMonthsLeft = totalMonths - m + 1;
-        if (repayType === 'equal-total') {
-          if (r_m === 0) {
-            totalPayment = startBal / activeRepayMonthsLeft;
-          } else {
-            totalPayment =
-              (startBal * (r_m * Math.pow(1 + r_m, activeRepayMonthsLeft))) /
-              (Math.pow(1 + r_m, activeRepayMonthsLeft) - 1);
-          }
-          interestPaid = startBal * r_m;
-          principalPaid = totalPayment - interestPaid;
-          remainingBalance = startBal - principalPaid;
-        } else {
-          principalPaid = principalPerMonth;
-          interestPaid = startBal * r_m;
-          totalPayment = principalPaid + interestPaid;
-          remainingBalance = startBal - principalPaid;
-        }
-      }
-
-      if (m === totalMonths) {
-        remainingBalance = 0;
-        principalPaid = startBal;
-        totalPayment = principalPaid + interestPaid;
-      }
-
-      totalInterest += interestPaid;
-      paymentArray.push(totalPayment);
-
-      resultData.push({
-        period: m,
-        startBalance: startBal,
-        principalPaid,
-        interestPaid,
-        totalPayment,
-        endBalance: Math.max(0, remainingBalance),
-      });
-    }
-  }
-
-  return {
-    totalMonths,
-    graceMonths,
-    totalInterest,
-    paymentArray,
-    resultData,
-  };
-}
-
 export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
   const t = TRANSLATIONS[lang];
   // 基礎連動參數 (單位：萬元)
@@ -391,14 +235,14 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
   const [singlePeriodUnit, setSinglePeriodUnit] = useState<'year' | 'month'>('year');
   const [singleGraceVal, setSingleGraceVal] = useState<number | ''>(3);
   const [singleGraceUnit, setSingleGraceUnit] = useState<'year' | 'month'>('year');
-  const [singleRateType, setSingleRateType] = useState<'single' | 'multi'>('single');
+  const [singleRateType, setSingleRateType] = useState<RateType>('single');
   const [singleRate, setSingleRate] = useState<number | ''>(2.185);
   const [singleStages, setSingleStages] = useState<Stage[]>([
     { durationValue: 2, durationUnit: 'year', rate: 2.0 },
     { durationValue: 1, durationUnit: 'year', rate: 2.1 },
     { durationValue: null, durationUnit: null, rate: 2.25 },
   ]);
-  const [singleRepayType, setSingleRepayType] = useState<'equal-total' | 'equal-principal'>('equal-total');
+  const [singleRepayType, setSingleRepayType] = useState<RepayType>('equal-total');
   const [singleFee, setSingleFee] = useState<number | ''>(5000);
 
   // 組合貸款設定 (貸款 A + 貸款 B)
@@ -408,8 +252,8 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
   const [periodUnit1, setPeriodUnit1] = useState<'year' | 'month'>('year');
   const [graceVal1, setGraceVal1] = useState<number | ''>(5);
   const [graceUnit1, setGraceUnit1] = useState<'year' | 'month'>('year');
-  const [repayType1, setRepayType1] = useState<'equal-total' | 'equal-principal'>('equal-total');
-  const [rateType1, setRateType1] = useState<'single' | 'multi'>('single');
+  const [repayType1, setRepayType1] = useState<RepayType>('equal-total');
+  const [rateType1, setRateType1] = useState<RateType>('single');
   const [singleRate1, setSingleRate1] = useState<number | ''>(1.775);
   const [stages1, setStages1] = useState<Stage[]>([
     { durationValue: 3, durationUnit: 'year', rate: 1.775 },
@@ -424,8 +268,8 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
   const [periodUnit2, setPeriodUnit2] = useState<'year' | 'month'>('year');
   const [graceVal2, setGraceVal2] = useState<number | ''>(3);
   const [graceUnit2, setGraceUnit2] = useState<'year' | 'month'>('year');
-  const [repayType2, setRepayType2] = useState<'equal-total' | 'equal-principal'>('equal-total');
-  const [rateType2, setRateType2] = useState<'single' | 'multi'>('single');
+  const [repayType2, setRepayType2] = useState<RepayType>('equal-total');
+  const [rateType2, setRateType2] = useState<RateType>('single');
   const [singleRate2, setSingleRate2] = useState<number | ''>(2.185);
   const [stages2, setStages2] = useState<Stage[]>([
     { durationValue: 2, durationUnit: 'year', rate: 2.185 },
@@ -673,134 +517,52 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
 
   // 房貸核心試算邏輯
   const calculateLoan = useCallback(() => {
-    const hp = housePrice === '' ? 0 : housePrice;
-    const dpAmt = downPaymentAmount === '' ? 0 : downPaymentAmount;
-    const currentTotalLoanAmt = Math.max(0, (hp - dpAmt) * 10000);
+    const result = calculateMortgage({
+      housePriceInTenThousands: housePrice === '' ? 0 : housePrice,
+      downPaymentInTenThousands: downPaymentAmount === '' ? 0 : downPaymentAmount,
+      loanMode,
+      single: {
+        periodVal: singlePeriodVal === '' ? 0 : singlePeriodVal,
+        periodUnit: singlePeriodUnit,
+        graceVal: singleGraceVal === '' ? 0 : singleGraceVal,
+        graceUnit: singleGraceUnit,
+        rateType: singleRateType,
+        singleRate: singleRate === '' ? 0 : singleRate,
+        stages: singleStages,
+        repayType: singleRepayType,
+        fee: singleFee === '' ? 0 : singleFee,
+      },
+      combinedA: {
+        loanAmount: (loanAmount1 === '' ? 0 : loanAmount1) * 10000,
+        periodVal: periodVal1 === '' ? 0 : periodVal1,
+        periodUnit: periodUnit1,
+        graceVal: graceVal1 === '' ? 0 : graceVal1,
+        graceUnit: graceUnit1,
+        rateType: rateType1,
+        singleRate: singleRate1 === '' ? 0 : singleRate1,
+        stages: stages1,
+        repayType: repayType1,
+        fee: fee1 === '' ? 0 : fee1,
+      },
+      combinedB: {
+        loanAmount: (loanAmount2 === '' ? 0 : loanAmount2) * 10000,
+        periodVal: periodVal2 === '' ? 0 : periodVal2,
+        periodUnit: periodUnit2,
+        graceVal: graceVal2 === '' ? 0 : graceVal2,
+        graceUnit: graceUnit2,
+        rateType: rateType2,
+        singleRate: singleRate2 === '' ? 0 : singleRate2,
+        stages: stages2,
+        repayType: repayType2,
+        fee: fee2 === '' ? 0 : fee2,
+      },
+    });
 
-    if (currentTotalLoanAmt <= 0) {
-      setFirstPayment(0);
-      setTotalInterest(0);
-      setTotalRepay(0);
-      setAprRate(0);
-      setSchedule([]);
-      return;
-    }
-
-    if (loanMode === 'single') {
-      const periodV = singlePeriodVal === '' ? 0 : singlePeriodVal;
-      const graceV = singleGraceVal === '' ? 0 : singleGraceVal;
-      const sRate = singleRate === '' ? 0 : singleRate;
-      const sFee = singleFee === '' ? 0 : singleFee;
-
-      const calcResult = calculateSingleLoanDetail(
-        currentTotalLoanAmt,
-        periodV,
-        singlePeriodUnit,
-        graceV,
-        singleGraceUnit,
-        singleRateType,
-        sRate,
-        singleStages,
-        singleRepayType
-      );
-
-      const firstP = calcResult.resultData[1]?.totalPayment || 0;
-      setFirstPayment(firstP);
-      setTotalInterest(calcResult.totalInterest);
-      setTotalRepay(currentTotalLoanAmt + calcResult.totalInterest + sFee);
-
-      const apr = calculateAPR(currentTotalLoanAmt, sFee, calcResult.paymentArray);
-      setAprRate(parseFloat(apr.toFixed(2)));
-
-      setSchedule(calcResult.resultData);
-    } else {
-      const lAmt1 = (loanAmount1 === '' ? 0 : loanAmount1) * 10000;
-      const lAmt2 = (loanAmount2 === '' ? 0 : loanAmount2) * 10000;
-
-      const pVal1 = periodVal1 === '' ? 0 : periodVal1;
-      const gVal1 = graceVal1 === '' ? 0 : graceVal1;
-      const rRate1 = singleRate1 === '' ? 0 : singleRate1;
-      const f1 = fee1 === '' ? 0 : fee1;
-
-      const pVal2 = periodVal2 === '' ? 0 : periodVal2;
-      const gVal2 = graceVal2 === '' ? 0 : graceVal2;
-      const rRate2 = singleRate2 === '' ? 0 : singleRate2;
-      const f2 = fee2 === '' ? 0 : fee2;
-
-      const calc1 = calculateSingleLoanDetail(
-        lAmt1,
-        pVal1,
-        periodUnit1,
-        gVal1,
-        graceUnit1,
-        rateType1,
-        rRate1,
-        stages1,
-        repayType1
-      );
-
-      const calc2 = calculateSingleLoanDetail(
-        lAmt2,
-        pVal2,
-        periodUnit2,
-        gVal2,
-        graceUnit2,
-        rateType2,
-        rRate2,
-        stages2,
-        repayType2
-      );
-
-      const maxMonths = Math.max(calc1.totalMonths, calc2.totalMonths);
-      const combinedRows: CombinedDetailRow[] = [];
-      const combinedPayments: number[] = [];
-
-      for (let m = 0; m <= maxMonths; m++) {
-        const d1 = calc1.resultData[m] || {
-          period: m,
-          startBalance: 0,
-          principalPaid: 0,
-          interestPaid: 0,
-          totalPayment: 0,
-          endBalance: 0,
-        };
-        const d2 = calc2.resultData[m] || {
-          period: m,
-          startBalance: 0,
-          principalPaid: 0,
-          interestPaid: 0,
-          totalPayment: 0,
-          endBalance: 0,
-        };
-
-        const totalPmt = d1.totalPayment + d2.totalPayment;
-        if (m > 0) combinedPayments.push(totalPmt);
-
-        combinedRows.push({
-          period: m,
-          startBalance: d1.startBalance + d2.startBalance,
-          principalPaid: d1.principalPaid + d2.principalPaid,
-          interestPaid: d1.interestPaid + d2.interestPaid,
-          totalPayment: totalPmt,
-          endBalance: d1.endBalance + d2.endBalance,
-          detail1: d1,
-          detail2: d2,
-        });
-      }
-
-      const firstP = combinedRows[1]?.totalPayment || 0;
-      const combinedTotalInterest = calc1.totalInterest + calc2.totalInterest;
-      const combinedFee = f1 + f2;
-
-      setFirstPayment(firstP);
-      setTotalInterest(combinedTotalInterest);
-      setTotalRepay(currentTotalLoanAmt + combinedTotalInterest + combinedFee);
-
-      const apr = calculateAPR(currentTotalLoanAmt, combinedFee, combinedPayments);
-      setAprRate(parseFloat(apr.toFixed(2)));
-
-      setSchedule(combinedRows);
-    }
+    setFirstPayment(result.firstPayment);
+    setTotalInterest(result.totalInterest);
+    setTotalRepay(result.totalRepay);
+    setAprRate(result.aprPercent);
+    setSchedule(result.schedule);
   }, [
     housePrice,
     downPaymentAmount,
