@@ -19,6 +19,16 @@
     `app/utils/finance.ts`（APR 二分求解：折現因子逐期遞乘、收斂提前結束）。
   - 業務層級數值（元、APR%、投保級距金額）與重構前完全一致；僅修正原本
     浮點累加造成的分位以下漂移。
+- **日期敏感工具抽離純函數引擎並修正時區地雷**：離職預告期（`resignation-calculator`）
+  與孕期試算（`pregnancy-calculator`）原本在 `*Client.tsx` 內以 `new Date('YYYY-MM-DD')`
+  解析純日期字串（UTC 解析，UTC+8 以外時區會退一天，違反鐵則 7、8），且約 200 行
+  日期計算內嵌於元件本體。
+  - 新增 `app/resignation-calculator/engine.ts`（勞基法第 16 / 38 條預告與特休、
+    正反向推算、逾期判定、特休折現、謀職假）與 `app/pregnancy-calculator/engine.ts`
+    （LMP / EDD / 超音波 / IVF 四模式 EDD 推算、CRL Hadlock 換算、當前週數、
+    產假 56 天區間與勞保生育給付 / 育嬰津貼）。
+  - 日期字串一律以 `parseYmd` 依「本地零時」建構；`today` 可注入以利測試；
+    孕期津貼金額改走 BigNumber.js。
 - **`tsconfig.json`**：開啟 `allowImportingTsExtensions`，引擎以 `.ts` 副檔名互相引入，
   供 Node 原生 `node:test` 直接載入 TypeScript。
 - **正規化全站 29 支原始碼檔案的換行符**：既有檔案含殘留 lone CR（`\r\r\n`），
@@ -28,9 +38,10 @@
 
 ### ✨ 新增功能 (Added)
 
-- **`npm run test:engine` 引擎單元測試套件**（`node:test`，51 項）：涵蓋各金融引擎的
-  歷期攤還表、總額、APR、投保級距與稅額，並對「凍結的浮點基準演算法」做批次交叉
-  驗證，確保定點數改寫在整數元層級零回歸。併入 `npm test` 與 `prebuild` 阻斷關卡。
+- **`npm run test:engine` 引擎單元測試套件**（`node:test`，73 項）：涵蓋各金融引擎的
+  歷期攤還表、總額、APR、投保級距與稅額（對「凍結的浮點基準演算法」批次交叉驗證，
+  確保定點數改寫在整數元層級零回歸），以及離職 / 孕期引擎的法定天數級距、日期
+  推算與時區安全。併入 `npm test` 與 `prebuild` 阻斷關卡。
 
 ### 📦 依賴 (Dependencies)
 
