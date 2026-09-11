@@ -1,9 +1,9 @@
 // app/my-salary-calculator/salaryConfig.ts
 // 直接載入 2024, 2025, 2026 官方原始 JSON 設定檔 (包含完整投保級距表與扣繳稅額表)
 
-import raw2026 from './config/2026.json';
-import raw2025 from './config/2025.json';
-import raw2024 from './config/2024.json';
+import raw2026 from './config/2026.json' with { type: 'json' };
+import raw2025 from './config/2025.json' with { type: 'json' };
+import raw2024 from './config/2024.json' with { type: 'json' };
 
 export interface Bracket {
   min: number;

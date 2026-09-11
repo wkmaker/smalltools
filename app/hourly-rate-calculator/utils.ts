@@ -1,6 +1,8 @@
 // app/hourly-rate-calculator/utils.ts
 // 共用型別定義、純函式與常數 — 供 HourlyRateCalculatorClient 與 RankHeroBanner 共同引用
 
+import { D } from '../utils/decimal.ts';
+
 /** 全台/全球 PR 排行的分位點錨定資料結構 */
 export interface PercentileAnchor {
   pr: number;
@@ -179,7 +181,7 @@ export interface TravelTier {
   description: string;
 }
 
-import countrySuitabilityData from './config/country_suitability.json';
+import countrySuitabilityData from './config/country_suitability.json' with { type: 'json' };
 
 /**
  * 根據使用者時薪，動態劃分旅遊「簡單」、「一般」、「困難」三個地點與體驗說明
@@ -315,6 +317,65 @@ export function getTravelTiers(
       description: selectedRule.hard.description,
     },
   };
+}
+
+// ─── 真實生命時薪主計算 ────────────────────────────────────────────────────
+
+export type CalcMode = 'monthly' | 'project';
+
+export interface RealHourlyRateInput {
+  calcMode: CalcMode;
+  /** 月薪制：月薪 / 月工時 / 無酬加班時數 / 通勤時數 / 每月額外開銷 */
+  monthlySalary: number;
+  monthlyHours: number;
+  overtimeHours: number;
+  commuteHours: number;
+  monthlyExpenses: number;
+  /** 專案制：專案報酬 / 投入工時 / 額外工時 / 專案開銷 */
+  projectFee: number;
+  projectHours: number;
+  extraHours: number;
+  projectExpenses: number;
+  /** 年工時（用於年薪換算與 PR 對照） */
+  hoursPerYear: number;
+  taiwanAnchors: PercentileAnchor[];
+  globalAnchors: PercentileAnchor[];
+}
+
+export interface RealHourlyRateResult {
+  totalHours: number;
+  netIncome: number;
+  realHourlyRate: number;
+  annualIncome: number;
+  taiwanPR: number;
+  globalPR: number;
+}
+
+/**
+ * 真實時薪 = (實拿報酬 − 工作開銷) ÷ (契約工時 + 無酬加班 + 通勤時數)。
+ * 金額（淨收入、時薪、年薪換算）一律走 BigNumber.js 定點數（鐵則 5、6）。
+ */
+export function calculateRealHourlyRate(input: RealHourlyRateInput): RealHourlyRateResult {
+  const n = (v: number) => (Number.isFinite(v) ? v : 0);
+
+  let totalHours: number;
+  let netIncome: number;
+  if (input.calcMode === 'monthly') {
+    totalHours = D(n(input.monthlyHours)).plus(n(input.overtimeHours)).plus(n(input.commuteHours)).toNumber();
+    netIncome = D(n(input.monthlySalary)).minus(n(input.monthlyExpenses)).toNumber();
+  } else {
+    totalHours = D(n(input.projectHours)).plus(n(input.extraHours)).toNumber();
+    netIncome = D(n(input.projectFee)).minus(n(input.projectExpenses)).toNumber();
+  }
+
+  const realHourlyRate = totalHours > 0 ? Math.max(0, D(netIncome).div(totalHours).toNumber()) : 0;
+  const annualIncome = D(realHourlyRate).times(n(input.hoursPerYear)).toNumber();
+
+  const clampPR = (v: number) => Math.min(Math.max(v, 1.0), 99.9);
+  const taiwanPR = realHourlyRate <= 0 ? 0.0 : clampPR(calculatePiecewisePR(annualIncome, input.taiwanAnchors, false));
+  const globalPR = realHourlyRate <= 0 ? 0.0 : clampPR(calculatePiecewisePR(annualIncome, input.globalAnchors, true));
+
+  return { totalHours, netIncome, realHourlyRate, annualIncome, taiwanPR, globalPR };
 }
 
 

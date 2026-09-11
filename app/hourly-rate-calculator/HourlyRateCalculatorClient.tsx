@@ -15,7 +15,7 @@ import {
   Milestone,
   CountryMatch,
   SUPPORTED_YEARS,
-  calculatePiecewisePR,
+  calculateRealHourlyRate,
   getSalaryForPR,
   formatPrCode,
 } from './utils';
@@ -251,39 +251,30 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
   const globalAnchors = globalStatsData.official_percentiles;
   const countryMatches: CountryMatch[] = countrySuitabilityData.tiers;
 
-  // Fix #2 + Low Priority: 計算結果整體 useMemo，避免每次 render 重跑
-  const { totalHours, netIncome, realHourlyRate, annualIncome, taiwanPR, globalPR } = useMemo(() => {
-    let totalHours = 0;
-    let netIncome = 0;
-
-    if (calcMode === 'monthly') {
-      const numSalary = monthlySalary === '' ? 0 : monthlySalary;
-      const numHours = monthlyHours === '' ? 0 : monthlyHours;
-      const numOvertime = overtimeHours === '' ? 0 : overtimeHours;
-      const numCommute = commuteHours === '' ? 0 : commuteHours;
-      const numExpenses = monthlyExpenses === '' ? 0 : monthlyExpenses;
-      totalHours = numHours + numOvertime + numCommute;
-      netIncome = numSalary - numExpenses;
-    } else {
-      const numFee = projectFee === '' ? 0 : projectFee;
-      const numHours = projectHours === '' ? 0 : projectHours;
-      const numExtra = extraHours === '' ? 0 : extraHours;
-      const numExpenses = projectExpenses === '' ? 0 : projectExpenses;
-      totalHours = numHours + numExtra;
-      netIncome = numFee - numExpenses;
-    }
-
-    const realHourlyRate = totalHours > 0 ? Math.max(0, netIncome / totalHours) : 0;
-    const annualIncome = realHourlyRate * currentTaiwanStat.default_working_hours.hours_per_year;
-    const taiwanPR = realHourlyRate <= 0 ? 0.0 : Math.min(Math.max(calculatePiecewisePR(annualIncome, taiwanAnchors, false), 1.0), 99.9);
-    const globalPR = realHourlyRate <= 0 ? 0.0 : Math.min(Math.max(calculatePiecewisePR(annualIncome, globalAnchors, true), 1.0), 99.9);
-
-    return { totalHours, netIncome, realHourlyRate, annualIncome, taiwanPR, globalPR };
-  }, [
-    calcMode, monthlySalary, monthlyHours, overtimeHours, commuteHours, monthlyExpenses,
-    projectFee, projectHours, extraHours, projectExpenses,
-    currentTaiwanStat, taiwanAnchors, globalAnchors,
-  ]);
+  // 真實時薪主計算（純函數引擎，見 ./utils.ts）；useMemo 僅為避免每次 render 重跑
+  const { totalHours, netIncome, realHourlyRate, annualIncome, taiwanPR, globalPR } = useMemo(
+    () =>
+      calculateRealHourlyRate({
+        calcMode,
+        monthlySalary: monthlySalary === '' ? 0 : monthlySalary,
+        monthlyHours: monthlyHours === '' ? 0 : monthlyHours,
+        overtimeHours: overtimeHours === '' ? 0 : overtimeHours,
+        commuteHours: commuteHours === '' ? 0 : commuteHours,
+        monthlyExpenses: monthlyExpenses === '' ? 0 : monthlyExpenses,
+        projectFee: projectFee === '' ? 0 : projectFee,
+        projectHours: projectHours === '' ? 0 : projectHours,
+        extraHours: extraHours === '' ? 0 : extraHours,
+        projectExpenses: projectExpenses === '' ? 0 : projectExpenses,
+        hoursPerYear: currentTaiwanStat.default_working_hours.hours_per_year,
+        taiwanAnchors,
+        globalAnchors,
+      }),
+    [
+      calcMode, monthlySalary, monthlyHours, overtimeHours, commuteHours, monthlyExpenses,
+      projectFee, projectHours, extraHours, projectExpenses,
+      currentTaiwanStat, taiwanAnchors, globalAnchors,
+    ],
+  );
 
   // ─── 合法性判斷 ───────────────────────────────────────────────────────────
   const isLegal = realHourlyRate >= minHourlyWage;

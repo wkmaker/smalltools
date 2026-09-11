@@ -696,7 +696,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#00ff99"
-      accentGlow="rgba(0, 255, 153, 0.6)"
+      accentGlow="rgba(0, 255, 153, 0.6)"
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 當前時間動態看板 */}

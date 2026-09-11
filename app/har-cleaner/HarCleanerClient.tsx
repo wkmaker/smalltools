@@ -321,7 +321,7 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#06b6d4"
-      accentGlow="rgba(6, 182, 212, 0.6)"
+      accentGlow="rgba(6, 182, 212, 0.6)"
     >
       <div className="w-full space-y-6">
         {/* 上傳與已載入檔案狀態控制列 */}

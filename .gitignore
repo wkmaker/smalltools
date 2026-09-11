@@ -24,3 +24,6 @@ Thumbs.db
 # IDE 設定
 .vscode/settings.json
 .idea/
+
+# TypeScript 增量建置快取
+tsconfig.tsbuildinfo

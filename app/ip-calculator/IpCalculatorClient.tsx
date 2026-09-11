@@ -730,7 +730,7 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#00f0ff"
-      accentGlow="rgba(0, 240, 255, 0.6)"
+      accentGlow="rgba(0, 240, 255, 0.6)"
     >
 
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">

@@ -902,7 +902,7 @@ Date: ${formatDate(new Date())}`;
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#ff4081"
-      accentGlow="rgba(255, 64, 129, 0.6)"
+      accentGlow="rgba(255, 64, 129, 0.6)"
     >
       <div className={styles.container}>
         {/* 上方左右雙欄排版 */}

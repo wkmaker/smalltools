@@ -855,7 +855,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#ffb800"
-      accentGlow="rgba(255, 184, 0, 0.6)"
+      accentGlow="rgba(255, 184, 0, 0.6)"
       extraFooterContent={
         <div className="flex items-center gap-1.5">
           <span>{t.onlineVersionText}</span>

@@ -610,7 +610,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#ef4444"
-      accentGlow="rgba(239, 68, 68, 0.6)"
+      accentGlow="rgba(239, 68, 68, 0.6)"
     >
       <div
         onDragOver={handleFileDragOver}

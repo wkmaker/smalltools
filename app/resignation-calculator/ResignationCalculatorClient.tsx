@@ -781,7 +781,7 @@ Sincerely,
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#00f5a0"
-      accentGlow="rgba(0, 245, 160, 0.6)"
+      accentGlow="rgba(0, 245, 160, 0.6)"
     >
       <div className={styles.container}>
 

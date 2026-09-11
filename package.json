@@ -1,15 +1,16 @@
 {
   "name": "smalltools",
-  "version": "1.8.2",
+  "version": "1.9.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node tests/check-ui-standards.mjs && node tests/audit-seo.mjs && node tests/verify-all-faqs.js && node tests/test-og-translations.mjs && node tests/test-og-constants.mjs",
+    "prebuild": "node tests/check-ui-standards.mjs && node tests/audit-seo.mjs && node tests/verify-all-faqs.js && node tests/test-og-translations.mjs && node tests/test-og-constants.mjs && npm run test:engine",
     "test:ui": "node tests/check-ui-standards.mjs",
     "test:seo": "node tests/audit-seo.mjs",
     "test:faq": "node tests/verify-all-faqs.js",
     "test:og": "node tests/test-og-translations.mjs && node tests/test-og-constants.mjs",
-    "test": "npm run test:ui && npm run test:seo && npm run test:faq && npm run test:og",
+    "test:engine": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"tests/engine/**/*.test.mjs\"",
+    "test": "npm run test:ui && npm run test:seo && npm run test:faq && npm run test:og && npm run test:engine",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."
@@ -21,6 +22,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@types/diff": "^8.0.0",
     "@types/node-forge": "^1.3.14",
+    "bignumber.js": "^11.1.5",
     "diff": "^9.0.0",
     "next": "^16.3.4",
     "node-forge": "^1.4.0",

@@ -1148,7 +1148,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       subtitle={t.subtitle}
       description={t.description}
       accentColor="#f59e0b"
-      accentGlow="rgba(245, 158, 11, 0.6)"
+      accentGlow="rgba(245, 158, 11, 0.6)"
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 頂部雙語切換與最新中獎動態公告列 */}

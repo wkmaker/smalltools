@@ -407,7 +407,7 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
         subtitle={t.subtitle}
         description={t.description}
         accentColor="#ff7300"
-        accentGlow="rgba(255,115,0,0.5)"
+        accentGlow="rgba(255,115,0,0.5)"
       >
         <div className={styles.container}>
           {/* Top Bar: Tabs & Language Switcher */}
