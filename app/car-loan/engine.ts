@@ -61,7 +61,7 @@ export interface CarLoanResult {
   afterSpecialPayment: number;
   totalInterest: number;
   totalPayment: number;
-  apr: number;
+  apr: number | null;
   /** 階梯式前段月付低於當期利息 → 本金不減反增 */
   isNegAmort: boolean;
 }

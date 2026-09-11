@@ -184,3 +184,12 @@ test('邊界：金額或期數為 0 回傳空結果', () => {
   assert.equal(r.monthlyPayment, 0);
   assert.equal(r.apr, 0);
 });
+
+test('手續費 ≥ 貸款金額時 apr 為 null（無法求解，不得靜默回傳 0）', () => {
+  const r = calculateCarLoan({
+    loanAmount: 300000, periodVal: 5, periodUnit: 'year', interestRatePercent: 4,
+    repayType: 'equal-total', loanScheme: 'standard', fee: 500000,
+    gracePeriod: 0, stepPayment: 0, stepPeriods: 0, balloonAmount: 0, labels: L,
+  });
+  assert.equal(r.apr, null);
+});
