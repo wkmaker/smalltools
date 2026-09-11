@@ -50,6 +50,7 @@ const TRANSLATIONS = {
       '專業免費的線上 SSL 憑證格式轉換工具！支援 PFX/P12, PEM, DER 雙向純前端安全轉換、憑證過期時間自動檢測與私鑰模數配對雜湊比對。',
     langToggleLabel: 'English',
     langToggleUrl: '/ssl-converter/en/',
+    closeAlert: '關閉提示訊息',
     tabChainFix: '憑證剖析與自動補鏈',
     tabPfxToPem: 'PFX / P12 轉 PEM',
     tabPemToPfx: 'PEM 轉 PFX / P12',
@@ -162,6 +163,7 @@ const TRANSLATIONS = {
       'Professional free online SSL certificate format converter. Convert PFX/P12, PEM, and DER with client-side security, certificate chain auto-fix, and expiration checks.',
     langToggleLabel: '繁體中文',
     langToggleUrl: '/ssl-converter/',
+    closeAlert: 'Close alert',
     tabChainFix: 'Parse & Fix Chain',
     tabPfxToPem: 'PFX / P12 to PEM',
     tabPemToPfx: 'PEM to PFX / P12',
@@ -794,7 +796,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
               }`}
             >
               <span>{alert.message}</span>
-              <button onClick={hideAlertMsg} className="p-1 opacity-70 hover:opacity-100 cursor-pointer">
+              <button onClick={hideAlertMsg} className="p-1 opacity-70 hover:opacity-100 cursor-pointer" aria-label={t.closeAlert}>
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
                   <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
                 </svg>
