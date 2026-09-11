@@ -6,6 +6,9 @@ import {
   calculateGestationalAge,
   calculateMaternityBenefits,
   crlToGestationalAge,
+  type CalcMode,
+  type ScanInputType,
+  type IvfType,
   addDays,
   formatDate,
 } from './engine';
@@ -374,7 +377,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const leaveStartId = useId();
 
   // 狀態管理
-  const [calcMode, setCalcMode] = useState<'lmp' | 'edd' | 'ultrasound' | 'ivf'>('lmp');
+  const [calcMode, setCalcMode] = useState<CalcMode>('lmp');
   
   // 預設日期為 12 週前（方便使用者一進入頁面就有生動的數據呈現）
   const defaultLmp = useMemo(() => {
@@ -387,12 +390,12 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const [cycleDays, setCycleDays] = useState<number>(28);
   const [eddDateInput, setEddDateInput] = useState<string>('');
   const [scanDate, setScanDate] = useState<string>(() => formatDate(new Date()));
-  const [scanInputType, setScanInputType] = useState<'weeks' | 'crl'>('weeks');
+  const [scanInputType, setScanInputType] = useState<ScanInputType>('weeks');
   const [scanWeeks, setScanWeeks] = useState<number>(12);
   const [scanDays, setScanDays] = useState<number>(0);
   const [crlValue, setCrlValue] = useState<number | ''>(45);
   const [ivfDate, setIvfDate] = useState<string>(() => formatDate(new Date()));
-  const [ivfType, setIvfType] = useState<'d5' | 'd3' | 'egg'>('d5');
+  const [ivfType, setIvfType] = useState<IvfType>('d5');
 
   // 依 CRL (mm) 換算胎兒天數與週數（純函數引擎，見 ./engine.ts）
   const crlConvertedAge = useMemo(() => crlToGestationalAge(crlValue), [crlValue]);
@@ -867,7 +870,7 @@ Date: ${formatDate(new Date())}`;
                   <select
                     id={modeSelectId}
                     value={calcMode}
-                    onChange={(e) => setCalcMode(e.target.value as any)}
+                    onChange={(e) => setCalcMode(e.target.value as CalcMode)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
                   >
                     <option value="lmp">{t.modeLmp}</option>
@@ -949,7 +952,7 @@ Date: ${formatDate(new Date())}`;
                       <select
                         id={scanTypeSelectId}
                         value={scanInputType}
-                        onChange={(e) => setScanInputType(e.target.value as any)}
+                        onChange={(e) => setScanInputType(e.target.value as ScanInputType)}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
                       >
                         <option value="weeks">{t.scanInputWeeks}</option>
@@ -1035,7 +1038,7 @@ Date: ${formatDate(new Date())}`;
                       <select
                         id={ivfTypeId}
                         value={ivfType}
-                        onChange={(e) => setIvfType(e.target.value as any)}
+                        onChange={(e) => setIvfType(e.target.value as IvfType)}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
                       >
                         <option value="d5">{t.ivfTypeD5}</option>
