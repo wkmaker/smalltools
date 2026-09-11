@@ -203,7 +203,7 @@ export interface MortgageResult {
   firstPayment: number;
   totalInterest: number;
   totalRepay: number;
-  aprPercent: number;
+  aprPercent: number | null;
 }
 
 const EMPTY_ROW = (m: number): SingleLoanDetailRow => ({

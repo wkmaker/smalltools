@@ -71,6 +71,8 @@ const TRANSLATIONS = {
     tagBalloon: '含尾款',
     toastCopied: '已複製試算分享連結到剪貼簿',
     negAmortWarning: '警告：前期月付金額低於每月利息，導致本金不減反增！',
+    aprUnavailable: '—',
+    aprUnavailableWarning: '開辦手續費不可大於或等於貸款金額，實質年利率無法計算',
     showingLimit: '僅展示前 120 期資料',
     unitY: '年',
     unitM: '月',
@@ -164,6 +166,8 @@ const TRANSLATIONS = {
     tagBalloon: 'Balloon',
     toastCopied: 'Shareable link copied to clipboard',
     negAmortWarning: 'Warning: Initial payment is lower than monthly interest. Loan balance will increase!',
+    aprUnavailable: '—',
+    aprUnavailableWarning: 'Origination fee cannot be greater than or equal to the loan amount — the effective APR cannot be calculated.',
     showingLimit: 'Showing first 120 periods',
     unitY: 'yr',
     unitM: 'mo',
@@ -230,7 +234,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
   const [afterSpecialPayment, setAfterSpecialPayment] = useState<number>(0);
   const [totalInterest, setTotalInterest] = useState<number>(0);
   const [totalPayment, setTotalPayment] = useState<number>(0);
-  const [apr, setApr] = useState<number>(0);
+  const [apr, setApr] = useState<number | null>(0);
   const [isNegAmort, setIsNegAmort] = useState<boolean>(false);
   const [schedule, setSchedule] = useState<LoanRow[]>([]);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
@@ -496,6 +500,16 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
             </svg>
             <span>{t.negAmortWarning}</span>
+          </div>
+        )}
+
+        {/* 手續費 ≥ 貸款金額：APR 無法求解警示 */}
+        {apr === null && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm font-medium flex items-center gap-2">
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            </svg>
+            <span>{t.aprUnavailableWarning}</span>
           </div>
         )}
 
@@ -818,7 +832,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
               <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">{t.aprLabel}</span>
                 <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
-                  {apr.toFixed(2)} %
+                  {apr === null ? t.aprUnavailable : `${apr.toFixed(2)} %`}
                 </span>
                 <span className="text-xs text-text-sub mt-1">{t.aprSub}</span>
               </div>

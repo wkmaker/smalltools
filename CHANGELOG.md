@@ -4,6 +4,28 @@
 
 ---
 
+## [1.10.1] - 2026-09-11
+
+### 🐛 修復 (Fixed)
+
+- **貸款試算工具（房貸、車貸、個人信貸）在「開辦費 ≥ 貸款金額」無效輸入下的靜默失敗**：
+  三支工具共用的 APR 求解函式 `app/utils/finance.ts` 的 `solveApr`，遇到淨撥款金額
+  （貸款金額 − 開辦費）小於等於 0 時會直接回傳 `0`，`mortgage-loan`／`car-loan` 因此
+  會顯示一個看似合理實則錯誤的「APR 0%」；`personal-loan` 更嚴重——自己重複實作了
+  一份幾乎相同的 `calculateAPR`，外層再把「算不出來（0）」偷偷退回「表面年利率」，
+  導致使用者把開辦費調到遠大於貸款金額時，APR 完全沒有變化、看起來一切正常
+  （違反鐵則 12「零靜默失敗」）。
+  - `solveApr` 改為在無法求解時回傳 `null`，與「真的收斂到 0%」的合法結果區分開來
+    （例如年利率與手續費皆為 0 的情境，本來就該顯示 0%，不受影響）。
+  - `personal-loan/engine.ts` 移除本地重複的 `calculateAPR`，改為共用 `solveApr`
+    （比照 `mortgage-loan`／`car-loan` 既有寫法），不再有遮蓋邏輯。
+  - 三支工具的 UI 在 `aprPercent`/`apr` 為 `null` 時顯示「—」並附上明確警示文字
+    （「開辦費不可大於或等於貸款金額，實質年利率無法計算」），`mortgage-loan` 的
+    雙貸款組合模式（`fee1`+`fee2`）一併涵蓋。
+  - `tests/engine/{personal-loan,mortgage-loan,car-loan}.test.mjs` 補上對應邊界測試。
+
+---
+
 ## [1.10.0] - 2026-09-11
 
 ### ✨ 新增功能 (Added)
