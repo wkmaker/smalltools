@@ -4,6 +4,13 @@ import React, { useState, useEffect, useRef, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './resignation-calculator.module.css';
+import {
+  calculateResignation,
+  formatDateStr,
+  formatDateFriendly,
+  parseYmd,
+  isWeekend,
+} from './engine';
 
 // 語意化雙語字典
 const TRANSLATIONS = {
@@ -387,74 +394,6 @@ Options for handling annual leave:
   },
 };
 
-// 格式化 Date 為 YYYY-MM-DD
-function formatDateStr(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-// 格式化 Date 為中文顯示 (如 2026/08/15 (六))
-function formatDateFriendly(date: Date, lang: 'zh-TW' | 'en'): string {
-  const daysZh = ['日', '一', '二', '三', '四', '五', '六'];
-  const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const dayName = lang === 'zh-TW' ? `(${daysZh[date.getDay()]})` : `(${daysEn[date.getDay()]})`;
-  return `${y}/${m}/${d} ${dayName}`;
-}
-
-// 判斷是否為週末
-function isWeekend(date: Date): boolean {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-}
-
-// 往前推算 N 個工作天（扣除週末）
-function subtractWorkingDays(startDate: Date, daysToSubtract: number): Date {
-  const current = new Date(startDate.getTime());
-  let count = 0;
-  
-  while (isWeekend(current)) {
-    current.setDate(current.getDate() - 1);
-  }
-  
-  while (count < daysToSubtract) {
-    current.setDate(current.getDate() - 1);
-    if (!isWeekend(current)) {
-      count++;
-    }
-  }
-  return current;
-}
-
-// 計算兩日期的實際工作天數（扣除週末）
-function countWorkingDaysBetween(startDate: Date, endDate: Date): number {
-  const current = new Date(startDate.getTime());
-  current.setDate(current.getDate() + 1); // 告知之次日起算
-  let count = 0;
-  while (current.getTime() <= endDate.getTime()) {
-    if (!isWeekend(current)) {
-      count++;
-    }
-    current.setDate(current.getDate() + 1);
-  }
-  return count;
-}
-
-// 依據勞動基準法第 38 條第 1 項計算法定特別休假天數
-function getStatutoryAnnualLeave(totalDaysTenure: number, tenureYears: number): number {
-  if (totalDaysTenure < 182) return 0; // 未滿 6 個月：0 日
-  if (totalDaysTenure < 365) return 3; // 6 個月以上未滿 1 年：3 日
-  if (tenureYears < 2) return 7;      // 1 年以上未滿 2 年：7 日
-  if (tenureYears < 3) return 10;     // 2 年以上未滿 3 年：10 日
-  if (tenureYears < 5) return 14;     // 3 年以上未滿 5 年：每年 14 日
-  if (tenureYears < 10) return 15;    // 5 年以上未滿 10 年：每年 15 日
-  return Math.min(30, 15 + (tenureYears - 9)); // 10 年以上：每 1 年加給 1 日，加至 30 日為止
-}
-
 interface Props {
   lang?: 'zh-TW' | 'en';
 }
@@ -585,152 +524,65 @@ export default function ResignationCalculatorClient({ lang = 'zh-TW' }: Props) {
     }, 3000);
   };
 
-  // --- 計算核心邏輯 ---
-  const onboardingD = onboardingDate ? new Date(onboardingDate) : new Date();
+  // --- 計算核心邏輯（純函數引擎，見 ./engine.ts） ---
+  const {
+    totalDaysTenure,
+    tenureYears,
+    tenureMonths,
+    statutoryAnnualLeave,
+    legalNoticeDaysRequired,
+    requiredNoticeDays,
+    calculatedNoticeDate: calculatedNoticeD,
+    noticeStartDate,
+    calculatedLastWorkingDate: calculatedLastWorkingD,
+    effectiveDate,
+    actualOfficeDate,
+    actualTakeLeaveDays,
+    maxTakeableLeaveDays,
+    payoutDaysTotal,
+    noticeDiffDays,
+    isPeriodSufficient,
+    isNoticeInPast,
+    daysRemainingFromToday,
+    isNoticeOverdueFromToday,
+    missingDaysStandard,
+    missingDaysFromToday,
+    postponeLastWorkingFromToday,
+    dailyAvgSalary,
+    estimatedLeavePayout,
+    maxJobSeekingLeaveDays,
+  } = calculateResignation({
+    calcDirection,
+    onboardingDate,
+    noticeDate,
+    targetLastWorkingDate,
+    noticeMode,
+    customDays: customDays === '' ? 0 : customDays,
+    annualLeaveDays: annualLeaveDays === '' ? 0 : annualLeaveDays,
+    leaveDaysToTake: leaveDaysToTake === '' ? 0 : leaveDaysToTake,
+    officeDayMode,
+    customOfficeDate,
+    monthlySalary: monthlySalary === '' ? 0 : monthlySalary,
+    today: formatDateStr(today),
+  });
 
-  // 1. 先估算年資 (依據提出的離職日或目標最後在職日)
-  let refNoticeDate = noticeDate ? new Date(noticeDate) : new Date();
-  if (calcDirection === 'lastToNotice' && targetLastWorkingDate) {
-    refNoticeDate = new Date(targetLastWorkingDate);
-  }
-
-  const diffTime = Math.max(0, refNoticeDate.getTime() - onboardingD.getTime());
-  const totalDaysTenure = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-  let tenureYears = refNoticeDate.getFullYear() - onboardingD.getFullYear();
-  let tenureMonths = refNoticeDate.getMonth() - onboardingD.getMonth();
-  if (tenureMonths < 0) {
-    tenureYears--;
-    tenureMonths += 12;
-  }
-  const tenureText = lang === 'zh-TW'
-    ? `${tenureYears} 年 ${tenureMonths} 個月 (約 ${totalDaysTenure} 天)`
-    : `${tenureYears} yrs ${tenureMonths} mos (${totalDaysTenure} days)`;
-
-  // 依據勞基法第 38 條計算法定特休天數
-  const statutoryAnnualLeave = getStatutoryAnnualLeave(totalDaysTenure, tenureYears);
-
-  // 自動依勞基法第 16 條計算法定要求預告天數
-  let legalNoticeDaysRequired = 0;
-  if (totalDaysTenure < 90) {
-    legalNoticeDaysRequired = 0; // 未滿 3 個月
-  } else if (totalDaysTenure < 365) {
-    legalNoticeDaysRequired = 10; // 滿 3 個月未滿 1 年
-  } else if (totalDaysTenure < 365 * 3) {
-    legalNoticeDaysRequired = 20; // 滿 1 年未滿 3 年
-  } else {
-    legalNoticeDaysRequired = 30; // 滿 3 年以上
-  }
-
-  const requiredNoticeDays = noticeMode === 'auto'
-    ? legalNoticeDaysRequired
-    : (customDays === '' ? 0 : customDays);
-
-  // 根據方向進行推算：
-  let calculatedNoticeD: Date;
-  let calculatedLastWorkingD: Date;
-
-  if (calcDirection === 'noticeToLast') {
-    // 模式一：已知預計提出日 ➜ 正向計算最後在職日
-    calculatedNoticeD = noticeDate ? new Date(noticeDate) : new Date();
-    
-    // 起算日為告知之次日
-    const noticeStartDate = new Date(calculatedNoticeD.getTime());
-    noticeStartDate.setDate(noticeStartDate.getDate() + 1);
-
-    calculatedLastWorkingD = new Date(noticeStartDate.getTime());
-    if (requiredNoticeDays > 0) {
-      calculatedLastWorkingD.setDate(calculatedLastWorkingD.getDate() + (requiredNoticeDays - 1));
-    } else {
-      calculatedLastWorkingD.setTime(calculatedNoticeD.getTime());
-    }
-  } else {
-    // 模式二：已知目標最後在職日 ➜ 反向推算最晚必須提出離職日
-    calculatedLastWorkingD = targetLastWorkingDate ? new Date(targetLastWorkingDate) : new Date();
-    
-    // 起算日為最後在職日前推 N - 1 天
-    // 提出日為起算日前一天（即最後在職日前推 N 天）
-    calculatedNoticeD = new Date(calculatedLastWorkingD.getTime());
-    if (requiredNoticeDays > 0) {
-      calculatedNoticeD.setDate(calculatedNoticeD.getDate() - requiredNoticeDays);
-    }
-  }
-
-  // 起算日
-  const noticeStartDate = new Date(calculatedNoticeD.getTime());
-  noticeStartDate.setDate(noticeStartDate.getDate() + 1);
-
-  // 離職生效日 (退保日)
-  const effectiveDate = new Date(calculatedLastWorkingD.getTime());
-  effectiveDate.setDate(effectiveDate.getDate() + 1);
-
-  // 實際最後出勤日與特休排休/折現邏輯
-  const leaveDaysTotal = annualLeaveDays === '' ? 0 : annualLeaveDays;
-  const leaveToTakeInput = leaveDaysToTake === '' ? 0 : leaveDaysToTake;
-  
-  // 實際預計要請的特休天數（不超過總特休天數）
-  const intendedTakeDays = Math.min(leaveDaysTotal, leaveToTakeInput);
-  
-  // 預告期間內最多能排休的工作天數
-  const maxTakeableLeaveDays = countWorkingDaysBetween(calculatedNoticeD, calculatedLastWorkingD);
-
-  // 實際在預告期內排掉的工作天數（受限於預告期工作天數與預計排休天數）
-  const actualTakeLeaveDays = Math.min(intendedTakeDays, maxTakeableLeaveDays);
-
-  // 剩餘未排休、或是無法在預告期排完的特休天數（全數自動轉換為不休假工資折算現金）
-  const payoutDaysTotal = Math.max(0, leaveDaysTotal - actualTakeLeaveDays);
   const excessPayoutLeaveDays = payoutDaysTotal;
-
-  // 實際最後到辦公室出勤日推算
-  let actualOfficeDate = new Date(calculatedLastWorkingD.getTime());
-  if (officeDayMode === 'autoLeaveEnd') {
-    if (actualTakeLeaveDays > 0) {
-      actualOfficeDate = subtractWorkingDays(calculatedLastWorkingD, actualTakeLeaveDays);
-      if (actualOfficeDate.getTime() < calculatedNoticeD.getTime()) {
-        actualOfficeDate = new Date(calculatedNoticeD.getTime());
-      }
-    }
-  } else if (officeDayMode === 'lastWorkingDay') {
-    actualOfficeDate = new Date(calculatedLastWorkingD.getTime());
-  } else if (officeDayMode === 'custom') {
-    actualOfficeDate = customOfficeDate ? new Date(customOfficeDate) : new Date(calculatedLastWorkingD.getTime());
-  }
-
-  // --- 合規與天數檢查 (含過去日期過期判定) ---
-  // 1. 提出日與最後在職日之間的給予預告天數 (曆天)
-  const noticeDiffDays = Math.round((calculatedLastWorkingD.getTime() - calculatedNoticeD.getTime()) / (1000 * 60 * 60 * 24));
-  const isPeriodSufficient = noticeDiffDays >= requiredNoticeDays;
-
-  // 2. 提出日是否在過去 (早於今天 00:00:00)
-  const calcNoticeD0 = new Date(calculatedNoticeD.getFullYear(), calculatedNoticeD.getMonth(), calculatedNoticeD.getDate());
-  const isNoticeInPast = calcNoticeD0.getTime() < today0.getTime();
-
-  // 3. 判斷節點是否早於今天（用於時間軸紅色高亮）
+  // JSX 顯示用的中間量（與引擎內部一致）
+  const leaveDaysTotal = annualLeaveDays === '' ? 0 : annualLeaveDays;
+  const intendedTakeDays = Math.min(leaveDaysTotal, leaveDaysToTake === '' ? 0 : leaveDaysToTake);
+  const noticeWeeks = Math.ceil(requiredNoticeDays / 7);
+  const refNoticeDate =
+    (calcDirection === 'lastToNotice' && targetLastWorkingDate
+      ? parseYmd(targetLastWorkingDate)
+      : parseYmd(noticeDate)) ?? today0;
+  const tenureText =
+    lang === 'zh-TW'
+      ? `${tenureYears} 年 ${tenureMonths} 個月 (約 ${totalDaysTenure} 天)`
+      : `${tenureYears} yrs ${tenureMonths} mos (${totalDaysTenure} days)`;
   const isDateInPast = (d: Date) => {
     const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     return d0.getTime() < today0.getTime();
   };
-
-  // 4. 若提出日在過去，但從「今天」開始算至「最後在職日」的剩餘天數：
-  const daysRemainingFromToday = Math.round((calculatedLastWorkingD.getTime() - today0.getTime()) / (1000 * 60 * 60 * 24));
-  const isNoticeOverdueFromToday = isNoticeInPast && (daysRemainingFromToday < requiredNoticeDays);
-
-  // 缺少的預告天數
-  const missingDaysStandard = Math.max(0, requiredNoticeDays - noticeDiffDays);
-  const missingDaysFromToday = Math.max(0, requiredNoticeDays - daysRemainingFromToday);
-
-  // 建議今天提出預告時順延之最後在職日
-  const postponeLastWorkingFromToday = new Date(today0.getTime());
-  postponeLastWorkingFromToday.setDate(postponeLastWorkingFromToday.getDate() + (requiredNoticeDays > 0 ? requiredNoticeDays : 0));
-
-  // 特休折現與日薪計算（計算全數折現天數 + 排休後超出預告期無法排完之剩餘天數）
-  const salaryNum = monthlySalary === '' ? 0 : monthlySalary;
-  const dailyAvgSalary = Math.round(salaryNum / 30);
-  const estimatedLeavePayout = Math.round(dailyAvgSalary * payoutDaysTotal);
-
-  // 資遣謀職假每週 2 天
-  const noticeWeeks = Math.ceil(requiredNoticeDays / 7);
-  const maxJobSeekingLeaveDays = noticeWeeks * 2;
 
   // 離職預告範本內文
   const emailTemplateText = lang === 'zh-TW'
