@@ -4,6 +4,50 @@
 
 ---
 
+## [1.10.1] - 2026-09-11
+
+### 🐛 修復 (Fixed)
+
+- **貸款試算工具（房貸、車貸、個人信貸）在「開辦費 ≥ 貸款金額」無效輸入下的靜默失敗**：
+  三支工具共用的 APR 求解函式 `app/utils/finance.ts` 的 `solveApr`，遇到淨撥款金額
+  （貸款金額 − 開辦費）小於等於 0 時會直接回傳 `0`，`mortgage-loan`／`car-loan` 因此
+  會顯示一個看似合理實則錯誤的「APR 0%」；`personal-loan` 更嚴重——自己重複實作了
+  一份幾乎相同的 `calculateAPR`，外層再把「算不出來（0）」偷偷退回「表面年利率」，
+  導致使用者把開辦費調到遠大於貸款金額時，APR 完全沒有變化、看起來一切正常
+  （違反鐵則 12「零靜默失敗」）。
+  - `solveApr` 改為在無法求解時回傳 `null`，與「真的收斂到 0%」的合法結果區分開來
+    （例如年利率與手續費皆為 0 的情境，本來就該顯示 0%，不受影響）。
+  - `personal-loan/engine.ts` 移除本地重複的 `calculateAPR`，改為共用 `solveApr`
+    （比照 `mortgage-loan`／`car-loan` 既有寫法），不再有遮蓋邏輯。
+  - 三支工具的 UI 在 `aprPercent`/`apr` 為 `null` 時顯示「—」並附上明確警示文字
+    （「開辦費不可大於或等於貸款金額，實質年利率無法計算」），`mortgage-loan` 的
+    雙貸款組合模式（`fee1`+`fee2`）一併涵蓋。
+  - `tests/engine/{personal-loan,mortgage-loan,car-loan}.test.mjs` 補上對應邊界測試。
+
+---
+
+## [1.10.0] - 2026-09-11
+
+### ✨ 新增功能 (Added)
+
+- **金融試算趨勢圖改用 ECharts，補上 hover 顯示數值**：房貸、車貸、個人信貸、複利
+  4 支工具原本的歷期走勢圖是自製 HTML5 Canvas 手繪（漸層填色 + `ctx.fillText` 手刻座標軸），
+  滑鼠移到圖表上完全不會顯示任何數值。新增共用元件 `app/components/TrendChart.tsx`，
+  改用 `echarts`（動態 import + tree-shaking，只裝 `LineChart` / `GridComponent` /
+  `TooltipComponent` / `CanvasRenderer`），取得原生 hover tooltip；複利試算的本金／
+  利息堆疊區域圖以 ECharts `stack` 機制重繪，視覺效果與原本一致。
+  - **順手修正一個小缺陷**：原本 Canvas 版本只在 `schedule` 變動時才重讀
+    `data-theme` 屬性，使用者切換亮暗模式若沒同時改輸入值，圖表配色不會即時更新；
+    新元件改用 `MutationObserver` 監聽 `data-theme` 變化即時重繪，切換亮暗模式立即生效。
+  - `pledge-calculator` 與 `futures-calculator` 的維持率／槓桿儀表是靜態 SVG 半圓
+    儀表板（顯示當下單一數值，非時間序列），不在本次改動範圍內。
+
+### 📦 依賴 (Dependencies)
+
+- 新增 `echarts` `^6.1.0`。
+
+---
+
 ## [1.9.0] - 2026-09-11
 
 ### 🔧 變更 (Changed)

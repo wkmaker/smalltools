@@ -8,6 +8,7 @@
  */
 
 import { D, BigNumber, toMoney, monthlyRateFromAnnualPercent } from '../utils/decimal.ts';
+import { solveApr } from '../utils/finance.ts';
 
 export type RepayMethod = 'equal-payment' | 'equal-principal';
 
@@ -35,43 +36,8 @@ export interface PersonalLoanResult {
   schedule: LoanScheduleRow[];
   monthlyPayment: number;
   totalInterest: number;
-  aprPercent: number;
-}
-
-/**
- * 採用二分搜尋法 (Bisection Method) 求解折現淨現值 (NPV = 0) 之 APR 實質年利率。
- * 折現冪次 `(1 + r)^(t+1)` 的指數為整數，BigNumber `.pow` 可精確運算。
- * @returns 年化百分比，四捨五入至小數 2 位；無法求解時回傳 0
- */
-export function calculateAPR(loanAmount: BigNumber.Value, fee: BigNumber.Value, payments: BigNumber.Value[]): number {
-  const netAmount = D(loanAmount).minus(fee);
-  if (netAmount.lte(0) || payments.length === 0) return 0;
-
-  const pv = payments.map(p => D(p));
-  let low = D(0);
-  let high = D(2); // 月折現率上限 200%
-  let mid = D(0);
-
-  for (let iter = 0; iter < 80; iter++) {
-    mid = low.plus(high).div(2);
-    // 收斂到遠超過輸出解析度（2 位小數的年化 %）即可提前結束
-    if (iter >= 40 && high.minus(low).lt('1e-12')) break;
-    const onePlusMid = mid.plus(1);
-    // 折現因子逐期遞乘（df_{t+1} = df_t * (1+mid)），避免每期重算 pow
-    let df = onePlusMid;
-    let npv = netAmount.negated();
-    for (let t = 0; t < pv.length; t++) {
-      npv = npv.plus(pv[t].div(df));
-      df = df.times(onePlusMid);
-    }
-    if (npv.gt(0)) {
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-
-  return mid.times(12).times(100).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+  /** 實質年利率（%）；手續費 ≥ 貸款金額等無效輸入時為 `null`，見 `solveApr` */
+  aprPercent: number | null;
 }
 
 export function calculatePersonalLoan(input: PersonalLoanInput): PersonalLoanResult {
@@ -132,12 +98,11 @@ export function calculatePersonalLoan(input: PersonalLoanInput): PersonalLoanRes
   }
 
   const paymentsList = rows.map(r => r.payment);
-  const calculatedApr = calculateAPR(loanAmt, numFee, paymentsList);
 
   return {
     schedule: rows,
     monthlyPayment: rows[0]?.payment ?? 0,
     totalInterest: toMoney(sumInterest),
-    aprPercent: calculatedApr > 0 ? calculatedApr : numRate,
+    aprPercent: solveApr(loanAmt.minus(numFee), paymentsList, { decimalPlaces: 2 }),
   };
 }

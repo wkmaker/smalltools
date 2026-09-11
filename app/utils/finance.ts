@@ -19,16 +19,17 @@ export interface SolveAprOptions {
  *
  * @param netAmount  期初實拿金額（貸款金額 - 手續費）
  * @param payments   逐期現金流（月）
- * @returns 年化 APR 百分比（number）；無法求解時回傳 0
+ * @returns 年化 APR 百分比（number）；淨撥款 ≤ 0（手續費 ≥ 貸款金額）或無現金流等
+ *   無效輸入時回傳 `null`，代表「無法求解」——不可與正常收斂到 0% 的合法結果混淆。
  */
 export function solveApr(
   netAmount: BigNumber.Value,
   payments: BigNumber.Value[],
   options: SolveAprOptions = {},
-): number {
+): number | null {
   const { maxIterations = 80, decimalPlaces } = options;
   const net = D(netAmount);
-  if (net.lte(0) || payments.length === 0) return 0;
+  if (net.lte(0) || payments.length === 0) return null;
 
   const pv = payments.map(p => D(p));
   let low = D(0);

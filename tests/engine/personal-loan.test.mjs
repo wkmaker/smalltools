@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculatePersonalLoan, calculateAPR } from '../../app/personal-loan/engine.ts';
+import { calculatePersonalLoan } from '../../app/personal-loan/engine.ts';
+import { solveApr } from '../../app/utils/finance.ts';
 
 /**
  * 個人信貸引擎特徵測試 (characterization tests)。
@@ -102,9 +103,21 @@ test('邊界：金額或期限為 0 時回傳空表', () => {
   assert.equal(r.totalInterest, 0);
 });
 
-test('calculateAPR：淨額 <= 0 或無現金流時回傳 0', () => {
-  assert.equal(calculateAPR(10000, 10000, [100, 100]), 0);
-  assert.equal(calculateAPR(10000, 0, []), 0);
+test('solveApr：淨額 <= 0 或無現金流時回傳 null（無法求解，非合法 0%）', () => {
+  assert.equal(solveApr(0, [100, 100]), null);
+  assert.equal(solveApr(-1, [100, 100]), null);
+  assert.equal(solveApr(10000, []), null);
+});
+
+test('個人信貸：手續費 ≥ 貸款金額時 aprPercent 為 null（不得靜默退回表面利率）', () => {
+  const r = calculatePersonalLoan({
+    amountInTenThousands: 50,
+    years: 7,
+    annualRatePercent: 3.25,
+    fee: 600000,
+    method: 'equal-payment',
+  });
+  assert.equal(r.aprPercent, null);
 });
 
 test('定點數不漂移：償還本金總和 === 原始貸款本金（各期為整數）', () => {

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import TrendChart from '../components/TrendChart';
 import styles from './compound-interest.module.css';
 import { calculateCompoundInterest, type InterestRow } from './engine';
 
@@ -271,7 +272,6 @@ export default function CompoundInterestClient({ lang = 'zh-TW' }: Props) {
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isMountedRef = useRef<boolean>(false);
 
   const principalInputId = useId();
@@ -361,111 +361,34 @@ export default function CompoundInterestClient({ lang = 'zh-TW' }: Props) {
     runCalculation();
   }, [runCalculation]);
 
-  // 繪製 Canvas 資產成長堆疊圖
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || schedule.length <= 1) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = rect.height;
-    ctx.clearRect(0, 0, width, height);
-
-    const maxVal = schedule[schedule.length - 1]?.total || 1;
-    const points = schedule.map((row, idx) => ({
-      x: (idx / (schedule.length - 1)) * (width - 60) + 40,
-      yPrincipal: height - 30 - (row.totalPrincipal / maxVal) * (height - 60),
-      yTotal: height - 30 - (row.total / maxVal) * (height - 60),
-    }));
-
-    // 1. 本金層
-    const gradPrincipal = ctx.createLinearGradient(0, 0, 0, height);
-    if (isLight) {
-      gradPrincipal.addColorStop(0, 'rgba(2, 132, 199, 0.18)');
-      gradPrincipal.addColorStop(1, 'rgba(2, 132, 199, 0.02)');
-    } else {
-      gradPrincipal.addColorStop(0, 'rgba(148, 163, 184, 0.35)');
-      gradPrincipal.addColorStop(1, 'rgba(148, 163, 184, 0.05)');
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].yPrincipal);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].yPrincipal);
-    }
-    ctx.lineTo(points[points.length - 1].x, height - 30);
-    ctx.lineTo(points[0].x, height - 30);
-    ctx.closePath();
-    ctx.fillStyle = gradPrincipal;
-    ctx.fill();
-
-    // 2. 利息層
-    const gradInterest = ctx.createLinearGradient(0, 0, 0, height);
-    if (isLight) {
-      gradInterest.addColorStop(0, 'rgba(245, 158, 11, 0.45)');
-      gradInterest.addColorStop(1, 'rgba(245, 158, 11, 0.08)');
-    } else {
-      gradInterest.addColorStop(0, 'rgba(255, 184, 0, 0.4)');
-      gradInterest.addColorStop(1, 'rgba(255, 184, 0, 0.05)');
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].yTotal);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].yTotal);
-    }
-    for (let i = points.length - 1; i >= 0; i--) {
-      ctx.lineTo(points[i].x, points[i].yPrincipal);
-    }
-    ctx.closePath();
-    ctx.fillStyle = gradInterest;
-    ctx.fill();
-
-    // 3. 投入本金邊界線
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].yPrincipal);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].yPrincipal);
-    }
-    ctx.strokeStyle = isLight ? '#0284c7' : '#94a3b8';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 4. 總資產頂線
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].yTotal);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].yTotal);
-    }
-    ctx.strokeStyle = isLight ? '#d97706' : '#ffb800';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // X / Y 軸刻度
-    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.8)' : 'rgba(255, 255, 255, 0.05)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(40, height - 30);
-    ctx.lineTo(width - 20, height - 30);
-    ctx.stroke();
-
-    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
-    ctx.font = '11px sans-serif';
-    ctx.fillText(t.initialLabel, 35, height - 12);
-    ctx.fillText(`${schedule.length - 1}${periodUnit === 'year' ? t.unitY : t.unitM}`, width - 45, height - 12);
-    ctx.fillText(`$${formatNumber(maxVal)}`, 5, 20);
-  }, [schedule, periodUnit, t]);
+  // 資產成長堆疊區域圖資料（TrendChart 為主題感知 ECharts 元件）
+  const trendXLabels = useMemo(() => schedule.map((row) => row.label), [schedule]);
+  const trendSeries = useMemo(
+    () => [
+      {
+        name: t.legendPrincipal,
+        data: schedule.map((row) => row.totalPrincipal),
+        colorDark: '#94a3b8',
+        colorLight: '#0284c7',
+        areaColorDark: 'rgba(148, 163, 184, 0.35)',
+        areaColorLight: 'rgba(2, 132, 199, 0.18)',
+        dashed: true,
+        lineWidth: 2,
+        stackOnPrevious: true,
+      },
+      {
+        // 疊在本金之上：傳「利息增量」而非總資產，疊加後的頂線視覺上才等於總資產
+        name: t.legendInterest,
+        data: schedule.map((row) => row.total - row.totalPrincipal),
+        colorDark: '#ffb800',
+        colorLight: '#d97706',
+        areaColorDark: 'rgba(255, 184, 0, 0.4)',
+        areaColorLight: 'rgba(245, 158, 11, 0.45)',
+        stackOnPrevious: true,
+      },
+    ],
+    [schedule, t],
+  );
 
   const copyShareLink = () => {
     const params = new URLSearchParams({
@@ -701,7 +624,7 @@ export default function CompoundInterestClient({ lang = 'zh-TW' }: Props) {
                 </div>
               </div>
               <div className="relative w-full h-[230px]">
-                <canvas ref={canvasRef} className="w-full h-full block" />
+                <TrendChart xLabels={trendXLabels} series={trendSeries} />
               </div>
             </div>
 

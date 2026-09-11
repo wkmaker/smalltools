@@ -164,3 +164,17 @@ test('邊界：貸款金額 <= 0 回傳空結果', () => {
   assert.equal(res.firstPayment, 0);
   assert.equal(res.aprPercent, 0);
 });
+
+test('手續費 ≥ 貸款金額時 aprPercent 為 null（無法求解，不得靜默回傳 0）', () => {
+  const res = calculateMortgage({
+    housePriceInTenThousands: 1000,
+    downPaymentInTenThousands: 500,
+    loanMode: 'single',
+    single: {
+      periodVal: 20, periodUnit: 'year', graceVal: 0, graceUnit: 'year',
+      rateType: 'single', singleRate: 2, stages: SINGLE_STAGE, repayType: 'equal-total', fee: 99999999,
+    },
+    combinedA: {}, combinedB: {},
+  });
+  assert.equal(res.aprPercent, null);
+});

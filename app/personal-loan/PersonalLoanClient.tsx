@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import TrendChart from '../components/TrendChart';
 import styles from './personal-loan.module.css';
 import { calculatePersonalLoan, type LoanScheduleRow, type RepayMethod } from './engine';
 
@@ -29,6 +30,8 @@ const TRANSLATIONS = {
     repayEqualPrincipal: '本金平均攤還',
     firstMonthPayment: '首期月付金額',
     aprRateLabel: 'APR 總費用年率',
+    aprUnavailable: '—',
+    aprUnavailableWarning: '開辦手續費不可大於或等於貸款金額，實質年利率無法計算',
     totalInterestLabel: '總利息支出',
     trendTitle: '賸餘本金遞減趨勢圖',
     legendRemaining: '賸餘本金餘額',
@@ -98,6 +101,8 @@ const TRANSLATIONS = {
     repayEqualPrincipal: 'Equal Principal',
     firstMonthPayment: 'First Month Payment',
     aprRateLabel: 'Effective APR Rate',
+    aprUnavailable: '—',
+    aprUnavailableWarning: 'Origination fee cannot be greater than or equal to the loan amount — the effective APR cannot be calculated.',
     totalInterestLabel: 'Total Interest',
     trendTitle: 'Remaining Balance Trend',
     legendRemaining: 'Remaining Balance',
@@ -162,12 +167,11 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
 
   const [monthlyPayment, setMonthlyPayment] = useState<number>(0);
   const [totalInterest, setTotalInterest] = useState<number>(0);
-  const [aprRate, setAprRate] = useState<number>(0);
+  const [aprRate, setAprRate] = useState<number | null>(0);
   const [schedule, setSchedule] = useState<LoanScheduleRow[]>([]);
 
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isMountedRef = useRef<boolean>(false);
 
   const amountInputId = useId();
@@ -245,83 +249,28 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
     runCalculation();
   }, [runCalculation]);
 
-  // 繪製 賸餘本金遞減趨勢圖 (Theme-Aware Canvas)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || schedule.length === 0) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = rect.height;
-    ctx.clearRect(0, 0, width, height);
-
+  // 賸餘本金遞減趨勢圖資料（TrendChart 為主題感知 ECharts 元件）
+  const trendChartData = useMemo(() => {
     const numAmt = (loanAmount === '' ? 0 : loanAmount) * 10000;
-    const maxVal = numAmt > 0 ? numAmt : 1;
-
-    const chartData = [
-      { month: 0, remaining: numAmt },
-      ...schedule,
-    ];
-
-    const points = chartData.map((row, idx) => ({
-      x: (idx / (chartData.length - 1)) * (width - 60) + 40,
-      y: height - 30 - (row.remaining / maxVal) * (height - 60),
-    }));
-
-    // 漸層背景 (亮暗雙模式色調調和)
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    if (isLight) {
-      grad.addColorStop(0, 'rgba(5, 150, 105, 0.18)');
-      grad.addColorStop(1, 'rgba(5, 150, 105, 0.02)');
-    } else {
-      grad.addColorStop(0, 'rgba(0, 245, 160, 0.3)');
-      grad.addColorStop(1, 'rgba(0, 245, 160, 0.02)');
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.lineTo(points[points.length - 1].x, height - 30);
-    ctx.lineTo(points[0].x, height - 30);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // 折線主軌跡
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.strokeStyle = isLight ? '#059669' : '#00f5a0';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // X / Y 軸刻度線與文字
-    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(40, height - 30);
-    ctx.lineTo(width - 20, height - 30);
-    ctx.stroke();
-
-    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
-    ctx.font = '11px sans-serif';
-    ctx.fillText(t.initialPeriod, 35, height - 12);
-    ctx.fillText(t.periodText(schedule.length), width - 45, height - 12);
-    ctx.fillText(`$${Math.round(maxVal).toLocaleString('zh-TW')}`, 5, 20);
-  }, [schedule, loanAmount, t]);
+    return [{ month: 0, remaining: numAmt }, ...schedule];
+  }, [schedule, loanAmount]);
+  const trendXLabels = useMemo(
+    () => trendChartData.map((row) => (row.month === 0 ? t.initialPeriod : t.periodText(row.month))),
+    [trendChartData, t],
+  );
+  const trendSeries = useMemo(
+    () => [
+      {
+        name: t.legendRemaining,
+        data: trendChartData.map((row) => row.remaining),
+        colorDark: '#00f5a0',
+        colorLight: '#059669',
+        areaColorDark: 'rgba(0, 245, 160, 0.3)',
+        areaColorLight: 'rgba(5, 150, 105, 0.18)',
+      },
+    ],
+    [trendChartData, t],
+  );
 
   const copyShareLink = () => {
     if (typeof window === 'undefined') return;
@@ -338,6 +287,16 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
       accentColor="#00f5a0"
       accentGlow="rgba(0, 245, 160, 0.6)"
     >
+
+      {/* 手續費 ≥ 貸款金額：APR 無法求解警示 */}
+      {aprRate === null && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm font-medium flex items-center gap-2">
+          <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+          </svg>
+          <span>{t.aprUnavailableWarning}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
         {/* 左欄：輸入選項區塊 */}
@@ -468,7 +427,7 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
             <div className={styles.statCard}>
               <span className="text-sm font-semibold text-text-sub">{t.aprRateLabel}</span>
               <span className={`text-xl font-bold font-mono ${styles.aprText}`}>
-                {aprRate}%
+                {aprRate === null ? t.aprUnavailable : `${aprRate}%`}
               </span>
             </div>
 
@@ -492,7 +451,7 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
               </div>
             </div>
             <div className="relative w-full h-[220px]">
-              <canvas ref={canvasRef} className="w-full h-full block" />
+              <TrendChart xLabels={trendXLabels} series={trendSeries} />
             </div>
           </div>
 

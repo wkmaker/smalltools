@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import TrendChart from '../components/TrendChart';
 import styles from './car-loan.module.css';
 import { calculateCarLoan, type LoanRow, type RepayType, type LoanScheme } from './engine';
 
@@ -70,6 +71,8 @@ const TRANSLATIONS = {
     tagBalloon: '含尾款',
     toastCopied: '已複製試算分享連結到剪貼簿',
     negAmortWarning: '警告：前期月付金額低於每月利息，導致本金不減反增！',
+    aprUnavailable: '—',
+    aprUnavailableWarning: '開辦手續費不可大於或等於貸款金額，實質年利率無法計算',
     showingLimit: '僅展示前 120 期資料',
     unitY: '年',
     unitM: '月',
@@ -163,6 +166,8 @@ const TRANSLATIONS = {
     tagBalloon: 'Balloon',
     toastCopied: 'Shareable link copied to clipboard',
     negAmortWarning: 'Warning: Initial payment is lower than monthly interest. Loan balance will increase!',
+    aprUnavailable: '—',
+    aprUnavailableWarning: 'Origination fee cannot be greater than or equal to the loan amount — the effective APR cannot be calculated.',
     showingLimit: 'Showing first 120 periods',
     unitY: 'yr',
     unitM: 'mo',
@@ -229,12 +234,11 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
   const [afterSpecialPayment, setAfterSpecialPayment] = useState<number>(0);
   const [totalInterest, setTotalInterest] = useState<number>(0);
   const [totalPayment, setTotalPayment] = useState<number>(0);
-  const [apr, setApr] = useState<number>(0);
+  const [apr, setApr] = useState<number | null>(0);
   const [isNegAmort, setIsNegAmort] = useState<boolean>(false);
   const [schedule, setSchedule] = useState<LoanRow[]>([]);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isMountedRef = useRef<boolean>(false);
 
   const carPriceInputId = useId();
@@ -436,76 +440,24 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
     runCalculation();
   }, [runCalculation]);
 
-  // 繪製 Canvas 趨勢圖表 (Theme-Aware)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || schedule.length <= 1) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = rect.height;
-    ctx.clearRect(0, 0, width, height);
-
-    const maxBal = Math.max(...schedule.map(r => r.endBalance), schedule[0]?.endBalance || 1);
-    const points = schedule.map((row, idx) => ({
-      x: (idx / (schedule.length - 1)) * (width - 60) + 40,
-      y: height - 30 - (row.endBalance / maxBal) * (height - 60),
-    }));
-
-    // 漸層背景 (亮暗模式色調)
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    if (isLight) {
-      grad.addColorStop(0, 'rgba(220, 38, 38, 0.18)');
-      grad.addColorStop(1, 'rgba(220, 38, 38, 0.02)');
-    } else {
-      grad.addColorStop(0, 'rgba(255, 0, 85, 0.35)');
-      grad.addColorStop(1, 'rgba(255, 0, 85, 0.0)');
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.lineTo(points[points.length - 1].x, height - 30);
-    ctx.lineTo(points[0].x, height - 30);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // 趨勢主線
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.strokeStyle = isLight ? '#dc2626' : '#ff0055';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // 網格座標
-    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(255, 255, 255, 0.05)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(40, height - 30);
-    ctx.lineTo(width - 20, height - 30);
-    ctx.stroke();
-
-    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
-    ctx.font = '11px sans-serif';
-    ctx.fillText('0', 35, height - 12);
-    ctx.fillText(`${schedule.length - 1}`, width - 45, height - 12);
-    ctx.fillText(`$${formatNumber(maxBal)}`, 5, 20);
-  }, [schedule]);
+  // 本金剩餘趨勢圖資料（TrendChart 為主題感知 ECharts 元件）
+  const trendXLabels = useMemo(
+    () => schedule.map((row) => (row.period === 0 ? t.initialPeriod : t.periodText(row.period))),
+    [schedule, t],
+  );
+  const trendSeries = useMemo(
+    () => [
+      {
+        name: t.balanceTrendTitle,
+        data: schedule.map((row) => row.endBalance),
+        colorDark: '#ff0055',
+        colorLight: '#dc2626',
+        areaColorDark: 'rgba(255, 0, 85, 0.35)',
+        areaColorLight: 'rgba(220, 38, 38, 0.18)',
+      },
+    ],
+    [schedule, t],
+  );
 
   const copyShareLink = () => {
     const params = new URLSearchParams({
@@ -548,6 +500,16 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
             </svg>
             <span>{t.negAmortWarning}</span>
+          </div>
+        )}
+
+        {/* 手續費 ≥ 貸款金額：APR 無法求解警示 */}
+        {apr === null && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm font-medium flex items-center gap-2">
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            </svg>
+            <span>{t.aprUnavailableWarning}</span>
           </div>
         )}
 
@@ -870,7 +832,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
               <div className={styles.statCard}>
                 <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px] mb-1">{t.aprLabel}</span>
                 <span className={`font-mono text-2xl font-bold ${styles.accentText}`}>
-                  {apr.toFixed(2)} %
+                  {apr === null ? t.aprUnavailable : `${apr.toFixed(2)} %`}
                 </span>
                 <span className="text-xs text-text-sub mt-1">{t.aprSub}</span>
               </div>
@@ -896,7 +858,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
             <div className={`${styles.glassCard} p-5 flex flex-col gap-3`}>
               <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px]">{t.balanceTrendTitle}</span>
               <div className="relative w-full h-[220px]">
-                <canvas ref={canvasRef} className="w-full h-full block" />
+                <TrendChart xLabels={trendXLabels} series={trendSeries} />
               </div>
             </div>
 
