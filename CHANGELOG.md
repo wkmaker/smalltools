@@ -4,6 +4,28 @@
 
 ---
 
+## [1.10.0] - 2026-09-11
+
+### ✨ 新增功能 (Added)
+
+- **金融試算趨勢圖改用 ECharts，補上 hover 顯示數值**：房貸、車貸、個人信貸、複利
+  4 支工具原本的歷期走勢圖是自製 HTML5 Canvas 手繪（漸層填色 + `ctx.fillText` 手刻座標軸），
+  滑鼠移到圖表上完全不會顯示任何數值。新增共用元件 `app/components/TrendChart.tsx`，
+  改用 `echarts`（動態 import + tree-shaking，只裝 `LineChart` / `GridComponent` /
+  `TooltipComponent` / `CanvasRenderer`），取得原生 hover tooltip；複利試算的本金／
+  利息堆疊區域圖以 ECharts `stack` 機制重繪，視覺效果與原本一致。
+  - **順手修正一個小缺陷**：原本 Canvas 版本只在 `schedule` 變動時才重讀
+    `data-theme` 屬性，使用者切換亮暗模式若沒同時改輸入值，圖表配色不會即時更新；
+    新元件改用 `MutationObserver` 監聽 `data-theme` 變化即時重繪，切換亮暗模式立即生效。
+  - `pledge-calculator` 與 `futures-calculator` 的維持率／槓桿儀表是靜態 SVG 半圓
+    儀表板（顯示當下單一數值，非時間序列），不在本次改動範圍內。
+
+### 📦 依賴 (Dependencies)
+
+- 新增 `echarts` `^6.1.0`。
+
+---
+
 ## [1.9.0] - 2026-09-11
 
 ### 🔧 變更 (Changed)
