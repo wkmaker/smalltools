@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import TrendChart from '../components/TrendChart';
 import styles from './car-loan.module.css';
 import { calculateCarLoan, type LoanRow, type RepayType, type LoanScheme } from './engine';
 
@@ -234,7 +235,6 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
   const [schedule, setSchedule] = useState<LoanRow[]>([]);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isMountedRef = useRef<boolean>(false);
 
   const carPriceInputId = useId();
@@ -436,76 +436,24 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
     runCalculation();
   }, [runCalculation]);
 
-  // 繪製 Canvas 趨勢圖表 (Theme-Aware)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || schedule.length <= 1) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = rect.height;
-    ctx.clearRect(0, 0, width, height);
-
-    const maxBal = Math.max(...schedule.map(r => r.endBalance), schedule[0]?.endBalance || 1);
-    const points = schedule.map((row, idx) => ({
-      x: (idx / (schedule.length - 1)) * (width - 60) + 40,
-      y: height - 30 - (row.endBalance / maxBal) * (height - 60),
-    }));
-
-    // 漸層背景 (亮暗模式色調)
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    if (isLight) {
-      grad.addColorStop(0, 'rgba(220, 38, 38, 0.18)');
-      grad.addColorStop(1, 'rgba(220, 38, 38, 0.02)');
-    } else {
-      grad.addColorStop(0, 'rgba(255, 0, 85, 0.35)');
-      grad.addColorStop(1, 'rgba(255, 0, 85, 0.0)');
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.lineTo(points[points.length - 1].x, height - 30);
-    ctx.lineTo(points[0].x, height - 30);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // 趨勢主線
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.strokeStyle = isLight ? '#dc2626' : '#ff0055';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // 網格座標
-    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(255, 255, 255, 0.05)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(40, height - 30);
-    ctx.lineTo(width - 20, height - 30);
-    ctx.stroke();
-
-    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
-    ctx.font = '11px sans-serif';
-    ctx.fillText('0', 35, height - 12);
-    ctx.fillText(`${schedule.length - 1}`, width - 45, height - 12);
-    ctx.fillText(`$${formatNumber(maxBal)}`, 5, 20);
-  }, [schedule]);
+  // 本金剩餘趨勢圖資料（TrendChart 為主題感知 ECharts 元件）
+  const trendXLabels = useMemo(
+    () => schedule.map((row) => (row.period === 0 ? t.initialPeriod : t.periodText(row.period))),
+    [schedule, t],
+  );
+  const trendSeries = useMemo(
+    () => [
+      {
+        name: t.balanceTrendTitle,
+        data: schedule.map((row) => row.endBalance),
+        colorDark: '#ff0055',
+        colorLight: '#dc2626',
+        areaColorDark: 'rgba(255, 0, 85, 0.35)',
+        areaColorLight: 'rgba(220, 38, 38, 0.18)',
+      },
+    ],
+    [schedule, t],
+  );
 
   const copyShareLink = () => {
     const params = new URLSearchParams({
@@ -896,7 +844,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
             <div className={`${styles.glassCard} p-5 flex flex-col gap-3`}>
               <span className="text-sm font-semibold text-text-sub uppercase tracking-[1px]">{t.balanceTrendTitle}</span>
               <div className="relative w-full h-[220px]">
-                <canvas ref={canvasRef} className="w-full h-full block" />
+                <TrendChart xLabels={trendXLabels} series={trendSeries} />
               </div>
             </div>
 
