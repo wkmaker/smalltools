@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import TrendChart from '../components/TrendChart';
 import styles from './mortgage-loan.module.css';
 import {
   calculateMortgage,
@@ -289,7 +290,6 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
 
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const priceInputId = useId();
   const percentInputId = useId();
@@ -602,76 +602,24 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
     calculateLoan();
   }, [calculateLoan]);
 
-  // 繪製 HTML5 Canvas 房貸餘額遞減趨勢圖 (Theme-Aware)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || schedule.length === 0) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = rect.height;
-    ctx.clearRect(0, 0, width, height);
-
-    const maxVal = schedule[0]?.endBalance || 1;
-    const points = schedule.map((row, idx) => ({
-      x: (idx / (schedule.length - 1)) * (width - 60) + 40,
-      y: height - 30 - (row.endBalance / maxVal) * (height - 60),
-    }));
-
-    // 漸層背景 (亮暗雙模式)
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    if (isLight) {
-      grad.addColorStop(0, 'rgba(5, 150, 105, 0.18)');
-      grad.addColorStop(1, 'rgba(5, 150, 105, 0.02)');
-    } else {
-      grad.addColorStop(0, 'rgba(0, 245, 160, 0.3)');
-      grad.addColorStop(1, 'rgba(0, 245, 160, 0.02)');
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.lineTo(points[points.length - 1].x, height - 30);
-    ctx.lineTo(points[0].x, height - 30);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // 賸餘本金折線
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.strokeStyle = isLight ? '#059669' : '#00f5a0';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // X/Y 軸刻度
-    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(255, 255, 255, 0.05)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(40, height - 30);
-    ctx.lineTo(width - 20, height - 30);
-    ctx.stroke();
-
-    ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
-    ctx.font = '11px sans-serif';
-    ctx.fillText('初始', 35, height - 12);
-    ctx.fillText(`第 ${schedule.length - 1} 期`, width - 50, height - 12);
-    ctx.fillText(`$${Math.round(maxVal).toLocaleString('zh-TW')}元`, 5, 20);
-  }, [schedule]);
+  // 房貸餘額遞減趨勢圖資料（TrendChart 為主題感知 ECharts 元件）
+  const trendXLabels = useMemo(
+    () => schedule.map((row) => (row.period === 0 ? t.initialPeriod : t.periodText(row.period))),
+    [schedule, t],
+  );
+  const trendSeries = useMemo(
+    () => [
+      {
+        name: t.remainingPrincipalLegend,
+        data: schedule.map((row) => row.endBalance),
+        colorDark: '#00f5a0',
+        colorLight: '#059669',
+        areaColorDark: 'rgba(0, 245, 160, 0.3)',
+        areaColorLight: 'rgba(5, 150, 105, 0.18)',
+      },
+    ],
+    [schedule, t],
+  );
 
   // 複製試算分享連結
   const copyShareLink = () => {
@@ -1432,7 +1380,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                 </div>
               </div>
               <div className="relative w-full h-[220px]">
-                <canvas ref={canvasRef} className="w-full h-full block" />
+                <TrendChart xLabels={trendXLabels} series={trendSeries} />
               </div>
             </div>
 
