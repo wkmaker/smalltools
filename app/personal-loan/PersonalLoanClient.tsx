@@ -29,6 +29,8 @@ const TRANSLATIONS = {
     repayEqualPrincipal: '本金平均攤還',
     firstMonthPayment: '首期月付金額',
     aprRateLabel: 'APR 總費用年率',
+    aprUnavailable: '—',
+    aprUnavailableWarning: '開辦手續費不可大於或等於貸款金額，實質年利率無法計算',
     totalInterestLabel: '總利息支出',
     trendTitle: '賸餘本金遞減趨勢圖',
     legendRemaining: '賸餘本金餘額',
@@ -98,6 +100,8 @@ const TRANSLATIONS = {
     repayEqualPrincipal: 'Equal Principal',
     firstMonthPayment: 'First Month Payment',
     aprRateLabel: 'Effective APR Rate',
+    aprUnavailable: '—',
+    aprUnavailableWarning: 'Origination fee cannot be greater than or equal to the loan amount — the effective APR cannot be calculated.',
     totalInterestLabel: 'Total Interest',
     trendTitle: 'Remaining Balance Trend',
     legendRemaining: 'Remaining Balance',
@@ -162,7 +166,7 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
 
   const [monthlyPayment, setMonthlyPayment] = useState<number>(0);
   const [totalInterest, setTotalInterest] = useState<number>(0);
-  const [aprRate, setAprRate] = useState<number>(0);
+  const [aprRate, setAprRate] = useState<number | null>(0);
   const [schedule, setSchedule] = useState<LoanScheduleRow[]>([]);
 
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
@@ -339,6 +343,16 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
       accentGlow="rgba(0, 245, 160, 0.6)"
     >
 
+      {/* 手續費 ≥ 貸款金額：APR 無法求解警示 */}
+      {aprRate === null && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm font-medium flex items-center gap-2">
+          <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+          </svg>
+          <span>{t.aprUnavailableWarning}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
         {/* 左欄：輸入選項區塊 */}
         <div className={`${styles.glassCard} p-8 flex flex-col gap-6 shadow-lg`}>
@@ -468,7 +482,7 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
             <div className={styles.statCard}>
               <span className="text-sm font-semibold text-text-sub">{t.aprRateLabel}</span>
               <span className={`text-xl font-bold font-mono ${styles.aprText}`}>
-                {aprRate}%
+                {aprRate === null ? t.aprUnavailable : `${aprRate}%`}
               </span>
             </div>
 
