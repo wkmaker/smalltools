@@ -207,14 +207,8 @@ const TRANSLATIONS = {
 };
 
 import { createSimpleZip } from './utils/zipBuilder';
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
+import { formatBytes } from '../utils/formatBytes';
+import { calculateBatchDimensions } from './engine';
 
 const safeLoadImage = (src: string, timeoutMs = 10000): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
@@ -234,29 +228,6 @@ const safeLoadImage = (src: string, timeoutMs = 10000): Promise<HTMLImageElement
     };
     img.src = src;
   });
-};
-
-const calculateBatchDimensions = (
-  imgW: number,
-  imgH: number,
-  targetW: number,
-  targetH: number,
-  scalePct: number,
-  keepAspectRatio: boolean
-) => {
-  if (targetW > 0 && targetH > 0) {
-    return { w: targetW, h: targetH };
-  }
-  if (targetW > 0 && keepAspectRatio && imgW > 0) {
-    return { w: targetW, h: Math.max(1, Math.round((targetW / imgW) * imgH)) };
-  }
-  if (targetH > 0 && keepAspectRatio && imgH > 0) {
-    return { w: Math.max(1, Math.round((targetH / imgH) * imgW)), h: targetH };
-  }
-  return {
-    w: Math.max(1, Math.round((imgW * scalePct) / 100)),
-    h: Math.max(1, Math.round((imgH * scalePct) / 100)),
-  };
 };
 
 export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorClientProps) {

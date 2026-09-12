@@ -13,6 +13,7 @@ import {
   SplitChunkMeta,
 } from './icsSplitter';
 import styles from './calendar-split.module.css';
+import { formatBytes } from '../utils/formatBytes';
 
 interface CalendarSplitClientProps {
   lang?: 'zh-TW' | 'en';
@@ -173,13 +174,6 @@ const TRANSLATIONS = {
   },
 };
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
 
 export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitClientProps) {
   const t = TRANSLATIONS[lang];
