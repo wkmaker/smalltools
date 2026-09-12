@@ -5,6 +5,12 @@
  * 透過動態 import() 延遲載入，只在使用者進入 PDF 相關工具頁時才下載對應 chunk。
  */
 
+import {
+  classifyImageCompressibility,
+  getDownsampleScaleFactor,
+  estimateCompressionRatio,
+} from './pdfCompressionRules';
+
 type PdfLibModule = typeof import('pdf-lib');
 type PdfJsModule = typeof import('pdfjs-dist');
 
@@ -443,24 +449,8 @@ export async function inspectPdfStructure(
         const byteLen = pdfObject instanceof PDFLib.PDFRawStream ? pdfObject.contents.byteLength : 0;
         totalImageBytes += byteLen;
 
-        let status: 'compressible' | 'protected' = 'compressible';
-        let statusReason = '可深度降採樣壓縮';
-
-        if (smask || imageMask) {
-          status = 'protected';
-          statusReason = '保護: 半透明水印 / 印章遮罩';
-          protectedCount++;
-        } else if (
-          colorSpace.includes('CMYK') ||
-          colorSpace.includes('Separation') ||
-          colorSpace.includes('DeviceN')
-        ) {
-          status = 'protected';
-          statusReason = '保護: 特殊色彩空間 (CMYK)';
-          protectedCount++;
-        } else if (decode) {
-          status = 'protected';
-          statusReason = '保護: Decode 轉置';
+        const { status, statusReason } = classifyImageCompressibility({ smask, imageMask, colorSpace, decode });
+        if (status === 'protected') {
           protectedCount++;
         } else {
           compressibleCount++;
@@ -480,11 +470,7 @@ export async function inspectPdfStructure(
     }
   }
 
-  let estRatio = 0;
-  if (originalSize > 0 && compressibleCount > 0) {
-    const estSaved = totalImageBytes * 0.55;
-    estRatio = Math.min(85, Math.max(10, Math.round((estSaved / originalSize) * 100)));
-  }
+  const estRatio = estimateCompressionRatio(originalSize, compressibleCount, totalImageBytes);
 
   return {
     originalSize,
@@ -601,7 +587,7 @@ export async function compressPdfInPlace(
     const origH = item.dict.get(PDFLib.PDFName.of('Height'))?.asNumber() || 0;
     if (origW <= 0 || origH <= 0) continue;
 
-    const scaleFactor = maxDpi <= 96 ? 0.45 : maxDpi <= 144 ? 0.65 : 0.85;
+    const scaleFactor = getDownsampleScaleFactor(maxDpi);
     const targetW = Math.max(16, Math.round(origW * scaleFactor));
     const targetH = Math.max(16, Math.round(origH * scaleFactor));
 
