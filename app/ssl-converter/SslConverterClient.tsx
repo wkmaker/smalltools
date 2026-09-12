@@ -14,6 +14,7 @@ import {
   parseSslPayload,
   buildUnifiedCertAnalysis,
 } from './engine';
+import { downloadBlob } from '../utils/downloadBlob';
 
 type TabType = 'cer-chain-fix' | 'pfx-to-pem' | 'pem-to-pfx' | 'der-to-pem' | 'pem-to-der';
 
@@ -403,15 +404,6 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     showToast(t.toastSentToChainFix);
   };
 
-  const triggerDownload = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   const handleClearCurrentTab = () => {
     if (activeTab === 'cer-chain-fix') {
       setCerFile(null);
@@ -621,7 +613,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const pfxDownloadFilename = `${pfxBaseName}_bundle.pfx`;
 
       const blob = new Blob([p12Array], { type: 'application/x-pkcs12' });
-      triggerDownload(blob, pfxDownloadFilename);
+      downloadBlob(blob, pfxDownloadFilename);
 
       const analysis = buildUnifiedCertAnalysis([certObj, ...caCertObjs]);
       const standardMeta = buildStandardMetaGrid(analysis, {
@@ -764,7 +756,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       }
 
       const blob = new Blob([derArray], { type: 'application/x-x509-ca-cert' });
-      triggerDownload(blob, filename);
+      downloadBlob(blob, filename);
 
       showAlertMsg('PEM 轉 DER 打包成功並已觸發下載！', 'success');
     } catch (err: unknown) {
@@ -1354,7 +1346,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
                               type="button"
                               onClick={() => {
                                 const blob = new Blob([displayContent], { type: 'text/plain' });
-                                triggerDownload(blob, downloadFilename);
+                                downloadBlob(blob, downloadFilename);
                               }}
                               className={styles.btnPrimarySmall}
                             >

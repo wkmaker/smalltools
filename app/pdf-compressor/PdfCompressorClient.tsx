@@ -9,6 +9,8 @@ import {
   InspectResult,
 } from '../utils/pdfHelper';
 import { formatBytes } from '../utils/formatBytes';
+import { downloadBlob } from '../utils/downloadBlob';
+import { randomToken } from '../utils/randomToken';
 import styles from './pdf-compressor.module.css';
 
 interface QueueItem {
@@ -434,7 +436,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
     }
 
     const newItems: QueueItem[] = pdfFiles.map((file, idx) => ({
-      id: `q_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
+      id: `q_${Date.now()}_${idx}_${randomToken(4)}`,
       file,
       name: file.name,
       size: file.size,
@@ -634,14 +636,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
     }
 
     const zipBlob = createSimpleZip(zipFiles);
-    const zipUrl = URL.createObjectURL(zipBlob);
-    const a = document.createElement('a');
-    a.href = zipUrl;
-    a.download = `PDF_Compressed_Batch_${new Date().toISOString().slice(0, 10)}.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(zipUrl), 5000);
+    downloadBlob(zipBlob, `PDF_Compressed_Batch_${new Date().toISOString().slice(0, 10)}.zip`, 5000);
     showToast(t.toastZipDone);
   };
 

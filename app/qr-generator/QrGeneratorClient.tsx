@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './qr-generator.module.css';
+import { downloadBlob } from '../utils/downloadBlob';
 
 interface QrGeneratorClientProps {
   lang?: 'zh-TW' | 'en';
@@ -1127,15 +1128,8 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const downloadVcfFile = () => {
     const data = getComputedData();
     const blob = new Blob([data], { type: 'text/vcard;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
     const nameStr = `${vCardLastName}${vCardFirstName}`.trim() || 'contact';
-    a.download = `contact_${nameStr}.vcf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `contact_${nameStr}.vcf`);
     showToast(t.vcfDownloadedToast);
   };
 
@@ -1143,15 +1137,8 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const downloadIcsFile = () => {
     const data = getComputedData();
     const blob = new Blob([data], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
     const summaryStr = eventSummary.trim() || 'event';
-    a.download = `event_${summaryStr}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `event_${summaryStr}.ics`);
     showToast(t.icsDownloadedToast);
   };
 

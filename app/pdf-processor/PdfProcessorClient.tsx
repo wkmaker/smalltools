@@ -10,6 +10,8 @@ import {
   compilePagesToPdfBlob,
   PdfComposerItem,
 } from '../utils/pdfHelper';
+import { downloadBlob } from '../utils/downloadBlob';
+import { randomToken } from '../utils/randomToken';
 import styles from './pdf-processor.module.css';
 
 export interface PdfPageItem extends PdfComposerItem {
@@ -425,7 +427,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
               setPages((prev) => [
                 ...prev,
                 {
-                  id: `pdf_${Date.now()}_${fIdx}_${p.pageIndex}_${Math.random().toString(36).substring(2, 6)}`,
+                  id: `pdf_${Date.now()}_${fIdx}_${p.pageIndex}_${randomToken(4)}`,
                   sourceType: 'PDF',
                   fileName: file.name,
                   pageIndex: p.pageIndex,
@@ -464,7 +466,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
             setPages((prev) => [
               ...prev,
               {
-                id: `img_${Date.now()}_${fIdx}_${Math.random().toString(36).substring(2, 6)}`,
+                id: `img_${Date.now()}_${fIdx}_${randomToken(4)}`,
                 sourceType: 'IMAGE',
                 fileName: file.name,
                 pageIndex: 0,
@@ -503,7 +505,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
           setPages((prev) => [
             ...prev,
             {
-              id: `pdf_${Date.now()}_${p.pageIndex}_${Math.random().toString(36).substring(2, 6)}`,
+              id: `pdf_${Date.now()}_${p.pageIndex}_${randomToken(4)}`,
               sourceType: 'PDF',
               fileName: file.name,
               pageIndex: p.pageIndex,
@@ -592,14 +594,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         },
         exportEngine
       );
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Combined_PDF_${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      downloadBlob(pdfBlob, `Combined_PDF_${new Date().toISOString().slice(0, 10)}.pdf`, 5000);
       showToast(t.toastExportSuccess);
     } catch (err) {
       console.error('PDF 匯出失敗:', err);

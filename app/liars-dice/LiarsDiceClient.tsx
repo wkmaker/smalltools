@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './liars-dice.module.css';
+import { randomToken } from '../utils/randomToken';
 
 interface HistoryItem {
   id: string;
@@ -545,7 +546,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
 
       // 新增至歷史前 5 次紀錄 (最新置頂，最多留 5 筆)
       const newItem: HistoryItem = {
-        id: timestamp.toString() + Math.random().toString(36).substring(2, 5),
+        id: timestamp.toString() + randomToken(3),
         timeString: timeStr,
         dice: newDice,
       };

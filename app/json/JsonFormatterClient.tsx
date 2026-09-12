@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './json.module.css';
+import { downloadBlob } from '../utils/downloadBlob';
 
 function TreeNode({ data, isLast, name }: { data: any; isLast: boolean; name?: string }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -347,12 +348,7 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
       return;
     }
     const blob = new Blob([content], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'formatted.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, 'formatted.json');
     showToast(t.toastExported);
   };
 
