@@ -39,6 +39,7 @@ const TRANSLATIONS = {
     providerCloudflare: 'Cloudflare DNS (1.1.1.1)',
     providerGoogle: 'Google DNS (8.8.8.8)',
     providerAliDNS: '阿里雲 DNS (AliDNS)',
+    providerAliDnsNotice: '查詢的網域名稱將直接送往中國大陸第三方（阿里雲）DNS 伺服器，請留意跨境資料流向。',
     typeLabel: '查詢紀錄類型 (Type)',
     queryBtn: '進行 DIG 查詢',
     querying: '請求中...',
@@ -131,6 +132,7 @@ const TRANSLATIONS = {
     providerCloudflare: 'Cloudflare DNS (1.1.1.1)',
     providerGoogle: 'Google DNS (8.8.8.8)',
     providerAliDNS: 'Alibaba Cloud DNS (AliDNS)',
+    providerAliDnsNotice: 'The queried domain name will be sent directly to a third-party DNS server in mainland China (Alibaba Cloud) — please be aware of this cross-border data flow.',
     typeLabel: 'Record Type',
     queryBtn: 'Execute DIG Lookup',
     querying: 'Querying...',
@@ -542,6 +544,9 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
               <option value="google">{t.providerGoogle}</option>
               <option value="alidns">{t.providerAliDNS}</option>
             </select>
+            {provider === 'alidns' && (
+              <p className={`text-xs leading-relaxed ${styles.crossBorderNotice}`}>{t.providerAliDnsNotice}</p>
+            )}
           </div>
 
           {/* 紀錄類型選單 (無障礙 W3C 標籤規範：標題改用 span) */}
