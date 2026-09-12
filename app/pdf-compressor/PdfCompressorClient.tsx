@@ -8,6 +8,7 @@ import {
   compressPdfInPlace,
   InspectResult,
 } from '../utils/pdfHelper';
+import { formatBytes } from '../utils/formatBytes';
 import styles from './pdf-compressor.module.css';
 
 interface QueueItem {
@@ -239,13 +240,6 @@ If an image is already below the target DPI, extremely small, or serves as a tra
   },
 };
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
 
 // 輕量化純前端 PKZip Builder
 function createSimpleZip(files: { name: string; data: Uint8Array }[]): Blob {
