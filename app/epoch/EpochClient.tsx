@@ -4,8 +4,14 @@ import { useState, useEffect, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './epoch.module.css';
-
-// === 時區與時間運算 Engine ===
+import {
+  getCleanTzLabel,
+  formatLocalTime,
+  formatInTimezone,
+  getTimezoneAbbreviation,
+  parseTimestampToDate,
+  convertDateToTimestamp,
+} from './engine';
 
 interface HistoryItem {
   id: number;
@@ -228,152 +234,6 @@ const TRANSLATIONS = {
   },
 };
 
-// 取得乾淨且人體工學的時區標籤（淨化 POSIX Etc/GMT-8 反向符號引發的混淆）
-function getCleanTzLabel(date: Date = new Date()): { tzName: string; utcOffset: string; displayLabel: string } {
-  try {
-    const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    const offsetMinutes = -date.getTimezoneOffset();
-    const sign = offsetMinutes >= 0 ? '+' : '-';
-    const absMin = Math.abs(offsetMinutes);
-    const hours = Math.floor(absMin / 60);
-    const mins = absMin % 60;
-    const minsStr = mins > 0 ? `:${String(mins).padStart(2, '0')}` : '';
-    const utcOffset = `UTC${sign}${hours}${minsStr}`;
-
-    // 若 tzName 包含 Etc/ 或 GMT，屬 POSIX 符號會造成混淆 (如 Etc/GMT-8 = UTC+8)，淨化為只顯示 UTC 標籤
-    if (!tzName || tzName.startsWith('Etc/') || tzName.includes('GMT')) {
-      return { tzName: '', utcOffset, displayLabel: utcOffset };
-    }
-
-    return { tzName, utcOffset, displayLabel: `${tzName}, ${utcOffset}` };
-  } catch {
-    return { tzName: '', utcOffset: 'UTC+8', displayLabel: 'UTC+8' };
-  }
-}
-
-// 格式化本機當地時間 (100% 精準對齊使用者裝置電腦時間)
-function formatLocalTime(date: Date): string {
-  try {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    const hh = String(date.getHours()).padStart(2, '0');
-    const min = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
-    const ms = String(date.getMilliseconds()).padStart(3, '0');
-    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}.${ms}`;
-  } catch {
-    return 'Invalid Date';
-  }
-}
-
-// 格式化時間輔助函數 YYYY-MM-DD HH:mm:ss.SSS (指定 IANA 時區)
-function formatInTimezone(date: Date, timeZone: string): string {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(date);
-    const p: Record<string, string> = {};
-    parts.forEach((part) => (p[part.type] = part.value));
-
-    const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
-    return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}.${ms}`;
-  } catch {
-    return 'Invalid Timezone';
-  }
-}
-
-// 取得時區縮寫，如 PDT / PST
-function getTimezoneAbbreviation(date: Date, timeZone: string): string {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      timeZoneName: 'short',
-    });
-    const parts = formatter.formatToParts(date);
-    const tzPart = parts.find((p) => p.type === 'timeZoneName');
-    return tzPart ? tzPart.value : '';
-  } catch {
-    return '';
-  }
-}
-
-// 取得 GMT 偏移量字串，如 GMT-07:00
-function getGmtOffsetString(date: Date, timeZone: string): string {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      timeZoneName: 'longOffset',
-    });
-    const parts = formatter.formatToParts(date);
-    const tzPart = parts.find((p) => p.type === 'timeZoneName');
-    return tzPart ? tzPart.value : '';
-  } catch {
-    return '';
-  }
-}
-
-// 根據指定 UTC 數值偏移格式化 YYYY-MM-DD HH:mm:ss.SSS
-function formatInOffset(date: Date, offsetHours: number): string {
-  try {
-    const offsetMs = offsetHours * 60 * 60 * 1000;
-    const targetDate = new Date(date.getTime() + offsetMs);
-
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Etc/UTC',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(targetDate);
-    const p: Record<string, string> = {};
-    parts.forEach((part) => (p[part.type] = part.value));
-
-    const ms = String(targetDate.getUTCMilliseconds()).padStart(3, '0');
-    return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}.${ms}`;
-  } catch {
-    return 'Invalid Offset';
-  }
-}
-
-// 日期轉時間戳記：根據 UTC 數值偏移反算
-function convertDateTimeToTimestampByOffset(
-  dateTimeStr: string,
-  msVal: number | string,
-  offsetHours: number
-): number | null {
-  if (!dateTimeStr) return null;
-
-  const cleanStr = dateTimeStr.replace('T', ' ').replace('/', '-');
-  const regex = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/;
-  const match = cleanStr.match(regex);
-  if (!match) return null;
-
-  const year = parseInt(match[1], 10);
-  const month = parseInt(match[2], 10) - 1;
-  const day = parseInt(match[3], 10);
-  const hour = parseInt(match[4], 10);
-  const minute = parseInt(match[5], 10);
-  const second = match[6] ? parseInt(match[6], 10) : 0;
-  const ms = typeof msVal === 'number' ? msVal : parseInt(msVal, 10) || 0;
-
-  const baseUtcMs = Date.UTC(year, month, day, hour, minute, second, ms);
-  const offsetMs = offsetHours * 60 * 60 * 1000;
-  return baseUtcMs - offsetMs;
-}
-
 interface EpochClientProps {
   lang?: 'zh-TW' | 'en';
 }
@@ -477,79 +337,18 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
   }, [isPaused]);
 
   // A. 時間戳記 ➜ 日期時間算結果 (Memo 化)
-  const tsToDateResult = useCallback(() => {
-    const raw = tsInput.trim();
-    if (!raw) return null;
-
-    const clean = raw.replace(/\D/g, '');
-    if (!clean) return null;
-
-    const tsNum = parseInt(clean, 10);
-    let unit = unitMode;
-    if (unit === 'auto') {
-      unit = clean.length >= 12 ? 'ms' : 's';
-    }
-
-    const dateObj = new Date(unit === 's' ? tsNum * 1000 : tsNum);
-    if (isNaN(dateObj.getTime())) return null;
-
-    const localStr = formatLocalTime(dateObj);
-    const taipeiStr = formatInTimezone(dateObj, 'Asia/Taipei');
-    const utcStr = formatInTimezone(dateObj, 'Etc/UTC');
-    const laStr = formatInTimezone(dateObj, 'America/Los_Angeles');
-    const laAbbr = getTimezoneAbbreviation(dateObj, 'America/Los_Angeles');
-    const laOffset = getGmtOffsetString(dateObj, 'America/Los_Angeles');
-    const customStr = formatInOffset(dateObj, customTzOffset);
-
-    // 元數據分析
-    const weekStr = t.weekDays[dateObj.getDay()];
-
-    const startOfYear = new Date(dateObj.getFullYear(), 0, 1);
-    const dayOfYear = Math.floor((dateObj.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-    const year = dateObj.getFullYear();
-    const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-    return {
-      cleanTs: clean,
-      unit,
-      dateObj,
-      localStr,
-      taipeiStr,
-      utcStr,
-      laStr,
-      laBadge: `${laAbbr} (${laOffset})`,
-      customStr,
-      weekStr,
-      dayOfYear,
-      year,
-      isLeap,
-    };
-  }, [tsInput, unitMode, customTzOffset, t]);
+  const tsToDateResult = useCallback(
+    () => parseTimestampToDate(tsInput, unitMode, customTzOffset, t.weekDays),
+    [tsInput, unitMode, customTzOffset, t]
+  );
 
   const parsedTsResult = tsToDateResult();
 
   // B. 日期時間 ➜ 時間戳記計算結果 (Memo 化)
-  const dateToTsResult = useCallback(() => {
-    if (!dtInput) return null;
-    const msEpoch = convertDateTimeToTimestampByOffset(dtInput, dtMsInput, dtTzOffset);
-    if (msEpoch === null || isNaN(msEpoch)) return null;
-
-    const secEpoch = Math.floor(msEpoch / 1000);
-    const dateObj = new Date(msEpoch);
-
-    return {
-      secEpoch,
-      msEpoch,
-      dateObj,
-      localStr: formatLocalTime(dateObj),
-      taipeiStr: formatInTimezone(dateObj, 'Asia/Taipei'),
-      utcStr: formatInTimezone(dateObj, 'Etc/UTC'),
-      laStr:
-        formatInTimezone(dateObj, 'America/Los_Angeles') +
-        ` (${getTimezoneAbbreviation(dateObj, 'America/Los_Angeles')})`,
-    };
-  }, [dtInput, dtMsInput, dtTzOffset]);
+  const dateToTsResult = useCallback(
+    () => convertDateToTimestamp(dtInput, dtMsInput, dtTzOffset),
+    [dtInput, dtMsInput, dtTzOffset]
+  );
 
   const parsedDateResult = dateToTsResult();
 
