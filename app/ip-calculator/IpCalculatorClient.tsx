@@ -4,29 +4,21 @@ import { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react'
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './ip-calculator.module.css';
+import {
+  ipToInt,
+  intToIp,
+  intToBinary,
+  cidrToMaskInt,
+  calculateSubnet,
+  type SubnetResult,
+  type IpBadgeKind,
+} from './engine';
 
-interface SubnetResult {
-  inputIp: string;
-  cidr: number;
-  subnetMask: string;
-  wildcardMask: string;
-  networkAddress: string;
-  networkInt: number;
-  broadcastAddress: string;
-  broadcastInt: number;
-  totalIps: number;
-  usableCount: number;
-  firstUsableInt: number;
-  lastUsableInt: number;
-  firstUsableStr: string;
-  lastUsableStr: string;
-  scopeInfo: {
-    classStr: string;
-    scope: string;
-    badgeClass: string;
-  };
-  binaryIp: string;
-}
+const BADGE_CLASS_BY_KIND: Record<IpBadgeKind, string> = {
+  private: styles.badgePrivate,
+  special: styles.badgeSpecial,
+  public: styles.badgePublic,
+};
 
 interface IpCalculatorClientProps {
   lang?: 'zh-TW' | 'en';
@@ -295,126 +287,6 @@ Resulting 32-bit binary: 11000000.10101000.00000001.00000001.`,
   },
 };
 
-function ipToInt(ipStr: string): number | null {
-  if (typeof ipStr !== 'string') return null;
-  const parts = ipStr.trim().split('.');
-  if (parts.length !== 4) return null;
-  let num = 0;
-  for (let i = 0; i < 4; i++) {
-    const p = parts[i];
-    if (!/^\d+$/.test(p)) return null;
-    const n = parseInt(p, 10);
-    if (n < 0 || n > 255 || (p.length > 1 && p.startsWith('0'))) return null;
-    num = (num << 8) + n;
-  }
-  return num >>> 0;
-}
-
-function intToIp(intVal: number): string {
-  return [
-    (intVal >>> 24) & 255,
-    (intVal >>> 16) & 255,
-    (intVal >>> 8) & 255,
-    intVal & 255,
-  ].join('.');
-}
-
-function intToBinary(intVal: number): string {
-  return [
-    (intVal >>> 24) & 255,
-    (intVal >>> 16) & 255,
-    (intVal >>> 8) & 255,
-    intVal & 255,
-  ]
-    .map((b) => b.toString(2).padStart(8, '0'))
-    .join('.');
-}
-
-function cidrToMaskInt(cidr: number): number {
-  if (cidr === 0) return 0;
-  return (~0 << (32 - cidr)) >>> 0;
-}
-
-interface IpRangeRuleV4 {
-  scope: string;
-  baseInt: number;
-  maskInt: number;
-  badgeClass: string;
-}
-
-const RFC_RESERVED_RANGES_V4: IpRangeRuleV4[] = [
-  // RFC 1918 - Private Networks
-  { scope: 'Private', baseInt: ipToInt('10.0.0.0')!, maskInt: cidrToMaskInt(8), badgeClass: styles.badgePrivate },
-  { scope: 'Private', baseInt: ipToInt('172.16.0.0')!, maskInt: cidrToMaskInt(12), badgeClass: styles.badgePrivate },
-  { scope: 'Private', baseInt: ipToInt('192.168.0.0')!, maskInt: cidrToMaskInt(16), badgeClass: styles.badgePrivate },
-
-  // RFC 1122 - Loopback
-  { scope: 'Loopback', baseInt: ipToInt('127.0.0.0')!, maskInt: cidrToMaskInt(8), badgeClass: styles.badgeSpecial },
-
-  // RFC 6598 - CGNAT (Shared Address Space)
-  { scope: 'CGNAT', baseInt: ipToInt('100.64.0.0')!, maskInt: cidrToMaskInt(10), badgeClass: styles.badgeSpecial },
-
-  // RFC 3927 - Link-Local / APIPA
-  { scope: 'Link-Local', baseInt: ipToInt('169.254.0.0')!, maskInt: cidrToMaskInt(16), badgeClass: styles.badgeSpecial },
-
-  // RFC 5771 / Class D & E Multicast & Experimental
-  { scope: 'Reserved', baseInt: ipToInt('224.0.0.0')!, maskInt: cidrToMaskInt(4), badgeClass: styles.badgeSpecial },
-];
-
-function getIpScopeInfo(ipInt: number) {
-  const firstOctet = (ipInt >>> 24) & 255;
-  let ipClass = 'C';
-  if (firstOctet <= 127) ipClass = 'A';
-  else if (firstOctet <= 191) ipClass = 'B';
-  else if (firstOctet <= 223) ipClass = 'C';
-  else if (firstOctet <= 239) ipClass = 'D (Multicast)';
-  else ipClass = 'E (Experimental)';
-
-  // 宣告式 RFC 對照表位元遮罩查表 (Bitwise Subnet Check)
-  const matchedRule = RFC_RESERVED_RANGES_V4.find(
-    (rule) => (ipInt & rule.maskInt) === (rule.baseInt & rule.maskInt)
-  );
-
-  if (matchedRule) {
-    return { classStr: `${ipClass} Class`, scope: matchedRule.scope, badgeClass: matchedRule.badgeClass };
-  }
-
-  return { classStr: `${ipClass} Class`, scope: 'Public', badgeClass: styles.badgePublic };
-}
-
-/**
- * IPv6 屬性與 Scope 判斷 (RFC 4193 / RFC 4291 / RFC 6890)
- */
-export function getIpv6ScopeInfo(ipv6Str: string) {
-  const normalized = ipv6Str.trim().toLowerCase();
-  if (normalized === '::1' || normalized === '0:0:0:0:0:0:0:1') {
-    return { scope: 'Loopback', type: '::1/128' };
-  }
-
-  const firstBlockHex = normalized.split(':')[0] || '0';
-  const firstVal = parseInt(firstBlockHex, 16);
-
-  if (isNaN(firstVal)) return { scope: 'Invalid', type: 'Unknown' };
-
-  // fc00::/7 -> Unique Local Address (私有 IPv6)
-  if ((firstVal & 0xfe00) === 0xfc00) {
-    return { scope: 'Private (ULA)', type: 'fc00::/7' };
-  }
-  // fe80::/10 -> Link-Local
-  if ((firstVal & 0xffc0) === 0xfe80) {
-    return { scope: 'Link-Local', type: 'fe80::/10' };
-  }
-  // ff00::/8 -> Multicast
-  if ((firstVal & 0xff00) === 0xff00) {
-    return { scope: 'Multicast', type: 'ff00::/8' };
-  }
-  // 2000::/3 -> Global Unicast (公網 IP)
-  if ((firstVal & 0xe000) === 0x2000) {
-    return { scope: 'Public', type: 'Global Unicast (2000::/3)' };
-  }
-
-  return { scope: 'Reserved', type: 'RFC Reserved' };
-}
 
 export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClientProps) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
@@ -447,63 +319,6 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
-  }, []);
-
-  const calculateSubnet = useCallback((ipInt: number, rawIpStr: string, cidr: number): SubnetResult => {
-    const maskInt = cidrToMaskInt(cidr);
-    const maskStr = intToIp(maskInt);
-    const wildcardInt = (~maskInt) >>> 0;
-    const wildcardStr = intToIp(wildcardInt);
-
-    const netInt = (ipInt & maskInt) >>> 0;
-    const netStr = intToIp(netInt);
-
-    const broadcastInt = (netInt | wildcardInt) >>> 0;
-    const broadcastStr = intToIp(broadcastInt);
-
-    const totalIps = Math.pow(2, 32 - cidr);
-
-    let usableCount = 0;
-    let firstUsableInt = 0;
-    let lastUsableInt = 0;
-
-    if (cidr === 31) {
-      usableCount = 2;
-      firstUsableInt = netInt;
-      lastUsableInt = broadcastInt;
-    } else if (cidr === 32) {
-      usableCount = 1;
-      firstUsableInt = netInt;
-      lastUsableInt = netInt;
-    } else {
-      usableCount = totalIps - 2;
-      firstUsableInt = netInt + 1;
-      lastUsableInt = broadcastInt - 1;
-    }
-
-    const firstUsableStr = intToIp(firstUsableInt);
-    const lastUsableStr = intToIp(lastUsableInt);
-    const scopeInfo = getIpScopeInfo(ipInt);
-    const binaryIp = intToBinary(ipInt);
-
-    return {
-      inputIp: rawIpStr,
-      cidr,
-      subnetMask: maskStr,
-      wildcardMask: wildcardStr,
-      networkAddress: netStr,
-      networkInt: netInt,
-      broadcastAddress: broadcastStr,
-      broadcastInt: broadcastInt,
-      totalIps,
-      usableCount,
-      firstUsableInt,
-      lastUsableInt,
-      firstUsableStr,
-      lastUsableStr,
-      scopeInfo,
-      binaryIp,
-    };
   }, []);
 
   // URL 初始化讀取
@@ -589,7 +404,7 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
     }
 
     setCurrentPage(1);
-  }, [mode, inputCidr, inputIp, selectMask, calculateSubnet, t.errCidrSlash, t.errCidrRange, t.errInvalidIp, t.errStdIp]);
+  }, [mode, inputCidr, inputIp, selectMask, t.errCidrSlash, t.errCidrRange, t.errInvalidIp, t.errStdIp]);
 
   // URL 正向同步 (replaceState)
   useEffect(() => {
@@ -917,7 +732,7 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
                 <span className="text-sm font-semibold text-text-sub">{t.classScopeLabel}</span>
                 <div className="flex items-center gap-1 mt-1 text-sm font-bold text-text-main">
                   <span>{calcResult.scopeInfo.classStr}</span>
-                  <span className={calcResult.scopeInfo.badgeClass}>{calcResult.scopeInfo.scope}</span>
+                  <span className={BADGE_CLASS_BY_KIND[calcResult.scopeInfo.badgeKind]}>{calcResult.scopeInfo.scope}</span>
                 </div>
               </div>
             </div>
