@@ -128,6 +128,10 @@ const TRANSLATIONS = {
         q: '上傳機密文件或合約進行 PDF 壓縮安全嗎？檔案會被上傳到後端嗎？',
         a: `100% 安全無虞！本工具採用「零伺服器架構 (Zero-Server Architecture)」，所有 PDF 解析、圖片重繪降採樣與重組工作均 100% 於您的瀏覽器記憶體本地完成，絕無任何資料上傳至任何雲端伺服器，甚至在斷網環境下也能完美離線執行。`,
       },
+      {
+        q: '壓縮後的 PDF 會保留原始檔案內嵌的巨集或 JavaScript 腳本嗎？',
+        a: `本工具僅針對圖片重新編碼與檔案結構最佳化，並不會主動掃描或移除來源 PDF 內嵌的 JavaScript / OpenAction 等可執行內容。若您上傳的原始檔案本身含有惡意腳本，壓縮後的檔案仍可能保留該內容，開啟時有機會在讀者的 PDF 閱讀器（如 Acrobat）中執行。建議僅壓縮來源可信的 PDF，若需要移除巨集/腳本，請先使用專門的 PDF 消毒工具處理。`,
+      },
     ],
   },
   en: {
@@ -226,6 +230,10 @@ If an image is already below the target DPI, extremely small, or serves as a tra
       {
         q: 'Is it safe to compress confidential documents? Are files uploaded to external servers?',
         a: `100% private and secure! Operating on a Zero-Server Architecture, all parsing, downsampling, and repackaging occur entirely within your browser's local memory. No files or data ever leave your device, and the tool works completely offline.`,
+      },
+      {
+        q: 'Does the compressed PDF still contain any embedded macros or JavaScript from the original file?',
+        a: `This tool only re-encodes images and optimizes file structure — it does not scan for or strip embedded JavaScript, OpenAction, or other executable content from the source PDF. If your original file already contains malicious scripts, the compressed output may still carry them and could execute when opened in a PDF reader such as Acrobat. Only compress PDFs from sources you trust; if you need to remove macros/scripts, use a dedicated PDF sanitization tool first.`,
       },
     ],
   },

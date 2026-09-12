@@ -115,6 +115,10 @@ const TRANSLATIONS = {
         q: '處理涉及合約或機密資料的 PDF 安全嗎？',
         a: `100% 隱私安全！本工具絕不上傳任何檔案至外部伺服器。所有頁面拆解、拖曳重組、旋轉與新檔合成運算皆 100% 於您的瀏覽器本地記憶體中完成，甚至斷網也能離線順暢操作。`,
       },
+      {
+        q: '合併輸出的 PDF 會保留原始檔案內嵌的巨集或 JavaScript 腳本嗎？',
+        a: `本工具僅處理頁面的視覺內容（合併、排序、旋轉、插入圖片），並不會主動掃描或移除來源 PDF 內嵌的 JavaScript / OpenAction 等可執行內容。若其中一份來源檔案本身含有惡意腳本，合併後的新檔案仍可能保留該內容。建議僅合併來源可信的 PDF，若需要移除巨集/腳本，請先使用專門的 PDF 消毒工具處理。`,
+      },
     ],
   },
   en: {
@@ -214,6 +218,10 @@ The lightbox renders the page in Just-In-Time high resolution, complete with mou
       {
         q: 'Is it safe to process confidential documents or contracts?',
         a: `100% safe and confidential! The composer operates completely on the client side. All splitting, reordering, rotation, and rendering happen inside your browser memory with zero server uploads, working 100% offline.`,
+      },
+      {
+        q: 'Does the merged output still contain any embedded macros or JavaScript from the source files?',
+        a: `This tool only handles page visuals (merging, reordering, rotation, image insertion) — it does not scan for or strip embedded JavaScript, OpenAction, or other executable content from the source PDFs. If one of your source files already contains a malicious script, the merged output may still carry it. Only merge PDFs from sources you trust; if you need to remove macros/scripts, use a dedicated PDF sanitization tool first.`,
       },
     ],
   },

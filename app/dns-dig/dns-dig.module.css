@@ -229,3 +229,11 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
+
+.crossBorderNotice {
+  color: #f59e0b;
+}
+
+:global([data-theme='light']) .crossBorderNotice {
+  color: #b45309;
+}
