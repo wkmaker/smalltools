@@ -1025,7 +1025,15 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     toastEl.className = isLight
       ? 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-[#d97706] bg-white/95 border border-[#d97706]/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md'
       : 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-amber-500/20 border border-amber-500/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md';
-    toastEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>${msg}</span>`;
+    // 圖示為固定靜態 SVG，訊息文字則一律用 textContent 賦值，避免未來有人把使用者可控文字
+    // 傳進這支函式時被當成 HTML 解析而構成 DOM XSS。
+    toastEl.insertAdjacentHTML(
+      'afterbegin',
+      '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+    );
+    const msgEl = document.createElement('span');
+    msgEl.textContent = msg;
+    toastEl.appendChild(msgEl);
     document.body.appendChild(toastEl);
     setTimeout(() => {
       if (document.body.contains(toastEl)) document.body.removeChild(toastEl);
