@@ -1,56 +1,37 @@
 /**
  * PDF 輔助運算工具庫 (超高解析度與 A4 無損畫質優化版)
- * 採用純前端非同步 CDN 動態載入 pdf-lib (v1.17.1) 與 pdfjs-dist (v3.11.174)
- * 100% 本機端極速資安運算，避開 Next.js SSR / Turbopack 靜態導出編譯 Node 原生模組問題
+ * pdf-lib (v1.17.1) 與 pdfjs-dist (v6.3.289) 皆為正式 npm 依賴、隨建置產物自行打包，
+ * 不再執行期向第三方 CDN 動態注入 <script>（無 SRI 風險、無外部單點失效）；
+ * 透過動態 import() 延遲載入，只在使用者進入 PDF 相關工具頁時才下載對應 chunk。
  */
 
-declare global {
-  interface Window {
-    PDFLib: any;
-    pdfjsLib: any;
+type PdfLibModule = typeof import('pdf-lib');
+type PdfJsModule = typeof import('pdfjs-dist');
+
+let modulesPromise: Promise<{ PDFLib: PdfLibModule; pdfjsLib: PdfJsModule }> | null = null;
+
+export async function loadPdfScripts(): Promise<{ PDFLib: PdfLibModule; pdfjsLib: PdfJsModule }> {
+  if (typeof window === 'undefined') {
+    throw new Error('PDF 處理模組僅能在瀏覽器環境載入');
   }
-}
-
-let loadPromise: Promise<void> | null = null;
-
-export async function loadPdfScripts(): Promise<void> {
-  if (typeof window === 'undefined') return;
-  if (window.PDFLib && window.pdfjsLib) return;
-  if (loadPromise) return loadPromise;
-
-  loadPromise = new Promise<void>((resolve, reject) => {
-    const scriptPdfLib = document.createElement('script');
-    scriptPdfLib.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
-    scriptPdfLib.async = true;
-
-    const scriptPdfJs = document.createElement('script');
-    scriptPdfJs.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
-    scriptPdfJs.async = true;
-
-    let loadedCount = 0;
-    const checkBoth = () => {
-      loadedCount++;
-      if (loadedCount === 2) {
-        if (window.pdfjsLib) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-        }
-        resolve();
-      }
-    };
-
-    const onError = (err: any) => reject(new Error('載入 PDF CDN 模組失敗，請檢查網路連線'));
-
-    scriptPdfLib.onload = checkBoth;
-    scriptPdfLib.onerror = onError;
-    scriptPdfJs.onload = checkBoth;
-    scriptPdfJs.onerror = onError;
-
-    document.head.appendChild(scriptPdfLib);
-    document.head.appendChild(scriptPdfJs);
-  });
-
-  return loadPromise;
+  if (!modulesPromise) {
+    modulesPromise = (async () => {
+      const [PDFLib, pdfjsLib] = await Promise.all([
+        import('pdf-lib'),
+        import('pdfjs-dist'),
+      ]);
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.min.mjs',
+        import.meta.url
+      ).toString();
+      return { PDFLib, pdfjsLib };
+    })().catch((err) => {
+      modulesPromise = null; // 載入失敗時清空快取，允許使用者重試
+      console.error('載入 PDF 處理模組失敗：', err);
+      throw new Error('載入 PDF 處理模組失敗，請檢查網路連線後重試');
+    });
+  }
+  return modulesPromise;
 }
 
 export interface RenderedPdfPage {
@@ -71,8 +52,7 @@ export async function renderPdfPagesProgressive(
   maxDimension: number = 800,
   password?: string
 ): Promise<void> {
-  await loadPdfScripts();
-  const pdfjsLib = window.pdfjsLib;
+  const { pdfjsLib } = await loadPdfScripts();
 
   // 複製一份 ArrayBuffer 傳給 PDF.js Worker，防範 Worker Transferable 導致原主執行緒 ArrayBuffer 變成 Detached (byteLength 0)
   const workerBuffer = arrayBuffer.slice(0);
@@ -120,6 +100,7 @@ export async function renderPdfPagesProgressive(
     if (!ctx) continue;
 
     await page.render({
+      canvas,
       canvasContext: ctx,
       viewport: viewport,
     }).promise;
@@ -145,8 +126,7 @@ export async function renderPdfPage300Dpi(
   pageIndex: number,
   password?: string
 ): Promise<{ dataUrl: string; pointWidth: number; pointHeight: number }> {
-  await loadPdfScripts();
-  const pdfjsLib = window.pdfjsLib;
+  const { pdfjsLib } = await loadPdfScripts();
 
   const docParams: any = { data: arrayBuffer.slice(0) };
   if (password) docParams.password = password;
@@ -179,9 +159,12 @@ export async function renderPdfPage300Dpi(
   ctx.imageSmoothingQuality = 'high';
 
   await page.render({
+    canvas,
     canvasContext: ctx,
     viewport: viewport,
-    renderInteractiveForms: true, // 100% 捕獲表單欄位、印章與電子簽名
+    // pdfjs-dist v4+ 移除了 renderInteractiveForms，改用 annotationMode 控制；
+    // ENABLE 會把表單欄位、印章與電子簽名的外觀一併繪製到 canvas 上，等同原本行為
+    annotationMode: pdfjsLib.AnnotationMode.ENABLE,
   }).promise;
 
   const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
@@ -291,8 +274,7 @@ export async function compilePagesToPdfBlob(
   onProgress?: (current: number, total: number) => void,
   exportEngine: 'wysiwyg' | 'vector' = 'wysiwyg'
 ): Promise<Blob> {
-  await loadPdfScripts();
-  const PDFLib = window.PDFLib;
+  const { PDFLib } = await loadPdfScripts();
   const targetPdf = await PDFLib.PDFDocument.create();
 
   const pdfDocCache = new Map<ArrayBuffer, any>();
@@ -352,7 +334,7 @@ export async function compilePagesToPdfBlob(
   }
 
   const pdfBytes = await targetPdf.save();
-  return new Blob([pdfBytes], { type: 'application/pdf' });
+  return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
 }
 
 export interface ImageInspectItem {
@@ -382,9 +364,7 @@ export async function inspectPdfStructure(
   pdfBuffer: ArrayBuffer,
   password?: string
 ): Promise<InspectResult> {
-  await loadPdfScripts();
-  const PDFLib = window.PDFLib;
-  const pdfjsLib = window.pdfjsLib;
+  const { PDFLib, pdfjsLib } = await loadPdfScripts();
 
   // 1. 優先使用 PDF.js 執行開檔與加密密碼預檢 (PDF.js 針對 Encrypted/PasswordException 拋錯極為精準)
   try {
@@ -449,15 +429,18 @@ export async function inspectPdfStructure(
       if (!dict) continue;
       const subtype = dict.get(PDFLib.PDFName.of('Subtype'));
       if (subtype === PDFLib.PDFName.of('Image')) {
-        const width = dict.get(PDFLib.PDFName.of('Width'))?.asNumber() || 0;
-        const height = dict.get(PDFLib.PDFName.of('Height'))?.asNumber() || 0;
+        const widthObj = dict.get(PDFLib.PDFName.of('Width'));
+        const width = widthObj instanceof PDFLib.PDFNumber ? widthObj.asNumber() : 0;
+        const heightObj = dict.get(PDFLib.PDFName.of('Height'));
+        const height = heightObj instanceof PDFLib.PDFNumber ? heightObj.asNumber() : 0;
         const filter = dict.get(PDFLib.PDFName.of('Filter'))?.toString() || 'Raw';
         const colorSpace = dict.get(PDFLib.PDFName.of('ColorSpace'))?.toString() || 'RGB';
         const smask = !!dict.get(PDFLib.PDFName.of('SMask'));
-        const imageMask = dict.get(PDFLib.PDFName.of('ImageMask'))?.asBoolean?.() || false;
+        const imageMaskObj = dict.get(PDFLib.PDFName.of('ImageMask'));
+        const imageMask = imageMaskObj instanceof PDFLib.PDFBool ? imageMaskObj.asBoolean() : false;
         const decode = !!dict.get(PDFLib.PDFName.of('Decode'));
 
-        const byteLen = pdfObject.contents ? pdfObject.contents.byteLength : 0;
+        const byteLen = pdfObject instanceof PDFLib.PDFRawStream ? pdfObject.contents.byteLength : 0;
         totalImageBytes += byteLen;
 
         let status: 'compressible' | 'protected' = 'compressible';
@@ -527,9 +510,7 @@ export async function compressPdfInPlace(
   onProgress?: (msg: string, pct: number) => void,
   password?: string
 ): Promise<Blob> {
-  await loadPdfScripts();
-  const PDFLib = window.PDFLib;
-  const pdfjsLib = window.pdfjsLib;
+  const { PDFLib, pdfjsLib } = await loadPdfScripts();
 
   const { quality = 0.65, maxDpi = 144 } = config;
 

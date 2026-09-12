@@ -33,29 +33,29 @@ export function generateSampleHar(): any {
           time: 85,
           request: {
             method: 'POST',
-            url: 'https://api.example.com/v1/auth/login?client_id=demo_app&redirect_token=sec_tok_987654321',
+            url: 'https://api.example.com/v1/auth/login?client_id=demo_app&redirect_token=MOCK_sec_tok_987654321',
             httpVersion: 'HTTP/2.0',
             cookies: [
-              { name: 'session_id', value: 'sess_live_98a76b54c3210' },
+              { name: 'session_id', value: 'MOCK_sess_live_98a76b54c3210' },
               { name: 'user_pref', value: 'dark_mode' },
             ],
             headers: [
               { name: 'Host', value: 'api.example.com' },
               { name: 'User-Agent', value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-              { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ' },
-              { name: 'X-Api-Key', value: 'test_mock_apikey_9876543210abcdef' },
-              { name: 'Cookie', value: 'session_id=sess_live_98a76b54c3210; token=secret_cookie_token_999; theme=dark' },
+              { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2NrIjp0cnVlLCJub3RlIjoiZml4dHVyZS1kYXRhLW9ubHkifQ.MOCK_SIGNATURE_DO_NOT_USE' },
+              { name: 'X-Api-Key', value: 'MOCK_test_apikey_9876543210abcdef' },
+              { name: 'Cookie', value: 'session_id=MOCK_sess_live_98a76b54c3210; token=MOCK_secret_cookie_token_999; theme=dark' },
               { name: 'Content-Type', value: 'application/json' },
             ],
             queryString: [
               { name: 'client_id', value: 'demo_app' },
-              { name: 'redirect_token', value: 'sec_tok_987654321' },
+              { name: 'redirect_token', value: 'MOCK_sec_tok_987654321' },
             ],
             postData: {
               mimeType: 'application/json',
               text: JSON.stringify({
                 username: 'admin@example.com',
-                password: 'SuperSecretP@ssw0rd!2026',
+                password: 'MOCK_SuperSecretP@ssw0rd_2026',
                 credit_card: '4532-1234-5678-9012',
                 aws_access_key: 'AKIAIOSFODNN7EXAMPLE',
               }, null, 2),
@@ -66,22 +66,22 @@ export function generateSampleHar(): any {
             statusText: 'OK',
             httpVersion: 'HTTP/2.0',
             cookies: [
-              { name: 'session_id', value: 'sess_live_new_updated_token_999' },
+              { name: 'session_id', value: 'MOCK_sess_live_new_updated_token_999' },
             ],
             headers: [
               { name: 'Content-Type', value: 'application/json; charset=utf-8' },
-              { name: 'Set-Cookie', value: 'session_id=sess_live_new_updated_token_999; Path=/; HttpOnly; Secure' },
+              { name: 'Set-Cookie', value: 'session_id=MOCK_sess_live_new_updated_token_999; Path=/; HttpOnly; Secure' },
             ],
             content: {
               size: 256,
               mimeType: 'application/json',
               text: JSON.stringify({
                 status: 'success',
-                accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfOTA5MCIsImV4cCI6MTgwMDAwMDAwMH0.K7kK7mQ6lE23fG9h7j2k1L8',
+                accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2NrIjp0cnVlLCJub3RlIjoiZml4dHVyZS1kYXRhLW9ubHkifQ.MOCK_SIGNATURE_DO_NOT_USE',
                 user: {
                   email: 'admin@example.com',
                   name: 'System Administrator',
-                  internal_secret: 'confidential_server_key_888',
+                  internal_secret: 'MOCK_confidential_server_key_888',
                 },
               }, null, 2),
             },
@@ -92,7 +92,7 @@ export function generateSampleHar(): any {
           time: 145,
           request: {
             method: 'GET',
-            url: 'https://cdn.example.com/assets/hero-banner.png?auth_token=tok_image_secret_123',
+            url: 'https://cdn.example.com/assets/hero-banner.png?auth_token=MOCK_tok_image_secret_123',
             httpVersion: 'HTTP/2.0',
             cookies: [],
             headers: [
@@ -100,7 +100,7 @@ export function generateSampleHar(): any {
               { name: 'Accept', value: 'image/png' },
             ],
             queryString: [
-              { name: 'auth_token', value: 'tok_image_secret_123' },
+              { name: 'auth_token', value: 'MOCK_tok_image_secret_123' },
             ],
           },
           response: {
