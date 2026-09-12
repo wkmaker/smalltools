@@ -5,6 +5,12 @@ import { createPortal } from 'react-dom';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './lucky-wheel.module.css';
+import {
+  calculateSectors as calculateSectorsEngine,
+  pickWeightedIndex,
+  generateId,
+  getContrastYIQ,
+} from './engine';
 
 // 預設轉盤色彩盤
 const PRESET_COLORS = [
@@ -357,19 +363,6 @@ You can also click 'Export TXT' to backup your configuration for future events.`
   },
 };
 
-function generateId(): string {
-  return 'p_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-}
-
-function getContrastYIQ(hexcolor: string): string {
-  const hex = hexcolor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16) || 0;
-  const g = parseInt(hex.substring(2, 4), 16) || 0;
-  const b = parseInt(hex.substring(4, 6), 16) || 0;
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-  return yiq >= 138 ? '#0f172a' : '#ffffff';
-}
-
 interface LuckyWheelClientProps {
   lang?: 'zh-TW' | 'en';
 }
@@ -527,22 +520,10 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   }, [prizes, enableQuantityLimit]);
 
   // 計算扇區角度與總權重
-  const calculateSectors = useCallback(() => {
-    const validPrizes = getUnfinishedPrizes();
-    const totalWeight = validPrizes.reduce((sum, p) => sum + p.weight, 0);
-    if (totalWeight === 0) return { sectors: [], totalWeight: 0 };
-
-    let currentAngle = 0;
-    const sectors = validPrizes.map((prize) => {
-      const angleSpan = (prize.weight / totalWeight) * 360;
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + angleSpan;
-      currentAngle = endAngle;
-      return { prize, startAngle, endAngle, angleSpan };
-    });
-
-    return { sectors, totalWeight };
-  }, [getUnfinishedPrizes]);
+  const calculateSectors = useCallback(
+    () => calculateSectorsEngine(getUnfinishedPrizes()),
+    [getUnfinishedPrizes]
+  );
 
   // 繪製 12 點鐘頂部指針 (Pointer)
   const drawPointer = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number) => {
@@ -833,16 +814,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     setIsSpinning(true);
 
     const randVal = Math.random() * totalWeight;
-    let accum = 0;
-    let selectedSector = sectors[0];
-
-    for (let i = 0; i < sectors.length; i++) {
-      accum += sectors[i].prize.weight;
-      if (randVal <= accum) {
-        selectedSector = sectors[i];
-        break;
-      }
-    }
+    const selectedSector = sectors[pickWeightedIndex(sectors.map((s) => s.prize.weight), randVal)];
 
     const midAngle = (selectedSector.startAngle + selectedSector.endAngle) / 2;
     // 頂部指針位於 12 點鐘方向 (270度)，需計算目標旋轉角度使扇區中心對齊 270 度
@@ -887,16 +859,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
 
     const totalWeight = validPrizes.reduce((sum, p) => sum + p.weight, 0);
     const randVal = Math.random() * totalWeight;
-    let accum = 0;
-    let winningPrize = validPrizes[0];
-
-    for (let i = 0; i < validPrizes.length; i++) {
-      accum += validPrizes[i].weight;
-      if (randVal <= accum) {
-        winningPrize = validPrizes[i];
-        break;
-      }
-    }
+    const winningPrize = validPrizes[pickWeightedIndex(validPrizes.map((p) => p.weight), randVal)];
 
     const stripPrizes: PrizeItem[] = [];
     for (let r = 0; r < 12; r++) {
