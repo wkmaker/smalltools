@@ -14,6 +14,7 @@ import {
 } from './icsSplitter';
 import styles from './calendar-split.module.css';
 import { formatBytes } from '../utils/formatBytes';
+import { downloadBlob } from '../utils/downloadBlob';
 
 interface CalendarSplitClientProps {
   lang?: 'zh-TW' | 'en';
@@ -297,14 +298,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
     (chunk: SplitChunkMeta) => {
       if (!parsedData) return;
       const blob = buildChunkBlob(parsedData, chunk);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = chunk.filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      downloadBlob(blob, chunk.filename, 1000);
     },
     [parsedData]
   );
@@ -327,14 +321,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
         });
 
         const zipBlob = createZipArchive(zipFiles);
-        const zipUrl = URL.createObjectURL(zipBlob);
-        const a = document.createElement('a');
-        a.href = zipUrl;
-        a.download = `${filenamePrefix || 'calendar'}_split_all.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+        downloadBlob(zipBlob, `${filenamePrefix || 'calendar'}_split_all.zip`, 1000);
       } finally {
         setIsZipping(false);
       }

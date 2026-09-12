@@ -208,6 +208,7 @@ const TRANSLATIONS = {
 
 import { createSimpleZip } from './utils/zipBuilder';
 import { formatBytes } from '../utils/formatBytes';
+import { downloadBlob } from '../utils/downloadBlob';
 import { calculateBatchDimensions } from './engine';
 
 const safeLoadImage = (src: string, timeoutMs = 10000): Promise<HTMLImageElement> => {
@@ -645,14 +646,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       }
 
       const zipBlob = createSimpleZip(processedFiles);
-      const zipUrl = URL.createObjectURL(zipBlob);
-      const a = document.createElement('a');
-      a.href = zipUrl;
-      a.download = `imagecraft_batch_${Date.now()}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      requestAnimationFrame(() => URL.revokeObjectURL(zipUrl));
+      downloadBlob(zipBlob, `imagecraft_batch_${Date.now()}.zip`, 100);
 
       showToast(t.zipCompleted);
     } catch (err) {

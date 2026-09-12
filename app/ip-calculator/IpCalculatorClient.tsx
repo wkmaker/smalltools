@@ -13,6 +13,7 @@ import {
   type SubnetResult,
   type IpBadgeKind,
 } from './engine';
+import { downloadBlob } from '../utils/downloadBlob';
 
 const BADGE_CLASS_BY_KIND: Record<IpBadgeKind, string> = {
   private: styles.badgePrivate,
@@ -514,15 +515,8 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
       } else {
         const mimeType = type === 'csv' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;';
         const blob = new Blob(chunks, { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
         const safeFilename = safeIp.replace(/[^a-zA-Z0-9.]/g, '_');
-        a.download = `ip_subnet_${safeFilename}_slash${cidr}.${type}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadBlob(blob, `ip_subnet_${safeFilename}_slash${cidr}.${type}`);
         showToast(
           t.toastExportSuccess.replace('{count}', usableCount.toLocaleString()).replace('{type}', type)
         );

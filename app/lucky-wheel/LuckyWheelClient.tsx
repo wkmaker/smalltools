@@ -11,6 +11,7 @@ import {
   generateId,
   getContrastYIQ,
 } from './engine';
+import { downloadBlob } from '../utils/downloadBlob';
 
 // 預設轉盤色彩盤
 const PRESET_COLORS = [
@@ -1007,12 +1008,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const exportTxt = () => {
     const textContent = prizes.map((p) => `${p.title}\t${p.weight}\t${p.quantity}\t${p.color}`).join('\n');
     const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `LuckyWheel_Prizes_${new Date().toISOString().slice(0, 10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `LuckyWheel_Prizes_${new Date().toISOString().slice(0, 10)}.txt`);
   };
 
   // TXT 匯入

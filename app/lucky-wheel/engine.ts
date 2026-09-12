@@ -6,6 +6,8 @@
  * 隨機值改由呼叫端注入，讓公平性判斷可以脫離 Math.random() 直接測試。
  */
 
+import { randomToken } from '../utils/randomToken.ts';
+
 export interface PrizeLike {
   weight: number;
 }
@@ -48,7 +50,7 @@ export function pickWeightedIndex(weights: number[], randVal: number): number {
 }
 
 export function generateId(): string {
-  return 'p_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+  return 'p_' + Date.now() + '_' + randomToken(5);
 }
 
 // YIQ 對比公式：依背景色亮度自動決定文字應顯示深色或淺色，確保轉盤/拉霸文字可讀性
