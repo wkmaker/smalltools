@@ -1,35 +1,62 @@
-import {
+import type {
   SanitizeRules,
   SanitizedStats,
   DetectedHeaderItem,
   ParsedRedactionGroup,
   HarEntryAnalysis,
   SanitizationResult,
-} from '../types';
+} from '../types.ts';
 import {
   DEFAULT_SENSITIVE_KEYS,
   PAYMENT_KEYS,
   TRACKER_DOMAINS,
-} from '../constants';
+} from '../constants.ts';
 
 // 正則表達式特徵 (深度掃描)
 const JWT_REGEX = /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.?[A-Za-z0-9_.+/=-]*/g;
 const BEARER_REGEX = /Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi;
 const AWS_KEY_REGEX = /(AKIA|ASIA)[0-9A-Z]{16}/g;
-const STRIPE_KEY_REGEX = /sk_live_[0-9a-zA-Z]{24,}/g;
+// Stripe：涵蓋正式/測試環境的一般金鑰與限制金鑰 (sk_live_ / sk_test_ / rk_live_ / rk_test_)
+const STRIPE_KEY_REGEX = /(?:sk|rk)_(?:live|test)_[0-9a-zA-Z]{24,}/g;
+// GitHub 個人存取權杖 (ghp_) 與各類 OAuth/App 權杖 (gho_/ghu_/ghs_/ghr_)
+const GITHUB_TOKEN_REGEX = /gh[opusr]_[A-Za-z0-9]{36,255}/g;
+// Slack Bot/User/App/Legacy 權杖
+const SLACK_TOKEN_REGEX = /xox[abpr]-[A-Za-z0-9-]{10,72}/gi;
+// Google API 金鑰
+const GOOGLE_API_KEY_REGEX = /AIza[0-9A-Za-z_-]{35}/g;
+// OpenAI 一般金鑰與 Project 金鑰
+const OPENAI_KEY_REGEX = /sk-(?:proj-)?[A-Za-z0-9_-]{20,}/g;
 const EMAIL_REGEX = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/g;
 // 信用卡卡號正則 (支援 13~19 位標準卡號，可含破折號或空格)
 const CREDIT_CARD_REGEX = /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|2[2-7][0-9]{14}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|6(?:011|5[0-9]{2})[0-9]{12}|(?:2131|1800|35\d{3})\d{11}|(?:\d{4}[ -]){3}\d{4})\b/g;
+
+// 將鍵名拆解為比對詞元：先在 camelCase 的大小寫邊界補上分隔符號
+// (例如 accessToken -> access_Token)，再統一轉小寫並以既有分隔符切詞，
+// 避免無分隔符的複合鍵名 (accessToken/authToken/privateKey 等) 跳過關鍵字比對。
+function tokenizeKey(key: string): string[] {
+  const withBoundaries = key.replace(/([a-z0-9])([A-Z])/g, '$1_$2');
+  return withBoundaries.toLowerCase().split(/[-_.:/\\]+/).filter(Boolean);
+}
 
 // 鍵名匹配檢查
 export function isMatchingKey(key: string, sensitiveList: string[]): boolean {
   const lower = key.toLowerCase();
   if (lower.startsWith(':')) return false; // 忽略 HTTP/2 虛擬標頭 (:authority, :path 等)
 
+  const tokens = tokenizeKey(key);
+
   return sensitiveList.some((target) => {
     if (lower === target) return true;
-    const tokens = lower.split(/[-_.:/\\]+/);
-    return tokens.includes(target);
+    if (tokens.includes(target)) return true;
+
+    // 清單中的複合關鍵字 (如 access_token、private_key) 沒有對應的單詞泛稱時，
+    // 需要在詞元序列中比對是否有連續片段完全吻合 (accessToken -> ['access','token'])。
+    const targetTokens = target.split(/[-_.:/\\]+/).filter(Boolean);
+    if (targetTokens.length < 2) return false;
+    for (let i = 0; i <= tokens.length - targetTokens.length; i++) {
+      if (targetTokens.every((t, j) => tokens[i + j] === t)) return true;
+    }
+    return false;
   });
 }
 
@@ -338,8 +365,16 @@ export async function sanitizeHarAsync(
         matchedRule = lang === 'en' ? 'Deep Regex (Bearer Token)' : '正則深度掃描 (Bearer Token)';
       } else if (/(AKIA|ASIA)[0-9A-Z]{16}/.test(val)) {
         matchedRule = lang === 'en' ? 'Deep Regex (AWS Key)' : '正則深度掃描 (AWS Key)';
-      } else if (/sk_live_[0-9a-zA-Z]{24,}/.test(val)) {
+      } else if (/(?:sk|rk)_(?:live|test)_[0-9a-zA-Z]{24,}/.test(val)) {
         matchedRule = lang === 'en' ? 'Deep Regex (Stripe Key)' : '正則深度掃描 (Stripe Key)';
+      } else if (/gh[opusr]_[A-Za-z0-9]{36,255}/.test(val)) {
+        matchedRule = lang === 'en' ? 'Deep Regex (GitHub Token)' : '正則深度掃描 (GitHub Token)';
+      } else if (/xox[abpr]-[A-Za-z0-9-]{10,72}/i.test(val)) {
+        matchedRule = lang === 'en' ? 'Deep Regex (Slack Token)' : '正則深度掃描 (Slack Token)';
+      } else if (/AIza[0-9A-Za-z_-]{35}/.test(val)) {
+        matchedRule = lang === 'en' ? 'Deep Regex (Google API Key)' : '正則深度掃描 (Google API Key)';
+      } else if (/sk-(?:proj-)?[A-Za-z0-9_-]{20,}/.test(val)) {
+        matchedRule = lang === 'en' ? 'Deep Regex (OpenAI Key)' : '正則深度掃描 (OpenAI Key)';
       }
     }
 
@@ -394,6 +429,26 @@ export async function sanitizeHarAsync(
         return redactVal;
       });
       text = text.replace(STRIPE_KEY_REGEX, () => {
+        matchCount++;
+        totalRedactedRegex++;
+        return redactVal;
+      });
+      text = text.replace(GITHUB_TOKEN_REGEX, () => {
+        matchCount++;
+        totalRedactedRegex++;
+        return redactVal;
+      });
+      text = text.replace(SLACK_TOKEN_REGEX, () => {
+        matchCount++;
+        totalRedactedRegex++;
+        return redactVal;
+      });
+      text = text.replace(GOOGLE_API_KEY_REGEX, () => {
+        matchCount++;
+        totalRedactedRegex++;
+        return redactVal;
+      });
+      text = text.replace(OPENAI_KEY_REGEX, () => {
         matchCount++;
         totalRedactedRegex++;
         return redactVal;
