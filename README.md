@@ -74,6 +74,17 @@
 
 ---
 
+## 🗓️ 未來規劃 (Roadmap)
+
+以下為規劃中、尚未實作的工具構想，依品質與實際需求排優先序上線，不綁定固定週期：
+
+* **PWA 圖標產生器**：上傳單張圖片，一鍵產生 Android / Web 應用所需的各尺寸圖標與 `manifest.json`。
+* **CA / 伺服器憑證產生器**：純前端產生自簽 CA 與伺服器憑證，與既有 `ssl-converter` 互補。
+* **郵件路徑解析器**：貼上 Email 原始標頭，視覺化解析 `Received` 轉送路徑與延遲。
+* **IP 子網段計算器新增 CIDR 搜尋**：於既有 `/ip-calculator` 頁面加入「輸入 IP Range 後可搜尋特定 IP 是否落在範圍內」的功能，不另開新頁。
+
+---
+
 ## 💻 技術棧 (Tech Stack)
 
 * **核心框架**：[Next.js 16 (App Router)](https://nextjs.org/) + [React 19](https://react.dev/) + [TypeScript 6](https://www.typescriptlang.org/)
