@@ -13,6 +13,7 @@ import {
   isIpInRange,
   isRangeWithin,
   normalizeIpOctets,
+  parseRangeQuery,
   type SubnetResult,
   type IpBadgeKind,
 } from './engine';
@@ -452,8 +453,8 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
 
     const { firstUsableInt, usableCount } = calcResult;
     const rawKw = filterKeyword.trim();
-    // CIDR 範圍查詢（含 "/"）僅用於範圍搜尋，不當作清單過濾關鍵字
-    const kw = rawKw.includes('/') ? '' : rawKw.toLowerCase();
+    // CIDR 範圍查詢僅用於範圍搜尋，不當作清單過濾關鍵字（單一 IP 查詢仍可過濾清單）
+    const kw = parseRangeQuery(rawKw)?.kind === 'cidr' ? '' : rawKw.toLowerCase();
     const result: Array<{ index: number; ipStr: string }> = [];
 
     const limit = usableCount > 1000 && !kw ? 1000 : Math.min(usableCount, 100000);
@@ -474,32 +475,18 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
   // Octet，如 192.168.3/24）則判定整段子網是否完整落在上方網段範圍內
   const rangeCheckResult = useMemo(() => {
     if (!calcResult) return null;
-    const raw = filterKeyword.trim();
-    if (!raw) return null;
+    const query = parseRangeQuery(filterKeyword);
+    if (!query) return null;
 
-    if (/^\d+\.\d+\.\d+\.\d+$/.test(raw)) {
-      const targetInt = ipToInt(raw);
-      if (targetInt === null) {
-        return { error: t.rangeCheckErrInvalid } as const;
-      }
-      return { inRange: isIpInRange(targetInt, calcResult.networkInt, calcResult.broadcastInt) } as const;
+    if (query.kind === 'invalid') {
+      return { error: t.rangeCheckErrInvalid } as const;
     }
-
-    const cidrMatch = raw.match(/^([\d.]+)\/(\d{1,3})$/);
-    if (cidrMatch) {
-      const cidr = parseInt(cidrMatch[2], 10);
-      const normalizedIp = normalizeIpOctets(cidrMatch[1]);
-      const ipInt = normalizedIp ? ipToInt(normalizedIp) : null;
-      if (ipInt === null || isNaN(cidr) || cidr < 0 || cidr > 32) {
-        return { error: t.rangeCheckErrInvalid } as const;
-      }
-      const sub = calculateSubnet(ipInt, normalizedIp!, cidr);
-      return {
-        inRange: isRangeWithin(sub.networkInt, sub.broadcastInt, calcResult.networkInt, calcResult.broadcastInt),
-      } as const;
+    if (query.kind === 'ip') {
+      return { inRange: isIpInRange(query.ipInt, calcResult.networkInt, calcResult.broadcastInt) } as const;
     }
-
-    return null;
+    return {
+      inRange: isRangeWithin(query.networkInt, query.broadcastInt, calcResult.networkInt, calcResult.broadcastInt),
+    } as const;
   }, [calcResult, filterKeyword, t.rangeCheckErrInvalid]);
 
   const handleClear = () => {

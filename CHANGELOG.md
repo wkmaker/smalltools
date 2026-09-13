@@ -42,6 +42,10 @@
   - 搜尋框輸入 `IP/CIDR`（可省略末尾 Octet）時改為計算該子網的網路/廣播位址，
     並用 `isRangeWithin` 判定是否完整落在目前網段內，同時該輸入不再誤觸清單的
     子字串過濾。
+  - 原本這段「判斷輸入框內容是單一 IP、IP/CIDR 或一般過濾字」的解析邏輯只寫在
+    `IpCalculatorClient.tsx` 的 `useMemo` 裡、未受測試覆蓋；抽成 `engine.ts` 的
+    純函數 `parseRangeQuery`，並補上單元測試（完整 IP、含縮寫的 IP/CIDR、格式合法
+    但數值不合法、一般過濾字與空字串），避免日後修改時再次回歸。
 
 ---
 

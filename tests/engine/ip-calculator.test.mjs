@@ -10,6 +10,7 @@ import {
   isIpInRange,
   isRangeWithin,
   normalizeIpOctets,
+  parseRangeQuery,
 } from '../../app/ip-calculator/engine.ts';
 
 test('ipToInt / intToIp：互轉一致，並拒絕非法格式', () => {
@@ -103,6 +104,34 @@ test('isRangeWithin：子網完整落在外層網段範圍內才回傳 true', ()
     isRangeWithin(outsideSub.networkInt, outsideSub.broadcastInt, outer.networkInt, outer.broadcastInt),
     false
   );
+});
+
+test('parseRangeQuery：完整 IPv4 回傳 ip 種類，供 isIpInRange 判定', () => {
+  const q = parseRangeQuery('192.168.3.200');
+  assert.deepEqual(q, { kind: 'ip', ipInt: ipToInt('192.168.3.200') });
+});
+
+test('parseRangeQuery：IP/CIDR（含省略末尾 Octet）回傳 cidr 種類與正確網路/廣播位址（回歸：192.168.0.0/20 網段搜尋 192.168.3.0/24 曾誤判為無效關鍵字）', () => {
+  const full = parseRangeQuery('192.168.3.0/24');
+  assert.deepEqual(full, {
+    kind: 'cidr',
+    networkInt: ipToInt('192.168.3.0'),
+    broadcastInt: ipToInt('192.168.3.255'),
+  });
+
+  const abbreviated = parseRangeQuery('192.168.3/24');
+  assert.deepEqual(abbreviated, full);
+});
+
+test('parseRangeQuery：格式符合但數值不合法回傳 invalid，一般過濾字串與空字串回傳 null', () => {
+  assert.deepEqual(parseRangeQuery('999.1.1.1'), { kind: 'invalid' });
+  assert.deepEqual(parseRangeQuery('192.168.1.1/33'), { kind: 'invalid' });
+  assert.deepEqual(parseRangeQuery('999.1.1.0/24'), { kind: 'invalid' });
+
+  assert.equal(parseRangeQuery('.100'), null);
+  assert.equal(parseRangeQuery('192.168'), null);
+  assert.equal(parseRangeQuery(''), null);
+  assert.equal(parseRangeQuery('   '), null);
 });
 
 test('isIpInRange：邊界含網路位址與廣播位址，範圍外回傳 false', () => {

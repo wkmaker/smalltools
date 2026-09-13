@@ -218,3 +218,43 @@ export function calculateSubnet(ipInt: number, rawIpStr: string, cidr: number): 
     binaryIp,
   };
 }
+
+export type RangeQuery =
+  | { kind: 'ip'; ipInt: number }
+  | { kind: 'cidr'; networkInt: number; broadcastInt: number }
+  | { kind: 'invalid' };
+
+/**
+ * 解析「範圍搜尋」輸入框的內容（UI 搜尋框同時身兼清單過濾與範圍搜尋兩種用途，
+ * 抽成純函數以便獨立單元測試，避免只在元件內用 useMemo/正規表示式判斷而未受測試覆蓋）。
+ *
+ * - 完整 IPv4（四段數字）→ { kind: 'ip', ipInt }，呼叫端應以 isIpInRange 判斷。
+ * - IP/CIDR（IP 可省略末尾 Octet，如 "192.168.3/24"）→ { kind: 'cidr', networkInt,
+ *   broadcastInt }，呼叫端應以 isRangeWithin 判斷子網是否完整落在目標網段內。
+ * - 格式符合上述兩種但數值不合法（Octet 超出 0~255、CIDR 超過 32 等）→
+ *   { kind: 'invalid' }，呼叫端應顯示格式錯誤訊息。
+ * - 其餘（一般過濾關鍵字、空字串）→ null，呼叫端應視為單純清單過濾，不觸發範圍搜尋。
+ */
+export function parseRangeQuery(raw: string): RangeQuery | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(trimmed)) {
+    const ipInt = ipToInt(trimmed);
+    return ipInt === null ? { kind: 'invalid' } : { kind: 'ip', ipInt };
+  }
+
+  const cidrMatch = trimmed.match(/^([\d.]+)\/(\d{1,3})$/);
+  if (cidrMatch) {
+    const cidr = parseInt(cidrMatch[2], 10);
+    const normalizedIp = normalizeIpOctets(cidrMatch[1]);
+    const ipInt = normalizedIp ? ipToInt(normalizedIp) : null;
+    if (normalizedIp === null || ipInt === null || isNaN(cidr) || cidr < 0 || cidr > 32) {
+      return { kind: 'invalid' };
+    }
+    const sub = calculateSubnet(ipInt, normalizedIp, cidr);
+    return { kind: 'cidr', networkInt: sub.networkInt, broadcastInt: sub.broadcastInt };
+  }
+
+  return null;
+}
