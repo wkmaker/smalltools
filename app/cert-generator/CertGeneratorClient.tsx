@@ -707,12 +707,13 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
                 <div className="text-sm font-bold text-text-main uppercase tracking-[1px]">{t.caGroupTitle}</div>
                 {savedCa && (
                   <div className={styles.fieldGroup}>
-                    <label className={styles.pillOption}>
+                    <label className={styles.customCheckbox}>
                       <input
                         type="checkbox"
                         checked={reuseCa}
                         onChange={(e) => setReuseCa(e.target.checked)}
                       />
+                      <span className={styles.checkmark} />
                       <span>{t.caReuseCheckboxLabel}</span>
                     </label>
                     <p className={styles.invalidHint} style={{ color: 'var(--text-secondary, #94a3b8)' }}>
@@ -724,7 +725,9 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
                 <div className={styles.fieldGroup}>
                   <button
                     type="button"
-                    className={styles.inlineLinkBtn}
+                    className={styles.btnDownload}
+                    style={{ alignSelf: 'flex-start' }}
+                    aria-expanded={showCaImport}
                     onClick={() => {
                       setShowCaImport((prev) => !prev);
                       setImportCaError(null);

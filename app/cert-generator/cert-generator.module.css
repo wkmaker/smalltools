@@ -98,6 +98,57 @@
   text-decoration: underline;
 }
 
+/* ── Checkbox ── */
+.customCheckbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+.customCheckbox input {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+:global([data-theme='light']) .checkmark {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(203, 213, 225, 0.9);
+}
+
+.customCheckbox input:checked + .checkmark {
+  background: var(--theme-color, #38bdf8);
+  border-color: var(--theme-color, #38bdf8);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.customCheckbox input:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #030305;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
 /* ── Radio Pills ── */
 .pillGroup {
   display: flex;
