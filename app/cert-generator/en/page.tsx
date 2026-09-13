@@ -48,6 +48,10 @@ const faqJsonLd = generateFaqSchema([
     a: 'RSA 2048/4096 has the widest compatibility — virtually every system and legacy client recognizes it, and it is the only option that supports PKCS#12 (.p12) packaging here. ECDSA (P-256/P-384) has shorter keys and faster operations, and is well supported by modern browsers and servers (Nginx, Caddy, recent OpenSSL) — a good fit when performance matters. Ed25519 has the fastest signing and shortest keys with strong security, but some older systems or enterprise clients may not support it yet — best when you control both ends of the connection.',
   },
   {
+    q: 'Does this tool support post-quantum cryptography (PQC) algorithms such as ML-DSA / Dilithium?',
+    a: 'Not yet. Key generation and certificate signing here rely entirely on the browser\'s native Web Crypto API, and that spec does not yet include post-quantum signature algorithms like ML-DSA or SLH-DSA — no mainstream browser implements them either, so a purely client-side tool cannot produce PQC certificates today. X.509 support for PQC algorithms (e.g. RFC 9881) is also still being standardized and isn\'t broadly interoperable yet. We will consider adding it once browser and ecosystem support matures.',
+  },
+  {
     q: 'What is the difference between PEM, DER, and PKCS#12 output?',
     a: 'PEM is a Base64 text format (`-----BEGIN CERTIFICATE-----`) — the most universal, accepted by Nginx, Apache, and Node.js, and easy to copy-paste. DER is the equivalent binary encoding, common with Java Keystores or certain embedded devices. PKCS#12 (.p12/.pfx) bundles a certificate and private key into one password-protected file, mainly used by Windows IIS, Java Tomcat, or anywhere a single importable file is required — currently RSA keys only.',
   },

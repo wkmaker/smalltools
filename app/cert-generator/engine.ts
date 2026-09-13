@@ -157,15 +157,15 @@ export interface CertificateBundle {
 
 async function toBundle(
   cert: x509.X509Certificate,
-  keys: CryptoKeyPair,
+  privateKey: CryptoKey,
   algorithm: KeyAlgorithm
 ): Promise<CertificateBundle> {
-  const privateKeyDer = await crypto.subtle.exportKey('pkcs8', keys.privateKey);
+  const privateKeyDer = await crypto.subtle.exportKey('pkcs8', privateKey);
   return {
     cert,
     certPem: cert.toString('pem'),
     certDer: cert.rawData,
-    privateKey: keys.privateKey,
+    privateKey,
     privateKeyPem: x509.PemConverter.encode(privateKeyDer, x509.PemConverter.PrivateKeyTag),
     privateKeyDer,
     algorithm,
@@ -195,7 +195,7 @@ export async function generateSelfSignedCertificate(options: SelfSignedCertifica
     extensions: await buildLeafExtensions(keys.publicKey, options.sanEntries),
   });
 
-  return toBundle(cert, keys, options.algorithm);
+  return toBundle(cert, keys.privateKey, options.algorithm);
 }
 
 export interface CaCertificateOptions {
@@ -220,7 +220,7 @@ export async function generateCaCertificate(options: CaCertificateOptions): Prom
     extensions: await buildCaExtensions(keys.publicKey),
   });
 
-  return toBundle(cert, keys, options.algorithm);
+  return toBundle(cert, keys.privateKey, options.algorithm);
 }
 
 export interface ServerCertificateOptions {
@@ -249,7 +249,68 @@ export async function generateServerCertificate(options: ServerCertificateOption
     extensions: await buildLeafExtensions(keys.publicKey, options.sanEntries, options.caPublicKey),
   });
 
-  return toBundle(cert, keys, options.algorithm);
+  return toBundle(cert, keys.privateKey, options.algorithm);
+}
+
+function detectImportedAlgorithm(publicKeyAlgorithm: KeyAlgorithm | { name: string; namedCurve?: string; modulusLength?: number }): KeyAlgorithm {
+  const algo = publicKeyAlgorithm as { name: string; namedCurve?: string; modulusLength?: number };
+  if (algo.name === 'RSASSA-PKCS1-v1_5') return (algo.modulusLength ?? 0) >= 3072 ? 'RSA-4096' : 'RSA-2048';
+  if (algo.name === 'ECDSA') return algo.namedCurve === 'P-384' ? 'ECDSA-P384' : 'ECDSA-P256';
+  return 'Ed25519';
+}
+
+/** 驗證私鑰與憑證公鑰確實成對：簽一張短期有效的探測憑證並用憑證公鑰驗證簽章。 */
+async function assertKeyPairMatches(cert: x509.X509Certificate, privateKey: CryptoKey): Promise<void> {
+  const mismatchError = new Error('私鑰與憑證的公鑰不匹配，請確認貼上正確的一對 CA 憑證與私鑰');
+  try {
+    const probeCert = await x509.X509CertificateGenerator.create({
+      serialNumber: generateSerialNumber(),
+      subject: 'CN=key-pair-check',
+      issuer: cert.subject,
+      notBefore: new Date(),
+      notAfter: new Date(Date.now() + 60_000),
+      signingKey: privateKey,
+      publicKey: cert.publicKey,
+    });
+    if (!(await probeCert.verify({ publicKey: cert.publicKey }))) throw mismatchError;
+  } catch {
+    throw mismatchError;
+  }
+}
+
+/**
+ * 從使用者貼上的 CA 憑證 PEM 與私鑰 PEM 重建可用於簽發的 CA bundle，
+ * 讓先前（含跨 session）已產生並下載的 CA 能繼續簽發新的伺服器憑證。
+ * 僅支援本工具產生的金鑰格式：RSA（SHA-256）、ECDSA（P-256/P-384）、Ed25519。
+ */
+export async function importCaCertificate(certPem: string, privateKeyPem: string): Promise<CertificateBundle> {
+  let cert: x509.X509Certificate;
+  try {
+    cert = new x509.X509Certificate(certPem.trim());
+  } catch {
+    throw new Error('CA 憑證格式無法辨識，請確認貼上完整的 PEM 憑證內容（"-----BEGIN CERTIFICATE-----"）');
+  }
+
+  const basicConstraints = cert.getExtension(x509.BasicConstraintsExtension);
+  if (!basicConstraints?.ca) {
+    throw new Error('這張憑證的 basicConstraints 未標示為 CA，無法用來簽發其他憑證');
+  }
+
+  const publicKeyAlgorithm = cert.publicKey.algorithm as { name: string; hash?: unknown };
+  const importAlgorithm =
+    publicKeyAlgorithm.name === 'RSASSA-PKCS1-v1_5' ? { ...publicKeyAlgorithm, hash: 'SHA-256' } : publicKeyAlgorithm;
+
+  let privateKey: CryptoKey;
+  try {
+    const privateKeyDer = x509.PemConverter.decodeFirst(privateKeyPem.trim());
+    privateKey = await crypto.subtle.importKey('pkcs8', privateKeyDer, importAlgorithm, true, ['sign']);
+  } catch {
+    throw new Error('私鑰格式無法辨識，請確認貼上完整的 PEM 私鑰內容（PKCS#8, "-----BEGIN PRIVATE KEY-----"）');
+  }
+
+  await assertKeyPairMatches(cert, privateKey);
+
+  return toBundle(cert, privateKey, detectImportedAlgorithm(publicKeyAlgorithm));
 }
 
 /** 將 RSA 憑證與私鑰打包為 PKCS#12 (.p12/.pfx)。僅支援 RSA，其他演算法會拋出錯誤。 */

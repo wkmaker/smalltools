@@ -7,6 +7,7 @@ import {
   generateCaCertificate,
   generateServerCertificate,
   generateSelfSignedCertificate,
+  importCaCertificate,
   buildPkcs12,
   supportsPkcs12,
 } from '../../app/cert-generator/engine.ts';
@@ -137,4 +138,50 @@ test('buildPkcs12：RSA 金鑰可成功打包，非 RSA 演算法（supportsPkcs
   });
   assert.equal(supportsPkcs12('ECDSA-P256'), false);
   assert.throws(() => buildPkcs12(ecCert.certPem, ecCert.privateKeyPem, 'test-password'));
+});
+
+test('importCaCertificate：貼上先前產生的 CA 憑證與私鑰 PEM，可重建 CA 並繼續簽發新的伺服器憑證', async () => {
+  for (const algorithm of ['RSA-2048', 'ECDSA-P384', 'Ed25519']) {
+    const original = await generateCaCertificate({
+      commonName: 'Imported Root CA',
+      validityDays: 3650,
+      algorithm,
+    });
+
+    const imported = await importCaCertificate(original.certPem, original.privateKeyPem);
+    assert.equal(imported.cert.subject, original.cert.subject);
+
+    const server = await generateServerCertificate({
+      commonName: 'imported.local',
+      sanEntries: parseSanInput('imported.local'),
+      validityDays: 365,
+      algorithm: 'ECDSA-P256',
+      caCert: imported.cert,
+      caPrivateKey: imported.privateKey,
+      caPublicKey: imported.cert.publicKey,
+    });
+
+    assert.equal(await server.cert.verify({ publicKey: original.cert.publicKey }), true);
+  }
+});
+
+test('importCaCertificate：非 CA 憑證（basicConstraints ca:false）應拋出明確錯誤', async () => {
+  const leaf = await generateSelfSignedCertificate({
+    commonName: 'not-a-ca',
+    sanEntries: parseSanInput(''),
+    validityDays: 365,
+    algorithm: 'RSA-2048',
+  });
+
+  await assert.rejects(() => importCaCertificate(leaf.certPem, leaf.privateKeyPem), /未標示為 CA/);
+});
+
+test('importCaCertificate：私鑰與憑證公鑰不成對時應拋出明確錯誤，而非簽出無效憑證鏈', async () => {
+  const caA = await generateCaCertificate({ commonName: 'CA A', validityDays: 365, algorithm: 'RSA-2048' });
+  const caB = await generateCaCertificate({ commonName: 'CA B', validityDays: 365, algorithm: 'RSA-2048' });
+
+  await assert.rejects(
+    () => importCaCertificate(caA.certPem, caB.privateKeyPem),
+    /私鑰與憑證的公鑰不匹配/
+  );
 });
