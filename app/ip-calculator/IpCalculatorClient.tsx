@@ -11,6 +11,7 @@ import {
   cidrToMaskInt,
   calculateSubnet,
   isIpInRange,
+  isRangeWithin,
   normalizeIpOctets,
   type SubnetResult,
   type IpBadgeKind,
@@ -59,7 +60,7 @@ const TRANSLATIONS = {
     copyAllBtn: '複製全量',
     exportTxtBtn: '匯出 TXT',
     exportCsvBtn: '匯出 CSV',
-    filterPlaceholder: '過濾清單 (例如 .100) 或輸入完整 IP 檢查是否在範圍內...',
+    filterPlaceholder: '過濾清單 (例如 .100)，或輸入完整 IP／子網 CIDR (例如 192.168.3.0/24) 檢查是否在範圍內...',
     largeNetNotice: '目前網段包含 {count} 個可用 IP。畫面上預設呈現前 1,000 筆分頁；完整數據可點擊右上角「匯出 TXT / CSV」極速線上下載。',
     colIndex: '編號 #',
     colIp: 'IP 位址',
@@ -198,7 +199,7 @@ const TRANSLATIONS = {
     copyAllBtn: 'Copy All',
     exportTxtBtn: 'Export TXT',
     exportCsvBtn: 'Export CSV',
-    filterPlaceholder: 'Filter the list (e.g. .100) or enter a full IP to check range...',
+    filterPlaceholder: 'Filter the list (e.g. .100), or enter a full IP / CIDR range (e.g. 192.168.3.0/24) to check...',
     largeNetNotice: 'This subnet contains {count} usable IPs. The list displays the first 1,000 items. Click "Export TXT / CSV" to download all IPs.',
     colIndex: 'Index #',
     colIp: 'IP Address',
@@ -450,7 +451,9 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
     if (!calcResult) return [];
 
     const { firstUsableInt, usableCount } = calcResult;
-    const kw = filterKeyword.trim().toLowerCase();
+    const rawKw = filterKeyword.trim();
+    // CIDR 範圍查詢（含 "/"）僅用於範圍搜尋，不當作清單過濾關鍵字
+    const kw = rawKw.includes('/') ? '' : rawKw.toLowerCase();
     const result: Array<{ index: number; ipStr: string }> = [];
 
     const limit = usableCount > 1000 && !kw ? 1000 : Math.min(usableCount, 100000);
@@ -467,18 +470,36 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
     return result;
   }, [calcResult, filterKeyword]);
 
-  // 過濾框同時身兼「範圍搜尋」：僅當輸入內容形似完整 IPv4（四段數字）時才判定範圍
+  // 過濾框同時身兼「範圍搜尋」：輸入完整 IPv4 判定單一 IP，輸入 IP/CIDR（可省略末尾
+  // Octet，如 192.168.3/24）則判定整段子網是否完整落在上方網段範圍內
   const rangeCheckResult = useMemo(() => {
     if (!calcResult) return null;
     const raw = filterKeyword.trim();
-    if (!raw || !/^\d+\.\d+\.\d+\.\d+$/.test(raw)) return null;
+    if (!raw) return null;
 
-    const targetInt = ipToInt(raw);
-    if (targetInt === null) {
-      return { error: t.rangeCheckErrInvalid } as const;
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(raw)) {
+      const targetInt = ipToInt(raw);
+      if (targetInt === null) {
+        return { error: t.rangeCheckErrInvalid } as const;
+      }
+      return { inRange: isIpInRange(targetInt, calcResult.networkInt, calcResult.broadcastInt) } as const;
     }
 
-    return { inRange: isIpInRange(targetInt, calcResult.networkInt, calcResult.broadcastInt) } as const;
+    const cidrMatch = raw.match(/^([\d.]+)\/(\d{1,3})$/);
+    if (cidrMatch) {
+      const cidr = parseInt(cidrMatch[2], 10);
+      const normalizedIp = normalizeIpOctets(cidrMatch[1]);
+      const ipInt = normalizedIp ? ipToInt(normalizedIp) : null;
+      if (ipInt === null || isNaN(cidr) || cidr < 0 || cidr > 32) {
+        return { error: t.rangeCheckErrInvalid } as const;
+      }
+      const sub = calculateSubnet(ipInt, normalizedIp!, cidr);
+      return {
+        inRange: isRangeWithin(sub.networkInt, sub.broadcastInt, calcResult.networkInt, calcResult.broadcastInt),
+      } as const;
+    }
+
+    return null;
   }, [calcResult, filterKeyword, t.rangeCheckErrInvalid]);
 
   const handleClear = () => {

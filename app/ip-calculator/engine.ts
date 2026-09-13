@@ -146,6 +146,22 @@ export function isIpInRange(targetIpInt: number, networkInt: number, broadcastIn
   return targetIpInt >= networkInt && targetIpInt <= broadcastInt;
 }
 
+/**
+ * 判斷一段子網範圍（子網路位址 ~ 子廣播位址）是否完整落在外層網段範圍內
+ * （兩端皆須介於外層網路位址與廣播位址之間，含邊界）。
+ */
+export function isRangeWithin(
+  subNetworkInt: number,
+  subBroadcastInt: number,
+  networkInt: number,
+  broadcastInt: number
+): boolean {
+  return (
+    isIpInRange(subNetworkInt, networkInt, broadcastInt) &&
+    isIpInRange(subBroadcastInt, networkInt, broadcastInt)
+  );
+}
+
 export function calculateSubnet(ipInt: number, rawIpStr: string, cidr: number): SubnetResult {
   const maskInt = cidrToMaskInt(cidr);
   const maskStr = intToIp(maskInt);

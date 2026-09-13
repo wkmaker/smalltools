@@ -8,6 +8,7 @@ import {
   getIpScopeInfo,
   calculateSubnet,
   isIpInRange,
+  isRangeWithin,
   normalizeIpOctets,
 } from '../../app/ip-calculator/engine.ts';
 
@@ -82,6 +83,26 @@ test('normalizeIpOctets：拒絕非法格式（超過 4 段、非數字、前導
   assert.equal(normalizeIpOctets(''), null);
   assert.equal(normalizeIpOctets('192.'), null);
   assert.equal(normalizeIpOctets('.192'), null);
+});
+
+test('isRangeWithin：子網完整落在外層網段範圍內才回傳 true', () => {
+  const outer = calculateSubnet(ipToInt('192.168.0.0'), '192.168.0.0', 20); // 192.168.0.0 ~ 192.168.15.255
+  const insideSub = calculateSubnet(ipToInt('192.168.3.0'), '192.168.3.0', 24); // 192.168.3.0 ~ 192.168.3.255
+  const supernetSub = calculateSubnet(ipToInt('192.168.0.0'), '192.168.0.0', 19); // 192.168.0.0 ~ 192.168.31.255（比外層更大，僅重疊非包含）
+  const outsideSub = calculateSubnet(ipToInt('192.168.20.0'), '192.168.20.0', 24); // 完全在外層之外
+
+  assert.equal(
+    isRangeWithin(insideSub.networkInt, insideSub.broadcastInt, outer.networkInt, outer.broadcastInt),
+    true
+  );
+  assert.equal(
+    isRangeWithin(supernetSub.networkInt, supernetSub.broadcastInt, outer.networkInt, outer.broadcastInt),
+    false
+  );
+  assert.equal(
+    isRangeWithin(outsideSub.networkInt, outsideSub.broadcastInt, outer.networkInt, outer.broadcastInt),
+    false
+  );
 });
 
 test('isIpInRange：邊界含網路位址與廣播位址，範圍外回傳 false', () => {
