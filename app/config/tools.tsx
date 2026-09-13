@@ -337,6 +337,25 @@ export const CATEGORIES: CategorySection[] = [
         ),
       },
       {
+        name: 'CA / 伺服器憑證產生器',
+        nameEn: 'CA & Server Certificate Generator',
+        subtitle: 'SELF-SIGNED CA & SERVER CERT GENERATOR',
+        subtitleEn: 'SELF-SIGNED CA & SERVER CERT GENERATOR',
+        description: '純前端自簽憑證產生工具，支援「純自簽」或「CA + 伺服器憑證」兩種模式，可選 RSA / ECDSA / Ed25519 金鑰演算法與 PEM / DER / PKCS#12 輸出格式，適合本地開發與內部測試 HTTPS 環境。',
+        descriptionEn: 'Pure client-side self-signed certificate generator with a direct or CA-issued mode, RSA / ECDSA / Ed25519 key algorithms, and PEM / DER / PKCS#12 output, ideal for local development and internal test HTTPS environments.',
+        href: '/cert-generator/',
+        hrefEn: '/cert-generator/en/',
+        cardClass: 'certGeneratorCard',
+        category: 'developer',
+        keywords: 'ca 憑證產生器 自簽憑證 伺服器憑證 self-signed certificate generator ssl san rsa ecdsa ed25519 pkcs12 der 根憑證 本地開發',
+        keywordsEn: 'self-signed certificate generator ca root certificate server certificate san rsa ecdsa ed25519 pkcs12 der localhost https',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#38bdf8]">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm3 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
+          </svg>
+        ),
+      },
+      {
         name: 'HAR 敏感資料清理工具',
         nameEn: 'HAR Sanitizer & Privacy Cleaner',
         subtitle: 'HAR SANITIZER & PRIVACY CLEANER',

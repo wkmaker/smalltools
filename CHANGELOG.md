@@ -4,6 +4,31 @@
 
 ---
 
+## [1.12.0] - 2026-09-13
+
+### ✨ 新增功能 (Added)
+
+- **新工具：CA / 伺服器憑證產生器（`/cert-generator/`）**：純前端自簽憑證產生工具，
+  支援「純自簽（不經過 CA）」與「CA + 伺服器憑證」兩種模式、RSA 2048/4096、
+  ECDSA P-256/P-384、Ed25519 金鑰演算法，以及 PEM、DER、PKCS#12（RSA 限定）
+  三種輸出格式，可自訂多組 DNS / IP SAN 與有效天數，適合本地開發與內部測試
+  HTTPS 環境。
+  - 底層改採 `@peculiar/x509`（Web Crypto API）取代 node-forge 產生金鑰與簽署憑證
+    ——node-forge 的憑證簽署寫死僅支援 RSA，無法產生 ECDSA/Ed25519 憑證；
+    PKCS#12 打包仍沿用 node-forge（僅 RSA，橋接 WebCrypto 匯出的 PKCS#8 私鑰）。
+  - `engine.ts` 提供純函數 `generateSelfSignedCertificate`、`generateCaCertificate`、
+    `generateServerCertificate`、`buildPkcs12`、`parseSanInput`，並補上 8 組涵蓋
+    憑證擴充欄位正確性（basicConstraints / keyUsage）、簽發鏈驗證、SAN 解析、
+    自簽模式、Ed25519 全流程與 PKCS#12 演算法限制的單元測試。
+  - 已登記於 `app/config/tools.tsx` 註冊表（developer 分類），sitemap 與首頁自動
+    衍生收錄；FAQ（8 則）、SEO Metadata、OG 圖片、繁中／英文頁面皆已補齊。
+
+### 📦 依賴 (Dependencies)
+
+- 新增 `@peculiar/x509` `^2.1.0`、`reflect-metadata` `^0.2.2`。
+
+---
+
 ## [1.11.0] - 2026-09-13
 
 ### ✨ 新增功能 (Added)

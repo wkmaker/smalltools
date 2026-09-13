@@ -7,6 +7,7 @@ import styles from './page.module.css';
 import ThemeToggle from '@/components/ThemeToggle';
 
 import { CATEGORIES, Category, Tool, type CategorySection } from './config/tools';
+import { version as appVersion } from '@/package.json';
 
 type Tab = 'all' | Category;
 
@@ -620,6 +621,8 @@ export default function HomeClient({ lang }: HomeClientProps) {
           </svg>
           {t.sponsorText}
         </a>
+        <span className="hidden sm:inline text-white/20">•</span>
+        <span className="font-mono opacity-60">v{appVersion}</span>
       </div>
     </div>
   );

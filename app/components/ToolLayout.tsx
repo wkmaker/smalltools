@@ -27,6 +27,7 @@ import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/components/ThemeToggle';
 import { CATEGORIES } from '@/app/config/tools';
 import { generateBreadcrumbSchema, type BreadcrumbItem } from '@/app/utils/breadcrumbSchema';
+import { version as appVersion } from '@/package.json';
 
 export type { BreadcrumbItem };
 
@@ -376,6 +377,8 @@ export default function ToolLayout({
               <div className="flex items-center gap-1.5">{extraFooterContent}</div>
             </>
           )}
+          <span className="text-white/20 hidden sm:inline">•</span>
+          <span className="font-mono opacity-60">v{appVersion}</span>
         </div>
       )}
     </div>
