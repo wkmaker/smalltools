@@ -117,6 +117,10 @@ export interface SubnetResult {
   binaryIp: string;
 }
 
+export function isIpInRange(targetIpInt: number, networkInt: number, broadcastInt: number): boolean {
+  return targetIpInt >= networkInt && targetIpInt <= broadcastInt;
+}
+
 export function calculateSubnet(ipInt: number, rawIpStr: string, cidr: number): SubnetResult {
   const maskInt = cidrToMaskInt(cidr);
   const maskStr = intToIp(maskInt);

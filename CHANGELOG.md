@@ -4,6 +4,20 @@
 
 ---
 
+## [1.11.0] - 2026-09-13
+
+### ✨ 新增功能 (Added)
+
+- **IP 子網段計算器新增「網段搜尋：IP 是否在範圍內」功能**：於既有 `/ip-calculator`
+  頁面加入搜尋欄位，輸入目標 IP 後即時比對是否落在上方已計算網段的網路位址／廣播位址
+  範圍內（含邊界），顯示「位於此網段範圍內」或「不在此網段範圍內」，不另開新頁。
+  - `engine.ts` 新增純函數 `isIpInRange(targetIpInt, networkInt, broadcastInt)`，補上
+    對應單元測試（含網路位址、廣播位址邊界與範圍外案例）。
+  - FAQ 常見問題新增一則對應說明（`IpCalculatorClient.tsx` 與 `page.tsx`／`en/page.tsx`
+    的 JSON-LD FAQPage 結構化資料同步更新，繁中／英文皆補上）。
+
+---
+
 ## [1.10.1] - 2026-09-11
 
 ### 🐛 修復 (Fixed)

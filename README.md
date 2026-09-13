@@ -55,7 +55,7 @@
 * **[DIG 網路診斷工具](https://tools.cjkuo.net/dns-dig/)** (`/dns-dig`) - 支援 Cloudflare / Google 加密 DoH 切換、即時發送 DIG 請求查詢 A, CNAME, MX, TXT 等記錄。
 * **[IP 檢測助手](https://tools.cjkuo.net/ip-detector/)** (`/ip-detector`) - 支援 IPv4/IPv6 雙棧偵測、Cloudflare / Mullvad 節點查詢與公有雲連線延遲診斷。
 * **[DNS HTTPS 紀錄設定產生器](https://tools.cjkuo.net/https-dns-generator/)** (`/https-dns-generator`) - 線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄產生器與 DNS 代管商填寫對照指南。
-* **[IP 子網段計算器](https://tools.cjkuo.net/ip-calculator/)** (`/ip-calculator`) - 快速計算 IPv4 / CIDR 網段資訊、可用 IP 列表與極速 TXT/CSV 導出。
+* **[IP 子網段計算器](https://tools.cjkuo.net/ip-calculator/)** (`/ip-calculator`) - 快速計算 IPv4 / CIDR 網段資訊、可用 IP 列表與極速 TXT/CSV 導出，並支援搜尋特定 IP 是否落在該網段範圍內。
 
 ### 📄 圖片與文件 (Media & Documents)
 * **[OG 圖片產生器](https://tools.cjkuo.net/og-generator/)** (`/og-generator`) - 專業 Open Graph 與社群封面圖片產生器，支援 4 款精緻模板、純前端 2x 視網膜超採樣、自訂 Logo 與特色背景圖、多比例自動適應及 PNG/JPEG/WebP/SVG 高速匯出。
@@ -81,7 +81,6 @@
 * **PWA 圖標產生器**：上傳單張圖片，一鍵產生 Android / Web 應用所需的各尺寸圖標與 `manifest.json`。
 * **CA / 伺服器憑證產生器**：純前端產生自簽 CA 與伺服器憑證，與既有 `ssl-converter` 互補。
 * **郵件路徑解析器**：貼上 Email 原始標頭，視覺化解析 `Received` 轉送路徑與延遲。
-* **IP 子網段計算器新增 CIDR 搜尋**：於既有 `/ip-calculator` 頁面加入「輸入 IP Range 後可搜尋特定 IP 是否落在範圍內」的功能，不另開新頁。
 
 ---
 

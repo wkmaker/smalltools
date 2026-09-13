@@ -116,6 +116,12 @@ Resulting 32-bit binary: 11000000.10101000.00000001.00000001.`,
 
 2. High-Performance Non-Blocking Export: When exporting large subnets (such as a /16 with 65,534 hosts) to TXT or CSV, the engine leverages asynchronous yielding chunks to maintain smooth UI responsiveness without freezing the main thread. Exported CSV files include UTF-8 BOM for full Microsoft Excel compatibility.`,
   },
+  {
+    q: 'How can I quickly check whether a specific IP address falls within a given CIDR range?',
+    a: `Enter the subnet you want to check above (CIDR notation, or IP + subnet mask) to calculate its network and broadcast addresses, then use the "Range Search: Is IP Within Range?" field below to enter the target IP.
+
+The tool instantly converts that IP to a 32-bit integer and checks whether it falls between the network and broadcast addresses (inclusive), showing "Inside this subnet range" or "Outside this subnet range" — no manual binary conversion or bitwise math required.`,
+  },
 ]);
 
 export default function IpCalculatorEnPage() {

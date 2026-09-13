@@ -116,6 +116,12 @@ const faqJsonLd = generateFaqSchema([
 
 ② 巨量數據非阻塞架構：當計算大型子網（如 /16 包含 65,534 個 IP）並點擊匯出 TXT 或 CSV 時，工具採用時間片分塊演算法 (Yielding Chunk Processing) 非阻塞處理，並於 CSV 檔首植入 UTF-8 BOM 確保 Microsoft Excel 開啟時零亂碼，流暢不卡死。`,
   },
+  {
+    q: '如何快速確認某個 IP 位址是否落在指定的網段（CIDR Range）範圍內？',
+    a: `在上方輸入欲檢查的網段（CIDR 標記法或 IP + 子網遮罩）算出網路位址與廣播位址後，於下方「網段搜尋：IP 是否在範圍內」欄位輸入欲檢查的目標 IP。
+
+工具會即時將該 IP 轉換為 32 位元整數，比對是否介於網路位址與廣播位址之間（含邊界），並直接顯示「位於此網段範圍內」或「不在此網段範圍內」的結果，不需手動換算二進位或位元運算即可判斷該 IP 是否屬於此子網。`,
+  },
 ]);
 
 export default function IpCalculatorPage() {

@@ -7,6 +7,7 @@ import {
   cidrToMaskInt,
   getIpScopeInfo,
   calculateSubnet,
+  isIpInRange,
 } from '../../app/ip-calculator/engine.ts';
 
 test('ipToInt / intToIp：互轉一致，並拒絕非法格式', () => {
@@ -63,4 +64,14 @@ test('calculateSubnet：/31 與 /32 屬於特殊邊界（RFC 3021 點對點與�
   assert.equal(r32.usableCount, 1);
   assert.equal(r32.firstUsableStr, '10.0.0.5');
   assert.equal(r32.lastUsableStr, '10.0.0.5');
+});
+
+test('isIpInRange：邊界含網路位址與廣播位址，範圍外回傳 false', () => {
+  const r = calculateSubnet(ipToInt('192.168.1.50'), '192.168.1.50', 24);
+
+  assert.equal(isIpInRange(ipToInt('192.168.1.0'), r.networkInt, r.broadcastInt), true);
+  assert.equal(isIpInRange(ipToInt('192.168.1.255'), r.networkInt, r.broadcastInt), true);
+  assert.equal(isIpInRange(ipToInt('192.168.1.128'), r.networkInt, r.broadcastInt), true);
+  assert.equal(isIpInRange(ipToInt('192.168.2.0'), r.networkInt, r.broadcastInt), false);
+  assert.equal(isIpInRange(ipToInt('192.168.0.255'), r.networkInt, r.broadcastInt), false);
 });
