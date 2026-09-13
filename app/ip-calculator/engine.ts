@@ -20,6 +20,31 @@ export function ipToInt(ipStr: string): number | null {
   return num >>> 0;
 }
 
+/**
+ * 將可能省略末尾 Octet 的縮寫 IP（如 "192.168.20" 或 "10"）正規化為完整
+ * 四段點分十進制字串，缺少的 Octet 一律補 0（"192.168.20" → "192.168.20.0"）。
+ * 每段仍需符合 0~255 且無多餘前導零，格式不合法回傳 null。
+ */
+export function normalizeIpOctets(ipStr: string): string | null {
+  if (typeof ipStr !== 'string') return null;
+  const trimmed = ipStr.trim();
+  if (trimmed === '' || trimmed.startsWith('.') || trimmed.endsWith('.')) return null;
+
+  const parts = trimmed.split('.');
+  if (parts.length < 1 || parts.length > 4) return null;
+
+  const octets: number[] = [];
+  for (const p of parts) {
+    if (!/^\d+$/.test(p)) return null;
+    const n = parseInt(p, 10);
+    if (n < 0 || n > 255 || (p.length > 1 && p.startsWith('0'))) return null;
+    octets.push(n);
+  }
+
+  while (octets.length < 4) octets.push(0);
+  return octets.join('.');
+}
+
 export function intToIp(intVal: number): string {
   return [
     (intVal >>> 24) & 255,

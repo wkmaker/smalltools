@@ -8,6 +8,7 @@ import {
   getIpScopeInfo,
   calculateSubnet,
   isIpInRange,
+  normalizeIpOctets,
 } from '../../app/ip-calculator/engine.ts';
 
 test('ipToInt / intToIp：互轉一致，並拒絕非法格式', () => {
@@ -64,6 +65,23 @@ test('calculateSubnet：/31 與 /32 屬於特殊邊界（RFC 3021 點對點與�
   assert.equal(r32.usableCount, 1);
   assert.equal(r32.firstUsableStr, '10.0.0.5');
   assert.equal(r32.lastUsableStr, '10.0.0.5');
+});
+
+test('normalizeIpOctets：省略末尾 Octet 時自動補 0', () => {
+  assert.equal(normalizeIpOctets('192.168.20'), '192.168.20.0');
+  assert.equal(normalizeIpOctets('192.168'), '192.168.0.0');
+  assert.equal(normalizeIpOctets('10'), '10.0.0.0');
+  assert.equal(normalizeIpOctets('192.168.1.50'), '192.168.1.50');
+});
+
+test('normalizeIpOctets：拒絕非法格式（超過 4 段、非數字、前導零、超出範圍）', () => {
+  assert.equal(normalizeIpOctets('1.2.3.4.5'), null);
+  assert.equal(normalizeIpOctets('192.168.a.1'), null);
+  assert.equal(normalizeIpOctets('01.2'), null);
+  assert.equal(normalizeIpOctets('256.1'), null);
+  assert.equal(normalizeIpOctets(''), null);
+  assert.equal(normalizeIpOctets('192.'), null);
+  assert.equal(normalizeIpOctets('.192'), null);
 });
 
 test('isIpInRange：邊界含網路位址與廣播位址，範圍外回傳 false', () => {
