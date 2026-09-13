@@ -236,8 +236,14 @@
 }
 
 /* ── Buttons ── */
-.btnGenerate {
+.actionRow {
+  display: flex;
+  gap: 0.625rem;
   margin-top: 0.25rem;
+}
+
+.btnGenerate {
+  flex: 1;
   width: 100%;
   height: 46px;
   display: flex;
@@ -253,6 +259,35 @@
   border-radius: 0.75rem;
   transition: all 0.3s ease;
   cursor: pointer;
+}
+
+.btnSecondary {
+  height: 46px;
+  padding: 0 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
+  color: var(--text-secondary, #94a3b8);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnSecondary:hover {
+  color: var(--text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='light']) .btnSecondary {
+  background: rgba(241, 245, 249, 0.9);
+  border-color: rgba(203, 213, 225, 0.8);
+  color: #475569;
+}
+
+:global([data-theme='light']) .btnSecondary:hover {
+  color: #0f172a;
+  background: rgba(226, 232, 240, 0.9);
 }
 
 :global([data-theme='light']) .btnGenerate {

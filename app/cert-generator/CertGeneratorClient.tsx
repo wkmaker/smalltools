@@ -198,6 +198,7 @@ const TRANSLATIONS = {
 
     generateBtn: '產生憑證',
     generatingBtn: '產生中…',
+    clearBtn: '清除欄位',
     errorCommonNameRequired: '請輸入 Common Name',
 
     warningTitle: '請注意：',
@@ -317,6 +318,7 @@ const TRANSLATIONS = {
 
     generateBtn: 'Generate Certificate',
     generatingBtn: 'Generating…',
+    clearBtn: 'Clear Fields',
     errorCommonNameRequired: 'Please enter a Common Name',
 
     warningTitle: 'Note:',
@@ -549,6 +551,19 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
     savedCaLabel,
     t,
   ]);
+
+  const handleClearForm = useCallback(() => {
+    setCaCommonName('');
+    setOrganization('');
+    setCountryCode('');
+    setCountryCustomMode(false);
+    setIdentityCommonName('');
+    setSanInput('');
+    setPkcs12Password('');
+    setErrorMsg(null);
+    setInvalidSanHint(null);
+    setIdentities(null);
+  }, []);
 
   const copyText = (text: string) => {
     navigator.clipboard
@@ -946,14 +961,19 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
 
               {errorMsg && <p className={styles.invalidHint}>{errorMsg}</p>}
 
-              <button
-                type="button"
-                className={styles.btnGenerate}
-                onClick={handleGenerate}
-                disabled={isGenerating}
-              >
-                {isGenerating ? t.generatingBtn : t.generateBtn}
-              </button>
+              <div className={styles.actionRow}>
+                <button
+                  type="button"
+                  className={styles.btnGenerate}
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? t.generatingBtn : t.generateBtn}
+                </button>
+                <button type="button" className={styles.btnSecondary} onClick={handleClearForm}>
+                  {t.clearBtn}
+                </button>
+              </div>
 
               <div className={styles.warningBanner}>
                 <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0 mt-0.5">
