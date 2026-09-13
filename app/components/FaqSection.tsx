@@ -34,6 +34,7 @@ export function getLightModeAccentColor(darkColor: string): string {
     '#4ade80': '#16a34a', // Green 600
     '#a3e635': '#65a30d', // Lime 600
     '#00f0ff': '#0284c7', // Sky 600
+    '#38bdf8': '#0284c7', // Sky 600
     '#0077ff': '#0369a1', // Sky 700
     '#6366f1': '#4338ca', // Indigo 700
     '#8b5cf6': '#7c3aed', // Violet 600
