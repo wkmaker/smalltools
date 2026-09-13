@@ -7,6 +7,10 @@ import {
   cidrToMaskInt,
   getIpScopeInfo,
   calculateSubnet,
+  isIpInRange,
+  isRangeWithin,
+  normalizeIpOctets,
+  parseRangeQuery,
 } from '../../app/ip-calculator/engine.ts';
 
 test('ipToInt / intToIp：互轉一致，並拒絕非法格式', () => {
@@ -63,4 +67,79 @@ test('calculateSubnet：/31 與 /32 屬於特殊邊界（RFC 3021 點對點與�
   assert.equal(r32.usableCount, 1);
   assert.equal(r32.firstUsableStr, '10.0.0.5');
   assert.equal(r32.lastUsableStr, '10.0.0.5');
+});
+
+test('normalizeIpOctets：省略末尾 Octet 時自動補 0', () => {
+  assert.equal(normalizeIpOctets('192.168.20'), '192.168.20.0');
+  assert.equal(normalizeIpOctets('192.168'), '192.168.0.0');
+  assert.equal(normalizeIpOctets('10'), '10.0.0.0');
+  assert.equal(normalizeIpOctets('192.168.1.50'), '192.168.1.50');
+});
+
+test('normalizeIpOctets：拒絕非法格式（超過 4 段、非數字、前導零、超出範圍）', () => {
+  assert.equal(normalizeIpOctets('1.2.3.4.5'), null);
+  assert.equal(normalizeIpOctets('192.168.a.1'), null);
+  assert.equal(normalizeIpOctets('01.2'), null);
+  assert.equal(normalizeIpOctets('256.1'), null);
+  assert.equal(normalizeIpOctets(''), null);
+  assert.equal(normalizeIpOctets('192.'), null);
+  assert.equal(normalizeIpOctets('.192'), null);
+});
+
+test('isRangeWithin：子網完整落在外層網段範圍內才回傳 true', () => {
+  const outer = calculateSubnet(ipToInt('192.168.0.0'), '192.168.0.0', 20); // 192.168.0.0 ~ 192.168.15.255
+  const insideSub = calculateSubnet(ipToInt('192.168.3.0'), '192.168.3.0', 24); // 192.168.3.0 ~ 192.168.3.255
+  const supernetSub = calculateSubnet(ipToInt('192.168.0.0'), '192.168.0.0', 19); // 192.168.0.0 ~ 192.168.31.255（比外層更大，僅重疊非包含）
+  const outsideSub = calculateSubnet(ipToInt('192.168.20.0'), '192.168.20.0', 24); // 完全在外層之外
+
+  assert.equal(
+    isRangeWithin(insideSub.networkInt, insideSub.broadcastInt, outer.networkInt, outer.broadcastInt),
+    true
+  );
+  assert.equal(
+    isRangeWithin(supernetSub.networkInt, supernetSub.broadcastInt, outer.networkInt, outer.broadcastInt),
+    false
+  );
+  assert.equal(
+    isRangeWithin(outsideSub.networkInt, outsideSub.broadcastInt, outer.networkInt, outer.broadcastInt),
+    false
+  );
+});
+
+test('parseRangeQuery：完整 IPv4 回傳 ip 種類，供 isIpInRange 判定', () => {
+  const q = parseRangeQuery('192.168.3.200');
+  assert.deepEqual(q, { kind: 'ip', ipInt: ipToInt('192.168.3.200') });
+});
+
+test('parseRangeQuery：IP/CIDR（含省略末尾 Octet）回傳 cidr 種類與正確網路/廣播位址（回歸：192.168.0.0/20 網段搜尋 192.168.3.0/24 曾誤判為無效關鍵字）', () => {
+  const full = parseRangeQuery('192.168.3.0/24');
+  assert.deepEqual(full, {
+    kind: 'cidr',
+    networkInt: ipToInt('192.168.3.0'),
+    broadcastInt: ipToInt('192.168.3.255'),
+  });
+
+  const abbreviated = parseRangeQuery('192.168.3/24');
+  assert.deepEqual(abbreviated, full);
+});
+
+test('parseRangeQuery：格式符合但數值不合法回傳 invalid，一般過濾字串與空字串回傳 null', () => {
+  assert.deepEqual(parseRangeQuery('999.1.1.1'), { kind: 'invalid' });
+  assert.deepEqual(parseRangeQuery('192.168.1.1/33'), { kind: 'invalid' });
+  assert.deepEqual(parseRangeQuery('999.1.1.0/24'), { kind: 'invalid' });
+
+  assert.equal(parseRangeQuery('.100'), null);
+  assert.equal(parseRangeQuery('192.168'), null);
+  assert.equal(parseRangeQuery(''), null);
+  assert.equal(parseRangeQuery('   '), null);
+});
+
+test('isIpInRange：邊界含網路位址與廣播位址，範圍外回傳 false', () => {
+  const r = calculateSubnet(ipToInt('192.168.1.50'), '192.168.1.50', 24);
+
+  assert.equal(isIpInRange(ipToInt('192.168.1.0'), r.networkInt, r.broadcastInt), true);
+  assert.equal(isIpInRange(ipToInt('192.168.1.255'), r.networkInt, r.broadcastInt), true);
+  assert.equal(isIpInRange(ipToInt('192.168.1.128'), r.networkInt, r.broadcastInt), true);
+  assert.equal(isIpInRange(ipToInt('192.168.2.0'), r.networkInt, r.broadcastInt), false);
+  assert.equal(isIpInRange(ipToInt('192.168.0.255'), r.networkInt, r.broadcastInt), false);
 });

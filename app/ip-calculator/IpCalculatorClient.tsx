@@ -10,6 +10,10 @@ import {
   intToBinary,
   cidrToMaskInt,
   calculateSubnet,
+  isIpInRange,
+  isRangeWithin,
+  normalizeIpOctets,
+  parseRangeQuery,
   type SubnetResult,
   type IpBadgeKind,
 } from './engine';
@@ -50,11 +54,14 @@ const TRANSLATIONS = {
     classScopeLabel: 'IP 類別與屬性 (Class & Scope)',
     usableRangeLabel: '可用 IP 範圍 (Usable IP Range)',
     binaryLabel: 'IP 二進制 (Binary Representation)',
-    usableListTitle: '可用 IP 位址列表',
+    rangeCheckInRange: '位於此網段範圍內',
+    rangeCheckNotInRange: '不在此網段範圍內',
+    rangeCheckErrInvalid: '請輸入有效的 IPv4 位址',
+    usableListTitle: '可用 IP 位址列表、網段搜尋',
     copyAllBtn: '複製全量',
     exportTxtBtn: '匯出 TXT',
     exportCsvBtn: '匯出 CSV',
-    filterPlaceholder: '過濾 IP 位址 (例如 .100)...',
+    filterPlaceholder: '過濾清單 (例如 .100)，或輸入完整 IP／子網 CIDR (例如 192.168.3.0/24) 檢查是否在範圍內...',
     largeNetNotice: '目前網段包含 {count} 個可用 IP。畫面上預設呈現前 1,000 筆分頁；完整數據可點擊右上角「匯出 TXT / CSV」極速線上下載。',
     colIndex: '編號 #',
     colIp: 'IP 位址',
@@ -154,6 +161,12 @@ const TRANSLATIONS = {
 
 ② 巨量數據非阻塞架構：當計算大型子網（如 /16 包含 65,534 個 IP）並點擊匯出 TXT 或 CSV 時，工具採用時間片分塊演算法 (Yielding Chunk Processing) 非阻塞處理，並於 CSV 檔首植入 UTF-8 BOM 確保 Microsoft Excel 開啟時零亂碼，流暢不卡死。`,
       },
+      {
+        q: '如何快速確認某個 IP 位址是否落在指定的網段（CIDR Range）範圍內？',
+        a: `在上方輸入欲檢查的網段（CIDR 標記法或 IP + 子網遮罩）算出網路位址與廣播位址後，於下方「可用 IP 位址列表、網段搜尋」欄位直接輸入完整的目標 IP。
+
+工具會即時將該 IP 轉換為 32 位元整數，比對是否介於網路位址與廣播位址之間（含邊界），並直接顯示「位於此網段範圍內」或「不在此網段範圍內」的結果，不需手動換算二進位或位元運算即可判斷該 IP 是否屬於此子網。`,
+      },
     ],
   },
   en: {
@@ -180,11 +193,14 @@ const TRANSLATIONS = {
     classScopeLabel: 'IP Class & Scope',
     usableRangeLabel: 'Usable IP Range',
     binaryLabel: 'Binary Representation',
-    usableListTitle: 'Usable IP Addresses List',
+    rangeCheckInRange: 'Inside this subnet range',
+    rangeCheckNotInRange: 'Outside this subnet range',
+    rangeCheckErrInvalid: 'Please enter a valid IPv4 address',
+    usableListTitle: 'Usable IP List & Range Search',
     copyAllBtn: 'Copy All',
     exportTxtBtn: 'Export TXT',
     exportCsvBtn: 'Export CSV',
-    filterPlaceholder: 'Filter IP address (e.g. .100)...',
+    filterPlaceholder: 'Filter the list (e.g. .100), or enter a full IP / CIDR range (e.g. 192.168.3.0/24) to check...',
     largeNetNotice: 'This subnet contains {count} usable IPs. The list displays the first 1,000 items. Click "Export TXT / CSV" to download all IPs.',
     colIndex: 'Index #',
     colIp: 'IP Address',
@@ -284,6 +300,12 @@ Resulting 32-bit binary: 11000000.10101000.00000001.00000001.`,
 
 2. High-Performance Non-Blocking Export: When exporting large subnets (such as a /16 with 65,534 hosts) to TXT or CSV, the engine leverages asynchronous yielding chunks to maintain smooth UI responsiveness without freezing the main thread. Exported CSV files include UTF-8 BOM for full Microsoft Excel compatibility.`,
       },
+      {
+        q: 'How can I quickly check whether a specific IP address falls within a given CIDR range?',
+        a: `Enter the subnet you want to check above (CIDR notation, or IP + subnet mask) to calculate its network and broadcast addresses, then enter a full target IP directly into the "Usable IP List & Range Search" field below.
+
+The tool instantly converts that IP to a 32-bit integer and checks whether it falls between the network and broadcast addresses (inclusive), showing "Inside this subnet range" or "Outside this subnet range" — no manual binary conversion or bitwise math required.`,
+      },
     ],
   },
 };
@@ -379,14 +401,15 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
       }
 
       if (rawIp.endsWith('.')) return;
-      const ipInt = ipToInt(rawIp);
-      if (ipInt === null) {
+      const normalizedIp = normalizeIpOctets(rawIp);
+      const ipInt = normalizedIp ? ipToInt(normalizedIp) : null;
+      if (ipInt === null || normalizedIp === null) {
         setErrMessage(`${t.errInvalidIp}: "${rawIp}"`);
         setCalcResult(null);
         return;
       }
 
-      setCalcResult(calculateSubnet(ipInt, rawIp, cidr));
+      setCalcResult(calculateSubnet(ipInt, normalizedIp, cidr));
     } else {
       const rawIp = inputIp.trim();
       if (!rawIp) {
@@ -429,7 +452,9 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
     if (!calcResult) return [];
 
     const { firstUsableInt, usableCount } = calcResult;
-    const kw = filterKeyword.trim().toLowerCase();
+    const rawKw = filterKeyword.trim();
+    // CIDR 範圍查詢僅用於範圍搜尋，不當作清單過濾關鍵字（單一 IP 查詢仍可過濾清單）
+    const kw = parseRangeQuery(rawKw)?.kind === 'cidr' ? '' : rawKw.toLowerCase();
     const result: Array<{ index: number; ipStr: string }> = [];
 
     const limit = usableCount > 1000 && !kw ? 1000 : Math.min(usableCount, 100000);
@@ -445,6 +470,24 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
 
     return result;
   }, [calcResult, filterKeyword]);
+
+  // 過濾框同時身兼「範圍搜尋」：輸入完整 IPv4 判定單一 IP，輸入 IP/CIDR（可省略末尾
+  // Octet，如 192.168.3/24）則判定整段子網是否完整落在上方網段範圍內
+  const rangeCheckResult = useMemo(() => {
+    if (!calcResult) return null;
+    const query = parseRangeQuery(filterKeyword);
+    if (!query) return null;
+
+    if (query.kind === 'invalid') {
+      return { error: t.rangeCheckErrInvalid } as const;
+    }
+    if (query.kind === 'ip') {
+      return { inRange: isIpInRange(query.ipInt, calcResult.networkInt, calcResult.broadcastInt) } as const;
+    }
+    return {
+      inRange: isRangeWithin(query.networkInt, query.broadcastInt, calcResult.networkInt, calcResult.broadcastInt),
+    } as const;
+  }, [calcResult, filterKeyword, t.rangeCheckErrInvalid]);
 
   const handleClear = () => {
     setInputCidr('');
@@ -749,7 +792,7 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
           </div>
         )}
 
-        {/* 可用 IP 列表區段 */}
+        {/* 可用 IP 列表區段（同時整合網段搜尋：輸入完整 IP 即可判定是否在範圍內） */}
         {calcResult && (
           <div className={styles.cardPanel}>
             <div className="flex justify-between items-center flex-wrap gap-4">
@@ -816,9 +859,35 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
               </div>
             </div>
 
+            {/* 範圍搜尋結果：輸入完整 IP 時顯示是否落在此網段範圍內 */}
+            {rangeCheckResult && (
+              'error' in rangeCheckResult ? (
+                <div className="text-red-500 dark:text-red-400 text-xs font-medium bg-red-500/10 border border-red-500/20 px-3.5 py-2 rounded-xl flex items-center gap-2">
+                  <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                  </svg>
+                  <span>{rangeCheckResult.error}</span>
+                </div>
+              ) : rangeCheckResult.inRange ? (
+                <div className="flex items-center gap-2 text-xs font-medium bg-[#00ff66]/10 border border-[#00ff66]/30 px-3.5 py-2 rounded-xl">
+                  <svg className={`w-4 h-4 fill-current shrink-0 ${styles.successText}`} viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                  <span className={styles.successText}>{t.rangeCheckInRange}</span>
+                </div>
+              ) : (
+                <div className="text-red-500 dark:text-red-400 flex items-center gap-2 text-xs font-medium bg-red-500/10 border border-red-500/20 px-3.5 py-2 rounded-xl">
+                  <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  </svg>
+                  <span>{t.rangeCheckNotInRange}</span>
+                </div>
+              )
+            )}
+
             {/* 大網段優化提示 */}
             {calcResult.usableCount > 1000 && (
-              <div className="flex gap-2.5 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-xl p-3.5 text-xs text-[#00f0ff] dark:text-[#00f0ff] items-center">
+              <div className={`flex gap-2.5 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-xl p-3.5 text-xs items-center ${styles.accentText}`}>
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
                   <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
                 </svg>

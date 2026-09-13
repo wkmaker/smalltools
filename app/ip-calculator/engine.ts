@@ -20,6 +20,31 @@ export function ipToInt(ipStr: string): number | null {
   return num >>> 0;
 }
 
+/**
+ * 將可能省略末尾 Octet 的縮寫 IP（如 "192.168.20" 或 "10"）正規化為完整
+ * 四段點分十進制字串，缺少的 Octet 一律補 0（"192.168.20" → "192.168.20.0"）。
+ * 每段仍需符合 0~255 且無多餘前導零，格式不合法回傳 null。
+ */
+export function normalizeIpOctets(ipStr: string): string | null {
+  if (typeof ipStr !== 'string') return null;
+  const trimmed = ipStr.trim();
+  if (trimmed === '' || trimmed.startsWith('.') || trimmed.endsWith('.')) return null;
+
+  const parts = trimmed.split('.');
+  if (parts.length < 1 || parts.length > 4) return null;
+
+  const octets: number[] = [];
+  for (const p of parts) {
+    if (!/^\d+$/.test(p)) return null;
+    const n = parseInt(p, 10);
+    if (n < 0 || n > 255 || (p.length > 1 && p.startsWith('0'))) return null;
+    octets.push(n);
+  }
+
+  while (octets.length < 4) octets.push(0);
+  return octets.join('.');
+}
+
 export function intToIp(intVal: number): string {
   return [
     (intVal >>> 24) & 255,
@@ -117,6 +142,26 @@ export interface SubnetResult {
   binaryIp: string;
 }
 
+export function isIpInRange(targetIpInt: number, networkInt: number, broadcastInt: number): boolean {
+  return targetIpInt >= networkInt && targetIpInt <= broadcastInt;
+}
+
+/**
+ * 判斷一段子網範圍（子網路位址 ~ 子廣播位址）是否完整落在外層網段範圍內
+ * （兩端皆須介於外層網路位址與廣播位址之間，含邊界）。
+ */
+export function isRangeWithin(
+  subNetworkInt: number,
+  subBroadcastInt: number,
+  networkInt: number,
+  broadcastInt: number
+): boolean {
+  return (
+    isIpInRange(subNetworkInt, networkInt, broadcastInt) &&
+    isIpInRange(subBroadcastInt, networkInt, broadcastInt)
+  );
+}
+
 export function calculateSubnet(ipInt: number, rawIpStr: string, cidr: number): SubnetResult {
   const maskInt = cidrToMaskInt(cidr);
   const maskStr = intToIp(maskInt);
@@ -172,4 +217,44 @@ export function calculateSubnet(ipInt: number, rawIpStr: string, cidr: number): 
     scopeInfo,
     binaryIp,
   };
+}
+
+export type RangeQuery =
+  | { kind: 'ip'; ipInt: number }
+  | { kind: 'cidr'; networkInt: number; broadcastInt: number }
+  | { kind: 'invalid' };
+
+/**
+ * 解析「範圍搜尋」輸入框的內容（UI 搜尋框同時身兼清單過濾與範圍搜尋兩種用途，
+ * 抽成純函數以便獨立單元測試，避免只在元件內用 useMemo/正規表示式判斷而未受測試覆蓋）。
+ *
+ * - 完整 IPv4（四段數字）→ { kind: 'ip', ipInt }，呼叫端應以 isIpInRange 判斷。
+ * - IP/CIDR（IP 可省略末尾 Octet，如 "192.168.3/24"）→ { kind: 'cidr', networkInt,
+ *   broadcastInt }，呼叫端應以 isRangeWithin 判斷子網是否完整落在目標網段內。
+ * - 格式符合上述兩種但數值不合法（Octet 超出 0~255、CIDR 超過 32 等）→
+ *   { kind: 'invalid' }，呼叫端應顯示格式錯誤訊息。
+ * - 其餘（一般過濾關鍵字、空字串）→ null，呼叫端應視為單純清單過濾，不觸發範圍搜尋。
+ */
+export function parseRangeQuery(raw: string): RangeQuery | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(trimmed)) {
+    const ipInt = ipToInt(trimmed);
+    return ipInt === null ? { kind: 'invalid' } : { kind: 'ip', ipInt };
+  }
+
+  const cidrMatch = trimmed.match(/^([\d.]+)\/(\d{1,3})$/);
+  if (cidrMatch) {
+    const cidr = parseInt(cidrMatch[2], 10);
+    const normalizedIp = normalizeIpOctets(cidrMatch[1]);
+    const ipInt = normalizedIp ? ipToInt(normalizedIp) : null;
+    if (normalizedIp === null || ipInt === null || isNaN(cidr) || cidr < 0 || cidr > 32) {
+      return { kind: 'invalid' };
+    }
+    const sub = calculateSubnet(ipInt, normalizedIp, cidr);
+    return { kind: 'cidr', networkInt: sub.networkInt, broadcastInt: sub.broadcastInt };
+  }
+
+  return null;
 }
