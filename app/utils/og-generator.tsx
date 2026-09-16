@@ -38,6 +38,7 @@ const CARD_ACCENT_COLORS: Record<string, string> = {
   passwordCard: '#059669', // 深翠綠
   sslCard: '#4f46e5', // 湛藍靛青
   sslConverterCard: '#4f46e5', // 湛藍靛青
+  certGeneratorCard: '#0284c7', // 深天藍
   epochCard: '#d97706', // 深琥珀金
   dnsCard: '#0284c7', // 深天藍
   digCard: '#0284c7', // 深天藍
