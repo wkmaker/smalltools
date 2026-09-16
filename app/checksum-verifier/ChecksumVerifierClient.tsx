@@ -30,6 +30,8 @@ interface HashedFile {
   errorMsg?: string;
 }
 
+type EntrySummaryKind = 'no-file' | 'pending' | 'match' | 'mismatch' | 'unsupported';
+
 const ACCENT = '#10b981';
 const ACCENT_GLOW = 'rgba(16, 185, 129, 0.5)';
 
@@ -69,6 +71,7 @@ const TRANSLATIONS = {
     entryWildcardLabel: '（套用於所有檔案）',
     entryNoFileFound: '找不到對應檔案',
     entryPending: '計算中…',
+    entryMatchedFile: (name: string) => `符合檔案：${name}`,
     badgeMatch: '相符',
     badgeMismatch: '不符',
     badgeUnsupported: '不支援比對',
@@ -144,6 +147,7 @@ const TRANSLATIONS = {
     entryWildcardLabel: '(applies to all files)',
     entryNoFileFound: 'No matching file found',
     entryPending: 'Computing…',
+    entryMatchedFile: (name: string) => `Matched file: ${name}`,
     badgeMatch: 'Match',
     badgeMismatch: 'Mismatch',
     badgeUnsupported: 'Unsupported',
@@ -315,7 +319,10 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
   }, [addFiles]);
 
   const removeFile = (id: string) => setFiles(prev => prev.filter(f => f.id !== id));
-  const clearAll = () => setFiles([]);
+  const clearAll = () => {
+    setFiles([]);
+    setChecksumText('');
+  };
 
   const copyValue = (val: string) => {
     navigator.clipboard
@@ -326,15 +333,26 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
 
   const parsedEntries = useMemo(() => parseChecksumText(checksumText), [checksumText]);
 
-  const entryUiResults = useMemo(() => {
+  const entrySummaries = useMemo(() => {
     return parsedEntries.map(entry => {
       const relevantFiles = files.filter(f => entryAppliesToFileName(entry, f.file.name));
-      const results = relevantFiles.map(f => {
-        if (f.status !== 'done') return { file: f, status: 'pending' as const };
-        const r = matchEntryAgainstFile(entry, f.file.name, f.hashes)!;
-        return { file: f, status: r.status as MatchStatus };
-      });
-      return { entry, results };
+      if (relevantFiles.length === 0) {
+        return { entry, kind: 'no-file' as EntrySummaryKind, fileName: undefined as string | undefined };
+      }
+
+      const doneResults = relevantFiles
+        .filter(f => f.status === 'done')
+        .map(f => ({ fileName: f.file.name, status: matchEntryAgainstFile(entry, f.file.name, f.hashes)!.status }));
+
+      const matched = doneResults.find(r => r.status === 'match');
+      if (matched) return { entry, kind: 'match' as EntrySummaryKind, fileName: matched.fileName };
+      if (relevantFiles.some(f => f.status !== 'done')) {
+        return { entry, kind: 'pending' as EntrySummaryKind, fileName: undefined };
+      }
+      if (doneResults.some(r => r.status === 'mismatch')) {
+        return { entry, kind: 'mismatch' as EntrySummaryKind, fileName: undefined };
+      }
+      return { entry, kind: 'unsupported' as EntrySummaryKind, fileName: undefined };
     });
   }, [parsedEntries, files]);
 
@@ -582,7 +600,7 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
                   <p className="text-xs text-text-sub px-1">{t.noEntriesHint}</p>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    {entryUiResults.map(({ entry, results }, idx) => (
+                    {entrySummaries.map(({ entry, kind, fileName }, idx) => (
                       <div key={idx} className={styles.entryRow}>
                         <div className="flex flex-col flex-1 min-w-0 gap-0.5">
                           <span className="text-xs font-semibold text-text-main truncate">
@@ -591,29 +609,28 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
                           <span className={styles.hashValue} style={{ fontSize: '0.72rem' }}>
                             {entry.hash}
                           </span>
+                          {kind === 'match' && entry.filename === null && fileName && (
+                            <span className="text-[0.68rem] text-text-sub truncate">
+                              {t.entryMatchedFile(fileName)}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          {results.length === 0 && (
+                        <div className="shrink-0">
+                          {kind === 'no-file' && (
                             <span className={`${styles.badge} ${styles.badgeNeutral}`}>{t.entryNoFileFound}</span>
                           )}
-                          {results.map((r, i) => (
-                            <span key={i}>
-                              {r.status === 'pending' && (
-                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>{t.entryPending}</span>
-                              )}
-                              {r.status === 'match' && (
-                                <span className={`${styles.badge} ${styles.badgeMatch}`}>{t.badgeMatch}</span>
-                              )}
-                              {r.status === 'mismatch' && (
-                                <span className={`${styles.badge} ${styles.badgeMismatch}`}>{t.badgeMismatch}</span>
-                              )}
-                              {r.status === 'unsupported' && (
-                                <span className={`${styles.badge} ${styles.badgeUnsupported}`}>
-                                  {t.badgeUnsupported}
-                                </span>
-                              )}
-                            </span>
-                          ))}
+                          {kind === 'pending' && (
+                            <span className={`${styles.badge} ${styles.badgeNeutral}`}>{t.entryPending}</span>
+                          )}
+                          {kind === 'match' && (
+                            <span className={`${styles.badge} ${styles.badgeMatch}`}>{t.badgeMatch}</span>
+                          )}
+                          {kind === 'mismatch' && (
+                            <span className={`${styles.badge} ${styles.badgeMismatch}`}>{t.badgeMismatch}</span>
+                          )}
+                          {kind === 'unsupported' && (
+                            <span className={`${styles.badge} ${styles.badgeUnsupported}`}>{t.badgeUnsupported}</span>
+                          )}
                         </div>
                       </div>
                     ))}
