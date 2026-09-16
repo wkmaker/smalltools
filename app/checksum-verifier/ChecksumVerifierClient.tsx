@@ -111,6 +111,10 @@ const TRANSLATIONS = {
         a: 'CRC32 是一種輕量的循環冗餘校驗碼，廣泛用於 ZIP、PNG、SFV 等格式的錯誤偵測：\n\n① 與雜湊演算法的差異：\nCRC32 並非密碼學安全雜湊，設計目的是快速偵測隨機傳輸錯誤（如硬碟壞軌、傳輸雜訊），而非防止人為蓄意竄改，因此不建議用於安全驗證場景，但檢查下載檔案是否損毀仍相當實用。\n\n② SFV 格式支援：\n本工具支援標準 `.sfv` 格式（`檔名  crc32碼`，檔名在前、8 碼十六進位 CRC32 在後，以 `;` 開頭的行視為註解），拖曳 `.sfv`／`.cksum` 檔案至主拖放區會自動判斷為校驗清單並解析比對。',
       },
       {
+        q: '如何把已算好的雜湊值匯出成檔案分享給別人？下載的校驗清單可以用系統內建指令核對嗎？',
+        a: '檔案清單上方的「下載校驗清單」功能就是為此設計：\n\n① 使用方式：\n從下拉選單選擇一種演算法（MD5 / SHA-1 / SHA-256 / SHA-512 / CRC32），按下「下載」，就會把目前已計算完成的所有檔案，以該演算法的雜湊值匯出成單一 GNU coreutils 相容格式的文字檔（如 `SHA256SUMS.txt`），檔頭附上 UTC 產生時間與 `tools.cjkuo.net` 來源註解。\n\n② 通用相容性：\n此檔案可直接用作業系統內建指令核對，例如 macOS/Linux 的 `sha256sum -c SHA256SUMS.txt` 或 `md5sum -c MD5SUMS.txt`，Windows 則可用 `Get-FileHash` 手動比對；也可以把這份檔案原封不動再拖回本工具，會自動判斷為校驗清單並解析比對。',
+      },
+      {
         q: '為什麼計算大型檔案（如數 GB 的映像檔）的 MD5 感覺比 SHA-256 慢？',
         a: '這與底層運算引擎有關：\n\n① 原生加速 vs. 純軟體實作：\nSHA-1/256/512 由瀏覽器原生的 Web Crypto API（SubtleCrypto）計算，具備底層最佳化甚至硬體加速；MD5 因未被瀏覽器原生支援，本工具採用純 JavaScript 實作 RFC 1321 演算法，速度自然較慢。\n\n② 不卡頓保證：\n即便如此，本工具在計算 MD5 時仍會定期讓出主執行緒，確保頁面在處理大型檔案時依然可以捲動、拖曳新檔案，不會凍結瀏覽器分頁。',
       },
@@ -189,6 +193,10 @@ const TRANSLATIONS = {
       {
         q: 'What is CRC32? Does this tool support .sfv checksum files?',
         a: 'CRC32 is a lightweight cyclic redundancy check widely used by ZIP, PNG, and SFV formats for error detection:\n\n① How It Differs From Cryptographic Hashes:\nCRC32 is not a cryptographically secure hash — it is designed to quickly catch random transmission errors (disk bad sectors, transfer noise) rather than deliberate tampering, so it should not be relied on for security verification, though it remains useful for checking whether a download got corrupted.\n\n② SFV Support:\nThis tool supports the standard `.sfv` format (`filename  crc32hex`, filename first followed by the 8-character hex CRC32, with lines starting with `;` treated as comments). Dropping a `.sfv` or `.cksum` file into the main dropzone automatically routes it to the checksum manifest parser.',
+      },
+      {
+        q: 'How do I export the computed hashes into a file to share with someone else? Can the downloaded manifest be verified with built-in OS commands?',
+        a: 'That\'s exactly what the "Download checksum manifest" control above the file list is for:\n\n① How to Use It:\nPick an algorithm from the dropdown (MD5 / SHA-1 / SHA-256 / SHA-512 / CRC32) and click "Download" — every file that has finished hashing gets exported into a single GNU coreutils-compatible text file (e.g. `SHA256SUMS.txt`), with a header noting the UTC generation time and a `tools.cjkuo.net` attribution comment.\n\n② Universal Compatibility:\nThe file can be verified directly with built-in OS commands, such as `sha256sum -c SHA256SUMS.txt` or `md5sum -c MD5SUMS.txt` on macOS/Linux, or `Get-FileHash` for manual comparison on Windows. You can also drop the exported file straight back into this tool — it will be auto-detected as a checksum manifest and parsed for verification.',
       },
       {
         q: 'Why does computing MD5 on a large file (e.g. a multi-GB disk image) feel slower than SHA-256?',
