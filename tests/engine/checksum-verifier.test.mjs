@@ -11,6 +11,8 @@ import {
   matchEntryAgainstFile,
   entryAppliesToFileName,
   looksLikeChecksumManifestFilename,
+  buildChecksumManifest,
+  checksumManifestFileName,
 } from '../../app/checksum-verifier/engine.ts';
 
 function toBytes(str) {
@@ -186,4 +188,45 @@ test('looksLikeChecksumManifestFilename：一般檔案不應被誤判', () => {
   assert.equal(looksLikeChecksumManifestFilename('installer.exe'), false);
   assert.equal(looksLikeChecksumManifestFilename('notes.txt'), false);
   assert.equal(looksLikeChecksumManifestFilename('archive.zip'), false);
+});
+
+test('checksumManifestFileName：每種演算法對應慣用的 SUMS 檔名', () => {
+  assert.equal(checksumManifestFileName('MD5'), 'MD5SUMS.txt');
+  assert.equal(checksumManifestFileName('SHA-1'), 'SHA1SUMS.txt');
+  assert.equal(checksumManifestFileName('SHA-256'), 'SHA256SUMS.txt');
+  assert.equal(checksumManifestFileName('SHA-512'), 'SHA512SUMS.txt');
+  assert.equal(checksumManifestFileName('CRC32'), 'CRC32SUMS.txt');
+});
+
+test('buildChecksumManifest：產生 GNU coreutils 相容格式，含 UTC 產生時間與來源註解', () => {
+  const generatedAt = new Date('2026-09-16T02:34:56.789Z');
+  const manifest = buildChecksumManifest(
+    [
+      { fileName: 'a.txt', hash: 'd41d8cd98f00b204e9800998ecf8427e' },
+      { fileName: 'b.txt', hash: '900150983cd24fb0d6963f7d28e17f72' },
+    ],
+    'MD5',
+    generatedAt
+  );
+
+  const lines = manifest.split('\n');
+  assert.equal(lines[0], '# Generated: 2026-09-16T02:34:56Z (UTC)');
+  assert.equal(lines[1], '# Algorithm: MD5');
+  assert.equal(lines[2], '# Created by tools.cjkuo.net');
+  assert.equal(lines[3], '');
+  assert.equal(lines[4], 'd41d8cd98f00b204e9800998ecf8427e  a.txt');
+  assert.equal(lines[5], '900150983cd24fb0d6963f7d28e17f72  b.txt');
+  assert.ok(manifest.endsWith('\n'));
+});
+
+test('buildChecksumManifest：輸出可被自身 parseChecksumText 正確解析（往返一致）', () => {
+  const files = [
+    { fileName: 'installer.exe', hash: 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' },
+  ];
+  const manifest = buildChecksumManifest(files, 'SHA-256');
+  const entries = parseChecksumText(manifest);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].filename, 'installer.exe');
+  assert.equal(entries[0].hash, files[0].hash);
+  assert.equal(entries[0].algorithm, 'SHA-256');
 });

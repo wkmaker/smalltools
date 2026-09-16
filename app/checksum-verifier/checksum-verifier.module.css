@@ -27,7 +27,7 @@
   padding: 1rem;
   color: var(--text-primary, #ffffff);
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   outline: none;
   resize: vertical;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -294,13 +294,22 @@
   flex: 1;
   min-width: 0;
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: var(--text-primary, #ffffff);
   word-break: break-all;
 }
 
+.hashValueCompact {
+  flex: 1;
+  min-width: 0;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #94a3b8);
+  word-break: break-all;
+}
+
 .hashAlgoLabel {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--text-secondary, #94a3b8);
@@ -335,7 +344,7 @@
   gap: 0.3rem;
   padding: 0.2rem 0.6rem;
   border-radius: 9999px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -407,8 +416,8 @@
 
 .entryRow {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.35rem;
   padding: 0.6rem 0.75rem;
   border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.02);
@@ -418,4 +427,62 @@
 :global([data-theme='light']) .entryRow {
   background: rgba(255, 255, 255, 0.45);
   border-color: rgba(203, 213, 225, 0.7);
+}
+
+/* ── 全部清除（醒目危險色按鈕） ── */
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #fb7185;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnDanger:hover {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.4);
+}
+
+:global([data-theme='light']) .btnDanger {
+  background: rgba(225, 29, 72, 0.1);
+  border-color: rgba(225, 29, 72, 0.4);
+  color: #be123c;
+}
+
+:global([data-theme='light']) .btnDanger:hover {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #ffffff;
+}
+
+/* ── 下載校驗清單工具列 ── */
+.algoSelect {
+  background: var(--select-bg);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.65rem;
+  color: var(--text-primary, #ffffff);
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+:global([data-theme='light']) .algoSelect {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(203, 213, 225, 0.8);
+  color: #0f172a;
+}
+
+.algoSelect:focus {
+  border-color: #10b981;
 }

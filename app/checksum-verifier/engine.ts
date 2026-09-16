@@ -336,3 +336,46 @@ export function looksLikeChecksumManifestFilename(fileName: string): boolean {
   const withoutExt = name.replace(/\.[^./\\]+$/, '');
   return CHECKSUM_BASENAME_RE.test(withoutExt) || CHECKSUM_BASENAME_RE.test(name);
 }
+
+// ── 校驗清單匯出 ────────────────────────────────────────────────
+
+export interface ChecksumManifestFile {
+  fileName: string;
+  hash: string;
+}
+
+/**
+ * 慣用的校驗清單匯出檔名（可再匯入本工具或 GNU coreutils 對應指令核對）。
+ */
+export function checksumManifestFileName(algorithm: HashAlgorithm): string {
+  const suffix: Record<HashAlgorithm, string> = {
+    CRC32: 'CRC32SUMS.txt',
+    MD5: 'MD5SUMS.txt',
+    'SHA-1': 'SHA1SUMS.txt',
+    'SHA-256': 'SHA256SUMS.txt',
+    'SHA-512': 'SHA512SUMS.txt',
+  };
+  return suffix[algorithm];
+}
+
+/**
+ * 產生 GNU coreutils 相容格式（`<hash>  <filename>`）的校驗清單文字，
+ * 開頭附上產生時間（UTC）與來源標註的註解行（`#` 開頭，`parseChecksumText`
+ * 會忽略），可分享給他人用 `md5sum -c` / `sha256sum -c` 等指令核對，
+ * 也可再次拖入本工具驗證。
+ */
+export function buildChecksumManifest(
+  files: ChecksumManifestFile[],
+  algorithm: HashAlgorithm,
+  generatedAt: Date = new Date()
+): string {
+  const isoUtc = generatedAt.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  const lines = [
+    `# Generated: ${isoUtc} (UTC)`,
+    `# Algorithm: ${algorithm}`,
+    '# Created by tools.cjkuo.net',
+    '',
+    ...files.map(f => `${f.hash}  ${f.fileName}`),
+  ];
+  return lines.join('\n') + '\n';
+}

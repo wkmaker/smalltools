@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import { formatBytes } from '../utils/formatBytes';
+import { downloadBlob } from '../utils/downloadBlob';
 import styles from './checksum-verifier.module.css';
 import {
   HASH_ALGORITHMS,
@@ -14,7 +15,10 @@ import {
   parseChecksumText,
   matchEntryAgainstFile,
   entryAppliesToFileName,
+  detectAlgorithmByLength,
   looksLikeChecksumManifestFilename,
+  buildChecksumManifest,
+  checksumManifestFileName,
 } from './engine';
 
 interface Props {
@@ -55,6 +59,10 @@ const TRANSLATIONS = {
     toastCopyFailed: '複製失敗，請手動複製',
     toastManifestLoaded: (n: number) => `已載入 ${n} 份校驗清單並解析`,
     toastReadError: '讀取檔案時發生錯誤',
+    toastNoDoneFiles: '尚無已完成計算的檔案可匯出',
+    toastManifestDownloaded: '校驗清單已下載',
+    downloadManifestLabel: '下載校驗清單：',
+    downloadManifestBtn: '下載',
     hashingLabel: (algo: string, pct: number) => `正在計算 ${algo}… ${pct}%`,
     hashingLabelGeneric: '正在計算雜湊值…',
     errorLabel: '計算失敗',
@@ -131,6 +139,10 @@ const TRANSLATIONS = {
     toastCopyFailed: 'Copy failed, please copy manually',
     toastManifestLoaded: (n: number) => `Loaded and parsed ${n} checksum manifest(s)`,
     toastReadError: 'Error reading file',
+    toastNoDoneFiles: 'No completed file hashes to export yet',
+    toastManifestDownloaded: 'Checksum manifest downloaded',
+    downloadManifestLabel: 'Download checksum manifest:',
+    downloadManifestBtn: 'Download',
     hashingLabel: (algo: string, pct: number) => `Computing ${algo}… ${pct}%`,
     hashingLabelGeneric: 'Computing hashes…',
     errorLabel: 'Computation failed',
@@ -203,6 +215,10 @@ function getFileMatchSummary(file: HashedFile, entries: ChecksumEntry[]): MatchS
   return 'unsupported';
 }
 
+function truncateHash(hash: string): string {
+  return hash.length <= 24 ? hash : `${hash.slice(0, 12)}…${hash.slice(-8)}`;
+}
+
 export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
   const t = TRANSLATIONS[lang];
 
@@ -210,9 +226,11 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
   const appendFileInputId = useId();
   const manifestInputId = useId();
   const checksumTextareaId = useId();
+  const downloadAlgoId = useId();
 
   const [files, setFiles] = useState<HashedFile[]>([]);
   const [checksumText, setChecksumText] = useState('');
+  const [downloadAlgo, setDownloadAlgo] = useState<HashAlgorithm>('SHA-256');
   const [isDragOver, setIsDragOver] = useState(false);
   const [isAppendDragOver, setIsAppendDragOver] = useState(false);
   const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
@@ -331,6 +349,21 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
       .catch(() => showToast(t.toastCopyFailed));
   };
 
+  const doneFiles = useMemo(() => files.filter(f => f.status === 'done'), [files]);
+
+  const handleDownloadManifest = () => {
+    if (doneFiles.length === 0) {
+      showToast(t.toastNoDoneFiles);
+      return;
+    }
+    const manifest = buildChecksumManifest(
+      doneFiles.map(f => ({ fileName: f.file.name, hash: f.hashes[downloadAlgo]! })),
+      downloadAlgo
+    );
+    downloadBlob(new Blob([manifest], { type: 'text/plain;charset=utf-8' }), checksumManifestFileName(downloadAlgo));
+    showToast(t.toastManifestDownloaded);
+  };
+
   const parsedEntries = useMemo(() => parseChecksumText(checksumText), [checksumText]);
 
   const entrySummaries = useMemo(() => {
@@ -432,12 +465,76 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
             <div className="grid grid-cols-[1.15fr_1fr] gap-6 max-lg:grid-cols-1 items-start">
               {/* 左欄：目標檔案清單 */}
               <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between px-1">
+                <div className="flex items-center justify-between px-1 flex-wrap gap-2">
                   <span className="text-sm font-semibold text-text-main">{t.fileCountLabel(files.length)}</span>
-                  <button type="button" onClick={clearAll} className={styles.btnSecondary}>
+                  <button type="button" onClick={clearAll} className={styles.btnDanger}>
+                    <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                    </svg>
                     {t.clearAllBtn}
                   </button>
                 </div>
+
+                {/* 持續性拖曳追加入口：固定在清單最上方，檔案一多也不必捲動尋找 */}
+                <div
+                  onClick={() => document.getElementById(appendFileInputId)?.click()}
+                  onDragEnter={e => {
+                    e.preventDefault();
+                    setIsAppendDragOver(true);
+                  }}
+                  onDragOver={e => {
+                    e.preventDefault();
+                    setIsAppendDragOver(true);
+                  }}
+                  onDragLeave={() => setIsAppendDragOver(false)}
+                  onDrop={e => {
+                    e.preventDefault();
+                    setIsAppendDragOver(false);
+                    if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
+                  }}
+                  className={`${styles.appendDropzone} ${isAppendDragOver ? styles.appendDropzoneActive : ''}`}
+                >
+                  <label htmlFor={appendFileInputId} className="sr-only">
+                    {t.appendDropzoneText}
+                  </label>
+                  <input
+                    id={appendFileInputId}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={e => {
+                      if (e.target.files) addFiles(e.target.files);
+                      e.target.value = '';
+                    }}
+                  />
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                  </svg>
+                  {t.appendDropzoneText}
+                </div>
+
+                {doneFiles.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap px-1">
+                    <label htmlFor={downloadAlgoId} className="text-xs font-medium text-text-sub">
+                      {t.downloadManifestLabel}
+                    </label>
+                    <select
+                      id={downloadAlgoId}
+                      className={styles.algoSelect}
+                      value={downloadAlgo}
+                      onChange={e => setDownloadAlgo(e.target.value as HashAlgorithm)}
+                    >
+                      {HASH_ALGORITHMS.map(algo => (
+                        <option key={algo} value={algo}>
+                          {algo}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={handleDownloadManifest} className={styles.btnPrimary}>
+                      {t.downloadManifestBtn}
+                    </button>
+                  </div>
+                )}
 
                 {files.map(f => {
                   const summary = getFileMatchSummary(f, parsedEntries);
@@ -513,44 +610,6 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
                     </div>
                   );
                 })}
-
-                {/* 持續性拖曳追加入口 */}
-                <div
-                  onClick={() => document.getElementById(appendFileInputId)?.click()}
-                  onDragEnter={e => {
-                    e.preventDefault();
-                    setIsAppendDragOver(true);
-                  }}
-                  onDragOver={e => {
-                    e.preventDefault();
-                    setIsAppendDragOver(true);
-                  }}
-                  onDragLeave={() => setIsAppendDragOver(false)}
-                  onDrop={e => {
-                    e.preventDefault();
-                    setIsAppendDragOver(false);
-                    if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
-                  }}
-                  className={`${styles.appendDropzone} ${isAppendDragOver ? styles.appendDropzoneActive : ''}`}
-                >
-                  <label htmlFor={appendFileInputId} className="sr-only">
-                    {t.appendDropzoneText}
-                  </label>
-                  <input
-                    id={appendFileInputId}
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={e => {
-                      if (e.target.files) addFiles(e.target.files);
-                      e.target.value = '';
-                    }}
-                  />
-                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                  </svg>
-                  {t.appendDropzoneText}
-                </div>
               </div>
 
               {/* 右欄：驗證面板 */}
@@ -600,40 +659,44 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
                   <p className="text-xs text-text-sub px-1">{t.noEntriesHint}</p>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    {entrySummaries.map(({ entry, kind, fileName }, idx) => (
-                      <div key={idx} className={styles.entryRow}>
-                        <div className="flex flex-col flex-1 min-w-0 gap-0.5">
-                          <span className="text-xs font-semibold text-text-main truncate">
-                            {entry.filename ?? t.entryWildcardLabel}
-                          </span>
-                          <span className={styles.hashValue} style={{ fontSize: '0.72rem' }}>
-                            {entry.hash}
-                          </span>
-                          {kind === 'match' && entry.filename === null && fileName && (
-                            <span className="text-[0.68rem] text-text-sub truncate">
-                              {t.entryMatchedFile(fileName)}
+                    {entrySummaries.map(({ entry, kind, fileName }, idx) => {
+                      const algo = entry.algorithm ?? detectAlgorithmByLength(entry.hash.length);
+                      return (
+                        <div key={idx} className={styles.entryRow}>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-semibold text-text-main truncate min-w-0">
+                              {entry.filename ?? t.entryWildcardLabel}
                             </span>
+                            <div className="shrink-0">
+                              {kind === 'no-file' && (
+                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>{t.entryNoFileFound}</span>
+                              )}
+                              {kind === 'pending' && (
+                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>{t.entryPending}</span>
+                              )}
+                              {kind === 'match' && (
+                                <span className={`${styles.badge} ${styles.badgeMatch}`}>{t.badgeMatch}</span>
+                              )}
+                              {kind === 'mismatch' && (
+                                <span className={`${styles.badge} ${styles.badgeMismatch}`}>{t.badgeMismatch}</span>
+                              )}
+                              {kind === 'unsupported' && (
+                                <span className={`${styles.badge} ${styles.badgeUnsupported}`}>
+                                  {t.badgeUnsupported}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            {algo && <span className={styles.hashAlgoLabel} style={{ width: 'auto' }}>{algo}</span>}
+                            <span className={`${styles.hashValueCompact} truncate`}>{truncateHash(entry.hash)}</span>
+                          </div>
+                          {kind === 'match' && entry.filename === null && fileName && (
+                            <span className="text-xs text-text-sub truncate">{t.entryMatchedFile(fileName)}</span>
                           )}
                         </div>
-                        <div className="shrink-0">
-                          {kind === 'no-file' && (
-                            <span className={`${styles.badge} ${styles.badgeNeutral}`}>{t.entryNoFileFound}</span>
-                          )}
-                          {kind === 'pending' && (
-                            <span className={`${styles.badge} ${styles.badgeNeutral}`}>{t.entryPending}</span>
-                          )}
-                          {kind === 'match' && (
-                            <span className={`${styles.badge} ${styles.badgeMatch}`}>{t.badgeMatch}</span>
-                          )}
-                          {kind === 'mismatch' && (
-                            <span className={`${styles.badge} ${styles.badgeMismatch}`}>{t.badgeMismatch}</span>
-                          )}
-                          {kind === 'unsupported' && (
-                            <span className={`${styles.badge} ${styles.badgeUnsupported}`}>{t.badgeUnsupported}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
