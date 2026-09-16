@@ -4,6 +4,28 @@
 
 ---
 
+## [1.13.0] - 2026-09-16
+
+### ✨ 新增功能 (Added)
+
+- **新增「檔案雜湊計算與校驗工具」（`/checksum-verifier`）**：純前端拖曳檔案即可計算
+  MD5、SHA-1、SHA-256、SHA-512、CRC32，並可直接把官方提供的校驗清單檔案（`.sha256`、
+  `.md5`、`.sfv`、`SHA256SUMS`、`CHECKSUMS` 等常見命名）一起拖進同一個拖放區，自動判斷
+  為校驗清單而非目標檔案，解析後與已上傳檔案逐一比對是否相符。
+  - `engine.ts` 提供純函數：`md5Hex`（RFC 1321 純 JS 實作）、`crc32Hex`（CRC-32/ISO-HDLC，
+    與 zlib/ZIP/PNG/SFV 相同變體）兩者處理大檔案時皆定期讓出主執行緒避免卡頓；
+    `computeHashHex` / `computeAllHashes`（SHA 系列透過 Web Crypto SubtleCrypto 原生計算）、
+    `parseChecksumText`（支援 GNU coreutils `<hash>  <filename>`、BSD/OpenSSL
+    `SHA256 (filename) = <hash>`、SFV `<filename> <crc32hex>`、純雜湊字串共四種格式）、
+    `matchEntryAgainstFile` / `entryAppliesToFileName`（比對邏輯，遇到本工具未提供的
+    演算法如 SHA-384 會誠實標示「不支援比對」而非給出誤導結果）。
+  - 支援多檔同時拖曳、每個檔案獨立顯示計算進度與四種演算法結果，並保留「持續性拖曳」
+    入口與全域拖曳浮層，可隨時追加新檔案或新的校驗清單。
+  - 已補上 `tests/engine/checksum-verifier.test.mjs`（含 RFC 標準測試向量交叉驗證）、
+    雙語 FAQ 與 SEO Metadata，並登記於 `app/config/tools.tsx` 中央工具註冊表。
+
+---
+
 ## [1.12.1] - 2026-09-13
 
 ### 🐛 修復 (Fixed)
