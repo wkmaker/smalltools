@@ -375,6 +375,27 @@ export const CATEGORIES: CategorySection[] = [
         ),
       },
       {
+        name: '檔案雜湊計算與校驗工具',
+        nameEn: 'File Hash Calculator & Checksum Verifier',
+        subtitle: 'FILE HASH CALCULATOR & CHECKSUM VERIFIER',
+        subtitleEn: 'FILE HASH CALCULATOR & CHECKSUM VERIFIER',
+        description:
+          '純前端檔案雜湊計算與完整性校驗工具，拖曳檔案即可算出 MD5 / SHA-1 / SHA-256 / SHA-512 / CRC32，並可直接丟入官方校驗清單檔案（含 .sfv）自動比對是否相符。',
+        descriptionEn:
+          'Client-side file hash calculator and integrity checker. Compute MD5 / SHA-1 / SHA-256 / SHA-512 / CRC32 and drop in the official checksum manifest (including .sfv) for automatic verification.',
+        href: '/checksum-verifier/',
+        hrefEn: '/checksum-verifier/en/',
+        cardClass: 'checksumCard',
+        category: 'developer',
+        keywords: '檔案雜湊計算 md5 sha256 sha512 crc32 checksum verifier 校驗碼 完整性驗證 sha256sum md5sum sfv',
+        keywordsEn: 'file hash calculator md5 sha256 sha512 crc32 checksum verifier integrity check sha256sum md5sum sfv',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#10b981]">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+        ),
+      },
+      {
         name: 'Epoch 時間戳記轉換',
         nameEn: 'Epoch Timestamp Converter',
         subtitle: 'EPOCH TIMESTAMP CONVERTER',

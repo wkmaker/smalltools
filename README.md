@@ -51,6 +51,7 @@
 * **[HAR 敏感資料清理工具](https://tools.cjkuo.net/har-cleaner/)** (`/har-cleaner`) - 專業純前端 HAR 封包脫敏與瘦身神器！支援自動清除 Cookie、Authorization 標頭、Bearer JWT、API 密鑰、敏感 Query 與 POST Payload，並可精準清理肥大二進位媒體酬載，100% 本地記憶體運算不外傳。
 * **[Epoch 時間戳記轉換](https://tools.cjkuo.net/epoch/)** (`/epoch`) - 支援秒與毫秒自動判定，即時在台北時間、UTC、美西時區之間雙向轉換。
 * **[CA / 伺服器憑證產生器](https://tools.cjkuo.net/cert-generator/)** (`/cert-generator`) - 純前端自簽憑證產生工具，支援純自簽或 CA + 伺服器兩種模式、RSA/ECDSA/Ed25519 金鑰演算法與 PEM/DER/PKCS#12 輸出格式，適合本地開發與內部測試 HTTPS 環境。
+* **[檔案雜湊計算與校驗工具](https://tools.cjkuo.net/checksum-verifier/)** (`/checksum-verifier`) - 拖曳檔案計算 MD5/SHA-1/SHA-256/SHA-512/CRC32，可直接丟入官方校驗清單檔案（sha256sum、CHECKSUMS、.sfv 等）自動比對是否相符，100% 本機運算。
 
 ### 🌐 網路維運 (Network Utilities)
 * **[DIG 網路診斷工具](https://tools.cjkuo.net/dns-dig/)** (`/dns-dig`) - 支援 Cloudflare / Google 加密 DoH 切換、即時發送 DIG 請求查詢 A, CNAME, MX, TXT 等記錄。
