@@ -498,6 +498,44 @@ export const CATEGORIES: CategorySection[] = [
           </svg>
         ),
       },
+      {
+        name: 'PAC 規則產生器',
+        nameEn: 'PAC Script Generator',
+        subtitle: 'PROXY AUTO-CONFIG SCRIPT GENERATOR',
+        subtitleEn: 'PROXY AUTO-CONFIG SCRIPT GENERATOR',
+        description: '視覺化 PAC 代理配置腳本產生工具。自由編排分流規則、支援 IPv4/IPv6 (isInNetEx) 雙棧網段、代理伺服器池與一鍵 Data URI 匯出。',
+        descriptionEn: 'Visual PAC rule builder with IPv4/IPv6 (isInNetEx) dual-stack subnets, custom proxy pools, failover fallback chains, and one-click Data URI export.',
+        href: '/pac-generator/',
+        hrefEn: '/pac-generator/en/',
+        cardClass: 'pacGeneratorCard',
+        category: 'network',
+        keywords: 'pac generator 代理自動配置 findproxyforurl proxy auto config socks5 http 產生器 規則 isinnet isinnetex',
+        keywordsEn: 'pac generator proxy auto config findproxyforurl socks5 http pac builder isinnet isinnetex',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f5a0]">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2v-2zm0-10h2v8h-2V6zm8.9 6c0 1.12-.22 2.19-.62 3.17l-1.57-.91c.24-.71.39-1.47.39-2.26 0-3.87-3.13-7-7-7-1.07 0-2.07.25-2.98.67L7.23 3.73C8.65 3.26 10.27 3 12 3c4.97 0 9 4.03 9 9z" />
+          </svg>
+        ),
+      },
+      {
+        name: 'PAC 測試與除錯器',
+        nameEn: 'PAC Tester & Simulator',
+        subtitle: 'PROXY AUTO-CONFIG DEBUGGER & SIMULATOR',
+        subtitleEn: 'PROXY AUTO-CONFIG DEBUGGER & SIMULATOR',
+        description: '純前端 PAC 沙盒執行與模擬除錯工具。支援單一網址深度 Trace、批量網址回歸測試、IPv6 擴充模擬與虛擬 DNS 環境。',
+        descriptionEn: 'In-browser PAC sandbox debugger and simulation tool. Features single URL step-by-step trace logs, batch regression testing, IPv6 support, and mock DNS.',
+        href: '/pac-tester/',
+        hrefEn: '/pac-tester/en/',
+        cardClass: 'pacTesterCard',
+        category: 'network',
+        keywords: 'pac tester 代理除錯 測試 findproxyforurl proxy simulator debugger 驗證 批量測試 trace isinnetex',
+        keywordsEn: 'pac tester proxy simulator debugger findproxyforurl trace batch test isinnetex',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#00f0ff]">
+            <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+          </svg>
+        ),
+      },
     ],
   },
   {

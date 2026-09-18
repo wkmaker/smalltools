@@ -58,6 +58,8 @@
 * **[IP 檢測助手](https://tools.cjkuo.net/ip-detector/)** (`/ip-detector`) - 支援 IPv4/IPv6 雙棧偵測、Cloudflare / Mullvad 節點查詢與公有雲連線延遲診斷。
 * **[DNS HTTPS 紀錄設定產生器](https://tools.cjkuo.net/https-dns-generator/)** (`/https-dns-generator`) - 線上 DNS HTTPS (Type 65 / RFC 9460) 紀錄產生器與 DNS 代管商填寫對照指南。
 * **[IP 子網段計算器](https://tools.cjkuo.net/ip-calculator/)** (`/ip-calculator`) - 快速計算 IPv4 / CIDR 網段資訊、可用 IP 列表與極速 TXT/CSV 導出，並支援搜尋特定 IP 是否落在該網段範圍內。
+* **[PAC 規則產生器](https://tools.cjkuo.net/pac-generator/)** (`/pac-generator`) - 視覺化 PAC (Proxy Auto-Config) 代理自動配置腳本產生工具。支援 IPv4/IPv6 (isInNetEx) 雙棧網段、代理節點池與故障轉移 Fallback 容錯鏈，並可一鍵匯出 Data URI 與下載 `.pac` 檔案。
+* **[PAC 測試與除錯器](https://tools.cjkuo.net/pac-tester/)** (`/pac-tester`) - 純前端 PAC 沙盒執行與模擬除錯工具。支援單一網址深度 Trace、批量網址回歸測試與 CSV 報表匯出、IPv6 擴充模擬及 Mock DNS 虛擬環境。
 
 ### 📄 圖片與文件 (Media & Documents)
 * **[OG 圖片產生器](https://tools.cjkuo.net/og-generator/)** (`/og-generator`) - 專業 Open Graph 與社群封面圖片產生器，支援 4 款精緻模板、純前端 2x 視網膜超採樣、自訂 Logo 與特色背景圖、多比例自動適應及 PNG/JPEG/WebP/SVG 高速匯出。

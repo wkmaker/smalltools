@@ -4,6 +4,28 @@
 
 ---
 
+## [1.15.0] - 2026-09-18
+
+### ✨ 新增功能 (Added)
+
+- **新增「PAC 規則產生器」（`/pac-generator/`）**：
+  - 專為自動代理配置 (Proxy Auto-Config) 腳本打造的視覺化編排生產工具。
+  - 支援代理伺服器池 (Proxy Pool) 定義（DIRECT、PROXY、HTTPS、SOCKS、SOCKS5、自訂字串）與故障轉移 Fallback 容錯鏈。
+  - 支援多種分流條件（純主機名、網域後綴、完全比對、萬用字元、IPv4 CIDR、IPv6 CIDR、正則表達式）。
+  - 內建 4 大常用情境範本（企業內網繞行、開發者本機除錯、指定雲端服務白名單代理、空白自訂）。
+  - 支援一鍵複製標準 JavaScript PAC 代碼、下載 `.pac` 檔案（MIME: `application/x-ns-proxy-autoconfig`）、複製 Data URI（RFC 2397）、以及跨工具「前往 PAC 測試器驗證」的一鍵轉移功能。
+  - 完整支援 IPv6 擴展規範（`isInNetEx`），並附有各作業系統 (Windows, macOS, iOS, Firefox) 之 PAC 設定圖文指引。
+
+- **新增「PAC 測試與除錯器」（`/pac-tester/`）**：
+  - 專為 PAC 腳本深度審計與除錯打造的純前端沙盒執行環境。
+  - **單一網址深度除錯 (Single URL Trace)**：即時模擬 `FindProxyForURL(url, host)` 執行，輸出決策走向、回傳代理字串、毫秒級耗時與完整的逐步條件判定軌跡 (Trace Steps)。
+  - **批量網址回歸測試 (Batch Regression Test)**：一次貼入多組 URL 進行批量分流驗證，支援狀態篩選（全部、直連、代理、錯誤）與一鍵匯出 CSV 稽核報表。
+  - **虛擬網路環境模擬 (Mock Context)**：支援自訂模擬客戶端本機 IPv4 (`myIpAddress`)、IPv6 (`myIpAddressEx`) 以及靜態 Mock DNS 主機映射字典。
+  - **語法與相容性診斷 (Static Linter)**：即時檢驗 `FindProxyForURL` 進入點、return 語句，並主動提示 IPv6 在傳統 `isInNet` 中的潛在相容性陷阱。
+  - 純前端安全沙盒隔離執行，遮蔽全域物件並具備逾時防護機制，100% 零伺服器隱私保護。
+
+---
+
 ## [1.14.0] - 2026-09-16
 
 ### ✨ 新增功能 (Added)
