@@ -482,33 +482,63 @@ export function buildSingleConditionExpression(
 }
 
 /**
- * 將分流規則轉為完整的 JavaScript 條件運算式（支援多值以 || 串聯）
+ * 將單一條件（含同類型多值，以 || 串聯）轉為 JavaScript 運算式；無合法值時回傳 null
+ */
+export function buildConditionGroupExpression(
+  condition: { conditionType: ConditionType; value: string },
+  enableIpv6: boolean,
+  resolveIpFirst: boolean
+): string | null {
+  if (condition.conditionType === 'plainHost') {
+    return 'isPlainHostName(host)';
+  }
+
+  const tokens = splitRuleValues(condition.value, condition.conditionType);
+  if (tokens.length === 0) {
+    return null;
+  }
+
+  if (tokens.length === 1) {
+    return buildSingleConditionExpression(condition.conditionType, tokens[0], enableIpv6, resolveIpFirst);
+  }
+
+  const subExprs = tokens.map((t) =>
+    buildSingleConditionExpression(condition.conditionType, t, enableIpv6, resolveIpFirst)
+  );
+
+  // 若子條件本身包含 ||，用括號包起以防優先權問題
+  const formattedExprs = subExprs.map((expr) => (expr.includes(' || ') ? `(${expr})` : expr));
+  return formattedExprs.join(' ||\n    ');
+}
+
+/**
+ * 將分流規則轉為完整的 JavaScript 條件運算式。
+ * 主要條件與 andConditions（若有）之間以 AND 疊加，各自內部的多值仍以 || 串聯。
  */
 export function buildConditionExpression(
   rule: RoutingRule,
   enableIpv6: boolean,
   resolveIpFirst: boolean
 ): string {
-  if (rule.conditionType === 'plainHost') {
-    return 'isPlainHostName(host)';
-  }
+  const conditions = [
+    { conditionType: rule.conditionType, value: rule.value },
+    ...(rule.andConditions ?? []),
+  ];
 
-  const tokens = splitRuleValues(rule.value, rule.conditionType);
-  if (tokens.length === 0) {
+  const groupExprs = conditions
+    .map((c) => buildConditionGroupExpression(c, enableIpv6, resolveIpFirst))
+    .filter((expr): expr is string => expr !== null);
+
+  if (groupExprs.length === 0) {
     return 'false';
   }
-
-  if (tokens.length === 1) {
-    return buildSingleConditionExpression(rule.conditionType, tokens[0], enableIpv6, resolveIpFirst);
+  if (groupExprs.length === 1) {
+    return groupExprs[0];
   }
 
-  const subExprs = tokens.map((t) =>
-    buildSingleConditionExpression(rule.conditionType, t, enableIpv6, resolveIpFirst)
-  );
-
-  // 若子條件本身包含 ||，用括號包起以防優先權問題
-  const formattedExprs = subExprs.map((expr) => (expr.includes(' || ') ? `(${expr})` : expr));
-  return formattedExprs.join(' ||\n    ');
+  // 有多個群組以 AND 疊加時，若群組內為多值 || 串聯，用括號包起以防優先權混淆
+  const formattedGroups = groupExprs.map((expr) => (expr.includes(' || ') ? `(${expr})` : expr));
+  return formattedGroups.join(' &&\n    ');
 }
 
 /**

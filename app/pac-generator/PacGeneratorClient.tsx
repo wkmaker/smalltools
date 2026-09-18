@@ -9,6 +9,7 @@ import {
   ProxyNode,
   ProxyType,
   RoutingRule,
+  RuleCondition,
 } from './types';
 import {
   formatProxyString,
@@ -75,6 +76,9 @@ const TRANSLATIONS = {
     importModeAppend: '追加至現有規則',
     cancelBtn: '取消',
     multiValueHint: '支援多個值（每行一個，或以逗號/分號分隔）',
+    andConditionBadge: 'AND',
+    addAndConditionBtn: '+ 加入 AND 條件',
+    andConditionHint: '此規則需同時符合以上全部條件才會命中，例如「協定為 https」且「網域為 example.com」',
     copiedToast: '已複製到剪貼簿！',
     optionsTitle: '進階輸出設定',
     enableIpv6Label: '啟用 IPv6 擴充支援 (isInNetEx)',
@@ -315,6 +319,9 @@ data:application/x-ns-proxy-autoconfig;base64,....
     importModeAppend: 'Append to Existing Rules',
     cancelBtn: 'Cancel',
     multiValueHint: 'Supports multiple values (one per line, or comma/semicolon separated)',
+    andConditionBadge: 'AND',
+    addAndConditionBtn: '+ Add AND Condition',
+    andConditionHint: 'This rule matches only when ALL conditions above are met, e.g. protocol is https AND domain is example.com',
     copiedToast: 'Copied to clipboard!',
     optionsTitle: 'Advanced Output Options',
     enableIpv6Label: 'Enable IPv6 Extended Support (isInNetEx)',
@@ -505,6 +512,24 @@ Click the "Copy Data URI" button to encode the entire PAC script into a single s
     ],
   },
 };
+
+// 比對條件類型下拉選單共用選項（主要條件與 AND 疊加條件皆使用同一份清單）
+const CONDITION_TYPE_OPTIONS: ConditionType[] = [
+  'domainSuffix',
+  'plainHost',
+  'domainExact',
+  'wildcardHost',
+  'wildcardUrl',
+  'ipv4Cidr',
+  'ipv6Cidr',
+  'clientIpv4',
+  'clientIpv6',
+  'protocol',
+  'port',
+  'weekday',
+  'timeRange',
+  'regex',
+];
 
 export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClientProps) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
@@ -745,6 +770,37 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
 
   const handleUpdateRule = (id: string, updates: Partial<RoutingRule>) => {
     setRules((prev) => prev.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+  };
+
+  // AND 疊加條件增刪改（例如「協定為 https」且「網域為 x」需同時成立才命中）
+  const handleAddAndCondition = (ruleId: string) => {
+    setRules((prev) =>
+      prev.map((r) =>
+        r.id === ruleId
+          ? { ...r, andConditions: [...(r.andConditions ?? []), { conditionType: 'domainSuffix', value: '' }] }
+          : r
+      )
+    );
+  };
+
+  const handleUpdateAndCondition = (ruleId: string, index: number, updates: Partial<RuleCondition>) => {
+    setRules((prev) =>
+      prev.map((r) => {
+        if (r.id !== ruleId || !r.andConditions) return r;
+        const next = r.andConditions.map((c, i) => (i === index ? { ...c, ...updates } : c));
+        return { ...r, andConditions: next };
+      })
+    );
+  };
+
+  const handleRemoveAndCondition = (ruleId: string, index: number) => {
+    setRules((prev) =>
+      prev.map((r) => {
+        if (r.id !== ruleId || !r.andConditions) return r;
+        const next = r.andConditions.filter((_, i) => i !== index);
+        return { ...r, andConditions: next.length > 0 ? next : undefined };
+      })
+    );
   };
 
   const handleDeleteRule = (id: string) => {
@@ -1232,20 +1288,9 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                               }
                               className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
                             >
-                              <option value="domainSuffix">{t.conditionTypes.domainSuffix}</option>
-                              <option value="plainHost">{t.conditionTypes.plainHost}</option>
-                              <option value="domainExact">{t.conditionTypes.domainExact}</option>
-                              <option value="wildcardHost">{t.conditionTypes.wildcardHost}</option>
-                              <option value="wildcardUrl">{t.conditionTypes.wildcardUrl}</option>
-                              <option value="ipv4Cidr">{t.conditionTypes.ipv4Cidr}</option>
-                              <option value="ipv6Cidr">{t.conditionTypes.ipv6Cidr}</option>
-                              <option value="clientIpv4">{t.conditionTypes.clientIpv4}</option>
-                              <option value="clientIpv6">{t.conditionTypes.clientIpv6}</option>
-                              <option value="protocol">{t.conditionTypes.protocol}</option>
-                              <option value="port">{t.conditionTypes.port}</option>
-                              <option value="weekday">{t.conditionTypes.weekday}</option>
-                              <option value="timeRange">{t.conditionTypes.timeRange}</option>
-                              <option value="regex">{t.conditionTypes.regex}</option>
+                              {CONDITION_TYPE_OPTIONS.map((ct) => (
+                                <option key={ct} value={ct}>{t.conditionTypes[ct]}</option>
+                              ))}
                             </select>
                           </div>
 
@@ -1284,6 +1329,75 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                               ))}
                             </select>
                           </div>
+                        </div>
+
+                        {/* AND 疊加條件：需與主要條件同時成立才命中（如「協定為 https」且「網域為 x」） */}
+                        {((rule.andConditions?.length ?? 0) > 0) && (
+                          <div className={styles.andConditionsBlock}>
+                            {rule.andConditions!.map((cond, condIdx) => {
+                              const condValidation = validateRuleValue(cond.conditionType, cond.value);
+                              const condMsg = isEn ? condValidation.messageEn : condValidation.messageZh;
+                              return (
+                                <div key={condIdx} className={styles.andConditionRow}>
+                                  <span className={styles.andConditionBadge}>{t.andConditionBadge}</span>
+                                  <select
+                                    value={cond.conditionType}
+                                    onChange={(e) =>
+                                      handleUpdateAndCondition(rule.id, condIdx, { conditionType: e.target.value as ConditionType })
+                                    }
+                                    className="text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                                  >
+                                    {CONDITION_TYPE_OPTIONS.map((ct) => (
+                                      <option key={ct} value={ct}>{t.conditionTypes[ct]}</option>
+                                    ))}
+                                  </select>
+                                  {cond.conditionType !== 'plainHost' ? (
+                                    <input
+                                      type="text"
+                                      value={cond.value}
+                                      onChange={(e) => handleUpdateAndCondition(rule.id, condIdx, { value: e.target.value })}
+                                      placeholder={t.conditionPlaceholders[cond.conditionType] || t.matchValue}
+                                      className={`flex-1 min-w-0 text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none transition-colors font-mono placeholder:text-text-sub/50 ${
+                                        !condValidation.isValid
+                                          ? styles.inputWarning
+                                          : 'bg-black/20 border border-white/10 focus:border-[var(--theme-color)]'
+                                      }`}
+                                    />
+                                  ) : (
+                                    <div className="flex-1 min-w-0 text-xs text-text-sub px-3 py-2.5 italic truncate">
+                                      {t.conditionPlaceholders.plainHost}
+                                    </div>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveAndCondition(rule.id, condIdx)}
+                                    aria-label={`${t.delete} AND #${condIdx + 1}`}
+                                    className="p-1 text-text-sub hover:text-red-400 transition-colors"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                    </svg>
+                                  </button>
+                                  {!condValidation.isValid && condMsg && (
+                                    <span className={styles.ruleWarningText}>{condMsg}</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleAddAndCondition(rule.id)}
+                            className={styles.addAndConditionBtn}
+                          >
+                            {t.addAndConditionBtn}
+                          </button>
+                          {(rule.andConditions?.length ?? 0) > 0 && (
+                            <span className="text-xs text-text-sub">{t.andConditionHint}</span>
+                          )}
                         </div>
 
                         {/* 卡片底端通欄：即時語法告警 或 溫和輔助提示 */}

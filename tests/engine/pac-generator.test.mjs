@@ -222,6 +222,60 @@ test('buildConditionExpression: 支援 MDN 協定、埠號、星期與時段條�
   assert.equal(buildConditionExpression(ruleTime, true, false), 'timeRange(9, 18)');
 });
 
+test('buildConditionExpression: andConditions 應以 AND 疊加主要條件（例如協定為 https 且網域為 x）', () => {
+  // 1. 主要條件 + 一個 AND 條件：協定為 https 且網域後綴為 .example.com
+  const ruleHttpsAndDomain = {
+    id: 'a1',
+    name: 'HTTPS to example.com only',
+    enabled: true,
+    conditionType: 'protocol',
+    value: 'https',
+    andConditions: [{ conditionType: 'domainSuffix', value: '.example.com' }],
+    targetProxy: 'DIRECT',
+  };
+  const expr = buildConditionExpression(ruleHttpsAndDomain, true, false);
+  assert.equal(
+    expr,
+    '((url.substring(0, 6) === "https:" || url.startsWith("https:"))) &&\n    (dnsDomainIs(host, ".example.com") || host === "example.com")'
+  );
+
+  // 2. 沒有 andConditions 時行為應與過去完全一致（不應多包一層括號）
+  const ruleNoAnd = { id: 'a2', name: 'HTTPS Only', enabled: true, conditionType: 'protocol', value: 'https', targetProxy: 'DIRECT' };
+  assert.equal(buildConditionExpression(ruleNoAnd, true, false), '(url.substring(0, 6) === "https:" || url.startsWith("https:"))');
+
+  // 3. andConditions 中值為空的項目應被忽略，不會導致整條規則恆為 false
+  const ruleWithEmptyAnd = {
+    id: 'a3',
+    name: 'Port 443 with empty AND',
+    enabled: true,
+    conditionType: 'port',
+    value: '443',
+    andConditions: [{ conditionType: 'domainSuffix', value: '' }],
+    targetProxy: 'DIRECT',
+  };
+  assert.equal(
+    buildConditionExpression(ruleWithEmptyAnd, true, false),
+    '(shExpMatch(url, "*:443/*") || shExpMatch(url, "*:443"))'
+  );
+
+  // 4. 多個 andConditions 應依序以 AND 疊加
+  const ruleMultiAnd = {
+    id: 'a4',
+    name: 'HTTPS + example.com + port 443',
+    enabled: true,
+    conditionType: 'protocol',
+    value: 'https',
+    andConditions: [
+      { conditionType: 'domainSuffix', value: '.example.com' },
+      { conditionType: 'port', value: '443' },
+    ],
+    targetProxy: 'DIRECT',
+  };
+  const exprMulti = buildConditionExpression(ruleMultiAnd, true, false);
+  const andParts = exprMulti.split(' &&\n    ');
+  assert.equal(andParts.length, 3);
+});
+
 test('validateRuleValue: 正確檢驗 MDN 協定、埠號、星期與時段格式', () => {
   assert.equal(validateRuleValue('protocol', 'http').isValid, true);
   assert.equal(validateRuleValue('protocol', 'https:').isValid, true);
