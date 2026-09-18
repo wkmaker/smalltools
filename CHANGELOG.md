@@ -18,6 +18,11 @@
   - 網址參數（分享連結帶入）優先於本地記憶，命中時視為一次變更寫回本地。
   - `activeTab`／`searchQuery` 初始值改用 `useState` lazy initializer 同步決定，移除原本用來同步網址參數的 `effect`。
 
+### 🐛 問題修復 (Fixed)
+
+- **修復 PAC 規則產生器 Hydration Mismatch**：`engine.ts` 的 `generatePacScript` 預設移除動態產生的毫秒時間戳記（改為選填參數），確保 SSR 伺服器渲染與 Client 端水合字串 100% 一致，徹底消滅 React Hydration 崩潰報錯。
+- **消滅 React 19 Script 標籤警告**：`app/layout.tsx` 根版面注入的主題腳本改用 Next.js 官方 `<Script strategy="beforeInteractive">`，避免客戶端渲染時觸發 `Encountered a script tag while rendering React component` 警告。
+
 ## [1.15.0] - 2026-09-18
 
 ### ✨ 新增功能 (Added)

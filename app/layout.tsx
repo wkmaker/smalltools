@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
@@ -84,7 +85,11 @@ export default function RootLayout({
   return (
     <html lang="zh-TW" suppressHydrationWarning>
       <head>
-        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script
+          id="theme-script"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+        />
       </head>
       <body>
         <ThemeProvider>

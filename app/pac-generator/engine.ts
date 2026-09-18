@@ -521,6 +521,7 @@ export function generatePacScript(options: {
   enableIpv6: boolean;
   resolveIpFirst: boolean;
   title?: string;
+  timestamp?: string;
 }): string {
   const {
     proxies,
@@ -529,6 +530,7 @@ export function generatePacScript(options: {
     enableIpv6,
     resolveIpFirst,
     title = 'Proxy Auto-Configuration (PAC) Script',
+    timestamp,
   } = options;
 
   const defaultProxyStr = resolveTargetProxyString(defaultAction, proxies);
@@ -538,7 +540,9 @@ export function generatePacScript(options: {
   lines.push('/**');
   lines.push(` * ${title}`);
   lines.push(` * Generated with Smalltools PAC Generator (https://tools.cjkuo.net/pac-generator/)`);
-  lines.push(` * Generated at: ${new Date().toISOString()}`);
+  if (timestamp) {
+    lines.push(` * Generated at: ${timestamp}`);
+  }
   lines.push(' * 100% Client-Side & Zero-Server Logging');
   lines.push(' */');
   lines.push('');
