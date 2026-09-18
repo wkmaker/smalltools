@@ -40,6 +40,34 @@ const jsonLd = {
 
 const faqJsonLd = generateFaqSchema([
   {
+    q: 'PAC 分流規則支援哪些條件模式？各自適用什麼場景？',
+    a: `本工具支援 8 種條件模式，涵蓋主機、網域、URL、IP 與正則表達式：
+
+① 純主機名稱 (isPlainHostName)：
+比對不含任何點號「.」的主機名稱（如 http://intranet/ 或 http://hr/）。常用於將內部局域網服務設為 DIRECT 直連，免去繁瑣的網段列舉。
+
+② 網域後綴 (dnsDomainIs)：
+比對特定網域及其所有子網域。例如填入「.google.com」會同時命中 mail.google.com、drive.google.com 與根網域 google.com。
+
+③ 完整網域名稱 (localHostOrDomainIs / host ===)：
+精確比對單一主機名。例如填入「api.github.com」僅對該主機生效，不會影響 raw.githubusercontent.com。
+
+④ 主機名萬用字元 (shExpMatch host)：
+使用星號「*」與問號「?」比對主機名結構。例如「*.internal.net」或「git-*.company.com」。
+
+⑤ 完整 URL 萬用字元 (shExpMatch url)：
+針對完整 URL 進行萬用字元比對（包含協定與路徑）。例如「https://*.secure.bank/*」或「ftp://*」。
+
+⑥ IPv4 網段 / CIDR (isInNet)：
+比對目標伺服器的 IPv4 IP 位址區間。支援標準 CIDR 格式，例如「10.0.0.0/8」、「172.16.0.0/12」或「192.168.1.0/24」。
+
+⑦ IPv6 網段 / CIDR (isInNetEx)：
+利用現代瀏覽器擴充的 isInNetEx() 函式，支援原生 IPv6 CIDR 比對。例如企業 ULA 私有網段「fc00::/7」或測試網段「2001:db8::/32」。
+
+⑧ 正則表達式 (RegEx)：
+採用 JavaScript 正則表達式進行深度比對。例如「^https?://.*\\.internal(:[0-9]+)?/」，適合複雜的多層過濾需求。`,
+  },
+  {
     q: '什麼是 PAC (Proxy Auto-Config) 檔案？運作原理是什麼？',
     a: `PAC（Proxy Auto-Config，代理自動配置）是一種由 Netscape 於 1996 年制定的網路技術標準。
 

@@ -63,18 +63,56 @@ const TRANSLATIONS = {
     guideIos: 'iOS / iPadOS：設定 ➔ Wi-Fi ➔ 點擊已連線 Wi-Fi 右側「i」➔ 設定代理伺服器 ➔ 選擇「自動」➔ 貼入 URL。',
     guideFirefox: 'Firefox：設定 ➔ 一般 ➔ 網路設定 ➔ 選擇「自動代理設定網址 (PAC)」➔ 貼入 URL。',
     conditionTypes: {
-      plainHost: '純主機名稱 (無點號，如 intranet/)',
-      domainSuffix: '網域後綴 (如 .google.com)',
-      domainExact: '完整網域名稱 (精確相符)',
-      wildcardHost: '主機名萬用字元 (*.internal.*)',
-      wildcardUrl: '完整 URL 萬用字元 (https://*)',
-      ipv4Cidr: 'IPv4 網段 / CIDR (如 10.0.0.0/8)',
-      ipv6Cidr: 'IPv6 網段 / CIDR (如 fc00::/7)',
-      regex: '正則表達式 (RegEx)',
+      plainHost: '純主機名稱',
+      domainSuffix: '網域後綴',
+      domainExact: '完整網域名稱',
+      wildcardHost: '主機名萬用字元',
+      wildcardUrl: '完整 URL 萬用字元',
+      ipv4Cidr: 'IPv4 網段 (CIDR)',
+      ipv6Cidr: 'IPv6 網段 (CIDR)',
+      regex: '正則表達式',
+    },
+    conditionPlaceholders: {
+      plainHost: '無需指定值 (純主機名無點號自動命中)',
+      domainSuffix: '例如：.google.com 或 .corp.internal',
+      domainExact: '例如：api.github.com 或 intranet.local',
+      wildcardHost: '例如：*.internal.net 或 dev-*.corp',
+      wildcardUrl: '例如：https://*.internal/* 或 ftp://*',
+      ipv4Cidr: '例如：10.0.0.0/8 或 192.168.1.0/24',
+      ipv6Cidr: '例如：2001:db8::/32 或 fc00::/7',
+      regex: '例如：^https?://.*\\.internal(:[0-9]+)?/',
     },
     faqTitle: '常見問題與技術解析',
     faqSubtitle: '深入瞭解 PAC 規格、瀏覽器相容性、IPv6 與備援鏈機制',
     faqItems: [
+      {
+        q: 'PAC 分流規則支援哪些條件模式？各自適用什麼場景？',
+        a: `本工具支援 8 種條件模式，涵蓋主機、網域、URL、IP 與正則表達式：
+
+① 純主機名稱 (isPlainHostName)：
+比對不含任何點號「.」的主機名稱（如 http://intranet/ 或 http://hr/）。常用於將內部局域網服務設為 DIRECT 直連，免去繁瑣的網段列舉。
+
+② 網域後綴 (dnsDomainIs)：
+比對特定網域及其所有子網域。例如填入「.google.com」會同時命中 mail.google.com、drive.google.com 與根網域 google.com。
+
+③ 完整網域名稱 (localHostOrDomainIs / host ===)：
+精確比對單一主機名。例如填入「api.github.com」僅對該主機生效，不會影響 raw.githubusercontent.com。
+
+④ 主機名萬用字元 (shExpMatch host)：
+使用星號「*」與問號「?」比對主機名結構。例如「*.internal.net」或「git-*.company.com」。
+
+⑤ 完整 URL 萬用字元 (shExpMatch url)：
+針對完整 URL 進行萬用字元比對（包含協定與路徑）。例如「https://*.secure.bank/*」或「ftp://*」。
+
+⑥ IPv4 網段 / CIDR (isInNet)：
+比對目標伺服器的 IPv4 IP 位址區間。支援標準 CIDR 格式，例如「10.0.0.0/8」、「172.16.0.0/12」或「192.168.1.0/24」。
+
+⑦ IPv6 網段 / CIDR (isInNetEx)：
+利用現代瀏覽器擴充的 isInNetEx() 函式，支援原生 IPv6 CIDR 比對。例如企業 ULA 私有網段「fc00::/7」或測試網段「2001:db8::/32」。
+
+⑧ 正則表達式 (RegEx)：
+採用 JavaScript 正則表達式進行深度比對。例如「^https?://.*\\.internal(:[0-9]+)?/」，適合複雜的多層過濾需求。`,
+      },
       {
         q: '什麼是 PAC (Proxy Auto-Config) 檔案？運作原理是什麼？',
         a: `PAC（Proxy Auto-Config，代理自動配置）是一種由 Netscape 於 1996 年制定的網路技術標準。
@@ -188,18 +226,56 @@ data:application/x-ns-proxy-autoconfig;base64,....
     guideIos: 'iOS / iPadOS: Settings ➔ Wi-Fi ➔ Tap "i" icon on active Wi-Fi ➔ Configure Proxy ➔ Select Automatic ➔ Paste URL.',
     guideFirefox: 'Firefox: Settings ➔ General ➔ Network Settings ➔ Select "Automatic proxy configuration URL" ➔ Paste URL.',
     conditionTypes: {
-      plainHost: 'Plain Hostname without dots (e.g. intranet/)',
-      domainSuffix: 'Domain Suffix (e.g. .google.com)',
-      domainExact: 'Exact Hostname (e.g. example.com)',
-      wildcardHost: 'Hostname Wildcard (*.internal.*)',
-      wildcardUrl: 'URL Wildcard (https://*)',
-      ipv4Cidr: 'IPv4 Subnet / CIDR (e.g. 10.0.0.0/8)',
-      ipv6Cidr: 'IPv6 Subnet / CIDR (e.g. fc00::/7)',
-      regex: 'Regular Expression (RegEx)',
+      plainHost: 'Plain Hostname',
+      domainSuffix: 'Domain Suffix',
+      domainExact: 'Exact Hostname',
+      wildcardHost: 'Hostname Wildcard',
+      wildcardUrl: 'URL Wildcard',
+      ipv4Cidr: 'IPv4 Subnet (CIDR)',
+      ipv6Cidr: 'IPv6 Subnet (CIDR)',
+      regex: 'Regular Expression',
+    },
+    conditionPlaceholders: {
+      plainHost: 'No value needed (matches hostnames without dots)',
+      domainSuffix: 'e.g. .google.com or .corp.internal',
+      domainExact: 'e.g. api.github.com or intranet.local',
+      wildcardHost: 'e.g. *.internal.net or dev-*.corp',
+      wildcardUrl: 'e.g. https://*.internal/* or ftp://*',
+      ipv4Cidr: 'e.g. 10.0.0.0/8 or 192.168.1.0/24',
+      ipv6Cidr: 'e.g. 2001:db8::/32 or fc00::/7',
+      regex: 'e.g. ^https?://.*\\.internal(:[0-9]+)?/',
     },
     faqTitle: 'Frequently Asked Questions',
     faqSubtitle: 'In-depth guide to PAC specifications, IPv6 extensions, failover chains, and browser behavior',
     faqItems: [
+      {
+        q: 'What condition match modes are supported in routing rules, and when should I use them?',
+        a: `The generator supports 8 matching conditions covering hostnames, domains, full URLs, IP subnets, and regular expressions:
+
+① Plain Hostname (isPlainHostName):
+Matches hostnames without any dot "." (such as http://intranet/ or http://hr/). Ideal for directing internal local intranet traffic to DIRECT bypass.
+
+② Domain Suffix (dnsDomainIs):
+Matches a specific domain and all its subdomains. For example, entering ".google.com" matches mail.google.com, drive.google.com, and the apex domain google.com.
+
+③ Exact Hostname (localHostOrDomainIs / host ===):
+Matches a single, exact hostname. For example, "api.github.com" will only match that exact host and will not affect raw.githubusercontent.com.
+
+④ Hostname Wildcard (shExpMatch host):
+Matches hostname patterns using "*" and "?". For example, "*.internal.net" or "git-*.company.com".
+
+⑤ URL Wildcard (shExpMatch url):
+Matches the complete request URL including scheme, port, and path. For example, "https://*.secure.bank/*" or "ftp://*".
+
+⑥ IPv4 Subnet / CIDR (isInNet):
+Matches destination IPv4 addresses against CIDR subnets, such as "10.0.0.0/8", "172.16.0.0/12", or "192.168.1.0/24".
+
+⑦ IPv6 Subnet / CIDR (isInNetEx):
+Uses the modern isInNetEx() function for native IPv6 CIDR prefix matching, such as enterprise ULA private subnets "fc00::/7" or "2001:db8::/32".
+
+⑧ Regular Expression (RegEx):
+Evaluates arbitrary JavaScript regular expressions against the URL or host, such as "^https?://.*\\.internal(:[0-9]+)?/", ideal for complex routing logic.`,
+      },
       {
         q: 'What is a PAC (Proxy Auto-Config) file and how does it work?',
         a: `A PAC (Proxy Auto-Config) file is a standard introduced by Netscape in 1996.
@@ -655,12 +731,12 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                               type="text"
                               value={rule.value}
                               onChange={(e) => handleUpdateRule(rule.id, { value: e.target.value })}
-                              placeholder={t.matchValue}
-                              className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                              placeholder={t.conditionPlaceholders[rule.conditionType] || t.matchValue}
+                              className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)] placeholder:text-text-sub/50"
                             />
                           ) : (
-                            <div className="text-xs text-text-sub px-3 py-2.5 italic border border-dashed border-white/10 rounded-lg">
-                              isPlainHostName (無須指定值)
+                            <div className="text-xs text-text-sub px-3 py-2.5 italic border border-dashed border-white/10 rounded-lg truncate" title={t.conditionPlaceholders.plainHost}>
+                              {t.conditionPlaceholders.plainHost}
                             </div>
                           )}
                         </div>

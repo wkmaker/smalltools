@@ -40,6 +40,34 @@ const jsonLd = {
 
 const faqJsonLd = generateFaqSchema([
   {
+    q: 'What condition match modes are supported in routing rules, and when should I use them?',
+    a: `The generator supports 8 matching conditions covering hostnames, domains, full URLs, IP subnets, and regular expressions:
+
+① Plain Hostname (isPlainHostName):
+Matches hostnames without any dot "." (such as http://intranet/ or http://hr/). Ideal for directing internal local intranet traffic to DIRECT bypass.
+
+② Domain Suffix (dnsDomainIs):
+Matches a specific domain and all its subdomains. For example, entering ".google.com" matches mail.google.com, drive.google.com, and the apex domain google.com.
+
+③ Exact Hostname (localHostOrDomainIs / host ===):
+Matches a single, exact hostname. For example, "api.github.com" will only match that exact host and will not affect raw.githubusercontent.com.
+
+④ Hostname Wildcard (shExpMatch host):
+Matches hostname patterns using "*" and "?". For example, "*.internal.net" or "git-*.company.com".
+
+⑤ URL Wildcard (shExpMatch url):
+Matches the complete request URL including scheme, port, and path. For example, "https://*.secure.bank/*" or "ftp://*".
+
+⑥ IPv4 Subnet / CIDR (isInNet):
+Matches destination IPv4 addresses against CIDR subnets, such as "10.0.0.0/8", "172.16.0.0/12", or "192.168.1.0/24".
+
+⑦ IPv6 Subnet / CIDR (isInNetEx):
+Uses the modern isInNetEx() function for native IPv6 CIDR prefix matching, such as enterprise ULA private subnets "fc00::/7" or "2001:db8::/32".
+
+⑧ Regular Expression (RegEx):
+Evaluates arbitrary JavaScript regular expressions against the URL or host, such as "^https?://.*\\.internal(:[0-9]+)?/", ideal for complex routing logic.`,
+  },
+  {
     q: 'What is a PAC (Proxy Auto-Config) file and how does it work?',
     a: `A PAC (Proxy Auto-Config) file is a standard introduced by Netscape in 1996.
 
