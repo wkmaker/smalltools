@@ -1,4 +1,5 @@
 import type { ConditionType, PacImportResult, PacPreset, PacProjectConfig, ProxyNode, RoutingRule } from './types.ts';
+import { isValidIpv4 as sharedIsValidIpv4, isValidIpv6 as sharedIsValidIpv6 } from '../utils/ipUtils.ts';
 export { netmaskToCidr, parsePacScript, parseProxyNodeFromString, splitConditionByType, splitTopLevelOr } from './importer.ts';
 
 /**
@@ -20,15 +21,7 @@ export function cidrToNetmask(prefix: number): string {
  * 檢查是否為合法 IPv4 位址
  */
 export function isValidIpv4(ip: string): boolean {
-  const parts = ip.trim().split('.');
-  if (parts.length !== 4) return false;
-  for (const part of parts) {
-    if (!/^\d+$/.test(part)) return false;
-    if (part.length > 1 && part.startsWith('0')) return false;
-    const num = parseInt(part, 10);
-    if (num < 0 || num > 255) return false;
-  }
-  return true;
+  return sharedIsValidIpv4(ip);
 }
 
 /**
@@ -55,41 +48,7 @@ export function isValidIpv4CidrOrIp(input: string): boolean {
  * 檢查是否為合法 IPv6 位址
  */
 export function isValidIpv6(ip: string): boolean {
-  let clean = ip.trim().toLowerCase();
-  if (clean.startsWith('[') && clean.endsWith(']')) {
-    clean = clean.slice(1, -1);
-  }
-  if (!clean) return false;
-  if (!/^[0-9a-f:.]+$/i.test(clean)) return false;
-
-  // 處理 IPv4 映射 (如 ::ffff:192.168.1.1)
-  if (clean.includes('.')) {
-    const lastColon = clean.lastIndexOf(':');
-    if (lastColon === -1) return false;
-    const ipv4Part = clean.slice(lastColon + 1);
-    if (!isValidIpv4(ipv4Part)) return false;
-    clean = clean.slice(0, lastColon + 1) + '0:0';
-  }
-
-  const doubleColonCount = (clean.match(/::/g) || []).length;
-  if (doubleColonCount > 1) return false;
-
-  let parts: string[] = [];
-  if (clean.includes('::')) {
-    const [left, right] = clean.split('::');
-    const leftParts = left ? left.split(':') : [];
-    const rightParts = right ? right.split(':') : [];
-    if (leftParts.length + rightParts.length > 7) return false;
-    parts = [...leftParts, ...rightParts];
-  } else {
-    parts = clean.split(':');
-    if (parts.length !== 8) return false;
-  }
-
-  for (const part of parts) {
-    if (!/^[0-9a-f]{1,4}$/i.test(part)) return false;
-  }
-  return true;
+  return sharedIsValidIpv6(ip);
 }
 
 /**

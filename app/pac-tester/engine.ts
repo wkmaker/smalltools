@@ -5,73 +5,17 @@ import type {
   PacSingleTestResult,
   PacTestTraceStep,
 } from './types.ts';
+import { parseIpv4ToInt, parseIpv6ToBigInt } from '../utils/ipUtils.ts';
 
 /**
  * 將 IPv4 字串轉為 32-bit 無號整數
  */
-export function ipv4ToInt(ip: string): number | null {
-  const parts = ip.trim().split('.');
-  if (parts.length !== 4) return null;
-  let res = 0;
-  for (let i = 0; i < 4; i++) {
-    const num = parseInt(parts[i], 10);
-    if (isNaN(num) || num < 0 || num > 255 || parts[i] !== String(num)) return null;
-    res = ((res << 8) | num) >>> 0;
-  }
-  return res >>> 0;
-}
+export const ipv4ToInt = parseIpv4ToInt;
 
 /**
  * 將 IPv6 字串展開並解析為 128-bit BigInt
  */
-export function ipv6ToBigInt(ip: string): bigint | null {
-  try {
-    let clean = ip.trim().toLowerCase();
-    // 去除可選的方括號例如 [2001:db8::1]
-    if (clean.startsWith('[') && clean.endsWith(']')) {
-      clean = clean.slice(1, -1);
-    }
-    // 檢查是否有包含 IPv4 映射 (如 ::ffff:192.168.1.1)
-    if (clean.includes('.')) {
-      const lastColon = clean.lastIndexOf(':');
-      if (lastColon === -1) return null;
-      const ipv4Part = clean.slice(lastColon + 1);
-      const ipv4Int = ipv4ToInt(ipv4Part);
-      if (ipv4Int === null) return null;
-      const hex1 = ((ipv4Int >>> 16) & 0xffff).toString(16);
-      const hex2 = (ipv4Int & 0xffff).toString(16);
-      clean = clean.slice(0, lastColon + 1) + hex1 + ':' + hex2;
-    }
-
-    const doubleColonCount = (clean.match(/::/g) || []).length;
-    if (doubleColonCount > 1) return null;
-
-    let parts: string[] = [];
-    if (clean.includes('::')) {
-      const [left, right] = clean.split('::');
-      const leftParts = left ? left.split(':') : [];
-      const rightParts = right ? right.split(':') : [];
-      const missingZeros = 8 - (leftParts.length + rightParts.length);
-      if (missingZeros < 0) return null;
-      parts = [...leftParts, ...Array(missingZeros).fill('0'), ...rightParts];
-    } else {
-      parts = clean.split(':');
-      if (parts.length !== 8) return null;
-    }
-
-    if (parts.length !== 8) return null;
-
-    let result = BigInt(0);
-    for (let i = 0; i < 8; i++) {
-      const val = parseInt(parts[i], 16);
-      if (isNaN(val) || val < 0 || val > 0xffff) return null;
-      result = (result << BigInt(16)) | BigInt(val);
-    }
-    return result;
-  } catch {
-    return null;
-  }
-}
+export const ipv6ToBigInt = parseIpv6ToBigInt;
 
 /**
  * 萬用字元轉正則匹配 (shExpMatch)
