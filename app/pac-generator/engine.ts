@@ -116,6 +116,17 @@ export function buildConditionExpression(
 }
 
 /**
+ * 產生乾淨且合法的 JavaScript 常數識別碼 (避免純中文轉出過多底線)
+ */
+export function generateProxyVarName(name: string, id: string, index: number): string {
+  const sanitized = name.trim().replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toUpperCase();
+  if (sanitized.length >= 2) {
+    return `PROXY_${sanitized}`;
+  }
+  return `PROXY_NODE_${index + 1}`;
+}
+
+/**
  * 核心：根據規則與代理池配置生成標準 PAC 檔案 JavaScript
  */
 export function generatePacScript(options: {
@@ -149,10 +160,11 @@ export function generatePacScript(options: {
 
   // 宣告代理池備查常數
   lines.push('// ==================== 代理伺服器常數定義 ====================');
-  proxies.forEach((p) => {
+  proxies.forEach((p, idx) => {
     const formatted = formatProxyString(p);
-    const varName = `PROXY_${p.name.replace(/[^a-zA-Z0-9_]/g, '_').toUpperCase() || p.id.toUpperCase()}`;
-    lines.push(`const ${varName} = "${formatted}";`);
+    const varName = generateProxyVarName(p.name, p.id, idx);
+    const comment = p.name ? ` // ${p.name}` : '';
+    lines.push(`const ${varName} = "${formatted}";${comment}`);
   });
   lines.push(`const DEFAULT_PROXY = "${defaultProxyStr}";`);
   lines.push('');

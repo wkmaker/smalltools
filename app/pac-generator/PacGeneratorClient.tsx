@@ -568,9 +568,9 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                       className={`${styles.ruleCard} ${!rule.enabled ? styles.ruleCardDisabled : ''}`}
                     >
                       {/* 上排：規則名稱、排序、開關與刪除 */}
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-semibold text-text-sub px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between gap-3 min-w-0">
+                        <div className="flex-1 flex items-center gap-2 min-w-0">
+                          <span className="shrink-0 text-xs font-mono font-semibold text-text-sub px-2 py-0.5 rounded bg-white/5 border border-white/10">
                             #{idx + 1}
                           </span>
                           <input
@@ -578,11 +578,11 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                             value={rule.name}
                             onChange={(e) => handleUpdateRule(rule.id, { name: e.target.value })}
                             placeholder={t.ruleName}
-                            className="text-sm font-medium bg-transparent border-b border-white/10 px-1 py-0.5 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                            className="flex-1 min-w-0 text-sm font-medium bg-transparent border-b border-white/10 px-2 py-1 text-text-main focus:outline-none focus:border-[var(--theme-color)] transition-colors"
                           />
                         </div>
 
-                        <div className="flex items-center gap-1">
+                        <div className="shrink-0 flex items-center gap-1">
                           <button
                             type="button"
                             onClick={() => handleMoveRule(idx, 'up')}

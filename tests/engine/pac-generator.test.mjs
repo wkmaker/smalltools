@@ -7,6 +7,7 @@ import {
   buildConditionExpression,
   generatePacScript,
   generatePacDataUrl,
+  generateProxyVarName,
   PRESET_TEMPLATES,
 } from '../../app/pac-generator/engine.ts';
 
@@ -47,6 +48,13 @@ test('formatProxyString: 輸出標準 PAC 返回格式', () => {
     formatProxyString({ id: '4', name: 'c', type: 'PROXY', host: '', port: '', customString: 'PROXY a:80; DIRECT' }),
     'PROXY a:80; DIRECT'
   );
+});
+
+test('generateProxyVarName: 中文與英數常數命名防呆', () => {
+  assert.equal(generateProxyVarName('公司外網代理', 'p1', 0), 'PROXY_NODE_1');
+  assert.equal(generateProxyVarName('US_East_Proxy', 'p2', 1), 'PROXY_US_EAST_PROXY');
+  assert.equal(generateProxyVarName('10.0.0.1節點', 'p3', 2), 'PROXY_10_0_0_1');
+  assert.equal(generateProxyVarName('---', 'p4', 3), 'PROXY_NODE_4');
 });
 
 test('buildConditionExpression: 支援各種 PAC 條件表達式', () => {
