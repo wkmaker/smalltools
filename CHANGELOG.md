@@ -39,6 +39,13 @@
   - **語法與相容性診斷 (Static Linter)**：即時檢驗 `FindProxyForURL` 進入點、return 語句，並主動提示 IPv6 在傳統 `isInNet` 中的潛在相容性陷阱。
   - 純前端安全沙盒隔離執行，遮蔽全域物件並具備逾時防護機制，100% 零伺服器隱私保護。
 
+### 🔧 重構 (Changed)
+
+- **PAC 測試器改在獨立 Web Worker 執行 PAC 腳本**：使用者貼上的腳本內容不受控，原本在主執行緒同步 `new Function()` eval 執行，一旦卡住（無窮迴圈等）會凍結整個分頁；改由 `public/pac-tester-worker.js` 獨立執行緒執行並加上逾時保護，超時直接 `terminate()`，主執行緒維持可回應狀態。
+- **PAC 產生器規則卡片拆出 `RuleCard.tsx` 並以 `React.memo` 優化**：避免編輯單一規則時整份規則列表重新渲染。
+- **抽出共用 IPv4 / IPv6 位址解析工具 `app/utils/ipUtils.ts`**：`ip-calculator`、`pac-generator`、`pac-tester` 三處原本各自重複實作字串轉整數 / BigInt 的邏輯，統一抽到共用模組維護。
+- **全站 32 個工具的 `TRANSLATIONS` 文案物件抽離為獨立 `translations.ts`**：延續既有的模組化拆分慣例（呼應 `og-generator` 已採用的做法），讓 `XxxClient.tsx` 保持在合理行數以內，純粹的檔案搬移不變更文案內容。其中 `har-cleaner` 原本混雜於 `constants.ts` 中的文案也一併拆出；`hourly-rate-calculator` 原本是 67 處行內 `isEn ? 'English' : '中文'` 三元運算子，先重構為結構化 `TRANSLATIONS['zh-TW' | 'en']` 物件後再抽離（含 JSX 標籤內容與資料層既有雙語欄位選值刻意保留原樣，未強行納入文案字典）。
+
 ---
 
 ## [1.14.0] - 2026-09-16
