@@ -365,7 +365,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                   <span>{t.proxyPoolTitle}</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                   {proxies.length > 0 && (
                     <button
                       type="button"
@@ -418,7 +418,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                         value={proxy.name}
                         onChange={(e) => handleUpdateProxy(proxy.id, { name: e.target.value })}
                         placeholder={t.proxyName}
-                        className="text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                        className={`text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                       />
                       <select
                         value={proxy.type}
@@ -464,7 +464,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                             value={proxy.host}
                             onChange={(e) => handleUpdateProxy(proxy.id, { host: e.target.value })}
                             placeholder={t.proxyHost}
-                            className="text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                            className={`text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                           />
                           <div className="flex items-center gap-2">
                             <input
@@ -476,7 +476,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                                 })
                               }
                               placeholder={t.proxyPort}
-                              className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                              className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                             />
                             <button
                               type="button"
@@ -614,7 +614,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                   </svg>
                   <span>{t.rulesTitle} ({rules.length})</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                   {rules.length > 0 && (
                     <button
                       type="button"

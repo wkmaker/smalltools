@@ -204,9 +204,7 @@ function RuleCard({
                 onChange={(e) => onUpdateRule(rule.id, { value: e.target.value })}
                 placeholder={t.conditionPlaceholders[rule.conditionType] || t.matchValue}
                 className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none transition-colors font-mono resize-y placeholder:text-text-sub/50 ${
-                  !validation.isValid
-                    ? styles.inputWarning
-                    : 'bg-black/20 border border-white/10 focus:border-[var(--theme-color)]'
+                  !validation.isValid ? styles.inputWarning : styles.fieldInput
                 }`}
               />
             ) : (
@@ -260,9 +258,7 @@ function RuleCard({
                       onChange={(e) => onUpdateAndCondition(rule.id, condIdx, { value: e.target.value })}
                       placeholder={t.conditionPlaceholders[cond.conditionType] || t.matchValue}
                       className={`flex-1 min-w-0 text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none transition-colors font-mono placeholder:text-text-sub/50 ${
-                        !condValidation.isValid
-                          ? styles.inputWarning
-                          : 'bg-black/20 border border-white/10 focus:border-[var(--theme-color)]'
+                        !condValidation.isValid ? styles.inputWarning : styles.fieldInput
                       }`}
                     />
                   ) : (

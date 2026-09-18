@@ -359,3 +359,73 @@
   border-color: rgba(220, 38, 38, 0.25);
   color: #dc2626; /* Red 600 WCAG AA > 4.5:1 */
 }
+
+:global([data-theme='light']) .dangerButton {
+  background: rgba(220, 38, 38, 0.06);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #dc2626; /* Red 600 WCAG AA > 4.5:1 */
+}
+
+:global([data-theme='light']) .dangerButton:hover {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+/* ── 一般輸入框 / 文字區域（診斷區、單一測試網址、批量網址、Mock 表單） ── */
+.fieldInput {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fieldInput:focus {
+  border-color: var(--theme-color, #00f0ff);
+}
+
+:global([data-theme='light']) .fieldInput {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+/* ── 語法診斷 Bar ── */
+.diagnosticBar {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme='light']) .diagnosticBar {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* ── 測試結果卡片 ── */
+.resultCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme='light']) .resultCard {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+/* ── 回傳字串顯示區 ── */
+.resultCode {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='light']) .resultCode {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+/* ── 結果細項小卡（Host / IP / 通訊協定等） ── */
+.metaCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='light']) .metaCard {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.06);
+}
