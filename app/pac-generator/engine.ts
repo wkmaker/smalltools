@@ -1,5 +1,5 @@
 import type { ConditionType, PacImportResult, PacPreset, PacProjectConfig, ProxyNode, RoutingRule } from './types.ts';
-export { netmaskToCidr, parsePacScript, parseProxyNodeFromString } from './importer.ts';
+export { netmaskToCidr, parsePacScript, parseProxyNodeFromString, splitConditionByType, splitTopLevelOr } from './importer.ts';
 
 /**
  * 將 IPv4 CIDR 前綴 (0-32) 轉換為標準子網遮罩 (例如 24 -> 255.255.255.0)

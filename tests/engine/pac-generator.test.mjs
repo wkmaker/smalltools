@@ -16,6 +16,7 @@ import {
   validateRuleValue,
   splitRuleValues,
   parsePacScript,
+  splitConditionByType,
   PRESET_TEMPLATES,
 } from '../../app/pac-generator/engine.ts';
 
@@ -448,6 +449,50 @@ return 'DIRECT';
   assert.ok(protoRule.value.includes('https'));
   assert.ok(protoRule.value.includes('ftp'));
   assert.equal(protoRule.targetProxy, result.proxies[0].id);
+});
+
+test('parsePacScript: 同一個 if 內以 || 混合不同類型條件時，不應靜默丟棄任何子句', () => {
+  const mixedConditionScript = `
+function FindProxyForURL(url, host) {
+  if (isPlainHostName(host) || dnsDomainIs(host, ".example.com")) {
+    return "DIRECT";
+  } else if (shExpMatch(host, "*.com")) {
+    return "PROXY proxy1.example.com:8080; PROXY proxy4.example.com:8080";
+  } else if (shExpMatch(host, "*.edu")) {
+    return "PROXY proxy2.example.com:8080; PROXY proxy4.example.com:8080";
+  }
+  return "DIRECT";
+}
+`;
+  const result = parsePacScript(mixedConditionScript);
+  assert.equal(result.success, true);
+
+  // 混合類型的第一個 if 應拆成兩條規則，且都指向 DIRECT（與原始 OR 語意等價）
+  const plainHostRule = result.rules.find((r) => r.conditionType === 'plainHost');
+  assert.ok(plainHostRule, '應保留 isPlainHostName 子句');
+  assert.equal(plainHostRule.targetProxy, 'DIRECT');
+
+  const domainRule = result.rules.find((r) => r.conditionType === 'domainSuffix' && r.value.includes('example.com'));
+  assert.ok(domainRule, '不應丟棄 dnsDomainIs(host, ".example.com") 子句');
+  assert.equal(domainRule.targetProxy, 'DIRECT');
+
+  // 其餘兩條 wildcardHost 規則應各自指向不同的備援代理鏈
+  const wildcardRules = result.rules.filter((r) => r.conditionType === 'wildcardHost');
+  assert.equal(wildcardRules.length, 2);
+  assert.equal(result.rules.length, 4);
+});
+
+test('splitConditionByType: 同類型子句應合併保留多值 OR，不同類型子句應拆開', () => {
+  const sameType = splitConditionByType('dnsDomainIs(host, ".a.com") || dnsDomainIs(host, ".b.com")');
+  assert.equal(sameType.length, 1);
+
+  const mixedType = splitConditionByType('isPlainHostName(host) || dnsDomainIs(host, ".example.com")');
+  assert.equal(mixedType.length, 2);
+  assert.equal(mixedType[0], 'isPlainHostName(host)');
+  assert.equal(mixedType[1], 'dnsDomainIs(host, ".example.com")');
+
+  const single = splitConditionByType('isPlainHostName(host)');
+  assert.deepEqual(single, ['isPlainHostName(host)']);
 });
 
 test('parsePacScript & buildConditionExpression: 支援用戶端本機 IP (myIpAddress) 與字串拼接備援代理鏈', () => {

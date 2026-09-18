@@ -229,6 +229,91 @@ export function extractAllIfBlocks(code: string): ExtractedIfBlock[] {
 }
 
 /**
+ * 在最外層（括號深度 0、非字串內）切割 || 運算子，取得各個子條件子句
+ */
+export function splitTopLevelOr(condition: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+
+  for (let i = 0; i < condition.length; i++) {
+    const ch = condition[i];
+    const prev = i > 0 ? condition[i - 1] : '';
+    if (ch === "'" && !inDoubleQuote && prev !== '\\') {
+      inSingleQuote = !inSingleQuote;
+    } else if (ch === '"' && !inSingleQuote && prev !== '\\') {
+      inDoubleQuote = !inDoubleQuote;
+    } else if (!inSingleQuote && !inDoubleQuote) {
+      if (ch === '(') {
+        depth++;
+      } else if (ch === ')') {
+        depth--;
+      } else if (depth === 0 && ch === '|' && condition[i + 1] === '|') {
+        parts.push(condition.slice(start, i).trim());
+        i++; // 跳過緊接的第二個 |
+        start = i + 1;
+      }
+    }
+  }
+  parts.push(condition.slice(start).trim());
+  return parts.filter(Boolean);
+}
+
+/**
+ * 依規則解析的既有優先序，分類單一子句所屬的條件類型分組鍵（僅用於分組，不影響實際欄位解析）
+ */
+function classifyConditionClauseBucket(clause: string): string {
+  if (clause.includes('isPlainHostName')) return 'plainHost';
+  if (clause.includes('isInNet(') || clause.includes('isInNet (')) return 'ipv4';
+  if (clause.includes('isInNetEx')) return 'ipv6';
+  if (clause.includes('url.substring') || clause.includes('url.startsWith')) return 'protocol';
+  if (clause.includes('shExpMatch') && clause.includes('*:')) return 'port';
+  if (clause.includes('weekdayRange')) return 'weekday';
+  if (clause.includes('timeRange')) return 'timeRange';
+  if (
+    clause.includes('dnsDomainIs') ||
+    clause.includes('host ==') ||
+    clause.includes('host ===') ||
+    clause.includes('localHostOrDomainIs')
+  ) {
+    return 'domain';
+  }
+  if (clause.includes('shExpMatch') && clause.includes('host')) return 'wildcardHost';
+  if (clause.includes('shExpMatch') && clause.includes('url')) return 'wildcardUrl';
+  if (clause.includes('.test(url)') || clause.includes('.test(host)')) return 'regex';
+  return 'other';
+}
+
+/**
+ * 將一個 if 條件依最外層 || 拆開後，依條件類型分組：
+ * 同類型的子句合併回同一段（保留原本的多值 OR 解析能力，如多個 dnsDomainIs），
+ * 不同類型的子句則拆成獨立的一段（避免像 isPlainHostName(host) || dnsDomainIs(host, ".x") 這種
+ * 混合類型條件，被單一判斷分支整個吃掉、導致其餘子句被靜默丟棄）。
+ * 拆出的多段最終都會指向同一個 targetProxy，語意與原始 OR 完全等價（由上而下命中即離開）。
+ */
+export function splitConditionByType(condition: string): string[] {
+  const clauses = splitTopLevelOr(condition);
+  if (clauses.length <= 1) {
+    return [condition];
+  }
+
+  const order: string[] = [];
+  const buckets = new Map<string, string[]>();
+  for (const clause of clauses) {
+    const key = classifyConditionClauseBucket(clause);
+    if (!buckets.has(key)) {
+      order.push(key);
+      buckets.set(key, []);
+    }
+    buckets.get(key)!.push(clause);
+  }
+
+  return order.map((key) => buckets.get(key)!.join(' || '));
+}
+
+/**
  * 智慧解析 PAC 腳本或 JSON 設定檔
  */
 export function parsePacScript(content: string): PacImportResult {
@@ -327,271 +412,273 @@ export function parsePacScript(content: string): PacImportResult {
     });
     const targetProxy = matchedProxy ? matchedProxy.id : targetRaw;
 
-    // 清洗註解作為規則名稱
-    let ruleName = blockComment
-      .replace(/^(Don't proxy|Route|Proxy|Bypass)\s+/i, '')
-      .replace(/\*+/g, '')
-      .trim();
-    if (!ruleName || ruleName.length > 50) {
-      ruleName = `分流規則 ${ruleIndex}`;
-    }
+    // 若同一個 if 內以最外層 || 混合了不同類型的條件（例如 isPlainHostName(host) || dnsDomainIs(host, ".x")），
+    // 拆成多段各自解析，避免其中一段被單一判斷分支整個消化、導致其餘子句被靜默丟棄
+    const subConditions = splitConditionByType(condition);
 
-    // 是否為用戶端本機 IP (myIpAddress / myIpAddressEx)
-    const isClientIp = condition.includes('myIpAddress');
+    for (const subCondition of subConditions) {
+      // 是否為用戶端本機 IP (myIpAddress / myIpAddressEx)
+      const isClientIp = subCondition.includes('myIpAddress');
 
-    // 1. 純主機名
-    if (condition.includes('isPlainHostName')) {
+      // 1. 純主機名
+      if (subCondition.includes('isPlainHostName')) {
+        rules.push({
+          id: `rule_${Date.now()}_${ruleIndex++}`,
+          name: blockComment || '內部純主機直連',
+          enabled: true,
+          conditionType: 'plainHost',
+          value: '',
+          targetProxy,
+          description: blockComment || undefined,
+        });
+        continue;
+      }
+
+      // 2. IPv4 CIDR / isInNet (目標伺服器 或 用戶端本機)
+      if (subCondition.includes('isInNet(') || subCondition.includes('isInNet (')) {
+        const ipMatches = Array.from(
+          subCondition.matchAll(/isInNet\s*\(\s*[^,]+,\s*['"]([^'"]+)['"],\s*['"]([^'"]+)['"]\s*\)/g)
+        );
+        if (ipMatches.length > 0) {
+          const cidrList: string[] = [];
+          for (const m of ipMatches) {
+            const ip = m[1].trim();
+            const mask = m[2].trim();
+            const prefix = netmaskToCidr(mask);
+            if (prefix === 32) {
+              cidrList.push(ip);
+            } else {
+              cidrList.push(`${ip}/${prefix}`);
+            }
+          }
+          const uniqueCidrs = Array.from(new Set(cidrList));
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || (isClientIp ? '用戶端本機 IP 分流' : 'IPv4 網段分流'),
+            enabled: true,
+            conditionType: isClientIp ? 'clientIpv4' : 'ipv4Cidr',
+            value: uniqueCidrs.join('\n'),
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 3. IPv6 CIDR / isInNetEx (目標伺服器 或 用戶端本機)
+      if (subCondition.includes('isInNetEx')) {
+        const ip6Matches = Array.from(
+          subCondition.matchAll(/isInNetEx\s*\(\s*[^,]+,\s*['"]([^'"]+)['"]\s*\)/g)
+        );
+        if (ip6Matches.length > 0) {
+          const list = Array.from(new Set(ip6Matches.map((m) => m[1].trim())));
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || (isClientIp ? '用戶端本機 IPv6 分流' : 'IPv6 網段分流'),
+            enabled: true,
+            conditionType: isClientIp ? 'clientIpv6' : 'ipv6Cidr',
+            value: list.join('\n'),
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 4. 傳輸協定 (url.substring / url.startsWith)
+      if (subCondition.includes('url.substring') || subCondition.includes('url.startsWith')) {
+        const protoMatches = Array.from(subCondition.matchAll(/['"]([a-zA-Z0-9]+):?['"]/g));
+        const protos = Array.from(
+          new Set(
+            protoMatches
+              .map((m) => m[1].replace(/:$/, '').toLowerCase())
+              .filter((p) => ['http', 'https', 'ftp', 'ws', 'wss', 'socks'].includes(p))
+          )
+        );
+        if (protos.length > 0) {
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || '通訊協定分流',
+            enabled: true,
+            conditionType: 'protocol',
+            value: protos.join('\n'),
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 5. 連接埠號 (shExpMatch url *:port)
+      if (subCondition.includes('shExpMatch') && subCondition.includes('*:')) {
+        const portMatches = Array.from(subCondition.matchAll(/\*:(\d+)/g));
+        if (portMatches.length > 0) {
+          const ports = Array.from(new Set(portMatches.map((m) => m[1])));
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || '連接埠分流',
+            enabled: true,
+            conditionType: 'port',
+            value: ports.join('\n'),
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 6. 星期排程 (weekdayRange)
+      if (subCondition.includes('weekdayRange')) {
+        const dayMatches = Array.from(subCondition.matchAll(/weekdayRange\s*\(\s*['"]([^'"]+)['"](?:,\s*['"]([^'"]+)['"])?/g));
+        if (dayMatches.length > 0) {
+          const d1 = dayMatches[0][1];
+          const d2 = dayMatches[0][2];
+          const val = d2 ? `${d1}-${d2}` : d1;
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || '工作日/週末分流',
+            enabled: true,
+            conditionType: 'weekday',
+            value: val,
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 7. 時段排程 (timeRange)
+      if (subCondition.includes('timeRange')) {
+        const timeMatches = Array.from(subCondition.matchAll(/timeRange\s*\(\s*(\d+)(?:,\s*(\d+))?/g));
+        if (timeMatches.length > 0) {
+          const t1 = timeMatches[0][1];
+          const t2 = timeMatches[0][2];
+          const val = t2 ? `${t1}-${t2}` : t1;
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || '時段範圍分流',
+            enabled: true,
+            conditionType: 'timeRange',
+            value: val,
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 8. 網域與主機名 (dnsDomainIs / host == "..." / host === "...")
+      if (
+        subCondition.includes('dnsDomainIs') ||
+        subCondition.includes('host ==') ||
+        subCondition.includes('host ===') ||
+        subCondition.includes('localHostOrDomainIs')
+      ) {
+        const domainMatches = Array.from(
+          subCondition.matchAll(/dnsDomainIs\s*\(\s*host,\s*['"]([^'"]+)['"]\s*\)/g)
+        );
+        const hostMatches = Array.from(
+          subCondition.matchAll(/(?:host\s*===?|host\s*==)\s*['"]([^'"]+)['"]/g)
+        );
+
+        const domainList: string[] = [];
+        domainMatches.forEach((m) => domainList.push(m[1].trim()));
+        hostMatches.forEach((m) => domainList.push(m[1].trim()));
+
+        if (domainList.length > 0) {
+          // 整理去重
+          const cleanedDomains = Array.from(
+            new Set(
+              domainList.map((d) => {
+                // 若同時有 .example.com 與 example.com，統一保留乾淨網域名稱
+                return d.startsWith('.') ? d.slice(1) : d;
+              })
+            )
+          );
+
+          const hasSuffix = domainMatches.length > 0;
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || (hasSuffix ? '特定網域分流' : '精確主機分流'),
+            enabled: true,
+            conditionType: hasSuffix ? 'domainSuffix' : 'domainExact',
+            value: cleanedDomains.join('\n'),
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 9. 主機名萬用字元 (shExpMatch host)
+      if (subCondition.includes('shExpMatch') && subCondition.includes('host')) {
+        const matchPatterns = Array.from(
+          subCondition.matchAll(/shExpMatch\s*\(\s*host,\s*['"]([^'"]+)['"]\s*\)/g)
+        );
+        if (matchPatterns.length > 0) {
+          const patterns = Array.from(new Set(matchPatterns.map((m) => m[1].trim())));
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || '主機名萬用字元',
+            enabled: true,
+            conditionType: 'wildcardHost',
+            value: patterns.join('\n'),
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 10. URL 萬用字元 (shExpMatch url)
+      if (subCondition.includes('shExpMatch') && subCondition.includes('url')) {
+        const matchPatterns = Array.from(
+          subCondition.matchAll(/shExpMatch\s*\(\s*url,\s*['"]([^'"]+)['"]\s*\)/g)
+        );
+        if (matchPatterns.length > 0) {
+          const patterns = Array.from(new Set(matchPatterns.map((m) => m[1].trim())));
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || 'URL 萬用字元',
+            enabled: true,
+            conditionType: 'wildcardUrl',
+            value: patterns.join('\n'),
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 11. 正則表達式
+      if (subCondition.includes('.test(url)') || subCondition.includes('.test(host)')) {
+        const regexMatch = subCondition.match(/\/([^\/]+)\/([a-z]*)\.test/);
+        if (regexMatch) {
+          rules.push({
+            id: `rule_${Date.now()}_${ruleIndex++}`,
+            name: blockComment || '正則表達式分流',
+            enabled: true,
+            conditionType: 'regex',
+            value: regexMatch[1],
+            targetProxy,
+            description: blockComment || undefined,
+          });
+          continue;
+        }
+      }
+
+      // 兜底：未能精準辨識的自訂複合條件
+      warnings.push(`條件「${subCondition.slice(0, 30)}...」未能完全解析為標準樣式，已轉換為 URL 萬用比對。`);
       rules.push({
         id: `rule_${Date.now()}_${ruleIndex++}`,
-        name: blockComment || '內部純主機直連',
+        name: blockComment || `自訂規則 ${ruleIndex}`,
         enabled: true,
-        conditionType: 'plainHost',
-        value: '',
+        conditionType: 'wildcardUrl',
+        value: subCondition,
         targetProxy,
         description: blockComment || undefined,
       });
-      continue;
     }
-
-    // 2. IPv4 CIDR / isInNet (目標伺服器 或 用戶端本機)
-    if (condition.includes('isInNet(') || condition.includes('isInNet (')) {
-      const ipMatches = Array.from(
-        condition.matchAll(/isInNet\s*\(\s*[^,]+,\s*['"]([^'"]+)['"],\s*['"]([^'"]+)['"]\s*\)/g)
-      );
-      if (ipMatches.length > 0) {
-        const cidrList: string[] = [];
-        for (const m of ipMatches) {
-          const ip = m[1].trim();
-          const mask = m[2].trim();
-          const prefix = netmaskToCidr(mask);
-          if (prefix === 32) {
-            cidrList.push(ip);
-          } else {
-            cidrList.push(`${ip}/${prefix}`);
-          }
-        }
-        const uniqueCidrs = Array.from(new Set(cidrList));
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || (isClientIp ? '用戶端本機 IP 分流' : 'IPv4 網段分流'),
-          enabled: true,
-          conditionType: isClientIp ? 'clientIpv4' : 'ipv4Cidr',
-          value: uniqueCidrs.join('\n'),
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 3. IPv6 CIDR / isInNetEx (目標伺服器 或 用戶端本機)
-    if (condition.includes('isInNetEx')) {
-      const ip6Matches = Array.from(
-        condition.matchAll(/isInNetEx\s*\(\s*[^,]+,\s*['"]([^'"]+)['"]\s*\)/g)
-      );
-      if (ip6Matches.length > 0) {
-        const list = Array.from(new Set(ip6Matches.map((m) => m[1].trim())));
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || (isClientIp ? '用戶端本機 IPv6 分流' : 'IPv6 網段分流'),
-          enabled: true,
-          conditionType: isClientIp ? 'clientIpv6' : 'ipv6Cidr',
-          value: list.join('\n'),
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 4. 傳輸協定 (url.substring / url.startsWith)
-    if (condition.includes('url.substring') || condition.includes('url.startsWith')) {
-      const protoMatches = Array.from(condition.matchAll(/['"]([a-zA-Z0-9]+):?['"]/g));
-      const protos = Array.from(
-        new Set(
-          protoMatches
-            .map((m) => m[1].replace(/:$/, '').toLowerCase())
-            .filter((p) => ['http', 'https', 'ftp', 'ws', 'wss', 'socks'].includes(p))
-        )
-      );
-      if (protos.length > 0) {
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || '通訊協定分流',
-          enabled: true,
-          conditionType: 'protocol',
-          value: protos.join('\n'),
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 5. 連接埠號 (shExpMatch url *:port)
-    if (condition.includes('shExpMatch') && condition.includes('*:')) {
-      const portMatches = Array.from(condition.matchAll(/\*:(\d+)/g));
-      if (portMatches.length > 0) {
-        const ports = Array.from(new Set(portMatches.map((m) => m[1])));
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || '連接埠分流',
-          enabled: true,
-          conditionType: 'port',
-          value: ports.join('\n'),
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 6. 星期排程 (weekdayRange)
-    if (condition.includes('weekdayRange')) {
-      const dayMatches = Array.from(condition.matchAll(/weekdayRange\s*\(\s*['"]([^'"]+)['"](?:,\s*['"]([^'"]+)['"])?/g));
-      if (dayMatches.length > 0) {
-        const d1 = dayMatches[0][1];
-        const d2 = dayMatches[0][2];
-        const val = d2 ? `${d1}-${d2}` : d1;
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || '工作日/週末分流',
-          enabled: true,
-          conditionType: 'weekday',
-          value: val,
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 7. 時段排程 (timeRange)
-    if (condition.includes('timeRange')) {
-      const timeMatches = Array.from(condition.matchAll(/timeRange\s*\(\s*(\d+)(?:,\s*(\d+))?/g));
-      if (timeMatches.length > 0) {
-        const t1 = timeMatches[0][1];
-        const t2 = timeMatches[0][2];
-        const val = t2 ? `${t1}-${t2}` : t1;
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || '時段範圍分流',
-          enabled: true,
-          conditionType: 'timeRange',
-          value: val,
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 8. 網域與主機名 (dnsDomainIs / host == "..." / host === "...")
-    if (condition.includes('dnsDomainIs') || condition.includes('host ==') || condition.includes('host ===') || condition.includes('localHostOrDomainIs')) {
-      const domainMatches = Array.from(
-        condition.matchAll(/dnsDomainIs\s*\(\s*host,\s*['"]([^'"]+)['"]\s*\)/g)
-      );
-      const hostMatches = Array.from(
-        condition.matchAll(/(?:host\s*===?|host\s*==)\s*['"]([^'"]+)['"]/g)
-      );
-
-      const domainList: string[] = [];
-      domainMatches.forEach((m) => domainList.push(m[1].trim()));
-      hostMatches.forEach((m) => domainList.push(m[1].trim()));
-
-      if (domainList.length > 0) {
-        // 整理去重
-        const cleanedDomains = Array.from(
-          new Set(
-            domainList.map((d) => {
-              // 若同時有 .example.com 與 example.com，統一保留乾淨網域名稱
-              return d.startsWith('.') ? d.slice(1) : d;
-            })
-          )
-        );
-
-        const hasSuffix = domainMatches.length > 0;
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || (hasSuffix ? '特定網域分流' : '精確主機分流'),
-          enabled: true,
-          conditionType: hasSuffix ? 'domainSuffix' : 'domainExact',
-          value: cleanedDomains.join('\n'),
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 9. 主機名萬用字元 (shExpMatch host)
-    if (condition.includes('shExpMatch') && condition.includes('host')) {
-      const matchPatterns = Array.from(
-        condition.matchAll(/shExpMatch\s*\(\s*host,\s*['"]([^'"]+)['"]\s*\)/g)
-      );
-      if (matchPatterns.length > 0) {
-        const patterns = Array.from(new Set(matchPatterns.map((m) => m[1].trim())));
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || '主機名萬用字元',
-          enabled: true,
-          conditionType: 'wildcardHost',
-          value: patterns.join('\n'),
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 10. URL 萬用字元 (shExpMatch url)
-    if (condition.includes('shExpMatch') && condition.includes('url')) {
-      const matchPatterns = Array.from(
-        condition.matchAll(/shExpMatch\s*\(\s*url,\s*['"]([^'"]+)['"]\s*\)/g)
-      );
-      if (matchPatterns.length > 0) {
-        const patterns = Array.from(new Set(matchPatterns.map((m) => m[1].trim())));
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || 'URL 萬用字元',
-          enabled: true,
-          conditionType: 'wildcardUrl',
-          value: patterns.join('\n'),
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 11. 正則表達式
-    if (condition.includes('.test(url)') || condition.includes('.test(host)')) {
-      const regexMatch = condition.match(/\/([^\/]+)\/([a-z]*)\.test/);
-      if (regexMatch) {
-        rules.push({
-          id: `rule_${Date.now()}_${ruleIndex++}`,
-          name: blockComment || '正則表達式分流',
-          enabled: true,
-          conditionType: 'regex',
-          value: regexMatch[1],
-          targetProxy,
-          description: blockComment || undefined,
-        });
-        continue;
-      }
-    }
-
-    // 兜底：未能精準辨識的自訂複合條件
-    warnings.push(`條件「${condition.slice(0, 30)}...」未能完全解析為標準樣式，已轉換為 URL 萬用比對。`);
-    rules.push({
-      id: `rule_${Date.now()}_${ruleIndex++}`,
-      name: blockComment || `自訂規則 ${ruleIndex}`,
-      enabled: true,
-      conditionType: 'wildcardUrl',
-      value: condition,
-      targetProxy,
-      description: blockComment || undefined,
-    });
   }
 
   return {
