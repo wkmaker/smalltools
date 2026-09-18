@@ -41,16 +41,16 @@ const jsonLd = {
 const faqJsonLd = generateFaqSchema([
   {
     q: 'What condition match modes are supported in routing rules, and when should I use them?',
-    a: `The generator supports 12 matching conditions covering hostnames, domains, full URLs, IP subnets, protocols, ports, time schedules, and regular expressions:
+    a: `The generator supports 14 matching conditions covering hostnames, domains, full URLs, IP subnets, client local network steering, protocols, ports, time schedules, and regular expressions:
 
 ① Plain Hostname (isPlainHostName):
 Matches hostnames without any dot "." (such as http://intranet/ or http://hr/). Ideal for directing internal local intranet traffic to DIRECT bypass.
 
 ② Domain Suffix (dnsDomainIs):
-Matches a specific domain and all its subdomains. For example, entering ".google.com" matches mail.google.com, drive.google.com, and the apex domain google.com.
+Matches a specific domain and all its subdomains. Supports multiple domains (one per line or comma separated). For example, entering ".google.com" matches mail.google.com, drive.google.com, and the apex domain google.com.
 
 ③ Exact Hostname (localHostOrDomainIs / host ===):
-Matches a single, exact hostname. For example, "api.github.com" will only match that exact host and will not affect raw.githubusercontent.com.
+Matches single or multiple exact hostnames. For example, "api.github.com" will only match that exact host and will not affect raw.githubusercontent.com.
 
 ④ Hostname Wildcard (shExpMatch host):
 Matches hostname patterns using "*" and "?". For example, "*.internal.net" or "git-*.company.com".
@@ -58,26 +58,32 @@ Matches hostname patterns using "*" and "?". For example, "*.internal.net" or "g
 ⑤ URL Wildcard (shExpMatch url):
 Matches the complete request URL including scheme, port, and path. For example, "https://*.secure.bank/*" or "ftp://*".
 
-⑥ IPv4 Address / Subnet (isInNet):
-Matches destination IPv4 addresses. Supports both single host IPs (e.g. "192.168.1.1", matched with a /32 subnet mask) and CIDR subnets (e.g. "10.0.0.0/8", "172.16.0.0/12", "192.168.1.0/24"). Matches both direct IP access and DNS-resolved addresses.
+⑥ Target IPv4 Address / Subnet (isInNet):
+Matches destination IPv4 addresses. Supports both single host IPs (e.g. "192.168.1.1", matched with a /32 subnet mask) and CIDR subnets (e.g. "10.0.0.0/8", "172.16.0.0/12", "192.168.1.0/24"). Matches both direct IP access and DNS-resolved addresses. Supports multi-line input.
 
-⑦ IPv6 Address / Subnet (isInNetEx):
+⑦ Target IPv6 Address / Subnet (isInNetEx):
 Uses the modern isInNetEx() function for native IPv6 matching. Supports single IPv6 addresses (e.g. "2001:db8::1", auto-padded with /128) and CIDR subnets (e.g. enterprise ULA subnets "fc00::/7" or "2001:db8::/32").
 
-⑧ URL Protocol:
+⑧ Client Local IPv4 Subnet (myIpAddress):
+Matches the client machine's own local IPv4 address (e.g. "10.1.0.0/16"). Essential for multi-branch corporate networks to steer employees in branch A to Proxy Cluster 1 and branch B to Cluster 2.
+
+⑨ Client Local IPv6 Subnet (myIpAddressEx):
+Matches the client device's local IPv6 network interface address for dual-stack branch steering.
+
+⑩ URL Protocol:
 Matches transfer protocols such as http:, https:, ftp:, ws:, and wss: for scheme-level proxy steering.
 
-⑨ Port:
-Matches destination network ports (e.g. 80, 443, 8080, 8443) to route specific services through designated proxies.
+⑪ Destination Port:
+Matches target network ports (e.g. 80, 443, 8080, 8443) for service-specific forwarding.
 
-⑩ Day of Week (weekdayRange):
-Evaluates the client's current day of week (e.g. MON-FRI workdays or SAT-SUN weekends) to automate proxy schedules.
+⑫ Weekday Range (weekdayRange):
+Dynamically switches proxy policies based on day of the week (e.g. MON-FRI for workdays or SAT-SUN for weekends).
 
-⑪ Time Range (timeRange):
-Evaluates 24-hour hour ranges (e.g. 9-18 office hours) to switch between proxy tunnels and direct connections.
+⑬ Daily Time Range (timeRange):
+Applies routing rules during specific hours of the day (e.g. 9-18 for standard business hours).
 
-⑫ Regular Expression (RegEx):
-Evaluates arbitrary JavaScript regular expressions against the URL or host, such as "^https?://.*\\.internal(:[0-9]+)?/", ideal for complex routing logic.`,
+⑭ Regular Expression (RegExp.test):
+Provides maximum flexibility to test the entire URL against custom regular expressions.`,
   },
   {
     q: 'Can I route traffic by a single IPv4 or IPv6 address? How does it differ from Exact Hostname?',
@@ -171,6 +177,14 @@ This ensures high availability without breaking Internet access during proxy mai
 ② Subdomain Matching Nuances: dnsDomainIs(host, ".google.com") only matches subdomains (like mail.google.com), not the apex domain google.com. This tool automatically accounts for apex domains in suffix rules.
 ③ Excessive DNS Lookups: Overusing dnsResolve() forces synchronous DNS lookups for every request. If your DNS is slow, browsing performance degrades noticeably.
 ④ Browser Cache: Browsers cache PAC results. After modifying rules, restart your browser or visit chrome://net-internals/#proxy to clear proxy caches.`,
+  },
+  {
+    q: 'What scenarios does this visual editor fit? Should I hand-write the script for complex logic instead?',
+    a: `This tool's data model is "a list of rules, evaluated top to bottom, return on first match" — which maps to a chain of if (condition) { return proxy; } statements in the generated PAC script. That's semantically identical to an if / else if chain, since a return always exits the function immediately, so there's no observable difference from having an else branch — you never need to write else yourself.
+
+Good fit: any number of independent matching rules, e.g. "domain A goes through this proxy, domain B through that one, everything else DIRECT" — a rule list scales fine to dozens of entries. You can also stack "AND conditions" within a single rule (e.g. protocol is https AND domain is x) for more precise matching.
+
+Not a good fit: scenarios that need branching, loops, or dynamic string logic *inside* a single match's outcome (for example, deciding whether to add another proxy hop based on the IP a lookup just resolved). That's beyond what a flat rule list can express — hand-write the JavaScript instead, or drop raw logic into a rule's "Custom String" field, then paste the full script into the PAC tester to verify actual behavior.`,
   },
   {
     q: 'How can I use Data URI format without hosting a web server?',

@@ -41,16 +41,16 @@ const jsonLd = {
 const faqJsonLd = generateFaqSchema([
   {
     q: 'PAC 分流規則支援哪些條件模式？各自適用什麼場景？',
-    a: `本工具支援 12 種條件模式，涵蓋主機、網域、URL、IP、傳輸協定、連接埠、時間排程與正則表達式：
+    a: `本工具支援 14 種條件模式，涵蓋主機、網域、URL、IP、用戶端本機分流、傳輸協定、連接埠、時間排程與正則表達式：
 
 ① 純主機名稱 (isPlainHostName)：
 比對不含任何點號「.」的主機名稱（如 http://intranet/ 或 http://hr/）。常用於將內部局域網服務設為 DIRECT 直連，免去繁瑣的網段列舉。
 
 ② 網域後綴 (dnsDomainIs)：
-比對特定網域及其所有子網域。例如填入「.google.com」會同時命中 mail.google.com、drive.google.com 與根網域 google.com。
+比對特定網域及其所有子網域。支援一行輸入一個或多個網域（以換行或逗號分隔）。例如填入「.google.com」會同時命中 mail.google.com、drive.google.com 與根網域 google.com。
 
 ③ 完整網域名稱 (localHostOrDomainIs / host ===)：
-精確比對單一主機名。例如填入「api.github.com」僅對該主機生效，不會影響 raw.githubusercontent.com。
+精確比對單一或多個主機名。例如填入「api.github.com」僅對該主機生效，不會影響 raw.githubusercontent.com。
 
 ④ 主機名萬用字元 (shExpMatch host)：
 使用星號「*」與問號「?」比對主機名結構。例如「*.internal.net」或「git-*.company.com」。
@@ -58,26 +58,32 @@ const faqJsonLd = generateFaqSchema([
 ⑤ 完整 URL 萬用字元 (shExpMatch url)：
 針對完整 URL 進行萬用字元比對（包含協定與路徑）。例如「https://*.secure.bank/*」或「ftp://*」。
 
-⑥ IPv4 位址 / 網段 (isInNet)：
-比對目標伺服器的 IPv4 IP 位址。支援「單一主機 IP」（如 192.168.1.1，自動以 /32 遮罩比對）與「CIDR 網段」（如 10.0.0.0/8、172.16.0.0/12、192.168.1.0/24）。無論直接存取 IP 或網域解析命中皆能生效。
+⑥ 目標 IPv4 位址 / 網段 (isInNet)：
+比對目標伺服器的 IPv4 IP 位址。支援「單一主機 IP」（如 192.168.1.1，自動以 /32 遮罩比對）與「CIDR 網段」（如 10.0.0.0/8、172.16.0.0/12、192.168.1.0/24），亦支援多組網段批次輸入。無論直接存取 IP 或網域解析命中皆能生效。
 
-⑦ IPv6 位址 / 網段 (isInNetEx)：
+⑦ 目標 IPv6 位址 / 網段 (isInNetEx)：
 利用現代瀏覽器擴充的 isInNetEx() 函式進行 IPv6 比對。支援「單一 IPv6 位址」（如 2001:db8::1，自動補齊 /128 遮罩）與「CIDR 網段」（如企業 ULA 私有網段 fc00::/7 或測試網段 2001:db8::/32）。
 
-⑧ 傳輸協定 (URL Protocol)：
+⑧ 用戶端本機 IPv4 網段 (myIpAddress)：
+依據使用者裝置當前所在的本機 IPv4 位址進行分流（如 10.1.0.0/16 走一號網關，10.2.0.0/16 走二號網關）。常用於企業跨據點辦公室的就近代理調度與負載平衡。
+
+⑨ 用戶端本機 IPv6 網段 (myIpAddressEx)：
+依據使用者裝置當前的 IPv6 網路介面位址進行比對分流。
+
+⑩ 傳輸協定 (URL Protocol)：
 比對請求協定（如 http:、https:、ftp:、ws:、wss:），依傳輸層協定自動分流。
 
-⑨ 連接埠 (Port)：
+⑪ 連接埠 (Port)：
 比對目標通訊埠（如 80、443、8080、8443），針對特定服務端口指派代理伺服器。
 
-⑩ 工作日與週末 (weekdayRange)：
+⑫ 工作日與週末 (weekdayRange)：
 根據客戶端當前星期週期（如 MON-FRI 工作日或 SAT-SUN 週末）自動切換代理策略。
 
-⑪ 時段範圍 (timeRange)：
-根據 24 小時制小時範圍（如 9-18 上班時間）切換代理或直連通道。
+⑬ 每日時段範圍 (timeRange)：
+根據當前小時範圍（如 9-18 代表上午 9 點至下午 6 點）動態切換上班時段專用代理。
 
-⑫ 正則表達式 (RegEx)：
-採用 JavaScript 正則表達式進行深度比對。例如「^https?://.*\\.internal(:[0-9]+)?/」，適合複雜的多層過濾需求。`,
+⑭ 正則表達式 (RegExp.test)：
+提供最高自訂自由度，直接以正則表達式對完整目標網址進行高階樣式比對。`,
   },
   {
     q: '可以指定單一 IPv4 或 IPv6 位址進行分流嗎？與「完整網域名稱」有何不同？',
@@ -171,6 +177,14 @@ PAC 檔案本質上是一段定義了名為 FindProxyForURL(url, host) 的 JavaS
 ② 網域比對語法細微差異：dnsDomainIs(host, ".google.com") 只能比對子網域（如 mail.google.com），若直接訪問根網域 google.com 則不會命中。本工具產生的規則已自動補齊根網域相符判斷。
 ③ DNS 阻斷或逾時：若在 PAC 中濫用 dnsResolve()，瀏覽器在發送請求前必須等待本機 DNS 回應。若 DNS 伺服器延遲高或解析失敗，會導致整個網路瀏覽停頓甚至放棄代理。
 ④ 本機瀏覽器快取：許多瀏覽器會快取 PAC 腳本達數小時，修改 PAC 後建議重啟瀏覽器或在 chrome://net-internals/#proxy 點擊「Clear bad proxies / Re-apply settings」。`,
+  },
+  {
+    q: '這個視覺化編輯器適用哪些情境？遇到複雜邏輯是不是該自己寫腳本？',
+    a: `本工具的資料模型是「規則清單，由上而下逐條比對、命中即回傳」，對應到產生的 PAC 腳本就是一串 if (條件) { return 代理; }。這與寫成 if / else if 鏈語意完全相同——因為一旦 return 就會離開函式，不會有 else 分支才有的差異，所以你完全不需要自己組 else。
+
+適用範圍：多筆彼此獨立的比對規則，例如「A 網域配這個代理、B 網域配那個代理、其餘直連」，不論有幾十條都可以線性列出；也支援在單一規則內疊加「AND 條件」（如同時符合「協定為 https」且「網域為 x」）表達較精細的比對。
+
+不適用範圍：需要在單一命中結果「內部」再做分支判斷、跑迴圈、動態組字串等程式邏輯的情境（例如依實際解析出的 IP 才決定要不要多繞一層代理）。這已經超出「規則清單」能表達的範圍——建議直接手寫 JavaScript，或在規則卡片的「自訂代理字串」欄位塞一段原始邏輯，再用 PAC 測試器貼上完整腳本驗證實際執行結果。`,
   },
   {
     q: '如何使用 Data URI 格式代替 HTTP 伺服器掛載 PAC 檔案？',
