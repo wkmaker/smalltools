@@ -41,7 +41,7 @@ const jsonLd = {
 const faqJsonLd = generateFaqSchema([
   {
     q: 'What condition match modes are supported in routing rules, and when should I use them?',
-    a: `The generator supports 8 matching conditions covering hostnames, domains, full URLs, IP subnets, and regular expressions:
+    a: `The generator supports 12 matching conditions covering hostnames, domains, full URLs, IP subnets, protocols, ports, time schedules, and regular expressions:
 
 ① Plain Hostname (isPlainHostName):
 Matches hostnames without any dot "." (such as http://intranet/ or http://hr/). Ideal for directing internal local intranet traffic to DIRECT bypass.
@@ -58,14 +58,40 @@ Matches hostname patterns using "*" and "?". For example, "*.internal.net" or "g
 ⑤ URL Wildcard (shExpMatch url):
 Matches the complete request URL including scheme, port, and path. For example, "https://*.secure.bank/*" or "ftp://*".
 
-⑥ IPv4 Subnet / CIDR (isInNet):
-Matches destination IPv4 addresses against CIDR subnets, such as "10.0.0.0/8", "172.16.0.0/12", or "192.168.1.0/24".
+⑥ IPv4 Address / Subnet (isInNet):
+Matches destination IPv4 addresses. Supports both single host IPs (e.g. "192.168.1.1", matched with a /32 subnet mask) and CIDR subnets (e.g. "10.0.0.0/8", "172.16.0.0/12", "192.168.1.0/24"). Matches both direct IP access and DNS-resolved addresses.
 
-⑦ IPv6 Subnet / CIDR (isInNetEx):
-Uses the modern isInNetEx() function for native IPv6 CIDR prefix matching, such as enterprise ULA private subnets "fc00::/7" or "2001:db8::/32".
+⑦ IPv6 Address / Subnet (isInNetEx):
+Uses the modern isInNetEx() function for native IPv6 matching. Supports single IPv6 addresses (e.g. "2001:db8::1", auto-padded with /128) and CIDR subnets (e.g. enterprise ULA subnets "fc00::/7" or "2001:db8::/32").
 
-⑧ Regular Expression (RegEx):
+⑧ URL Protocol:
+Matches transfer protocols such as http:, https:, ftp:, ws:, and wss: for scheme-level proxy steering.
+
+⑨ Port:
+Matches destination network ports (e.g. 80, 443, 8080, 8443) to route specific services through designated proxies.
+
+⑩ Day of Week (weekdayRange):
+Evaluates the client's current day of week (e.g. MON-FRI workdays or SAT-SUN weekends) to automate proxy schedules.
+
+⑪ Time Range (timeRange):
+Evaluates 24-hour hour ranges (e.g. 9-18 office hours) to switch between proxy tunnels and direct connections.
+
+⑫ Regular Expression (RegEx):
 Evaluates arbitrary JavaScript regular expressions against the URL or host, such as "^https?://.*\\.internal(:[0-9]+)?/", ideal for complex routing logic.`,
+  },
+  {
+    q: 'Can I route traffic by a single IPv4 or IPv6 address? How does it differ from Exact Hostname?',
+    a: `Yes! In fact, using the "IPv4 / IPv6 Address / Subnet" condition is strongly recommended for routing specific IP addresses:
+
+① Key Difference: Single IP vs. Exact Hostname:
+• If you enter 192.168.1.1 under "Exact Hostname", the script generates host === "192.168.1.1". This matches ONLY if the user explicitly types http://192.168.1.1/ in their browser. If they browse to api.local whose DNS resolves to 192.168.1.1, the rule will NOT trigger.
+• In contrast, entering 192.168.1.1 under "IPv4 Address / Subnet" generates isInNet(host, "192.168.1.1", "255.255.255.255"). This function matches BOTH literal IP visits and hostnames resolving to that physical IP address!
+
+② Automatic IPv6 /128 Prefix Completion:
+If you input 2001:db8::1 without a prefix, this generator automatically appends /128 (generating isInNetEx(host, "2001:db8::1/128")), ensuring full compliance with RFC and browser engine standards.
+
+③ Real-time Format Validation:
+As you type IP addresses, the editor validates syntax on the fly (octets between 0-255, hexadecimal groups, prefix ranges). An amber warning will display immediately if syntax errors are detected, preventing invalid PAC scripts.`,
   },
   {
     q: 'What is the difference with "Resolve Host IP Before Subnet Check (dnsResolve)", and when should I enable it?',

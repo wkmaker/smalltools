@@ -51,7 +51,8 @@ export function getLightModeAccentColor(darkColor: string): string {
 }
 
 function renderAnswerWithLinks(text: string) {
-  const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^\s\)]+\)|https?:\/\/[^\s\)\n]+)/g;
+  // 只比對顯式 Markdown 連結語法 [linkText](https://...)，避免將內文中的範例 URL (如 http://intranet/ 或 https://*.bank/*) 誤轉為超連結
+  const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^\s\)]+\))/g;
   const parts = text.split(tokenRegex);
 
   return parts.map((part, i) => {
@@ -65,25 +66,9 @@ function renderAnswerWithLinks(text: string) {
           href={linkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline font-semibold hover:opacity-80 transition-opacity"
-          style={{ color: 'var(--faq-accent-dark)' }}
+          className={styles.faqLink}
         >
           {linkText}
-        </a>
-      );
-    }
-
-    if (part.match(/^https?:\/\//)) {
-      return (
-        <a
-          key={i}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline font-medium hover:opacity-80 transition-opacity break-all"
-          style={{ color: 'var(--faq-accent-dark)' }}
-        >
-          {part}
         </a>
       );
     }

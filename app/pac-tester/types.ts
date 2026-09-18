@@ -2,6 +2,8 @@ export interface MockContext {
   clientIpv4: string;
   clientIpv6: string;
   dnsMap: Record<string, string>; // hostname -> comma or space separated IPs
+  simulatedDay?: string; // e.g. 'AUTO', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'
+  simulatedHour?: number; // e.g. -1 (auto) or 0-23
 }
 
 export interface PacTestTraceStep {
@@ -15,6 +17,9 @@ export interface PacSingleTestResult {
   host: string;
   protocol: string;
   port: string;
+  resolvedIp: string;
+  hostType: 'IPv4' | 'IPv6' | 'Domain';
+  clientIp: string;
   returnString: string;
   status: 'DIRECT' | 'PROXY' | 'SOCKS' | 'HTTPS' | 'ERROR';
   executionTimeMs: number;

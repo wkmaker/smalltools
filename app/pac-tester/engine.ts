@@ -135,9 +135,18 @@ export function checkIsInNetEx(ip: string, prefixWithMask: string): boolean {
  * 建立標準 PAC 模擬沙盒環境
  */
 export function createPacSandbox(
-  mockContext: MockContext,
-  traceSteps: PacTestTraceStep[]
+  mockContext: Partial<MockContext> = {},
+  traceSteps: PacTestTraceStep[] = []
 ) {
+  const safeContext: MockContext = {
+    clientIpv4: '192.168.1.100',
+    clientIpv6: '2001:db8::100',
+    dnsMap: {},
+    simulatedDay: 'AUTO',
+    simulatedHour: -1,
+    ...mockContext,
+  };
+
   const recordTrace = (fnName: string, args: (string | number | boolean)[], result: string | number | boolean) => {
     traceSteps.push({
       functionName: fnName,
@@ -187,8 +196,8 @@ export function createPacSandbox(
     if (typeof host !== 'string') return '';
     const h = host.toLowerCase();
     // 優先查 Mock DNS 字典
-    if (mockContext.dnsMap[h]) {
-      const resolved = mockContext.dnsMap[h].split(/[\s,]+/)[0];
+    if (safeContext.dnsMap && safeContext.dnsMap[h]) {
+      const resolved = safeContext.dnsMap[h].split(/[\s,]+/)[0];
       return recordTrace('dnsResolve', [host], resolved) as string;
     }
     // 若本身即為 IPv4 或 IPv6 則直接回傳
@@ -204,7 +213,7 @@ export function createPacSandbox(
   };
 
   const myIpAddress = () => {
-    const res = mockContext.clientIpv4 || '192.168.1.100';
+    const res = safeContext.clientIpv4 || '192.168.1.100';
     return recordTrace('myIpAddress', [], res) as string;
   };
 
@@ -246,14 +255,138 @@ export function createPacSandbox(
   };
 
   const myIpAddressEx = () => {
-    const ipv4 = mockContext.clientIpv4 || '192.168.1.100';
-    const ipv6 = mockContext.clientIpv6 || '2001:db8::100';
+    const ipv4 = safeContext.clientIpv4 || '192.168.1.100';
+    const ipv6 = safeContext.clientIpv6 || '2001:db8::100';
     const res = `${ipv4};${ipv6}`;
     return recordTrace('myIpAddressEx', [], res) as string;
   };
 
   const isResolvableEx = (host: string) => {
     return recordTrace('isResolvableEx', [host], true);
+  };
+
+  const DAY_MAP: Record<string, number> = {
+    SUN: 0,
+    MON: 1,
+    TUE: 2,
+    WED: 3,
+    THU: 4,
+    FRI: 5,
+    SAT: 6,
+  };
+
+  const weekdayRange = (wd1: string, wd2?: string, gmt?: string) => {
+    const isGmt = wd2 === 'GMT' || gmt === 'GMT';
+    const actualWd2 = wd2 === 'GMT' ? undefined : wd2;
+
+    const now = new Date();
+    let currentDayIdx = isGmt ? now.getUTCDay() : now.getDay();
+    if (
+      safeContext.simulatedDay &&
+      safeContext.simulatedDay !== 'AUTO' &&
+      DAY_MAP[safeContext.simulatedDay] !== undefined
+    ) {
+      currentDayIdx = DAY_MAP[safeContext.simulatedDay];
+    }
+
+    const startIdx = DAY_MAP[String(wd1).toUpperCase().trim()];
+    if (startIdx === undefined) return recordTrace('weekdayRange', [wd1], false);
+
+    if (!actualWd2) {
+      const res = currentDayIdx === startIdx;
+      return recordTrace('weekdayRange', [wd1], res);
+    }
+
+    const endIdx = DAY_MAP[String(actualWd2).toUpperCase().trim()];
+    if (endIdx === undefined) return recordTrace('weekdayRange', [wd1, actualWd2], false);
+
+    let res = false;
+    if (startIdx <= endIdx) {
+      res = currentDayIdx >= startIdx && currentDayIdx <= endIdx;
+    } else {
+      res = currentDayIdx >= startIdx || currentDayIdx <= endIdx;
+    }
+    return recordTrace('weekdayRange', [wd1, actualWd2], res);
+  };
+
+  const timeRange = (...args: (number | string)[]) => {
+    const isGmt = args.includes('GMT');
+    const nums = args.filter((a): a is number => typeof a === 'number');
+
+    const now = new Date();
+    let currentHour = isGmt ? now.getUTCHours() : now.getHours();
+    const currentMin = isGmt ? now.getUTCMinutes() : now.getMinutes();
+    const currentSec = isGmt ? now.getUTCSeconds() : now.getSeconds();
+
+    if (
+      typeof safeContext.simulatedHour === 'number' &&
+      safeContext.simulatedHour >= 0 &&
+      safeContext.simulatedHour <= 23
+    ) {
+      currentHour = safeContext.simulatedHour;
+    }
+
+    const currentTimeInSeconds = currentHour * 3600 + currentMin * 60 + currentSec;
+
+    let res = false;
+    if (nums.length === 1) {
+      res = currentHour === nums[0];
+    } else if (nums.length === 2) {
+      const [h1, h2] = nums;
+      if (h1 <= h2) {
+        res = currentHour >= h1 && currentHour <= h2;
+      } else {
+        res = currentHour >= h1 || currentHour <= h2;
+      }
+    } else if (nums.length === 4) {
+      const t1 = nums[0] * 3600 + nums[1] * 60;
+      const t2 = nums[2] * 3600 + nums[3] * 60;
+      if (t1 <= t2) {
+        res = currentTimeInSeconds >= t1 && currentTimeInSeconds <= t2;
+      } else {
+        res = currentTimeInSeconds >= t1 || currentTimeInSeconds <= t2;
+      }
+    } else if (nums.length >= 6) {
+      const t1 = nums[0] * 3600 + nums[1] * 60 + nums[2];
+      const t2 = nums[3] * 3600 + nums[4] * 60 + nums[5];
+      if (t1 <= t2) {
+        res = currentTimeInSeconds >= t1 && currentTimeInSeconds <= t2;
+      } else {
+        res = currentTimeInSeconds >= t1 || currentTimeInSeconds <= t2;
+      }
+    }
+    return recordTrace('timeRange', args, res);
+  };
+
+  const dateRange = (...args: (number | string)[]) => {
+    const nums = args.filter((a): a is number => typeof a === 'number');
+    const now = new Date();
+    const currentDay = now.getDate();
+    let res = true;
+    if (nums.length === 1) {
+      res = currentDay === nums[0];
+    } else if (nums.length >= 2) {
+      res = currentDay >= nums[0] && currentDay <= nums[1];
+    }
+    return recordTrace('dateRange', args, res);
+  };
+
+  const sortIpAddressList = (ipAddressList: string) => {
+    if (typeof ipAddressList !== 'string') return '';
+    const list = ipAddressList.split(';').map((s) => s.trim()).filter(Boolean);
+    list.sort((a, b) => {
+      const isA6 = a.includes(':');
+      const isB6 = b.includes(':');
+      if (isA6 && !isB6) return -1;
+      if (!isA6 && isB6) return 1;
+      return a.localeCompare(b);
+    });
+    const res = list.join(';');
+    return recordTrace('sortIpAddressList', [ipAddressList], res) as string;
+  };
+
+  const getClientVersion = () => {
+    return recordTrace('getClientVersion', [], '1.0') as string;
   };
 
   return {
@@ -270,6 +403,11 @@ export function createPacSandbox(
     dnsResolveEx,
     myIpAddressEx,
     isResolvableEx,
+    weekdayRange,
+    timeRange,
+    dateRange,
+    sortIpAddressList,
+    getClientVersion,
   };
 }
 
@@ -283,7 +421,7 @@ export function parseTargetUrl(rawUrl: string): {
   port: string;
 } {
   let url = rawUrl.trim();
-  if (!/^https?:\/\//i.test(url) && !/^ftp:\/\//i.test(url)) {
+  if (!/^https?:\/\//i.test(url) && !/^ftp:\/\//i.test(url) && !/^wss?:\/\//i.test(url)) {
     url = `https://${url}`;
   }
 
@@ -294,7 +432,7 @@ export function parseTargetUrl(rawUrl: string): {
       host = host.slice(1, -1);
     }
     const protocol = parsed.protocol.replace(':', '');
-    const port = parsed.port || (protocol === 'https' ? '443' : protocol === 'http' ? '80' : '21');
+    const port = parsed.port || (protocol === 'https' ? '443' : protocol === 'http' ? '80' : protocol === 'ftp' ? '21' : '80');
     return { url, host, protocol, port };
   } catch {
     let cleanHost = url.replace(/^[a-z]+:\/\//i, '').split('/')[0].split(':')[0];
@@ -334,6 +472,14 @@ export function runSinglePacTest(
 
   try {
     const sandbox = createPacSandbox(mockContext, traceSteps);
+    const resolvedIp = sandbox.dnsResolve(host);
+    const hostType: 'IPv4' | 'IPv6' | 'Domain' =
+      ipv4ToInt(host) !== null
+        ? 'IPv4'
+        : ipv6ToBigInt(host) !== null
+        ? 'IPv6'
+        : 'Domain';
+    const clientIp = sandbox.myIpAddress();
 
     // 建立安全的封閉執行作用域，阻斷對全域物件的存取
     const sandboxScopeKeys = Object.keys(sandbox);
@@ -386,6 +532,9 @@ export function runSinglePacTest(
       host,
       protocol,
       port,
+      resolvedIp,
+      hostType,
+      clientIp,
       returnString,
       status,
       executionTimeMs: duration,
@@ -394,11 +543,21 @@ export function runSinglePacTest(
   } catch (err: unknown) {
     const duration = Math.round((performance.now() - startTime) * 100) / 100;
     const errorMsg = err instanceof Error ? err.message : String(err);
+    const hostType: 'IPv4' | 'IPv6' | 'Domain' =
+      ipv4ToInt(host) !== null
+        ? 'IPv4'
+        : ipv6ToBigInt(host) !== null
+        ? 'IPv6'
+        : 'Domain';
+
     return {
       url,
       host,
       protocol,
       port,
+      resolvedIp: 'N/A',
+      hostType,
+      clientIp: mockContext.clientIpv4 || '192.168.1.100',
       returnString: 'ERROR',
       status: 'ERROR',
       executionTimeMs: duration,

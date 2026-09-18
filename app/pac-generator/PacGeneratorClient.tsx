@@ -14,7 +14,9 @@ import {
   formatProxyString,
   generatePacDataUrl,
   generatePacScript,
+  parsePacScript,
   PRESET_TEMPLATES,
+  validateRuleValue,
 } from './engine';
 
 interface PacGeneratorClientProps {
@@ -28,31 +30,51 @@ const TRANSLATIONS = {
     description: '強大且安全的視覺化 PAC 代理配置腳本產生器。自由設定分流規則、IPv4/IPv6 雙棧子網段、多重代理節點與備援鏈，100% 瀏覽器本機生成。',
     presetLabel: '常用情境範本',
     proxyPoolTitle: '代理伺服器池 (Proxy Pool)',
-    addProxyBtn: '新增節點',
+    addProxyBtn: '新增代理節點',
+    addChainBtn: '組合備援鏈',
+    chainTypeLabel: '備援容錯鏈 (Failover Chain)',
+    chainBuilderTitle: '備援順位序列 (依序嘗試故障轉移)',
+    chainAddHop: '加入順位',
+    chainConcatToggle: '以 JS 字串拼接 (+) 多行排版',
     proxyName: '節點名稱',
     proxyType: '類型',
     proxyHost: '主機 / IP',
     proxyPort: '埠號',
-    proxyCustom: '自訂字串 (選填)',
-    rulesTitle: '分流規則編排 (Routing Rules)',
+    proxyCustom: '自訂代理字串 (選填)',
+    rulesTitle: '分流規則排序 (由上而下命中即離開)',
     addRuleBtn: '新增規則',
+    clearProxiesBtn: '清空節點',
+    clearRulesBtn: '清空規則',
+    clearProxiesConfirm: '確定要清空所有代理節點嗎？',
+    clearRulesConfirm: '確定要清空所有分流規則嗎？',
     ruleName: '規則名稱',
     conditionType: '比對條件',
     matchValue: '比對目標值',
     targetAction: '目標動作',
-    ruleDescription: '說明備註',
+    ruleDescription: '說明',
     moveUp: '上移',
     moveDown: '下移',
     delete: '刪除',
     enable: '啟用',
     disable: '停用',
-    defaultActionTitle: '未命中規則時的預設路由',
+    defaultActionTitle: '預設兜底行為 (無任何規則命中時)',
     directOption: 'DIRECT (直連不經代理)',
     previewTitle: '生成的 PAC 腳本 (JavaScript)',
     copyScript: '複製代碼',
     downloadPac: '下載 .pac 檔案',
     copyDataUrl: '複製 Data URI',
     testInTester: '前往 PAC 測試器驗證',
+    importBtn: '匯入腳本 / 設定',
+    exportConfigBtn: '備份設定 (JSON)',
+    importModalTitle: '匯入 PAC 腳本或專案設定',
+    importModalDesc: '支援貼上標準 PAC JavaScript 腳本（FindProxyForURL 函式）或 Smalltools 專案 JSON 檔。系統將自動逆向解析代理伺服器、分流規則（包含多網域/多 IP 條件）與預設兜底行為。',
+    importPlaceholder: '在此貼上 PAC 腳本 (如 function FindProxyForURL...) 或 JSON 設定檔內容...',
+    uploadFileBtn: '選取檔案載入 (.pac / .js / .json)',
+    parseAndApplyBtn: '開始智能解析匯入',
+    importModeReplace: '覆蓋當前設定',
+    importModeAppend: '追加至現有規則',
+    cancelBtn: '取消',
+    multiValueHint: '支援多個值（每行一個，或以逗號/分號分隔）',
     copiedToast: '已複製到剪貼簿！',
     optionsTitle: '進階輸出設定',
     enableIpv6Label: '啟用 IPv6 擴充支援 (isInNetEx)',
@@ -63,18 +85,30 @@ const TRANSLATIONS = {
       domainExact: '完整網域名稱',
       wildcardHost: '主機名萬用字元',
       wildcardUrl: '完整 URL 萬用字元',
-      ipv4Cidr: 'IPv4 網段 (CIDR)',
-      ipv6Cidr: 'IPv6 網段 (CIDR)',
+      ipv4Cidr: '目標 IPv4 位址 / 網段 (CIDR)',
+      ipv6Cidr: '目標 IPv6 位址 / 網段 (CIDR)',
+      clientIpv4: '用戶端本機 IPv4 網段 (myIpAddress)',
+      clientIpv6: '用戶端本機 IPv6 網段 (myIpAddressEx)',
+      protocol: '傳輸協定 (HTTP/HTTPS/FTP)',
+      port: '通訊埠號 (Port)',
+      weekday: '工作日 / 週末 (Weekday)',
+      timeRange: '時段範圍 (Time Range)',
       regex: '正則表達式',
     },
     conditionPlaceholders: {
       plainHost: '無需指定值 (純主機名無點號自動命中)',
-      domainSuffix: '例如：.google.com 或 .corp.internal',
-      domainExact: '例如：api.github.com 或 intranet.local',
+      domainSuffix: '例如：.google.com 或多行填寫多個網域',
+      domainExact: '例如：api.github.com 或多行填寫多個主機',
       wildcardHost: '例如：*.internal.net 或 dev-*.corp',
       wildcardUrl: '例如：https://*.internal/* 或 ftp://*',
-      ipv4Cidr: '例如：10.0.0.0/8 或 192.168.1.0/24',
-      ipv6Cidr: '例如：2001:db8::/32 或 fc00::/7',
+      ipv4Cidr: '例如：192.168.1.1 或 10.0.0.0/8 (每行一個)',
+      ipv6Cidr: '例如：2001:db8::1 或 fc00::/7 (每行一個)',
+      clientIpv4: '例如：10.1.0.0/16 或 192.168.1.0/24 (每行一個)',
+      clientIpv6: '例如：2001:db8::/32 或 fc00::/7 (每行一個)',
+      protocol: '例如：http、https、ftp、ws 或 wss',
+      port: '例如：80、443、8080 或 1080',
+      weekday: '例如：MON-FRI (平日) 或 SAT-SUN (週末)',
+      timeRange: '例如：9-18 (代表 09:00 至 18:00)',
       regex: '例如：^https?://.*\\.internal(:[0-9]+)?/',
     },
     faqTitle: '常見問題與技術解析',
@@ -82,16 +116,16 @@ const TRANSLATIONS = {
     faqItems: [
       {
         q: 'PAC 分流規則支援哪些條件模式？各自適用什麼場景？',
-        a: `本工具支援 8 種條件模式，涵蓋主機、網域、URL、IP 與正則表達式：
+        a: `本工具支援 14 種條件模式，涵蓋主機、網域、URL、IP、用戶端本機分流、傳輸協定、連接埠、時間排程與正則表達式：
 
 ① 純主機名稱 (isPlainHostName)：
 比對不含任何點號「.」的主機名稱（如 http://intranet/ 或 http://hr/）。常用於將內部局域網服務設為 DIRECT 直連，免去繁瑣的網段列舉。
 
 ② 網域後綴 (dnsDomainIs)：
-比對特定網域及其所有子網域。例如填入「.google.com」會同時命中 mail.google.com、drive.google.com 與根網域 google.com。
+比對特定網域及其所有子網域。支援一行輸入一個或多個網域（以換行或逗號分隔）。例如填入「.google.com」會同時命中 mail.google.com、drive.google.com 與根網域 google.com。
 
 ③ 完整網域名稱 (localHostOrDomainIs / host ===)：
-精確比對單一主機名。例如填入「api.github.com」僅對該主機生效，不會影響 raw.githubusercontent.com。
+精確比對單一或多個主機名。例如填入「api.github.com」僅對該主機生效，不會影響 raw.githubusercontent.com。
 
 ④ 主機名萬用字元 (shExpMatch host)：
 使用星號「*」與問號「?」比對主機名結構。例如「*.internal.net」或「git-*.company.com」。
@@ -99,14 +133,46 @@ const TRANSLATIONS = {
 ⑤ 完整 URL 萬用字元 (shExpMatch url)：
 針對完整 URL 進行萬用字元比對（包含協定與路徑）。例如「https://*.secure.bank/*」或「ftp://*」。
 
-⑥ IPv4 網段 / CIDR (isInNet)：
-比對目標伺服器的 IPv4 IP 位址區間。支援標準 CIDR 格式，例如「10.0.0.0/8」、「172.16.0.0/12」或「192.168.1.0/24」。
+⑥ 目標 IPv4 位址 / 網段 (isInNet)：
+比對目標伺服器的 IPv4 IP 位址。支援「單一主機 IP」（如 192.168.1.1，自動以 /32 遮罩比對）與「CIDR 網段」（如 10.0.0.0/8、172.16.0.0/12、192.168.1.0/24），亦支援多組網段批次輸入。無論直接存取 IP 或網域解析命中皆能生效。
 
-⑦ IPv6 網段 / CIDR (isInNetEx)：
-利用現代瀏覽器擴充的 isInNetEx() 函式，支援原生 IPv6 CIDR 比對。例如企業 ULA 私有網段「fc00::/7」或測試網段「2001:db8::/32」。
+⑦ 目標 IPv6 位址 / 網段 (isInNetEx)：
+利用現代瀏覽器擴充的 isInNetEx() 函式進行 IPv6 比對。支援「單一 IPv6 位址」（如 2001:db8::1，自動補齊 /128 遮罩）與「CIDR 網段」（如企業 ULA 私有網段 fc00::/7 或測試網段 2001:db8::/32）。
 
-⑧ 正則表達式 (RegEx)：
-採用 JavaScript 正則表達式進行深度比對。例如「^https?://.*\\.internal(:[0-9]+)?/」，適合複雜的多層過濾需求。`,
+⑧ 用戶端本機 IPv4 網段 (myIpAddress)：
+依據使用者裝置當前所在的本機 IPv4 位址進行分流（如 10.1.0.0/16 走一號網關，10.2.0.0/16 走二號網關）。常用於企業跨據點辦公室的就近代理調度與負載平衡。
+
+⑨ 用戶端本機 IPv6 網段 (myIpAddressEx)：
+依據使用者裝置當前的 IPv6 網路介面位址進行比對分流。
+
+⑩ 傳輸協定 (URL Protocol)：
+比對請求協定（如 http:、https:、ftp:、ws:、wss:），依傳輸層協定自動分流。
+
+⑪ 連接埠 (Port)：
+比對目標通訊埠（如 80、443、8080、8443），針對特定服務端口指派代理伺服器。
+
+⑫ 工作日與週末 (weekdayRange)：
+根據客戶端當前星期週期（如 MON-FRI 工作日或 SAT-SUN 週末）自動切換代理策略。
+
+⑬ 每日時段範圍 (timeRange)：
+根據當前小時範圍（如 9-18 代表上午 9 點至下午 6 點）動態切換上班時段專用代理。
+
+⑭ 正則表達式 (RegExp.test)：
+提供最高自訂自由度，直接以正則表達式對完整目標網址進行高階樣式比對。`,
+      },
+      {
+        q: '可以指定單一 IPv4 或 IPv6 位址進行分流嗎？與「完整網域名稱」有何不同？',
+        a: `可以！而且強烈建議使用「IPv4 / IPv6 位址 / 網段」條件來比對單一 IP：
+
+① 單一 IP 與「完整網域名稱」的關鍵差異：
+• 若在「完整網域名稱」填入 192.168.1.1，腳本產出 host === "192.168.1.1"，這只有在網址列明確鍵入 http://192.168.1.1/ 時才會命中。若使用者訪問 api.local 而其 DNS 解析為 192.168.1.1，則完全無法命中。
+• 若在「IPv4 位址 / 網段」填入單一 IP（例如 192.168.1.1），本工具會自動轉換為 isInNet(host, "192.168.1.1", "255.255.255.255")。此函式同時支援「直接存取 IP」與「網域解析後的實體 IP」雙重命中！
+
+② IPv6 單一 IP 自動補齊：
+若填入 2001:db8::1，本工具會自動補齊 /128 前綴遮罩（生成 isInNetEx(host, "2001:db8::1/128")），完全符合 RFC 與瀏覽器標準規範。
+
+③ 即時語法檢驗：
+輸入 IP 時，工具會即時檢查格式（4 段 0~255、IPv6 格式等）。若有錯字或超出範圍，輸入框會即時跳出警告提示，避免產出無效腳本。`,
       },
       {
         q: '比對 IP 前先行解析主機網域名稱 (dnsResolve) 有何差別？何時該開啟？',
@@ -205,6 +271,11 @@ data:application/x-ns-proxy-autoconfig;base64,....
     presetLabel: 'Quick Presets',
     proxyPoolTitle: 'Proxy Pool',
     addProxyBtn: 'Add Proxy Node',
+    addChainBtn: 'Add Failover Chain',
+    chainTypeLabel: 'Failover Proxy Chain',
+    chainBuilderTitle: 'Failover Sequence (Left-to-Right Failover)',
+    chainAddHop: 'Append Hop',
+    chainConcatToggle: 'Format with JavaScript String Concatenation (+)',
     proxyName: 'Node Name',
     proxyType: 'Type',
     proxyHost: 'Host / IP',
@@ -212,6 +283,10 @@ data:application/x-ns-proxy-autoconfig;base64,....
     proxyCustom: 'Custom String (Optional)',
     rulesTitle: 'Routing Rules Pipeline',
     addRuleBtn: 'Add Rule',
+    clearProxiesBtn: 'Clear Nodes',
+    clearRulesBtn: 'Clear Rules',
+    clearProxiesConfirm: 'Are you sure you want to clear all proxy nodes?',
+    clearRulesConfirm: 'Are you sure you want to clear all routing rules?',
     ruleName: 'Rule Name',
     conditionType: 'Match Condition',
     matchValue: 'Target Value',
@@ -229,6 +304,17 @@ data:application/x-ns-proxy-autoconfig;base64,....
     downloadPac: 'Download .pac File',
     copyDataUrl: 'Copy Data URI',
     testInTester: 'Test in PAC Simulator',
+    importBtn: 'Import Script / Config',
+    exportConfigBtn: 'Backup Config (.json)',
+    importModalTitle: 'Import PAC Script or Configuration',
+    importModalDesc: 'Paste standard PAC JavaScript code (FindProxyForURL function) or a Smalltools JSON configuration. Proxies, routing rules (including multi-domain/multi-IP lists), and default actions will be automatically extracted.',
+    importPlaceholder: 'Paste PAC script (e.g. function FindProxyForURL...) or JSON here...',
+    uploadFileBtn: 'Upload file (.pac / .js / .json)',
+    parseAndApplyBtn: 'Parse & Apply',
+    importModeReplace: 'Replace Current Config',
+    importModeAppend: 'Append to Existing Rules',
+    cancelBtn: 'Cancel',
+    multiValueHint: 'Supports multiple values (one per line, or comma/semicolon separated)',
     copiedToast: 'Copied to clipboard!',
     optionsTitle: 'Advanced Output Options',
     enableIpv6Label: 'Enable IPv6 Extended Support (isInNetEx)',
@@ -239,18 +325,30 @@ data:application/x-ns-proxy-autoconfig;base64,....
       domainExact: 'Exact Hostname',
       wildcardHost: 'Hostname Wildcard',
       wildcardUrl: 'URL Wildcard',
-      ipv4Cidr: 'IPv4 Subnet (CIDR)',
-      ipv6Cidr: 'IPv6 Subnet (CIDR)',
+      ipv4Cidr: 'Target IPv4 Address / Subnet (CIDR)',
+      ipv6Cidr: 'Target IPv6 Address / Subnet (CIDR)',
+      clientIpv4: 'Client Local IPv4 Subnet (myIpAddress)',
+      clientIpv6: 'Client Local IPv6 Subnet (myIpAddressEx)',
+      protocol: 'Protocol (HTTP/HTTPS/FTP)',
+      port: 'Target Port',
+      weekday: 'Weekday Range (Workdays/Weekends)',
+      timeRange: 'Time Range (Hours)',
       regex: 'Regular Expression',
     },
     conditionPlaceholders: {
       plainHost: 'No value needed (matches hostnames without dots)',
-      domainSuffix: 'e.g. .google.com or .corp.internal',
-      domainExact: 'e.g. api.github.com or intranet.local',
+      domainSuffix: 'e.g. .google.com or multiple domains per line',
+      domainExact: 'e.g. api.github.com or multiple hosts per line',
       wildcardHost: 'e.g. *.internal.net or dev-*.corp',
       wildcardUrl: 'e.g. https://*.internal/* or ftp://*',
-      ipv4Cidr: 'e.g. 10.0.0.0/8 or 192.168.1.0/24',
-      ipv6Cidr: 'e.g. 2001:db8::/32 or fc00::/7',
+      ipv4Cidr: 'e.g. 192.168.1.1 or 10.0.0.0/8 (one per line)',
+      ipv6Cidr: 'e.g. 2001:db8::1 or fc00::/7 (one per line)',
+      clientIpv4: 'e.g. 10.1.0.0/16 or 192.168.1.0/24 (one per line)',
+      clientIpv6: 'e.g. 2001:db8::/32 or fc00::/7 (one per line)',
+      protocol: 'e.g. http, https, ftp, ws, or wss',
+      port: 'e.g. 80, 443, 8080, or 1080',
+      weekday: 'e.g. MON-FRI (workdays) or SAT-SUN (weekends)',
+      timeRange: 'e.g. 9-18 (meaning 09:00 to 18:00)',
       regex: 'e.g. ^https?://.*\\.internal(:[0-9]+)?/',
     },
     faqTitle: 'Frequently Asked Questions',
@@ -258,16 +356,16 @@ data:application/x-ns-proxy-autoconfig;base64,....
     faqItems: [
       {
         q: 'What condition match modes are supported in routing rules, and when should I use them?',
-        a: `The generator supports 8 matching conditions covering hostnames, domains, full URLs, IP subnets, and regular expressions:
+        a: `The generator supports 14 matching conditions covering hostnames, domains, full URLs, IP subnets, client local network steering, protocols, ports, time schedules, and regular expressions:
 
 ① Plain Hostname (isPlainHostName):
 Matches hostnames without any dot "." (such as http://intranet/ or http://hr/). Ideal for directing internal local intranet traffic to DIRECT bypass.
 
 ② Domain Suffix (dnsDomainIs):
-Matches a specific domain and all its subdomains. For example, entering ".google.com" matches mail.google.com, drive.google.com, and the apex domain google.com.
+Matches a specific domain and all its subdomains. Supports multiple domains (one per line or comma separated). For example, entering ".google.com" matches mail.google.com, drive.google.com, and the apex domain google.com.
 
 ③ Exact Hostname (localHostOrDomainIs / host ===):
-Matches a single, exact hostname. For example, "api.github.com" will only match that exact host and will not affect raw.githubusercontent.com.
+Matches single or multiple exact hostnames. For example, "api.github.com" will only match that exact host and will not affect raw.githubusercontent.com.
 
 ④ Hostname Wildcard (shExpMatch host):
 Matches hostname patterns using "*" and "?". For example, "*.internal.net" or "git-*.company.com".
@@ -275,14 +373,46 @@ Matches hostname patterns using "*" and "?". For example, "*.internal.net" or "g
 ⑤ URL Wildcard (shExpMatch url):
 Matches the complete request URL including scheme, port, and path. For example, "https://*.secure.bank/*" or "ftp://*".
 
-⑥ IPv4 Subnet / CIDR (isInNet):
-Matches destination IPv4 addresses against CIDR subnets, such as "10.0.0.0/8", "172.16.0.0/12", or "192.168.1.0/24".
+⑥ Target IPv4 Address / Subnet (isInNet):
+Matches destination IPv4 addresses. Supports both single host IPs (e.g. "192.168.1.1", matched with a /32 subnet mask) and CIDR subnets (e.g. "10.0.0.0/8", "172.16.0.0/12", "192.168.1.0/24"). Matches both direct IP access and DNS-resolved addresses. Supports multi-line input.
 
-⑦ IPv6 Subnet / CIDR (isInNetEx):
-Uses the modern isInNetEx() function for native IPv6 CIDR prefix matching, such as enterprise ULA private subnets "fc00::/7" or "2001:db8::/32".
+⑦ Target IPv6 Address / Subnet (isInNetEx):
+Uses the modern isInNetEx() function for native IPv6 matching. Supports single IPv6 addresses (e.g. "2001:db8::1", auto-padded with /128) and CIDR subnets (e.g. enterprise ULA subnets "fc00::/7" or "2001:db8::/32").
 
-⑧ Regular Expression (RegEx):
-Evaluates arbitrary JavaScript regular expressions against the URL or host, such as "^https?://.*\\.internal(:[0-9]+)?/", ideal for complex routing logic.`,
+⑧ Client Local IPv4 Subnet (myIpAddress):
+Matches the client machine's own local IPv4 address (e.g. "10.1.0.0/16"). Essential for multi-branch corporate networks to steer employees in branch A to Proxy Cluster 1 and branch B to Cluster 2.
+
+⑨ Client Local IPv6 Subnet (myIpAddressEx):
+Matches the client device's local IPv6 network interface address for dual-stack branch steering.
+
+⑩ URL Protocol:
+Matches transfer protocols such as http:, https:, ftp:, ws:, and wss: for scheme-level proxy steering.
+
+⑪ Destination Port:
+Matches target network ports (e.g. 80, 443, 8080, 8443) for service-specific forwarding.
+
+⑫ Weekday Range (weekdayRange):
+Dynamically switches proxy policies based on day of the week (e.g. MON-FRI for workdays or SAT-SUN for weekends).
+
+⑬ Daily Time Range (timeRange):
+Applies routing rules during specific hours of the day (e.g. 9-18 for standard business hours).
+
+⑭ Regular Expression (RegExp.test):
+Provides maximum flexibility to test the entire URL against custom regular expressions.`,
+      },
+      {
+        q: 'Can I route traffic by a single IPv4 or IPv6 address? How does it differ from Exact Hostname?',
+        a: `Yes! In fact, using the "IPv4 / IPv6 Address / Subnet" condition is strongly recommended for routing specific IP addresses:
+
+① Key Difference: Single IP vs. Exact Hostname:
+• If you enter 192.168.1.1 under "Exact Hostname", the script generates host === "192.168.1.1". This matches ONLY if the user explicitly types http://192.168.1.1/ in their browser. If they browse to api.local whose DNS resolves to 192.168.1.1, the rule will NOT trigger.
+• In contrast, entering 192.168.1.1 under "IPv4 Address / Subnet" generates isInNet(host, "192.168.1.1", "255.255.255.255"). This function matches BOTH literal IP visits and hostnames resolving to that physical IP address!
+
+② Automatic IPv6 /128 Prefix Completion:
+If you input 2001:db8::1 without a prefix, this generator automatically appends /128 (generating isInNetEx(host, "2001:db8::1/128")), ensuring full compliance with RFC and browser engine standards.
+
+③ Real-time Format Validation:
+As you type IP addresses, the editor validates syntax on the fly (octets between 0-255, hexadecimal groups, prefix ranges). An amber warning will display immediately if syntax errors are detected, preventing invalid PAC scripts.`,
       },
       {
         q: 'What is the difference with "Resolve Host IP Before Subnet Check (dnsResolve)", and when should I enable it?',
@@ -395,6 +525,39 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
   const [resolveIpFirst, setResolveIpFirst] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // 匯入彈窗與狀態
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+  const [importContent, setImportContent] = useState<string>('');
+  const [importMode, setImportMode] = useState<'replace' | 'append'>('replace');
+  const [importError, setImportError] = useState<string | null>(null);
+
+  // 規則拖曳重排狀態與虛擬插入指示框位置
+  const [draggedRuleIndex, setDraggedRuleIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+
+  const handleReorderRule = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+    setRules((prev) => {
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIdx, 1);
+      updated.splice(toIdx, 0, moved);
+      return updated;
+    });
+  };
+
+  const handleDropAtIndex = (targetIndex: number) => {
+    if (draggedRuleIndex === null) return;
+    let finalIndex = targetIndex;
+    if (draggedRuleIndex < targetIndex) {
+      finalIndex = targetIndex - 1;
+    }
+    if (finalIndex !== draggedRuleIndex) {
+      handleReorderRule(draggedRuleIndex, finalIndex);
+    }
+    setDraggedRuleIndex(null);
+    setDropTargetIndex(null);
+  };
+
   // 套用範本
   const handleApplyPreset = (presetId: string) => {
     const found = PRESET_TEMPLATES.find((p) => p.id === presetId);
@@ -448,6 +611,75 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
     URL.revokeObjectURL(url);
   };
 
+  // 匯出 JSON 備份設定檔
+  const handleExportConfig = () => {
+    const projectConfig = {
+      version: 1,
+      proxies,
+      rules,
+      defaultAction,
+      enableIpv6,
+      resolveIpFirst,
+    };
+    const jsonStr = JSON.stringify(projectConfig, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'pac-config.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast(isEn ? 'Config exported!' : '設定已成功匯出！');
+  };
+
+  // 執行智能匯入
+  const handleDoImport = () => {
+    setImportError(null);
+    const res = parsePacScript(importContent);
+    if (!res.success) {
+      setImportError(isEn ? res.messageEn : res.messageZh);
+      return;
+    }
+
+    if (importMode === 'replace') {
+      setProxies(res.proxies);
+      setRules(res.rules);
+      setDefaultAction(res.defaultAction);
+      setEnableIpv6(res.enableIpv6);
+      setResolveIpFirst(res.resolveIpFirst);
+    } else {
+      // 追加模式：合併節點並追加規則
+      setProxies((prev) => {
+        const existingKeys = new Set(prev.map((p) => `${p.type}_${p.host}_${p.port}_${p.customString || ''}`));
+        const newNodes = res.proxies.filter(
+          (p) => !existingKeys.has(`${p.type}_${p.host}_${p.port}_${p.customString || ''}`)
+        );
+        return [...prev, ...newNodes];
+      });
+      setRules((prev) => [...prev, ...res.rules]);
+    }
+
+    setIsImportModalOpen(false);
+    setImportContent('');
+    showToast(isEn ? res.messageEn : res.messageZh);
+  };
+
+  // 讀取上傳檔案
+  const handleImportFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        setImportContent(text);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   // 跨工具連動：傳送到 PAC 測試器
   const handleGoToTester = () => {
     if (typeof window !== 'undefined') {
@@ -463,6 +695,24 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
     setProxies((prev) => [
       ...prev,
       { id: newId, name: isEn ? 'New Proxy' : '新代理節點', type: 'PROXY', host: '127.0.0.1', port: 8080 },
+    ]);
+  };
+
+  const handleAddChain = () => {
+    const newId = `p_${Date.now()}`;
+    const nonChainProxies = proxies.filter((p) => p.type !== 'CHAIN');
+    const initialHops = nonChainProxies.length > 0 ? [nonChainProxies[0].id, 'DIRECT'] : ['DIRECT'];
+    setProxies((prev) => [
+      ...prev,
+      {
+        id: newId,
+        name: isEn ? `Failover Chain ${prev.length + 1}` : `備援代理鏈 ${prev.length + 1}`,
+        type: 'CHAIN',
+        host: 'cluster',
+        port: 8080,
+        chainHops: initialHops,
+        isConcatFormat: true,
+      },
     ]);
   };
 
@@ -523,22 +773,39 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
       accentGlow="rgba(0, 245, 160, 0.6)"
     >
       <div className={styles.container}>
-        {/* 常用範本選擇列 */}
-        <div className="mb-6 flex flex-wrap items-center gap-2" role="region" aria-label={t.presetLabel}>
-          <span className="text-sm font-semibold text-text-sub mr-2">{t.presetLabel}：</span>
-          {PRESET_TEMPLATES.map((preset) => {
-            const isActive = selectedPreset === preset.id;
-            return (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => handleApplyPreset(preset.id)}
-                className={`${styles.presetChip} ${isActive ? styles.presetChipActive : ''}`}
-              >
-                <span>{isEn ? preset.nameEn : preset.nameZh}</span>
-              </button>
-            );
-          })}
+        {/* 頂部操作列：常用範本選擇與匯入 */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3" role="region" aria-label={t.presetLabel}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-text-sub mr-2">{t.presetLabel}：</span>
+            {PRESET_TEMPLATES.map((preset) => {
+              const isActive = selectedPreset === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleApplyPreset(preset.id)}
+                  className={`${styles.presetChip} ${isActive ? styles.presetChipActive : ''}`}
+                >
+                  <span>{isEn ? preset.nameEn : preset.nameZh}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setImportError(null);
+              setIsImportModalOpen(true);
+            }}
+            className={`${styles.actionButton} ${styles.primaryButton}`}
+            style={{ padding: '0.4rem 0.85rem', fontSize: '0.8125rem' }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+            </svg>
+            <span>{t.importBtn}</span>
+          </button>
         </div>
 
         {/* 左右雙欄 Grid */}
@@ -550,25 +817,58 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
               <div className={styles.sectionHeader}>
                 <div className={styles.sectionTitle}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M4 1h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zM6 4h2v1H6V4zm0 8h2v1H6v-1zm0 8h2v1H6v-1z" />
+                    <path d="M4 1h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zm0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1z" />
                   </svg>
                   <span>{t.proxyPoolTitle}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddProxy}
-                  className={`${styles.actionButton} ${styles.secondaryButton}`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                  </svg>
-                  <span>{t.addProxyBtn}</span>
-                </button>
+
+                <div className="flex items-center gap-2">
+                  {proxies.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof window !== 'undefined' && window.confirm(t.clearProxiesConfirm)) {
+                          setProxies([]);
+                        }
+                      }}
+                      className={styles.ghostButton}
+                      title={t.clearProxiesBtn}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                      </svg>
+                      <span>{t.clearProxiesBtn}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleAddProxy}
+                    className={`${styles.actionButton} ${styles.secondaryButton}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                    </svg>
+                    <span>{t.addProxyBtn}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddChain}
+                    className={`${styles.actionButton} ${styles.secondaryButton}`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+                    </svg>
+                    <span>{t.addChainBtn}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-col gap-3">
                 {proxies.map((proxy) => (
-                  <div key={proxy.id} className={styles.ruleCard}>
+                  <div
+                    key={proxy.id}
+                    className={`${styles.ruleCard} ${proxy.type === 'CHAIN' ? styles.chainCard : ''}`}
+                  >
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
                       <input
                         type="text"
@@ -579,7 +879,16 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                       />
                       <select
                         value={proxy.type}
-                        onChange={(e) => handleUpdateProxy(proxy.id, { type: e.target.value as ProxyType })}
+                        onChange={(e) => {
+                          const newType = e.target.value as ProxyType;
+                          const updates: Partial<ProxyNode> = { type: newType };
+                          if (newType === 'CHAIN' && (!proxy.chainHops || proxy.chainHops.length === 0)) {
+                            const others = proxies.filter((p) => p.id !== proxy.id && p.type !== 'CHAIN');
+                            updates.chainHops = others.length > 0 ? [others[0].id, 'DIRECT'] : ['DIRECT'];
+                            updates.isConcatFormat = true;
+                          }
+                          handleUpdateProxy(proxy.id, updates);
+                        }}
                         className="text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
                       >
                         <option value="PROXY">PROXY (HTTP)</option>
@@ -587,8 +896,25 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                         <option value="SOCKS5">SOCKS5</option>
                         <option value="SOCKS">SOCKS</option>
                         <option value="DIRECT">DIRECT</option>
+                        <option value="CHAIN">{t.chainTypeLabel}</option>
                       </select>
-                      {proxy.type !== 'DIRECT' ? (
+                      {proxy.type === 'CHAIN' ? (
+                        <div className="sm:col-span-2 flex items-center justify-between gap-2">
+                          <span className="text-xs text-text-sub font-mono truncate">
+                            {formatProxyString(proxy, proxies)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProxy(proxy.id)}
+                            aria-label={`${t.delete} ${proxy.name}`}
+                            className="p-2 text-text-sub hover:text-red-400 transition-colors shrink-0"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : proxy.type !== 'DIRECT' ? (
                         <>
                           <input
                             type="text"
@@ -636,6 +962,101 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                         </div>
                       )}
                     </div>
+
+                    {/* 備援代理鏈展開建構器 */}
+                    {proxy.type === 'CHAIN' && (
+                      <div className={`mt-3 ${styles.chainBuilder}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-text-sub">
+                            {t.chainBuilderTitle}
+                          </span>
+                          <label className={styles.chainToggle}>
+                            <input
+                              type="checkbox"
+                              checked={proxy.isConcatFormat !== false}
+                              onChange={(e) =>
+                                handleUpdateProxy(proxy.id, { isConcatFormat: e.target.checked })
+                              }
+                            />
+                            <span>{t.chainConcatToggle}</span>
+                          </label>
+                        </div>
+
+                        {/* 順位標籤列表 */}
+                        <div className={styles.chainHopsList}>
+                          {(proxy.chainHops || ['DIRECT']).map((hopId, hopIdx) => {
+                            const matched = proxies.find((p) => p.id === hopId);
+                            const hopName =
+                              hopId === 'DIRECT'
+                                ? 'DIRECT'
+                                : matched
+                                ? `${matched.name} (${formatProxyString(matched, proxies)})`
+                                : hopId;
+
+                            return (
+                              <React.Fragment key={hopIdx}>
+                                <span className={styles.chainBadge}>
+                                  <span className="opacity-70 font-mono">#{hopIdx + 1}</span>
+                                  <span>{hopName}</span>
+                                  {(proxy.chainHops || []).length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = (proxy.chainHops || []).filter((_, i) => i !== hopIdx);
+                                        handleUpdateProxy(proxy.id, { chainHops: updated });
+                                      }}
+                                      className={styles.chainBadgeRemove}
+                                      title={t.delete}
+                                      aria-label={`${t.delete} ${hopName}`}
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                </span>
+                                {hopIdx < (proxy.chainHops || []).length - 1 && (
+                                  <span className={styles.chainArrow}>➔</span>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+
+                        {/* 追加順位控制區 */}
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
+                          <select
+                            id={`select_hop_${proxy.id}`}
+                            className="text-xs bg-select-bg border border-white/10 rounded-lg px-2.5 py-1.5 text-text-main focus:outline-none"
+                            defaultValue="DIRECT"
+                          >
+                            {proxies
+                              .filter((p) => p.id !== proxy.id)
+                              .map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.name} ({formatProxyString(p, proxies)})
+                                </option>
+                              ))}
+                            <option value="DIRECT">DIRECT (直連保底)</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const selectEl = document.getElementById(
+                                `select_hop_${proxy.id}`
+                              ) as HTMLSelectElement | null;
+                              const val = selectEl?.value || 'DIRECT';
+                              const currentHops = proxy.chainHops || [];
+                              handleUpdateProxy(proxy.id, { chainHops: [...currentHops, val] });
+                            }}
+                            className="text-xs px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-text-main transition-colors font-medium flex items-center gap-1 border border-white/10"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                            <span>{t.chainAddHop}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -650,140 +1071,264 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                   </svg>
                   <span>{t.rulesTitle} ({rules.length})</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddRule}
-                  className={`${styles.actionButton} ${styles.secondaryButton}`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                  </svg>
-                  <span>{t.addRuleBtn}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  {rules.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof window !== 'undefined' && window.confirm(t.clearRulesConfirm)) {
+                          setRules([]);
+                        }
+                      }}
+                      className={styles.ghostButton}
+                      title={t.clearRulesBtn}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                      </svg>
+                      <span>{t.clearRulesBtn}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleAddRule}
+                    className={`${styles.actionButton} ${styles.secondaryButton}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                    </svg>
+                    <span>{t.addRuleBtn}</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div
+                className="flex flex-col gap-3"
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDropTargetIndex(null);
+                  }
+                }}
+              >
                 {rules.map((rule, idx) => {
+                  const validation = validateRuleValue(rule.conditionType, rule.value);
+                  const validationMsg = isEn ? validation.messageEn : validation.messageZh;
+
+                  const showDropAbove =
+                    draggedRuleIndex !== null &&
+                    dropTargetIndex === idx &&
+                    draggedRuleIndex !== idx &&
+                    draggedRuleIndex !== idx - 1;
+
+                  const showDropBelow =
+                    idx === rules.length - 1 &&
+                    draggedRuleIndex !== null &&
+                    dropTargetIndex === rules.length &&
+                    draggedRuleIndex !== rules.length - 1;
+
                   return (
-                    <div
-                      key={rule.id}
-                      className={`${styles.ruleCard} ${!rule.enabled ? styles.ruleCardDisabled : ''}`}
-                    >
-                      {/* 上排：規則名稱、排序、開關與刪除 */}
-                      <div className="flex items-center justify-between gap-3 min-w-0">
-                        <div className="flex-1 flex items-center gap-2 min-w-0">
-                          <span className="shrink-0 text-xs font-mono font-semibold text-text-sub px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                            #{idx + 1}
-                          </span>
-                          <input
-                            type="text"
-                            value={rule.name}
-                            onChange={(e) => handleUpdateRule(rule.id, { name: e.target.value })}
-                            placeholder={t.ruleName}
-                            className="flex-1 min-w-0 text-sm font-medium bg-transparent border-b border-white/10 px-2 py-1 text-text-main focus:outline-none focus:border-[var(--theme-color)] transition-colors"
-                          />
-                        </div>
-
-                        <div className="shrink-0 flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleMoveRule(idx, 'up')}
-                            disabled={idx === 0}
-                            aria-label={t.moveUp}
-                            className="p-1 text-text-sub hover:text-text-main disabled:opacity-30"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+                    <React.Fragment key={rule.id}>
+                      {showDropAbove && (
+                        <div className={styles.dropIndicator} aria-hidden="true">
+                          <div className={styles.dropIndicatorBadge}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
                             </svg>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveRule(idx, 'down')}
-                            disabled={idx === rules.length - 1}
-                            aria-label={t.moveDown}
-                            className="p-1 text-text-sub hover:text-text-main disabled:opacity-30"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateRule(rule.id, { enabled: !rule.enabled })}
-                            className={`text-xs px-2 py-1 rounded border transition-colors ${
-                              rule.enabled ? styles.ruleToggleActive : styles.ruleToggleInactive
-                            }`}
-                          >
-                            {rule.enabled ? t.enable : t.disable}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRule(rule.id)}
-                            aria-label={`${t.delete} ${rule.name}`}
-                            className="p-1 text-text-sub hover:text-red-400 transition-colors"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                            </svg>
-                          </button>
+                            <span>{isEn ? `Drop to insert at #${idx + 1}` : `放開以移至第 ${idx + 1} 位`}</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      {/* 中排：條件型態、值、目標動作 */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <div>
-                          <label className="sr-only">{t.conditionType}</label>
-                          <select
-                            value={rule.conditionType}
-                            onChange={(e) =>
-                              handleUpdateRule(rule.id, { conditionType: e.target.value as ConditionType })
-                            }
-                            className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
-                          >
-                            <option value="domainSuffix">{t.conditionTypes.domainSuffix}</option>
-                            <option value="plainHost">{t.conditionTypes.plainHost}</option>
-                            <option value="domainExact">{t.conditionTypes.domainExact}</option>
-                            <option value="wildcardHost">{t.conditionTypes.wildcardHost}</option>
-                            <option value="wildcardUrl">{t.conditionTypes.wildcardUrl}</option>
-                            <option value="ipv4Cidr">{t.conditionTypes.ipv4Cidr}</option>
-                            <option value="ipv6Cidr">{t.conditionTypes.ipv6Cidr}</option>
-                            <option value="regex">{t.conditionTypes.regex}</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          {rule.conditionType !== 'plainHost' ? (
+                      <div
+                        draggable={true}
+                        onDragStart={(e) => {
+                          setDraggedRuleIndex(idx);
+                          setDropTargetIndex(null);
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const midY = rect.top + rect.height / 2;
+                          const targetPos = e.clientY < midY ? idx : idx + 1;
+                          if (dropTargetIndex !== targetPos) {
+                            setDropTargetIndex(targetPos);
+                          }
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (dropTargetIndex !== null) {
+                            handleDropAtIndex(dropTargetIndex);
+                          } else if (draggedRuleIndex !== null && draggedRuleIndex !== idx) {
+                            handleReorderRule(draggedRuleIndex, idx);
+                            setDraggedRuleIndex(null);
+                            setDropTargetIndex(null);
+                          }
+                        }}
+                        onDragEnd={() => {
+                          setDraggedRuleIndex(null);
+                          setDropTargetIndex(null);
+                        }}
+                        className={`${styles.ruleCard} ${!rule.enabled ? styles.ruleCardDisabled : ''} ${
+                          draggedRuleIndex === idx ? styles.ruleCardDragging : ''
+                        }`}
+                      >
+                        {/* 上排：拖曳手柄、規則編號、名稱、開關與刪除 */}
+                        <div className="flex items-center justify-between gap-3 min-w-0">
+                          <div className="flex-1 flex items-center gap-2 min-w-0">
+                            <div
+                              className={styles.dragHandle}
+                              title={isEn ? 'Drag to reorder' : '按住拖曳以調整順序'}
+                              aria-label={isEn ? 'Drag to reorder' : '按住拖曳以調整順序'}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 3H7v2h2V3zm4 0h-2v2h2V3zm4 0h-2v2h2V3zM9 7H7v2h2V7zm4 0h-2v2h2V7zm4 0h-2v2h2V7zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" />
+                              </svg>
+                            </div>
+                            <span className="shrink-0 text-xs font-mono font-semibold text-text-sub px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                              #{idx + 1}
+                            </span>
                             <input
                               type="text"
-                              value={rule.value}
-                              onChange={(e) => handleUpdateRule(rule.id, { value: e.target.value })}
-                              placeholder={t.conditionPlaceholders[rule.conditionType] || t.matchValue}
-                              className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)] placeholder:text-text-sub/50"
+                              value={rule.name}
+                              onChange={(e) => handleUpdateRule(rule.id, { name: e.target.value })}
+                              placeholder={t.ruleName}
+                              className="flex-1 min-w-0 text-sm font-medium bg-transparent border-b border-white/10 px-2 py-1 text-text-main focus:outline-none focus:border-[var(--theme-color)] transition-colors"
                             />
-                          ) : (
-                            <div className="text-xs text-text-sub px-3 py-2.5 italic border border-dashed border-white/10 rounded-lg truncate" title={t.conditionPlaceholders.plainHost}>
-                              {t.conditionPlaceholders.plainHost}
-                            </div>
-                          )}
+                          </div>
+
+                          <div className="shrink-0 flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateRule(rule.id, { enabled: !rule.enabled })}
+                              className={`text-xs px-2.5 py-1 rounded border transition-colors ${
+                                rule.enabled ? styles.ruleToggleActive : styles.ruleToggleInactive
+                              }`}
+                            >
+                              {rule.enabled ? t.enable : t.disable}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteRule(rule.id)}
+                              aria-label={`${t.delete} ${rule.name}`}
+                              className="p-1 text-text-sub hover:text-red-400 transition-colors"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
 
-                        <div>
-                          <label className="sr-only">{t.targetAction}</label>
-                          <select
-                            value={rule.targetProxy}
-                            onChange={(e) => handleUpdateRule(rule.id, { targetProxy: e.target.value })}
-                            className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
-                          >
-                            <option value="DIRECT">{t.directOption}</option>
-                            {proxies.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name} ({formatProxyString(p)})
-                              </option>
-                            ))}
-                          </select>
+                        {/* 中排：條件型態、值、目標動作 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <div>
+                            <label className="sr-only">{t.conditionType}</label>
+                            <select
+                              value={rule.conditionType}
+                              onChange={(e) =>
+                                handleUpdateRule(rule.id, { conditionType: e.target.value as ConditionType })
+                              }
+                              className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                            >
+                              <option value="domainSuffix">{t.conditionTypes.domainSuffix}</option>
+                              <option value="plainHost">{t.conditionTypes.plainHost}</option>
+                              <option value="domainExact">{t.conditionTypes.domainExact}</option>
+                              <option value="wildcardHost">{t.conditionTypes.wildcardHost}</option>
+                              <option value="wildcardUrl">{t.conditionTypes.wildcardUrl}</option>
+                              <option value="ipv4Cidr">{t.conditionTypes.ipv4Cidr}</option>
+                              <option value="ipv6Cidr">{t.conditionTypes.ipv6Cidr}</option>
+                              <option value="clientIpv4">{t.conditionTypes.clientIpv4}</option>
+                              <option value="clientIpv6">{t.conditionTypes.clientIpv6}</option>
+                              <option value="protocol">{t.conditionTypes.protocol}</option>
+                              <option value="port">{t.conditionTypes.port}</option>
+                              <option value="weekday">{t.conditionTypes.weekday}</option>
+                              <option value="timeRange">{t.conditionTypes.timeRange}</option>
+                              <option value="regex">{t.conditionTypes.regex}</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            {rule.conditionType !== 'plainHost' ? (
+                              <textarea
+                                rows={rule.value.includes('\n') ? Math.min(Math.max(rule.value.split('\n').length, 2), 6) : 1}
+                                value={rule.value}
+                                onChange={(e) => handleUpdateRule(rule.id, { value: e.target.value })}
+                                placeholder={t.conditionPlaceholders[rule.conditionType] || t.matchValue}
+                                className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none transition-colors font-mono resize-y placeholder:text-text-sub/50 ${
+                                  !validation.isValid
+                                    ? styles.inputWarning
+                                    : 'bg-black/20 border border-white/10 focus:border-[var(--theme-color)]'
+                                }`}
+                              />
+                            ) : (
+                              <div className="text-xs text-text-sub px-3 py-2.5 italic border border-dashed border-white/10 rounded-lg truncate" title={t.conditionPlaceholders.plainHost}>
+                                {t.conditionPlaceholders.plainHost}
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="sr-only">{t.targetAction}</label>
+                            <select
+                              value={rule.targetProxy}
+                              onChange={(e) => handleUpdateRule(rule.id, { targetProxy: e.target.value })}
+                              className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                            >
+                              <option value="DIRECT">{t.directOption}</option>
+                              {proxies.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.name} ({formatProxyString(p, proxies)})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
+
+                        {/* 卡片底端通欄：即時語法告警 或 溫和輔助提示 */}
+                        {!validation.isValid && validationMsg ? (
+                          <div className={styles.ruleWarningBar} role="alert">
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              className={styles.ruleWarningIcon}
+                              aria-hidden="true"
+                            >
+                              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                            </svg>
+                            <span className={styles.ruleWarningText}>{validationMsg}</span>
+                          </div>
+                        ) : rule.conditionType !== 'plainHost' ? (
+                          <div className={styles.ruleInfoBar}>
+                            <svg
+                              width="13"
+                              height="13"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              className={styles.ruleInfoIcon}
+                              aria-hidden="true"
+                            >
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                            </svg>
+                            <span className={styles.ruleInfoText}>{t.multiValueHint}</span>
+                          </div>
+                        ) : null}
                       </div>
-                    </div>
+
+                      {showDropBelow && (
+                        <div className={styles.dropIndicator} aria-hidden="true">
+                          <div className={styles.dropIndicatorBadge}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                            <span>{isEn ? `Drop to insert at #${rules.length}` : `放開以移至第 ${rules.length} 位`}</span>
+                          </div>
+                        </div>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </div>
@@ -799,7 +1344,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                   <option value="DIRECT">{t.directOption}</option>
                   {proxies.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({formatProxyString(p)})
+                      {p.name} ({formatProxyString(p, proxies)})
                     </option>
                   ))}
                 </select>
@@ -890,6 +1435,17 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
 
                 <button
                   type="button"
+                  onClick={handleExportConfig}
+                  className={`${styles.actionButton} ${styles.secondaryButton}`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
+                  </svg>
+                  <span>{t.exportConfigBtn}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleGoToTester}
                   className={`${styles.actionButton} ${styles.secondaryButton} ${styles.testerLinkButton}`}
                 >
@@ -909,6 +1465,129 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
             </div>
           </div>
         </div>
+
+        {/* 匯入 PAC 腳本或專案設定彈窗 Modal */}
+        {isImportModalOpen && (
+          <div
+            className={styles.modalOverlay}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="import-modal-title"
+          >
+            <div className={styles.modalCard}>
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className={styles.themeAccentText}>
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                  </svg>
+                  <h2 id="import-modal-title" className="text-base font-bold text-text-main">
+                    {t.importModalTitle}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsImportModalOpen(false)}
+                  className="p-1 rounded-lg text-text-sub hover:text-text-main hover:bg-white/10 transition-colors"
+                  aria-label={t.cancelBtn}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  </svg>
+                </button>
+              </div>
+
+              <p className="text-xs text-text-sub leading-relaxed">
+                {t.importModalDesc}
+              </p>
+
+              {/* 檔案上傳列 */}
+              <div className="flex items-center gap-3">
+                <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 border border-white/10 hover:bg-white/10 text-text-main cursor-pointer transition-colors">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+                  </svg>
+                  <span>{t.uploadFileBtn}</span>
+                  <input
+                    type="file"
+                    accept=".pac,.js,.txt,.json"
+                    onChange={handleImportFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* 代碼貼入文字框 */}
+              <textarea
+                value={importContent}
+                onChange={(e) => {
+                  setImportContent(e.target.value);
+                  if (importError) setImportError(null);
+                }}
+                placeholder={t.importPlaceholder}
+                className={styles.modalTextarea}
+              />
+
+              {/* 錯誤提示 */}
+              {importError && (
+                <div className={styles.ruleWarningBar} role="alert">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className={styles.ruleWarningIcon}>
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                  </svg>
+                  <span className={styles.ruleWarningText}>{importError}</span>
+                </div>
+              )}
+
+              {/* 匯入模式選擇與送出按鈕 */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-4 text-xs text-text-sub">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="importMode"
+                      value="replace"
+                      checked={importMode === 'replace'}
+                      onChange={() => setImportMode('replace')}
+                      className="accent-[var(--theme-color)]"
+                    />
+                    <span>{t.importModeReplace}</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="importMode"
+                      value="append"
+                      checked={importMode === 'append'}
+                      onChange={() => setImportMode('append')}
+                      className="accent-[var(--theme-color)]"
+                    />
+                    <span>{t.importModeAppend}</span>
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsImportModalOpen(false)}
+                    className={`${styles.actionButton} ${styles.secondaryButton}`}
+                  >
+                    {t.cancelBtn}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDoImport}
+                    disabled={!importContent.trim()}
+                    className={`${styles.actionButton} ${styles.primaryButton} disabled:opacity-40 disabled:cursor-not-allowed`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+                    </svg>
+                    <span>{t.parseAndApplyBtn}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* FAQ 常見問題 */}
         <FaqSection

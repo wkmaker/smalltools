@@ -296,3 +296,372 @@
   color: #059669;
   border-color: rgba(5, 150, 105, 0.3);
 }
+
+.ruleWarningBar {
+  margin-top: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.ruleWarningText {
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+.ruleWarningIcon {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+:global([data-theme='light']) .ruleWarningBar {
+  background: rgba(217, 119, 6, 0.06);
+  border-color: rgba(217, 119, 6, 0.2);
+}
+
+:global([data-theme='light']) .ruleWarningText {
+  color: #b45309; /* Amber 700 WCAG AA > 4.5:1 */
+}
+
+:global([data-theme='light']) .ruleWarningIcon {
+  color: #b45309;
+}
+
+/* 卡片底端通欄：輔助提示條 */
+.ruleInfoBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ruleInfoIcon {
+  color: var(--text-secondary);
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.ruleInfoText {
+  font-size: 0.75rem; /* text-xs 12px */
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+:global([data-theme='light']) .ruleInfoBar {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+:global([data-theme='light']) .ruleInfoText {
+  color: #475569; /* Slate 600 WCAG AA > 4.5:1 */
+}
+
+:global([data-theme='light']) .ruleInfoIcon {
+  color: #475569;
+}
+
+/* 拖曳手柄與拖曳重排 */
+.dragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: grab;
+  border-radius: 0.25rem;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.dragHandle:hover {
+  opacity: 1;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='light']) .dragHandle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.ruleCardDragging {
+  opacity: 0.45;
+  border-style: dashed !important;
+  transform: scale(0.99);
+}
+
+.ruleCardDragOver {
+  border-color: var(--theme-color, #00f5a0) !important;
+  box-shadow: 0 0 12px rgba(0, 245, 160, 0.25);
+}
+
+.inputWarning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+}
+
+.inputWarning:focus {
+  border-color: #f59e0b !important;
+}
+
+:global([data-theme='light']) .inputWarning {
+  background: rgba(217, 119, 6, 0.06) !important;
+  border-color: #d97706 !important;
+}
+
+:global([data-theme='light']) .inputWarning:focus {
+  border-color: #b45309 !important;
+}
+
+.themeAccentText {
+  color: var(--theme-color, #00f5a0);
+}
+
+:global([data-theme='light']) .themeAccentText {
+  color: #059669; /* Emerald 600 WCAG AA > 4.5:1 */
+}
+
+.ghostButton {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.ghostButton:hover {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+:global([data-theme='light']) .ghostButton:hover {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(220, 38, 38, 0.06);
+}
+
+/* 匯入彈窗 Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 42rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(18, 24, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+:global([data-theme='light']) .modalCard {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+}
+
+.modalTextarea {
+  width: 100%;
+  min-height: 12rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+:global([data-theme='light']) .modalTextarea {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.modalTextarea:focus {
+  outline: none;
+  border-color: var(--theme-color, #00f5a0);
+}
+
+/* 拖曳插入虛擬指示框 (Drop Insertion Placeholder) */
+.dropIndicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  margin: 0.25rem 0;
+  border-radius: 0.75rem;
+  border: 2px dashed rgba(0, 245, 160, 0.7);
+  background: rgba(0, 245, 160, 0.08);
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.15);
+  animation: pulseIndicator 1.5s infinite ease-in-out;
+  pointer-events: none;
+  transition: all 0.15s ease-out;
+}
+
+:global([data-theme='light']) .dropIndicator {
+  border-color: rgba(5, 150, 105, 0.7);
+  background: rgba(5, 150, 105, 0.08);
+  box-shadow: 0 0 12px rgba(5, 150, 105, 0.12);
+}
+
+@keyframes pulseIndicator {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(0.995);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dropIndicatorBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+  background: rgba(0, 245, 160, 0.18);
+  color: #00f5a0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+:global([data-theme='light']) .dropIndicatorBadge {
+  background: rgba(5, 150, 105, 0.15);
+  color: #047857; /* Emerald 700 WCAG AA > 4.5:1 */
+}
+
+/* 備援代理鏈組合器 (Failover Chain Builder) */
+.chainCard {
+  border-color: rgba(0, 245, 160, 0.3) !important;
+  background: rgba(0, 245, 160, 0.03) !important;
+}
+
+:global([data-theme='light']) .chainCard {
+  border-color: rgba(5, 150, 105, 0.25) !important;
+  background: rgba(5, 150, 105, 0.02) !important;
+}
+
+.chainBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='light']) .chainBuilder {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.chainHopsList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+
+.chainBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+:global([data-theme='light']) .chainBadge {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.chainBadgeRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.chainBadgeRemove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.chainArrow {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  font-size: 0.8125rem;
+}
+
+.chainToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.chainToggle input {
+  accent-color: var(--theme-color, #00f5a0);
+}
+
+

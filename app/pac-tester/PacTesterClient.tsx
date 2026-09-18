@@ -51,6 +51,10 @@ const TRANSLATIONS = {
       matchedRule: '執行歷程與條件追蹤 (Execution Trace)',
       noTrace: '此請求未呼叫任何 PAC 內建比對函式或直接由頂層回傳。',
       targetHost: '目標主機名',
+      targetHostType: '主機型態',
+      resolvedIp: 'DNS 解析 IP',
+      clientIp: '客戶端本機 IP (myIpAddress)',
+      protocolAndPort: '協議與連接埠',
       targetPort: '目標連接埠',
       targetProtocol: '協議類型',
     },
@@ -76,6 +80,10 @@ const TRANSLATIONS = {
       desc: '模擬客戶端本機 IP 與特定主機的 DNS 解析結果，無需更動您目前的真實網路連線即可測試邊界情境。',
       clientIpv4: '模擬客戶端 IPv4 (myIpAddress)',
       clientIpv6: '模擬客戶端 IPv6 (myIpAddressEx)',
+      timeSimulationTitle: '時間與排程模擬 (weekdayRange / timeRange)',
+      simulatedDay: '模擬星期 (Day of Week)',
+      simulatedHour: '模擬小時 (Hour: 0 ~ 23)',
+      autoOption: '自動 (跟隨當前系統時間)',
       dnsMapTitle: 'Mock DNS 靜態解析映射 (每行格式: host ip)',
       dnsMapPlaceholder: '例如:\nintranet.corp 10.0.1.5\napi.internal 192.168.1.50\nipv6.corp 2001:db8::5',
       resetBtn: '恢復預設值',
@@ -197,6 +205,10 @@ const TRANSLATIONS = {
       matchedRule: 'Step-by-step Execution Trace',
       noTrace: 'No internal PAC helper functions were invoked (direct return).',
       targetHost: 'Target Host',
+      targetHostType: 'Host Type',
+      resolvedIp: 'DNS Resolved IP',
+      clientIp: 'Client Local IP (myIpAddress)',
+      protocolAndPort: 'Protocol & Port',
       targetPort: 'Target Port',
       targetProtocol: 'Protocol',
     },
@@ -222,6 +234,10 @@ const TRANSLATIONS = {
       desc: 'Simulate client IP and host DNS mappings to test edge cases without modifying real network adapter settings.',
       clientIpv4: 'Simulated Client IPv4 (myIpAddress)',
       clientIpv6: 'Simulated Client IPv6 (myIpAddressEx)',
+      timeSimulationTitle: 'Time & Day Simulation (weekdayRange / timeRange)',
+      simulatedDay: 'Simulated Day of Week',
+      simulatedHour: 'Simulated Hour (0 ~ 23)',
+      autoOption: 'Auto (Follow System Time)',
       dnsMapTitle: 'Mock DNS Host Mapping (One per line: host ip)',
       dnsMapPlaceholder: 'e.g.:\nintranet.corp 10.0.1.5\napi.internal 192.168.1.50\nipv6.corp 2001:db8::5',
       resetBtn: 'Reset Defaults',
@@ -341,6 +357,8 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
   const [mockClientIpv4, setMockClientIpv4] = useState<string>('192.168.1.100');
   const [mockClientIpv6, setMockClientIpv6] = useState<string>('2001:db8::100');
   const [mockDnsText, setMockDnsText] = useState<string>('git.corp.internal 10.0.0.5\napi.internal 192.168.1.50');
+  const [simulatedDay, setSimulatedDay] = useState<string>('AUTO');
+  const [simulatedHour, setSimulatedHour] = useState<number | ''>('');
 
   // 檢查由 PAC 產生器帶來的程式碼
   useEffect(() => {
@@ -363,11 +381,13 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
       }
     });
     return {
-      clientIpv4: mockClientIpv4,
-      clientIpv6: mockClientIpv6,
+      clientIpv4: mockClientIpv4.trim(),
+      clientIpv6: mockClientIpv6.trim(),
       dnsMap,
+      simulatedDay,
+      simulatedHour: simulatedHour === '' ? -1 : Number(simulatedHour),
     };
-  }, [mockClientIpv4, mockClientIpv6, mockDnsText]);
+  }, [mockClientIpv4, mockClientIpv6, mockDnsText, simulatedDay, simulatedHour]);
 
   // 靜態語法診斷 (Linter)
   const lintIssues: PacLintIssue[] = useMemo(() => {
@@ -416,6 +436,8 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     setMockClientIpv4('192.168.1.100');
     setMockClientIpv6('2001:db8::100');
     setMockDnsText('git.corp.internal 10.0.0.5\napi.internal 192.168.1.50\nipv6.corp 2001:db8::5');
+    setSimulatedDay('AUTO');
+    setSimulatedHour('');
   };
 
   // 匯出 CSV 報表
@@ -518,14 +540,6 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
 
                   <button
                     type="button"
-                    onClick={() => setPacScript('')}
-                    className={`${styles.actionButton} ${styles.secondaryButton}`}
-                  >
-                    <span>{t.clearScriptBtn}</span>
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={handleClearAll}
                     title={t.clearAllConfirmTip}
                     className={`${styles.actionButton} ${styles.dangerButton}`}
@@ -567,7 +581,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
               {/* 語法與相容性診斷 Bar */}
               <div className="p-3 rounded-lg border border-white/10 bg-black/20">
                 {lintIssues.length === 0 ? (
-                  <div className={`flex items-center gap-2 text-xs font-medium ${styles.linterClean}`}>
+                  <div className={`flex items-center gap-2 text-sm font-medium ${styles.linterClean}`}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                     </svg>
@@ -575,19 +589,19 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1.5">
-                    <span className="text-xs font-semibold text-text-main">{t.linter.issuesFound}</span>
+                    <span className="text-sm font-semibold text-text-main">{t.linter.issuesFound}</span>
                     {lintIssues.map((issue, idx) => (
                       <div
                         key={idx}
-                        className={`text-xs flex items-start gap-1.5 ${
+                        className={`text-sm leading-relaxed flex items-start gap-1.5 ${
                           issue.severity === 'error'
-                            ? 'text-red-400'
+                            ? styles.lintIssueError
                             : issue.severity === 'warning'
-                            ? 'text-amber-400'
-                            : 'text-text-sub'
+                            ? styles.lintIssueWarning
+                            : styles.lintIssueInfo
                         }`}
                       >
-                        <span>•</span>
+                        <span className="shrink-0">•</span>
                         <span>{isEn ? issue.messageEn : issue.messageZh}</span>
                       </div>
                     ))}
@@ -709,24 +723,37 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                           </code>
                         </div>
 
-                        {/* 請求解析細節 */}
-                        <div className="grid grid-cols-3 gap-2 text-xs text-text-sub pt-2 border-t border-white/5">
-                          <div>
-                            <span className="block font-medium">{t.singleTest.targetHost}</span>
-                            <span className="font-mono text-text-main">{singleResult.host}</span>
+                        {/* 請求解析與 IP 除錯細節 */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-text-sub pt-2.5 border-t border-white/5">
+                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                            <span className="font-medium text-text-sub">{t.singleTest.targetHost}</span>
+                            <span className="font-mono text-text-main truncate" title={singleResult.host}>{singleResult.host}</span>
                           </div>
-                          <div>
-                            <span className="block font-medium">{t.singleTest.targetPort}</span>
-                            <span className="font-mono text-text-main">{singleResult.port}</span>
+
+                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                            <span className="font-medium text-text-sub">{t.singleTest.targetHostType}</span>
+                            <span className="font-mono text-text-main">{singleResult.hostType}</span>
                           </div>
-                          <div>
-                            <span className="block font-medium">{t.singleTest.targetProtocol}</span>
-                            <span className="font-mono text-text-main">{singleResult.protocol.toUpperCase()}</span>
+
+                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                            <span className="font-medium text-text-sub">{t.singleTest.resolvedIp}</span>
+                            <span className="font-mono text-text-main truncate" title={singleResult.resolvedIp}>{singleResult.resolvedIp}</span>
+                          </div>
+
+                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                            <span className="font-medium text-text-sub">{t.singleTest.protocolAndPort}</span>
+                            <span className="font-mono text-text-main">{singleResult.protocol.toUpperCase()} : {singleResult.port}</span>
                           </div>
                         </div>
 
+                        {/* 客戶端本機 IP */}
+                        <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-white/[0.02] border border-white/5 text-text-sub">
+                          <span>{t.singleTest.clientIp}:</span>
+                          <span className="font-mono text-text-main">{singleResult.clientIp}</span>
+                        </div>
+
                         {singleResult.error && (
-                          <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                          <div className={styles.errorBanner}>
                             {singleResult.error}
                           </div>
                         )}
@@ -992,6 +1019,51 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                       rows={4}
                       className="w-full text-sm font-mono bg-black/20 border border-white/10 rounded-lg p-3 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
                     />
+                  </div>
+
+                  {/* 時間與排程模擬 (weekdayRange / timeRange) */}
+                  <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
+                    <span className="text-sm font-semibold text-text-main">
+                      {t.mockContext.timeSimulationTitle}
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-text-sub mb-1">
+                          {t.mockContext.simulatedDay}
+                        </label>
+                        <select
+                          value={simulatedDay}
+                          onChange={(e) => setSimulatedDay(e.target.value)}
+                          className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                        >
+                          <option value="AUTO">{t.mockContext.autoOption}</option>
+                          <option value="MON">MON (星期一)</option>
+                          <option value="TUE">TUE (星期二)</option>
+                          <option value="WED">WED (星期三)</option>
+                          <option value="THU">THU (星期四)</option>
+                          <option value="FRI">FRI (星期五)</option>
+                          <option value="SAT">SAT (星期六)</option>
+                          <option value="SUN">SUN (星期日)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-text-sub mb-1">
+                          {t.mockContext.simulatedHour}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="23"
+                          value={simulatedHour}
+                          onChange={(e) =>
+                            setSimulatedHour(e.target.value === '' ? '' : parseInt(e.target.value, 10))
+                          }
+                          placeholder="例如: 14 (留空則隨系統時間)"
+                          className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex justify-end">

@@ -112,6 +112,90 @@ test('runSinglePacTest: 支援 IPv6 URL 與 isInNetEx 命中', () => {
   const res = runSinglePacTest(SAMPLE_PAC_SCRIPT, 'https://[fc00::1]/service', mockContext);
   assert.equal(res.status, 'DIRECT');
   assert.equal(res.returnString, 'DIRECT');
+  assert.equal(res.hostType, 'IPv6');
+  assert.equal(res.resolvedIp, 'fc00::1');
+  assert.equal(res.clientIp, '192.168.1.100');
   assert.ok(res.traceSteps.some((s) => s.functionName === 'isInNetEx' && s.result === true));
 });
+
+test('runSinglePacTest: 支援 MDN weekdayRange 與 timeRange 時間排程模擬', () => {
+  const script = `function FindProxyForURL(url, host) {
+    if (weekdayRange("MON", "FRI") && timeRange(9, 18)) {
+      return "PROXY work-proxy:8080";
+    }
+    return "DIRECT";
+  }`;
+
+  // 1. 模擬星期三 14:00 (上班時間) -> 走代理
+  const workContext = {
+    clientIpv4: '10.0.0.1',
+    clientIpv6: '2001:db8::1',
+    dnsMap: {},
+    simulatedDay: 'WED',
+    simulatedHour: 14,
+  };
+  const resWork = runSinglePacTest(script, 'https://example.com', workContext);
+  assert.equal(resWork.status, 'PROXY');
+  assert.equal(resWork.returnString, 'PROXY work-proxy:8080');
+
+  // 2. 模擬星期日 14:00 (週末休假) -> 直連
+  const weekendContext = {
+    clientIpv4: '10.0.0.1',
+    clientIpv6: '2001:db8::1',
+    dnsMap: {},
+    simulatedDay: 'SUN',
+    simulatedHour: 14,
+  };
+  const resWeekend = runSinglePacTest(script, 'https://example.com', weekendContext);
+  assert.equal(resWeekend.status, 'DIRECT');
+});
+
+test('runSinglePacTest: 支援使用者提供之 myIpAddress 本機 IP 分流與字串拼接備援代理', () => {
+  const userClientIpScript = `
+function FindProxyForURL(url, host) {
+  if (isInNet(myIpAddress(), "10.1.0.0", "255.255.0.0"))
+  { return "PROXY wcg1.example.com:8080; " + 
+  "PROXY wcg2.example.com:8080";
+  }
+
+  if (isInNet(myIpAddress(), "10.2.0.0", "255.255.0.0"))
+  { return "PROXY wcg1.example.com:8080; " + 
+  "PROXY wcg2.example.com:8080";
+  }
+
+  if (isInNet(myIpAddress(), "10.3.0.0", "255.255.0.0"))
+  { return "PROXY wcg2.example.com:8080; " + 
+  "PROXY wcg1.example.com:8080";
+  }
+
+  if (isInNet(myIpAddress(), "10.4.0.0", "255.255.0.0"))
+  { return "PROXY wcg2.example.com:8080; " + "PROXY wcg1.example.com:8080";
+  }
+
+  return "DIRECT";
+}
+  `;
+
+  // 1. 當本機 IP 為 10.1.50.20，命中第 1 條分流規則
+  const res1 = runSinglePacTest(userClientIpScript, 'https://example.com/test', {
+    clientIpv4: '10.1.50.20',
+  });
+  assert.equal(res1.status, 'PROXY');
+  assert.equal(res1.returnString, 'PROXY wcg1.example.com:8080; PROXY wcg2.example.com:8080');
+
+  // 2. 當本機 IP 為 10.3.1.5，命中第 3 條分流規則
+  const res2 = runSinglePacTest(userClientIpScript, 'https://google.com/', {
+    clientIpv4: '10.3.1.5',
+  });
+  assert.equal(res2.status, 'PROXY');
+  assert.equal(res2.returnString, 'PROXY wcg2.example.com:8080; PROXY wcg1.example.com:8080');
+
+  // 3. 當本機 IP 為 192.168.1.50（未命中任何規則），走兜底 DIRECT
+  const res3 = runSinglePacTest(userClientIpScript, 'https://anywhere.org/', {
+    clientIpv4: '192.168.1.50',
+  });
+  assert.equal(res3.status, 'DIRECT');
+  assert.equal(res3.returnString, 'DIRECT');
+});
+
 

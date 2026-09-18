@@ -324,3 +324,38 @@
 :global([data-theme='light']) .decisionText {
   color: #0284c7;
 }
+
+.lintIssueError {
+  color: #f87171;
+}
+
+.lintIssueWarning {
+  color: #fbbf24;
+}
+
+.lintIssueInfo {
+  color: var(--text-secondary);
+}
+
+:global([data-theme='light']) .lintIssueError {
+  color: #b91c1c; /* Red 700 WCAG AA > 4.5:1 */
+}
+
+:global([data-theme='light']) .lintIssueWarning {
+  color: #b45309; /* Amber 700 WCAG AA > 4.5:1 */
+}
+
+.errorBanner {
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.8125rem;
+  color: #f87171;
+}
+
+:global([data-theme='light']) .errorBanner {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #dc2626; /* Red 600 WCAG AA > 4.5:1 */
+}
