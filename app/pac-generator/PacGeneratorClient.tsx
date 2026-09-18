@@ -79,6 +79,8 @@ const TRANSLATIONS = {
     andConditionBadge: 'AND',
     addAndConditionBtn: '+ 加入 AND 條件',
     andConditionHint: '此規則需同時符合以上全部條件才會命中，例如「協定為 https」且「網域為 example.com」',
+    importWarningsTitle: '匯入時有部分條件未能完全辨識，已改用粗略的 URL 萬用比對，請人工複查以下規則：',
+    dismissBtn: '關閉',
     copiedToast: '已複製到剪貼簿！',
     optionsTitle: '進階輸出設定',
     enableIpv6Label: '啟用 IPv6 擴充支援 (isInNetEx)',
@@ -322,6 +324,8 @@ data:application/x-ns-proxy-autoconfig;base64,....
     andConditionBadge: 'AND',
     addAndConditionBtn: '+ Add AND Condition',
     andConditionHint: 'This rule matches only when ALL conditions above are met, e.g. protocol is https AND domain is example.com',
+    importWarningsTitle: 'Some conditions could not be fully recognized during import and were converted to a rough URL wildcard match. Please review these rules manually:',
+    dismissBtn: 'Dismiss',
     copiedToast: 'Copied to clipboard!',
     optionsTitle: 'Advanced Output Options',
     enableIpv6Label: 'Enable IPv6 Extended Support (isInNetEx)',
@@ -555,6 +559,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
   const [importContent, setImportContent] = useState<string>('');
   const [importMode, setImportMode] = useState<'replace' | 'append'>('replace');
   const [importError, setImportError] = useState<string | null>(null);
+  const [importWarnings, setImportWarnings] = useState<string[] | null>(null);
 
   // 規則拖曳重排狀態與虛擬插入指示框位置
   const [draggedRuleIndex, setDraggedRuleIndex] = useState<number | null>(null);
@@ -593,6 +598,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
     setDefaultAction(found.defaultAction);
     setEnableIpv6(found.enableIpv6);
     setResolveIpFirst(found.resolveIpFirst);
+    setImportWarnings(null);
   };
 
   // 產生 PAC 腳本
@@ -667,6 +673,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
       setImportError(isEn ? res.messageEn : res.messageZh);
       return;
     }
+    setImportWarnings(res.warnings && res.warnings.length > 0 ? res.warnings : null);
 
     if (importMode === 'replace') {
       setProxies(res.proxies);
@@ -1134,6 +1141,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                       onClick={() => {
                         if (typeof window !== 'undefined' && window.confirm(t.clearRulesConfirm)) {
                           setRules([]);
+                          setImportWarnings(null);
                         }
                       }}
                       className={styles.ghostButton}
@@ -1157,6 +1165,40 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                   </button>
                 </div>
               </div>
+
+              {importWarnings && importWarnings.length > 0 && (
+                <div className={styles.ruleWarningBar} role="alert" style={{ marginBottom: '0.75rem', alignItems: 'flex-start' }}>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className={styles.ruleWarningIcon}
+                    aria-hidden="true"
+                    style={{ marginTop: '0.15rem', flexShrink: 0 }}
+                  >
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <p className={styles.ruleWarningText}>{t.importWarningsTitle}</p>
+                    <ul className="mt-1 list-disc list-inside space-y-0.5">
+                      {importWarnings.map((w, i) => (
+                        <li key={i} className={styles.ruleWarningText} style={{ fontWeight: 400 }}>{w}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setImportWarnings(null)}
+                    aria-label={t.dismissBtn}
+                    className="shrink-0 text-text-sub hover:text-text-main transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                  </button>
+                </div>
+              )}
 
               <div
                 className="flex flex-col gap-3"
