@@ -10,7 +10,8 @@ import {
   SanitizationResult,
   DetectedHeaderItem,
 } from './types';
-import { TRANSLATIONS, generateSampleHar } from './constants';
+import { generateSampleHar } from './constants';
+import { TRANSLATIONS } from './translations';
 import { sanitizeHarAsync } from './engine/sanitizer';
 import { downloadBlob } from '../utils/downloadBlob';
 
