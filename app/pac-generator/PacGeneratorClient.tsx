@@ -561,6 +561,18 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[] | null>(null);
 
+  // 檢查由 PAC 測試器帶來的腳本，自動帶入匯入視窗
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const transferred = sessionStorage.getItem('pac_tester_export_code');
+      if (transferred && transferred.trim().length > 0) {
+        setImportContent(transferred);
+        setIsImportModalOpen(true);
+        sessionStorage.removeItem('pac_tester_export_code');
+      }
+    }
+  }, []);
+
   // 規則拖曳重排狀態與虛擬插入指示框位置
   const [draggedRuleIndex, setDraggedRuleIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);

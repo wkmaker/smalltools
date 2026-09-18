@@ -29,6 +29,7 @@ const TRANSLATIONS = {
     description: '專業安全純前端 PAC 模擬執行與除錯環境。支援單一網址深度 Trace、批量網址回歸測試、IPv6 (isInNetEx) 模擬與 DNS 虛擬沙盒，100% 瀏覽器本機運算。',
     scriptPanelTitle: 'PAC 腳本來源 (JavaScript)',
     loadSampleBtn: '載入示範腳本',
+    sendToGeneratorBtn: '送往 PAC 產生器匯入',
     clearScriptBtn: '清空腳本',
     clearAllBtn: '清除全部',
     clearAllConfirmTip: '確定要清空腳本、測試網址與所有測試結果嗎？',
@@ -183,6 +184,7 @@ const TRANSLATIONS = {
     description: 'Professional in-browser Proxy Auto-Config (PAC) debugger and sandbox execution simulator. Step-by-step trace logs, batch regression testing, IPv6 (isInNetEx) simulation, and mock DNS environments.',
     scriptPanelTitle: 'PAC Script Source (JavaScript)',
     loadSampleBtn: 'Load Sample Script',
+    sendToGeneratorBtn: 'Send to PAC Generator',
     clearScriptBtn: 'Clear Script',
     clearAllBtn: 'Clear All',
     clearAllConfirmTip: 'Are you sure you want to clear the script, target URLs, and all test results?',
@@ -419,6 +421,15 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     setBatchResults([]);
   };
 
+  // 跨工具連動：送回 PAC 產生器匯入
+  const handleSendToGenerator = () => {
+    if (typeof window !== 'undefined' && pacScript.trim().length > 0) {
+      sessionStorage.setItem('pac_tester_export_code', pacScript);
+      const targetUrl = isEn ? '/pac-generator/en/' : '/pac-generator/';
+      window.location.href = targetUrl;
+    }
+  };
+
   // 清除全部 (腳本、測試網址、單次與批量結果)
   const handleClearAll = () => {
     if (typeof window !== 'undefined' && pacScript.trim().length > 0) {
@@ -536,6 +547,19 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                     className={`${styles.actionButton} ${styles.secondaryButton}`}
                   >
                     <span>{t.loadSampleBtn}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSendToGenerator}
+                    disabled={!pacScript.trim()}
+                    title={t.sendToGeneratorBtn}
+                    className={`${styles.actionButton} ${styles.secondaryButton}`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z" />
+                    </svg>
+                    <span>{t.sendToGeneratorBtn}</span>
                   </button>
 
                   <button
