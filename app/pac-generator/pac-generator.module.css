@@ -1,0 +1,725 @@
+.container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.layoutGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .layoutGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--glass-shadow, 0 8px 32px 0 rgba(0, 0, 0, 0.36));
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionTitle svg {
+  color: var(--theme-color, #00f5a0);
+  flex-shrink: 0;
+}
+
+.ruleCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  min-width: 0;
+}
+
+.ruleCard:hover {
+  border-color: rgba(0, 245, 160, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ruleCardDisabled {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+.codeBox {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+  min-height: 480px;
+  max-height: 720px;
+  overflow-y: auto;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primaryButton {
+  background: var(--theme-color, #00f5a0);
+  color: #052e16;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.primaryButton:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 15px var(--accent-glow, rgba(0, 245, 160, 0.5));
+}
+
+.secondaryButton {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.secondaryButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.presetChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.presetChip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: var(--theme-color, #00f5a0);
+}
+
+.presetChipActive {
+  background: rgba(0, 245, 160, 0.12);
+  border-color: var(--theme-color, #00f5a0);
+  color: var(--theme-color, #00f5a0);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badgeDirect {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badgeProxy {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+/* 亮色模式高對比與視覺調優 */
+:global([data-theme='light']) .panel {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme='light']) .sectionHeader {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .ruleCard {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .ruleCard:hover {
+  border-color: #059669;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+:global([data-theme='light']) .codeBox {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+:global([data-theme='light']) .primaryButton {
+  background: #059669;
+  color: #ffffff;
+}
+
+:global([data-theme='light']) .secondaryButton {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+:global([data-theme='light']) .secondaryButton:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+:global([data-theme='light']) .presetChip {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .presetChip:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: #059669;
+}
+
+:global([data-theme='light']) .presetChipActive {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #059669;
+  color: #059669;
+}
+
+:global([data-theme='light']) .badgeDirect {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+  border-color: rgba(5, 150, 105, 0.25);
+}
+
+:global([data-theme='light']) .badgeProxy {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.ruleToggleActive {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.ruleToggleInactive {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.testerLinkButton {
+  border-color: rgba(6, 182, 212, 0.35);
+  color: #22d3ee;
+}
+
+.testerLinkButton:hover {
+  border-color: #06b6d4;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+}
+
+.toastSuccess {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+:global([data-theme='light']) .ruleToggleActive {
+  border-color: rgba(5, 150, 105, 0.3);
+  color: #059669;
+  background: rgba(5, 150, 105, 0.1);
+}
+
+:global([data-theme='light']) .testerLinkButton {
+  border-color: rgba(2, 132, 199, 0.3);
+  color: #0284c7;
+}
+
+:global([data-theme='light']) .testerLinkButton:hover {
+  border-color: #0284c7;
+  background: rgba(2, 132, 199, 0.06);
+}
+
+:global([data-theme='light']) .toastSuccess {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+.ruleWarningBar {
+  margin-top: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.ruleWarningText {
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+.ruleWarningIcon {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+:global([data-theme='light']) .ruleWarningBar {
+  background: rgba(217, 119, 6, 0.06);
+  border-color: rgba(217, 119, 6, 0.2);
+}
+
+:global([data-theme='light']) .ruleWarningText {
+  color: #b45309; /* Amber 700 WCAG AA > 4.5:1 */
+}
+
+:global([data-theme='light']) .ruleWarningIcon {
+  color: #b45309;
+}
+
+/* 卡片底端通欄：輔助提示條 */
+.ruleInfoBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ruleInfoIcon {
+  color: var(--text-secondary);
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.ruleInfoText {
+  font-size: 0.75rem; /* text-xs 12px */
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+:global([data-theme='light']) .ruleInfoBar {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+:global([data-theme='light']) .ruleInfoText {
+  color: #475569; /* Slate 600 WCAG AA > 4.5:1 */
+}
+
+:global([data-theme='light']) .ruleInfoIcon {
+  color: #475569;
+}
+
+/* 拖曳手柄與拖曳重排 */
+.dragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: grab;
+  border-radius: 0.25rem;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.dragHandle:hover {
+  opacity: 1;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='light']) .dragHandle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.ruleCardDragging {
+  opacity: 0.45;
+  border-style: dashed !important;
+  transform: scale(0.99);
+}
+
+.ruleCardDragOver {
+  border-color: var(--theme-color, #00f5a0) !important;
+  box-shadow: 0 0 12px rgba(0, 245, 160, 0.25);
+}
+
+.inputWarning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+}
+
+.inputWarning:focus {
+  border-color: #f59e0b !important;
+}
+
+:global([data-theme='light']) .inputWarning {
+  background: rgba(217, 119, 6, 0.06) !important;
+  border-color: #d97706 !important;
+}
+
+:global([data-theme='light']) .inputWarning:focus {
+  border-color: #b45309 !important;
+}
+
+.themeAccentText {
+  color: var(--theme-color, #00f5a0);
+}
+
+:global([data-theme='light']) .themeAccentText {
+  color: #059669; /* Emerald 600 WCAG AA > 4.5:1 */
+}
+
+.ghostButton {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.ghostButton:hover {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+:global([data-theme='light']) .ghostButton:hover {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(220, 38, 38, 0.06);
+}
+
+/* AND 疊加條件：與主要條件同時成立才命中 */
+.andConditionsBlock {
+  margin-top: 0.625rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--theme-color, #00f5a0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.andConditionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.andConditionBadge {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--theme-color, #00f5a0);
+  background: rgba(0, 245, 160, 0.12);
+  border: 1px solid rgba(0, 245, 160, 0.3);
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.4rem;
+}
+
+:global([data-theme='light']) .andConditionBadge {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.1);
+  border-color: rgba(5, 150, 105, 0.25);
+}
+
+.addAndConditionBtn {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addAndConditionBtn:hover {
+  color: var(--theme-color, #00f5a0);
+  border-color: var(--theme-color, #00f5a0);
+}
+
+:global([data-theme='light']) .addAndConditionBtn:hover {
+  color: #059669;
+  border-color: #059669;
+}
+
+/* 匯入彈窗 Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 42rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(18, 24, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+:global([data-theme='light']) .modalCard {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+}
+
+.modalTextarea {
+  width: 100%;
+  min-height: 12rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+:global([data-theme='light']) .modalTextarea {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.modalTextarea:focus {
+  outline: none;
+  border-color: var(--theme-color, #00f5a0);
+}
+
+/* 拖曳插入虛擬指示框 (Drop Insertion Placeholder) */
+.dropIndicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  margin: 0.25rem 0;
+  border-radius: 0.75rem;
+  border: 2px dashed rgba(0, 245, 160, 0.7);
+  background: rgba(0, 245, 160, 0.08);
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.15);
+  animation: pulseIndicator 1.5s infinite ease-in-out;
+  pointer-events: none;
+  transition: all 0.15s ease-out;
+}
+
+:global([data-theme='light']) .dropIndicator {
+  border-color: rgba(5, 150, 105, 0.7);
+  background: rgba(5, 150, 105, 0.08);
+  box-shadow: 0 0 12px rgba(5, 150, 105, 0.12);
+}
+
+@keyframes pulseIndicator {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(0.995);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dropIndicatorBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+  background: rgba(0, 245, 160, 0.18);
+  color: #00f5a0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+:global([data-theme='light']) .dropIndicatorBadge {
+  background: rgba(5, 150, 105, 0.15);
+  color: #047857; /* Emerald 700 WCAG AA > 4.5:1 */
+}
+
+/* 備援代理鏈組合器 (Failover Chain Builder) */
+.chainCard {
+  border-color: rgba(0, 245, 160, 0.3) !important;
+  background: rgba(0, 245, 160, 0.03) !important;
+}
+
+:global([data-theme='light']) .chainCard {
+  border-color: rgba(5, 150, 105, 0.25) !important;
+  background: rgba(5, 150, 105, 0.02) !important;
+}
+
+.chainBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='light']) .chainBuilder {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.chainHopsList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+
+.chainBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+:global([data-theme='light']) .chainBadge {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.chainBadgeRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.chainBadgeRemove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.chainArrow {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  font-size: 0.8125rem;
+}
+
+.chainToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.chainToggle input {
+  accent-color: var(--theme-color, #00f5a0);
+}
+
+

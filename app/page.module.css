@@ -443,6 +443,16 @@
 .ipCalculatorCard:hover h3 { color: #a3e635; text-shadow: 0 0 10px rgba(163, 230, 53, 0.4); }
 .ipCalculatorCard .cardAction { color: #a3e635; }
 
+.pacGeneratorCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 245, 160, 0.06), transparent 40%); }
+.pacGeneratorCard:hover { border-color: rgba(0, 245, 160, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 245, 160, 0.15); }
+.pacGeneratorCard:hover h3 { color: #00f5a0; text-shadow: 0 0 10px rgba(0, 245, 160, 0.4); }
+.pacGeneratorCard .cardAction { color: #00f5a0; }
+
+.pacTesterCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0, 240, 255, 0.06), transparent 40%); }
+.pacTesterCard:hover { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(0, 240, 255, 0.15); }
+.pacTesterCard:hover h3 { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+.pacTesterCard .cardAction { color: #00f0ff; }
+
 .textUtilityCard::before { background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255, 0, 127, 0.06), transparent 40%); }
 .textUtilityCard:hover { border-color: rgba(255, 0, 127, 0.4); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 0, 127, 0.15); }
 .textUtilityCard:hover h3 { color: #ff007f; text-shadow: 0 0 10px rgba(255, 0, 127, 0.4); }
@@ -702,6 +712,12 @@
 
 :global([data-theme='light']) .ipCalculatorCard:hover h3,
 :global([data-theme='light']) .ipCalculatorCard .cardAction { color: #65a30d; text-shadow: none; } /* 深黃綠 */
+
+:global([data-theme='light']) .pacGeneratorCard:hover h3,
+:global([data-theme='light']) .pacGeneratorCard .cardAction { color: #059669; text-shadow: none; } /* 深翠綠 */
+
+:global([data-theme='light']) .pacTesterCard:hover h3,
+:global([data-theme='light']) .pacTesterCard .cardAction { color: #0284c7; text-shadow: none; } /* 深海天藍 */
 
 /* 文字編輯區 - 3 個工具獨立配色 */
 :global([data-theme='light']) .textUtilityCard:hover h3,

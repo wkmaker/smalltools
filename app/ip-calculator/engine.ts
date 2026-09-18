@@ -5,20 +5,9 @@
  * 位址範圍查表與子網段（網路位址/廣播位址/可用範圍）計算等純函數。
  */
 
-export function ipToInt(ipStr: string): number | null {
-  if (typeof ipStr !== 'string') return null;
-  const parts = ipStr.trim().split('.');
-  if (parts.length !== 4) return null;
-  let num = 0;
-  for (let i = 0; i < 4; i++) {
-    const p = parts[i];
-    if (!/^\d+$/.test(p)) return null;
-    const n = parseInt(p, 10);
-    if (n < 0 || n > 255 || (p.length > 1 && p.startsWith('0'))) return null;
-    num = (num << 8) + n;
-  }
-  return num >>> 0;
-}
+import { parseIpv4ToInt } from '../utils/ipUtils.ts';
+
+export const ipToInt = parseIpv4ToInt;
 
 /**
  * 將可能省略末尾 Octet 的縮寫 IP（如 "192.168.20" 或 "10"）正規化為完整

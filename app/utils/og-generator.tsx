@@ -48,6 +48,8 @@ const CARD_ACCENT_COLORS: Record<string, string> = {
   ipDetectorCard: '#0284c7', // 深天藍
   ipCalculatorCard: '#0284c7', // 深天藍
   httpsDnsCard: '#4f46e5', // 湛藍靛青
+  pacGeneratorCard: '#059669', // 深翠綠
+  pacTesterCard: '#0284c7', // 深海天藍
   harCard: '#ea580c', // 深橘
   harCleanerCard: '#ea580c', // 深橘
   timeCard: '#0284c7', // 深天藍

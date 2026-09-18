@@ -301,3 +301,19 @@
   color: #334155; /* Slate 700 高對比度 */
 }
 
+.faqLink {
+  color: var(--faq-accent-dark, #00ff66);
+  text-decoration: underline;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+  word-break: break-all;
+}
+
+.faqLink:hover {
+  opacity: 0.8;
+}
+
+:global([data-theme='light']) .faqLink {
+  color: var(--faq-accent-light, #059669) !important;
+}
+
