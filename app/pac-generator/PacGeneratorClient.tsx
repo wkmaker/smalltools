@@ -260,6 +260,14 @@ PAC 檔案本質上是一段定義了名為 FindProxyForURL(url, host) 的 JavaS
 ④ 本機瀏覽器快取：許多瀏覽器會快取 PAC 腳本達數小時，修改 PAC 後建議重啟瀏覽器或在 chrome://net-internals/#proxy 點擊「Clear bad proxies / Re-apply settings」。`,
       },
       {
+        q: '這個視覺化編輯器適用哪些情境？遇到複雜邏輯是不是該自己寫腳本？',
+        a: `本工具的資料模型是「規則清單，由上而下逐條比對、命中即回傳」，對應到產生的 PAC 腳本就是一串 if (條件) { return 代理; }。這與寫成 if / else if 鏈語意完全相同——因為一旦 return 就會離開函式，不會有 else 分支才有的差異，所以你完全不需要自己組 else。
+
+適用範圍：多筆彼此獨立的比對規則，例如「A 網域配這個代理、B 網域配那個代理、其餘直連」，不論有幾十條都可以線性列出；也支援在單一規則內疊加「AND 條件」（如同時符合「協定為 https」且「網域為 x」）表達較精細的比對。
+
+不適用範圍：需要在單一命中結果「內部」再做分支判斷、跑迴圈、動態組字串等程式邏輯的情境（例如依實際解析出的 IP 才決定要不要多繞一層代理）。這已經超出「規則清單」能表達的範圍——建議直接手寫 JavaScript，或在規則卡片的「自訂代理字串」欄位塞一段原始邏輯，再用 PAC 測試器貼上完整腳本驗證實際執行結果。`,
+      },
+      {
         q: '如何使用 Data URI 格式代替 HTTP 伺服器掛載 PAC 檔案？',
         a: `傳統上 PAC 檔案必須架設在一台具備正確認證與 MIME Type（application/x-ns-proxy-autoconfig）的 Web 伺服器上。
 
@@ -503,6 +511,14 @@ This ensures high availability without breaking Internet access during proxy mai
 ② Subdomain Matching Nuances: dnsDomainIs(host, ".google.com") only matches subdomains (like mail.google.com), not the apex domain google.com. This tool automatically accounts for apex domains in suffix rules.
 ③ Excessive DNS Lookups: Overusing dnsResolve() forces synchronous DNS lookups for every request. If your DNS is slow, browsing performance degrades noticeably.
 ④ Browser Cache: Browsers cache PAC results. After modifying rules, restart your browser or visit chrome://net-internals/#proxy to clear proxy caches.`,
+      },
+      {
+        q: 'What scenarios does this visual editor fit? Should I hand-write the script for complex logic instead?',
+        a: `This tool's data model is "a list of rules, evaluated top to bottom, return on first match" — which maps to a chain of if (condition) { return proxy; } statements in the generated PAC script. That's semantically identical to an if / else if chain, since a return always exits the function immediately, so there's no observable difference from having an else branch — you never need to write else yourself.
+
+Good fit: any number of independent matching rules, e.g. "domain A goes through this proxy, domain B through that one, everything else DIRECT" — a rule list scales fine to dozens of entries. You can also stack "AND conditions" within a single rule (e.g. protocol is https AND domain is x) for more precise matching.
+
+Not a good fit: scenarios that need branching, loops, or dynamic string logic *inside* a single match's outcome (for example, deciding whether to add another proxy hop based on the IP a lookup just resolved). That's beyond what a flat rule list can express — hand-write the JavaScript instead, or drop raw logic into a rule's "Custom String" field, then paste the full script into the PAC tester to verify actual behavior.`,
       },
       {
         q: 'How can I use Data URI format without hosting a web server?',
