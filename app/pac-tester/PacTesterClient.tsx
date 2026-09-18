@@ -321,7 +321,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
               </div>
 
               {/* 語法與相容性診斷 Bar */}
-              <div className="p-3 rounded-lg border border-white/10 bg-black/20">
+              <div className={`p-3 rounded-lg ${styles.diagnosticBar}`}>
                 {lintIssues.length === 0 ? (
                   <div className={`flex items-center gap-2 text-sm font-medium ${styles.linterClean}`}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -403,7 +403,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                         onChange={(e) => setSingleUrl(e.target.value)}
                         placeholder={t.singleTest.urlPlaceholder}
                         onKeyDown={(e) => e.key === 'Enter' && handleRunSingleTest()}
-                        className="flex-1 text-sm bg-black/20 border border-white/10 rounded-lg px-3.5 py-2.5 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                        className={`flex-1 text-sm rounded-lg px-3.5 py-2.5 text-text-main focus:outline-none ${styles.fieldInput}`}
                       />
                       <div className="flex items-center gap-2 shrink-0">
                         <button
@@ -436,7 +436,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                   {/* 測試結果看板 */}
                   {singleResult && (
                     <div className="flex flex-col gap-4 mt-2">
-                      <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col gap-3">
+                      <div className={`p-4 rounded-xl flex flex-col gap-3 ${styles.resultCard}`}>
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-text-sub">
@@ -465,36 +465,36 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                         {/* 回傳字串標籤 */}
                         <div className="flex flex-col gap-1">
                           <span className="text-xs text-text-sub">{t.singleTest.proxyOutput}:</span>
-                          <code className={`text-sm font-mono font-semibold ${styles.proxyOutputCode} p-2.5 rounded-lg bg-black/30 border border-white/5 break-all`}>
+                          <code className={`text-sm font-mono font-semibold ${styles.proxyOutputCode} ${styles.resultCode} p-2.5 rounded-lg break-all`}>
                             {singleResult.returnString}
                           </code>
                         </div>
 
                         {/* 請求解析與 IP 除錯細節 */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-text-sub pt-2.5 border-t border-white/5">
-                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                          <div className={`p-2 rounded-lg flex flex-col gap-0.5 ${styles.metaCard}`}>
                             <span className="font-medium text-text-sub">{t.singleTest.targetHost}</span>
                             <span className="font-mono text-text-main truncate" title={singleResult.host}>{singleResult.host}</span>
                           </div>
 
-                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                          <div className={`p-2 rounded-lg flex flex-col gap-0.5 ${styles.metaCard}`}>
                             <span className="font-medium text-text-sub">{t.singleTest.targetHostType}</span>
                             <span className="font-mono text-text-main">{singleResult.hostType}</span>
                           </div>
 
-                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                          <div className={`p-2 rounded-lg flex flex-col gap-0.5 ${styles.metaCard}`}>
                             <span className="font-medium text-text-sub">{t.singleTest.resolvedIp}</span>
                             <span className="font-mono text-text-main truncate" title={singleResult.resolvedIp}>{singleResult.resolvedIp}</span>
                           </div>
 
-                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-0.5">
+                          <div className={`p-2 rounded-lg flex flex-col gap-0.5 ${styles.metaCard}`}>
                             <span className="font-medium text-text-sub">{t.singleTest.protocolAndPort}</span>
                             <span className="font-mono text-text-main">{singleResult.protocol.toUpperCase()} : {singleResult.port}</span>
                           </div>
                         </div>
 
                         {/* 客戶端本機 IP */}
-                        <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-white/[0.02] border border-white/5 text-text-sub">
+                        <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg text-text-sub ${styles.metaCard}`}>
                           <span>{t.singleTest.clientIp}:</span>
                           <span className="font-mono text-text-main">{singleResult.clientIp}</span>
                         </div>
@@ -516,7 +516,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                         </span>
 
                         {singleResult.traceSteps.length === 0 ? (
-                          <div className="text-xs text-text-sub p-3 italic rounded-lg bg-white/[0.02] border border-white/5">
+                          <div className={`text-xs text-text-sub p-3 italic rounded-lg ${styles.metaCard}`}>
                             {t.singleTest.noTrace}
                           </div>
                         ) : (
@@ -570,7 +570,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                       value={batchUrlsText}
                       onChange={(e) => setBatchUrlsText(e.target.value)}
                       rows={5}
-                      className="w-full text-sm font-mono bg-black/20 border border-white/10 rounded-lg p-3 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                      className={`w-full text-sm font-mono rounded-lg p-3 text-text-main focus:outline-none ${styles.fieldInput}`}
                     />
                   </div>
 
@@ -700,7 +700,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                       {/* 手機端直式卡片清單 */}
                       <div className="block sm:hidden space-y-2">
                         {filteredBatchResults.map((item) => (
-                          <div key={item.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col gap-1.5 text-xs">
+                          <div key={item.id} className={`p-3 rounded-xl flex flex-col gap-1.5 text-xs ${styles.resultCard}`}>
                             <div className="flex items-center justify-between">
                               <span
                                 className={`${styles.statusBadge} ${
@@ -743,7 +743,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                         type="text"
                         value={mockClientIpv4}
                         onChange={(e) => setMockClientIpv4(e.target.value)}
-                        className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                        className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                       />
                     </div>
 
@@ -755,7 +755,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                         type="text"
                         value={mockClientIpv6}
                         onChange={(e) => setMockClientIpv6(e.target.value)}
-                        className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                        className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                       />
                     </div>
                   </div>
@@ -769,7 +769,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                       onChange={(e) => setMockDnsText(e.target.value)}
                       placeholder={t.mockContext.dnsMapPlaceholder}
                       rows={4}
-                      className="w-full text-sm font-mono bg-black/20 border border-white/10 rounded-lg p-3 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                      className={`w-full text-sm font-mono rounded-lg p-3 text-text-main focus:outline-none ${styles.fieldInput}`}
                     />
                   </div>
 
@@ -812,7 +812,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                             setSimulatedHour(e.target.value === '' ? '' : parseInt(e.target.value, 10))
                           }
                           placeholder="例如: 14 (留空則隨系統時間)"
-                          className="w-full text-sm bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
+                          className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                         />
                       </div>
                     </div>

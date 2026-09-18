@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -19,6 +19,23 @@ const ARROW_SVG = (
 );
 
 const ALL_TABS: Tab[] = ['all', 'finance', 'workplace', 'developer', 'network', 'media', 'utility'];
+
+const ACTIVE_TAB_KEY = 'smalltools_active_tab';
+
+function readLocalTab(): Tab | null {
+  try {
+    const v = localStorage.getItem(ACTIVE_TAB_KEY);
+    return v && (ALL_TABS as string[]).includes(v) ? (v as Tab) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalTab(tab: Tab) {
+  try {
+    localStorage.setItem(ACTIVE_TAB_KEY, tab);
+  } catch {}
+}
 
 interface HomeClientProps {
   lang: 'zh-TW' | 'en';
@@ -43,20 +60,40 @@ export default function HomeClient({ lang }: HomeClientProps) {
   const basePath = isEn ? '/en/' : '/';
 
   const searchParams = useSearchParams();
-  const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<Tab>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  // 只在第一次 render 讀取一次網址參數：命中的話當作初始值來源，並在掛載後 flush 進
+  // localStorage（見下方 effect）。之後瀏覽器上一頁/下一頁改變 searchParams 不會反映到
+  // state，這是預期行為（平常操作不同步網址，只有主動分享才產生帶參數連結），
+  // 不要因此加回 effect 監聽 searchParams。
+  const urlCat = searchParams.get('category');
+  const hasValidUrlCat = !!urlCat && (ALL_TABS as string[]).includes(urlCat);
+
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (hasValidUrlCat) return urlCat as Tab;
+    return readLocalTab() ?? 'all';
+  });
+  const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('search')?.trim() || '');
   const [pinnedHrefs, setPinnedHrefs] = useState<string[]>([]);
   const [recentHrefs, setRecentHrefs] = useState<string[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ msg, show: true });
+    toastTimer.current = setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2500);
+  }, []);
+
+  // 網址參數命中時，視為一次「變更」寫回本地，讓之後不帶參數重新造訪也停在這次狀態
+  useEffect(() => {
+    if (hasValidUrlCat) writeLocalTab(urlCat as Tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 1. 初始化讀取 LocalStorage 中的常用釘選與最近使用工具
   useEffect(() => {
-    setIsMounted(true);
     try {
       const savedPinned = localStorage.getItem('smalltools_pinned_tools');
       if (savedPinned) {
@@ -89,14 +126,6 @@ export default function HomeClient({ lang }: HomeClientProps) {
       localStorage.removeItem('smalltools_recent_tools');
     } catch (e) {}
   };
-
-  useEffect(() => {
-    const cat = searchParams.get('category') as Tab | null;
-    const q = searchParams.get('search') || '';
-    if (cat && ALL_TABS.includes(cat)) setActiveTab(cat);
-    setSearchQuery(q);
-    if (searchInputRef.current) searchInputRef.current.value = q;
-  }, [searchParams]);
 
   useEffect(() => {
     let targetId = '';
@@ -136,22 +165,17 @@ export default function HomeClient({ lang }: HomeClientProps) {
     }
   }, []);
 
-  const syncURL = useCallback(
-    (tab: Tab, q: string, immediate = false) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      const update = () => {
-        const params = new URLSearchParams();
-        if (tab !== 'all') params.set('category', tab);
-        if (q) params.set('search', q);
-        const searchStr = params.toString();
-        const url = searchStr ? `${basePath}?${searchStr}` : basePath;
-        router.replace(url, { scroll: false });
-      };
-      if (immediate) update();
-      else debounceRef.current = setTimeout(update, 300);
-    },
-    [router, basePath]
-  );
+  const handleShare = useCallback(() => {
+    const params = new URLSearchParams();
+    if (activeTab !== 'all') params.set('category', activeTab);
+    if (searchQuery) params.set('search', searchQuery);
+    const qs = params.toString();
+    const url = `${window.location.origin}${basePath}${qs ? `?${qs}` : ''}`;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => showToast(t.shareCopied))
+      .catch(() => showToast(t.shareCopyFailed));
+  }, [activeTab, searchQuery, basePath, showToast, t.shareCopied, t.shareCopyFailed]);
 
   const isToolVisible = useCallback((tool: Tool, sectionId: Category, q: string, tab: Tab): boolean => {
     if (tab !== 'all' && sectionId !== tab) return false;
@@ -170,19 +194,16 @@ export default function HomeClient({ lang }: HomeClientProps) {
   const handleTabClick = (tab: Tab) => {
     if (tab === activeTab) return;
     setActiveTab(tab);
-    syncURL(tab, searchQuery, true);
+    writeLocalTab(tab);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const q = e.target.value;
-    setSearchQuery(q);
-    syncURL(activeTab, q);
+    setSearchQuery(e.target.value);
   };
 
   const handleSearchClear = () => {
     setSearchQuery('');
     if (searchInputRef.current) searchInputRef.current.value = '';
-    syncURL(activeTab, '', true);
     searchInputRef.current?.focus();
   };
 
@@ -236,6 +257,19 @@ export default function HomeClient({ lang }: HomeClientProps) {
           </kbd>
         </button>
 
+        <button
+          type="button"
+          onClick={handleShare}
+          title={t.shareBtn}
+          aria-label={t.shareBtn}
+          className="inline-flex items-center justify-center gap-1.5 px-3 max-sm:w-[42px] max-sm:px-0 h-[42px] rounded-xl bg-black/[.04] dark:bg-white/[.06] border border-black/10 dark:border-white/10 backdrop-blur-md text-text-sub hover:text-text-main hover:bg-black/[.08] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/20 transition-all text-xs font-medium cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
+          </svg>
+          <span className="hidden sm:inline">{isEn ? 'Share' : '分享'}</span>
+        </button>
+
         <Link
           href={t.langToggleUrl}
           prefetch={false}
@@ -268,6 +302,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
           <input
             ref={searchInputRef}
             type="text"
+            defaultValue={searchQuery}
             placeholder={t.searchPlaceholder}
             autoComplete="off"
             onChange={handleSearchChange}
@@ -311,7 +346,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
       </div>
 
       {/* ── 最近使用工具快速存取列 (Recent Tools Bar) ── */}
-      {isMounted && recentTools.length > 0 && activeTab === 'all' && !searchQuery && (
+      {recentTools.length > 0 && activeTab === 'all' && !searchQuery && (
         <div className={styles.recentBar}>
           <div className="flex items-center gap-1.5 text-xs font-medium text-text-sub">
             <span className="text-text-main flex-shrink-0">{CLOCK_ICON}</span>
@@ -349,7 +384,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
       )}
 
       {/* ── 我的常用工具 (Pinned Tools) 專屬區段 ── */}
-      {isMounted && pinnedTools.length > 0 && activeTab === 'all' && !searchQuery && (
+      {pinnedTools.length > 0 && activeTab === 'all' && !searchQuery && (
         <div className={`${styles.categorySection} ${styles.pinnedCategorySection}`}>
           <div className="flex items-center justify-between mb-6">
             <h2 className={styles.sectionTitle} style={{ margin: 0 }}>
@@ -530,6 +565,18 @@ export default function HomeClient({ lang }: HomeClientProps) {
         </a>
         <span className="hidden sm:inline text-white/20">•</span>
         <span className="font-mono opacity-60">v{appVersion}</span>
+      </div>
+
+      {/* Toast Notification */}
+      <div
+        className={`fixed bottom-8 right-8 flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl z-[100] pointer-events-none
+          bg-surface-glass border border-border-glass backdrop-blur-[16px] text-text-main shadow-lg
+          transition-all duration-300 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      >
+        <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        </svg>
+        {toast.msg}
       </div>
     </div>
   );

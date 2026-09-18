@@ -28,6 +28,9 @@ interface HomeTranslations {
   unpinTool: string;
   clearRecent: string;
   noPinnedHint: string;
+  shareBtn: string;
+  shareCopied: string;
+  shareCopyFailed: string;
 }
 
 export const TRANSLATIONS: Record<'zh-TW' | 'en', HomeTranslations> = {
@@ -63,6 +66,9 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', HomeTranslations> = {
     unpinTool: '取消釘選',
     clearRecent: '清除紀錄',
     noPinnedHint: '點擊任何工具卡片右上角的星號即可釘選常用工具至此處快速存取。',
+    shareBtn: '複製分享連結',
+    shareCopied: '已複製分享連結',
+    shareCopyFailed: '複製失敗，請手動複製網址',
   },
   en: {
     title: 'Online Toolbox',
@@ -96,5 +102,8 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', HomeTranslations> = {
     unpinTool: 'Unpin tool',
     clearRecent: 'Clear recent',
     noPinnedHint: 'Click the star icon on any tool card to pin your favorite tools here for quick access.',
+    shareBtn: 'Copy share link',
+    shareCopied: 'Share link copied',
+    shareCopyFailed: 'Copy failed, please copy the URL manually',
   },
 };

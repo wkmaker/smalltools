@@ -103,6 +103,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .primaryButton {
@@ -447,6 +449,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
@@ -720,6 +724,21 @@
 
 .chainToggle input {
   accent-color: var(--theme-color, #00f5a0);
+}
+
+/* ── 一般輸入框 / 文字區域（規則名稱、比對值、Proxy 名稱/主機/連接埠） ── */
+.fieldInput {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fieldInput:focus {
+  border-color: var(--theme-color, #00f5a0);
+}
+
+:global([data-theme='light']) .fieldInput {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.12);
 }
 
 
