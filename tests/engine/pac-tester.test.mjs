@@ -102,3 +102,16 @@ test('lintPacScript: 靜態相容性診斷', () => {
   const issues2 = lintPacScript(ipv6LegacyScript);
   assert.ok(issues2.some((i) => i.severity === 'warning' && i.messageZh.includes('isInNetEx')));
 });
+
+test('runSinglePacTest: 支援 IPv6 URL 與 isInNetEx 命中', () => {
+  const mockContext = {
+    clientIpv4: '192.168.1.100',
+    clientIpv6: '2001:db8::100',
+    dnsMap: {},
+  };
+  const res = runSinglePacTest(SAMPLE_PAC_SCRIPT, 'https://[fc00::1]/service', mockContext);
+  assert.equal(res.status, 'DIRECT');
+  assert.equal(res.returnString, 'DIRECT');
+  assert.ok(res.traceSteps.some((s) => s.functionName === 'isInNetEx' && s.result === true));
+});
+

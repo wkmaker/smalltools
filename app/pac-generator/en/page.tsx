@@ -68,6 +68,21 @@ Uses the modern isInNetEx() function for native IPv6 CIDR prefix matching, such 
 Evaluates arbitrary JavaScript regular expressions against the URL or host, such as "^https?://.*\\.internal(:[0-9]+)?/", ideal for complex routing logic.`,
   },
   {
+    q: 'What is the difference with "Resolve Host IP Before Subnet Check (dnsResolve)", and when should I enable it?',
+    a: `This setting controls whether the PAC script forces a synchronous DNS lookup before evaluating IP subnet rules (isInNet / isInNetEx):
+
+① Disabled (Default & Recommended for Performance):
+The script outputs isInNet(host, ...).
+When target URLs are IP literals (e.g., http://192.168.1.1/ or http://[fc00::1]/), subnets are matched immediately. When given standard domain names (e.g., google.com), modern browser engines handle lookups internally without triggering blocking synchronous DNS stalls.
+
+② Enabled (Forced DNS Resolution):
+The script outputs isInNet(dnsResolve(host), ...).
+The browser is forced to pause and synchronously resolve every hostname to an IP address before evaluating subnet rules.
+
+When to use:
+Enable this ONLY if you are deploying to legacy runtimes (such as older WinINet components or embedded WebViews) where isInNet fails to evaluate domain names automatically. In modern environments, keep it disabled for maximum browsing speed.`,
+  },
+  {
     q: 'What is a PAC (Proxy Auto-Config) file and how does it work?',
     a: `A PAC (Proxy Auto-Config) file is a standard introduced by Netscape in 1996.
 
@@ -92,7 +107,10 @@ Open System Settings ➔ Network ➔ Select your active connection ➔ Details..
 ③ iOS / iPadOS:
 Go to Settings ➔ Wi-Fi ➔ Tap the "i" info icon next to your network ➔ Scroll down to "Configure Proxy" ➔ Choose "Automatic" ➔ Paste the URL.
 
-④ Browser Extensions (e.g. SwitchyOmega):
+④ Mozilla Firefox:
+Open Settings ➔ General ➔ Network Settings ➔ Click "Settings..." ➔ Select "Automatic proxy configuration URL" ➔ Enter URL and confirm.
+
+⑤ Browser Extensions (e.g. SwitchyOmega):
 Create a new "PAC Profile", paste the generated script into the code box or point to the PAC URL for immediate switching.`,
   },
   {

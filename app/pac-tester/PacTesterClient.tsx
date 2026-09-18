@@ -29,7 +29,9 @@ const TRANSLATIONS = {
     description: '專業安全純前端 PAC 模擬執行與除錯環境。支援單一網址深度 Trace、批量網址回歸測試、IPv6 (isInNetEx) 模擬與 DNS 虛擬沙盒，100% 瀏覽器本機運算。',
     scriptPanelTitle: 'PAC 腳本來源 (JavaScript)',
     loadSampleBtn: '載入示範腳本',
-    clearBtn: '清空',
+    clearScriptBtn: '清空腳本',
+    clearAllBtn: '清除全部',
+    clearAllConfirmTip: '確定要清空腳本、測試網址與所有測試結果嗎？',
     uploadBtn: '上傳 .pac 檔案',
     dropzoneTip: '支援直接拖曳 .pac 或 .js 檔案至此處載入',
     tabs: {
@@ -41,6 +43,7 @@ const TRANSLATIONS = {
       urlLabel: '測試網址 (URL)',
       urlPlaceholder: '輸入欲測試的網址，如 https://git.corp.internal/api',
       runBtn: '執行模擬測試',
+      clearBtn: '清空',
       resultTitle: '測試結果評估',
       status: '最終分流決策',
       proxyOutput: '回傳字串',
@@ -54,6 +57,7 @@ const TRANSLATIONS = {
     batchTest: {
       urlsLabel: '待測網址清單 (每行一個)',
       runBtn: '執行批量測試',
+      clearBtn: '清空網址',
       exportCsv: '匯出 CSV 報表',
       filterAll: '全部結果',
       filterDirect: '僅直連 (DIRECT)',
@@ -73,7 +77,8 @@ const TRANSLATIONS = {
       clientIpv4: '模擬客戶端 IPv4 (myIpAddress)',
       clientIpv6: '模擬客戶端 IPv6 (myIpAddressEx)',
       dnsMapTitle: 'Mock DNS 靜態解析映射 (每行格式: host ip)',
-      dnsMapPlaceholder: '例如:\nintranet.corp 10.0.1.5\napi.internal 192.168.1.50',
+      dnsMapPlaceholder: '例如:\nintranet.corp 10.0.1.5\napi.internal 192.168.1.50\nipv6.corp 2001:db8::5',
+      resetBtn: '恢復預設值',
     },
     linter: {
       clean: '腳本語法檢驗正常，已具備標準 FindProxyForURL 函式。',
@@ -82,6 +87,22 @@ const TRANSLATIONS = {
     faqTitle: '常見問題與技術解析',
     faqSubtitle: '深入瞭解 PAC 除錯技巧、執行 Trace、批量回歸與 IPv6 虛擬模擬',
     faqItems: [
+      {
+        q: '除錯器是否支援 IPv6？如何測試 isInNetEx 與 IPv6 網段？',
+        a: `是的，本除錯器具備純前端沙盒引擎，完整支援現代 IPv6 PAC 擴展標準：
+
+① 128 位元 CIDR 前綴比對：
+底層以 BigInt 精確運算，支援 isInNetEx(host, "fc00::/7")、isInNetEx(host, "2001:db8::/32") 等任何 IPv6 CIDR 遮罩。
+
+② IPv6 目標網址與主機名稱：
+您可在單一或批量測試中直接輸入帶有方括號的 IPv6 網址（如 https://[fc00::1]/service 或 http://[2001:db8::1]:8080/），沙盒能自動解析並比對。
+
+③ 虛擬客戶端雙棧 IP (myIpAddressEx)：
+在「虛擬環境與 DNS 模擬」頁籤中，可自訂模擬客戶端的 IPv6 位址，供腳本中的 myIpAddressEx() 使用。
+
+④ Mock DNS IPv6 映射：
+您可以在 Mock DNS 中將特定內部網域映射到 IPv6 位址（例如 internal.svc 2001:db8::100），以此測試網域名稱解析後的 IPv6 分流策略。`,
+      },
       {
         q: '為什麼需要 PAC 測試與除錯器？傳統排查有何痛點？',
         a: `在作業系統或瀏覽器（如 Chrome / Edge / macOS）中套用 PAC 檔案時，整個網路棧是處於「黑箱狀態」的：
@@ -154,7 +175,9 @@ const TRANSLATIONS = {
     description: 'Professional in-browser Proxy Auto-Config (PAC) debugger and sandbox execution simulator. Step-by-step trace logs, batch regression testing, IPv6 (isInNetEx) simulation, and mock DNS environments.',
     scriptPanelTitle: 'PAC Script Source (JavaScript)',
     loadSampleBtn: 'Load Sample Script',
-    clearBtn: 'Clear',
+    clearScriptBtn: 'Clear Script',
+    clearAllBtn: 'Clear All',
+    clearAllConfirmTip: 'Are you sure you want to clear the script, target URLs, and all test results?',
     uploadBtn: 'Upload .pac File',
     dropzoneTip: 'Drag & drop a .pac or .js file here to load',
     tabs: {
@@ -166,6 +189,7 @@ const TRANSLATIONS = {
       urlLabel: 'Test Target URL',
       urlPlaceholder: 'Enter a URL to test, e.g. https://git.corp.internal/api',
       runBtn: 'Run Simulation',
+      clearBtn: 'Clear',
       resultTitle: 'Evaluation Result',
       status: 'Routing Decision',
       proxyOutput: 'Return String',
@@ -179,6 +203,7 @@ const TRANSLATIONS = {
     batchTest: {
       urlsLabel: 'URLs to Test (One per line)',
       runBtn: 'Run Batch Verification',
+      clearBtn: 'Clear URLs',
       exportCsv: 'Export CSV Report',
       filterAll: 'All Results',
       filterDirect: 'DIRECT Only',
@@ -198,7 +223,8 @@ const TRANSLATIONS = {
       clientIpv4: 'Simulated Client IPv4 (myIpAddress)',
       clientIpv6: 'Simulated Client IPv6 (myIpAddressEx)',
       dnsMapTitle: 'Mock DNS Host Mapping (One per line: host ip)',
-      dnsMapPlaceholder: 'e.g.:\nintranet.corp 10.0.1.5\napi.internal 192.168.1.50',
+      dnsMapPlaceholder: 'e.g.:\nintranet.corp 10.0.1.5\napi.internal 192.168.1.50\nipv6.corp 2001:db8::5',
+      resetBtn: 'Reset Defaults',
     },
     linter: {
       clean: 'Script syntax is valid with standard FindProxyForURL entry point.',
@@ -207,6 +233,22 @@ const TRANSLATIONS = {
     faqTitle: 'Frequently Asked Questions',
     faqSubtitle: 'In-depth guide to PAC debugging, execution tracing, batch verification, and IPv6 sandbox testing',
     faqItems: [
+      {
+        q: 'Does the tester support IPv6? How can I test isInNetEx and IPv6 subnets?',
+        a: `Yes, this simulator fully supports modern IPv6 PAC extensions with a 128-bit BigInt sandbox engine:
+
+① 128-bit CIDR Prefix Matching:
+Native support for isInNetEx(host, "fc00::/7"), isInNetEx(host, "2001:db8::/32"), and any standard IPv6 CIDR prefix.
+
+② IPv6 Target URLs & Hostnames:
+You can test bracketed IPv6 literals directly (e.g. https://[fc00::1]/service or http://[2001:db8::1]:8080/), which the sandbox automatically evaluates.
+
+③ Dual-Stack Client Simulation (myIpAddressEx):
+Configure mock client IPv6 addresses in the "Mock Environment & DNS" tab for scripts invoking myIpAddressEx().
+
+④ Mock DNS IPv6 Mapping:
+Map intranet domain names directly to IPv6 addresses (e.g. internal.svc 2001:db8::100) to test domain-to-IPv6 routing pipelines without touching real DNS.`,
+      },
       {
         q: 'Why do we need a dedicated PAC Tester & Debugger?',
         a: `When testing a PAC file directly in operating systems or browsers (Chrome, Edge, macOS), execution is a complete black box:
@@ -338,11 +380,42 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     setSingleResult(res);
   };
 
+  // 清空單次測試
+  const handleClearSingle = () => {
+    setSingleUrl('');
+    setSingleResult(null);
+  };
+
   // 執行批量測試
   const handleRunBatchTest = () => {
     const urls = batchUrlsText.split('\n').filter((u) => u.trim().length > 0);
     const results = runBatchPacTest(pacScript, urls, mockContext);
     setBatchResults(results);
+  };
+
+  // 清空批量測試
+  const handleClearBatch = () => {
+    setBatchUrlsText('');
+    setBatchResults([]);
+  };
+
+  // 清除全部 (腳本、測試網址、單次與批量結果)
+  const handleClearAll = () => {
+    if (typeof window !== 'undefined' && pacScript.trim().length > 0) {
+      if (!window.confirm(t.clearAllConfirmTip)) return;
+    }
+    setPacScript('');
+    setSingleUrl('');
+    setSingleResult(null);
+    setBatchUrlsText('');
+    setBatchResults([]);
+  };
+
+  // 重設 Mock Context 為預設值
+  const handleResetMock = () => {
+    setMockClientIpv4('192.168.1.100');
+    setMockClientIpv6('2001:db8::100');
+    setMockDnsText('git.corp.internal 10.0.0.5\napi.internal 192.168.1.50\nipv6.corp 2001:db8::5');
   };
 
   // 匯出 CSV 報表
@@ -434,13 +507,33 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                   <span>{t.scriptPanelTitle}</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     type="button"
                     onClick={() => setPacScript(SAMPLE_PAC_SCRIPT)}
                     className={`${styles.actionButton} ${styles.secondaryButton}`}
                   >
                     <span>{t.loadSampleBtn}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPacScript('')}
+                    className={`${styles.actionButton} ${styles.secondaryButton}`}
+                  >
+                    <span>{t.clearScriptBtn}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    title={t.clearAllConfirmTip}
+                    className={`${styles.actionButton} ${styles.dangerButton}`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                    </svg>
+                    <span>{t.clearAllBtn}</span>
                   </button>
 
                   <label className={`${styles.actionButton} ${styles.secondaryButton} cursor-pointer`}>
@@ -556,16 +649,26 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                         onKeyDown={(e) => e.key === 'Enter' && handleRunSingleTest()}
                         className="flex-1 text-sm bg-black/20 border border-white/10 rounded-lg px-3.5 py-2.5 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
                       />
-                      <button
-                        type="button"
-                        onClick={handleRunSingleTest}
-                        className={`${styles.actionButton} ${styles.primaryButton}`}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                        <span>{t.singleTest.runBtn}</span>
-                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={handleRunSingleTest}
+                          className={`${styles.actionButton} ${styles.primaryButton}`}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                          <span>{t.singleTest.runBtn}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleClearSingle}
+                          className={`${styles.actionButton} ${styles.secondaryButton}`}
+                        >
+                          <span>{t.singleTest.clearBtn}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -697,31 +800,39 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={handleRunBatchTest}
-                      className={`${styles.actionButton} ${styles.primaryButton}`}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                      <span>{t.batchTest.runBtn}</span>
-                    </button>
-
-                    {batchResults.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
-                        onClick={handleExportCsv}
-                        className={`${styles.actionButton} ${styles.secondaryButton}`}
+                        onClick={handleRunBatchTest}
+                        className={`${styles.actionButton} ${styles.primaryButton}`}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                          <path d="M8 5v14l11-7z" />
                         </svg>
-                        <span>{t.batchTest.exportCsv}</span>
+                        <span>{t.batchTest.runBtn}</span>
                       </button>
-                    )}
-                  </div>
+
+                      <button
+                        type="button"
+                        onClick={handleClearBatch}
+                        className={`${styles.actionButton} ${styles.secondaryButton}`}
+                      >
+                        <span>{t.batchTest.clearBtn}</span>
+                      </button>
+
+                      {batchResults.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleExportCsv}
+                          className={`${styles.actionButton} ${styles.secondaryButton}`}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                          </svg>
+                          <span>{t.batchTest.exportCsv}</span>
+                        </button>
+                      )}
+                    </div>
 
                   {/* 批量測試報表結果 */}
                   {batchResults.length > 0 && (
@@ -881,6 +992,16 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                       rows={4}
                       className="w-full text-sm font-mono bg-black/20 border border-white/10 rounded-lg p-3 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
                     />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleResetMock}
+                      className={`${styles.actionButton} ${styles.secondaryButton}`}
+                    >
+                      <span>{t.mockContext.resetBtn}</span>
+                    </button>
                   </div>
                 </div>
               )}

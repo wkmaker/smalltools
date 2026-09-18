@@ -40,6 +40,22 @@ const jsonLd = {
 
 const faqJsonLd = generateFaqSchema([
   {
+    q: 'Does the tester support IPv6? How can I test isInNetEx and IPv6 subnets?',
+    a: `Yes, this simulator fully supports modern IPv6 PAC extensions with a 128-bit BigInt sandbox engine:
+
+① 128-bit CIDR Prefix Matching:
+Native support for isInNetEx(host, "fc00::/7"), isInNetEx(host, "2001:db8::/32"), and any standard IPv6 CIDR prefix.
+
+② IPv6 Target URLs & Hostnames:
+You can test bracketed IPv6 literals directly (e.g. https://[fc00::1]/service or http://[2001:db8::1]:8080/), which the sandbox automatically evaluates.
+
+③ Dual-Stack Client Simulation (myIpAddressEx):
+Configure mock client IPv6 addresses in the "Mock Environment & DNS" tab for scripts invoking myIpAddressEx().
+
+④ Mock DNS IPv6 Mapping:
+Map intranet domain names directly to IPv6 addresses (e.g. internal.svc 2001:db8::100) to test domain-to-IPv6 routing pipelines without touching real DNS.`,
+  },
+  {
     q: 'Why do we need a dedicated PAC Tester & Debugger?',
     a: `When testing a PAC file directly in operating systems or browsers (Chrome, Edge, macOS), execution is a complete black box:
 

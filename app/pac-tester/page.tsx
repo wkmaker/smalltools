@@ -40,6 +40,22 @@ const jsonLd = {
 
 const faqJsonLd = generateFaqSchema([
   {
+    q: '除錯器是否支援 IPv6？如何測試 isInNetEx 與 IPv6 網段？',
+    a: `是的，本除錯器具備純前端沙盒引擎，完整支援現代 IPv6 PAC 擴展標準：
+
+① 128 位元 CIDR 前綴比對：
+底層以 BigInt 精確運算，支援 isInNetEx(host, "fc00::/7")、isInNetEx(host, "2001:db8::/32") 等任何 IPv6 CIDR 遮罩。
+
+② IPv6 目標網址與主機名稱：
+您可在單一或批量測試中直接輸入帶有方括號的 IPv6 網址（如 https://[fc00::1]/service 或 http://[2001:db8::1]:8080/），沙盒能自動解析並比對。
+
+③ 虛擬客戶端雙棧 IP (myIpAddressEx)：
+在「虛擬環境與 DNS 模擬」頁籤中，可自訂模擬客戶端的 IPv6 位址，供腳本中的 myIpAddressEx() 使用。
+
+④ Mock DNS IPv6 映射：
+您可以在 Mock DNS 中將特定內部網域映射到 IPv6 位址（例如 internal.svc 2001:db8::100），以此測試網域名稱解析後的 IPv6 分流策略。`,
+  },
+  {
     q: '為什麼需要 PAC 測試與除錯器？傳統排查有何痛點？',
     a: `在作業系統或瀏覽器（如 Chrome / Edge / macOS）中套用 PAC 檔案時，整個網路棧是處於「黑箱狀態」的：
 

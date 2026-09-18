@@ -85,7 +85,8 @@
   font-size: 0.875rem;
   line-height: 1.6;
   color: #e2e8f0;
-  max-height: 480px;
+  min-height: 480px;
+  max-height: 720px;
   overflow-y: auto;
   white-space: pre;
   tab-size: 2;

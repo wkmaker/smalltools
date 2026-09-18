@@ -110,6 +110,17 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.dangerButton {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+.dangerButton:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
 /* 狀態徽章 */
 .statusBadge {
   display: inline-flex;

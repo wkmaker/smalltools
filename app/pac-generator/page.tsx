@@ -68,6 +68,21 @@ const faqJsonLd = generateFaqSchema([
 採用 JavaScript 正則表達式進行深度比對。例如「^https?://.*\\.internal(:[0-9]+)?/」，適合複雜的多層過濾需求。`,
   },
   {
+    q: '比對 IP 前先行解析主機網域名稱 (dnsResolve) 有何差別？何時該開啟？',
+    a: `此選項決定在執行 IPv4/IPv6 網段比對（如 isInNet 或 isInNetEx）時，是否強制先將目標主機名稱轉換為 IP 位址：
+
+① 未開啟（預設建議，效能最佳）：
+腳本直接生成 isInNet(host, ...)。
+當請求的網址本身就是 IP（例如 http://192.168.1.1/ 或 http://[fc00::1]/）時直接比對；若為一般網域（如 google.com），現代瀏覽器底層會自動處理或快速略過，完全不會產生多餘的同步 DNS 阻塞延遲。
+
+② 開啟後（強制解析模式）：
+腳本會改為生成 isInNet(dnsResolve(host), ...)。
+在進行網段比對前，強制瀏覽器必須先發出一次同步 DNS 請求，將主機名稱解析為實體 IP 後再進行比對。
+
+適用場景：
+僅在特定舊型環境（例如舊版 Windows WinINet、部分 Android WebView 或特定代理客戶端中，其 isInNet 遇到網域名稱不會自動解析而直接回傳 false）才需要開啟。在一般現代瀏覽器中保持關閉即可獲得最流暢的連線體驗。`,
+  },
+  {
     q: '什麼是 PAC (Proxy Auto-Config) 檔案？運作原理是什麼？',
     a: `PAC（Proxy Auto-Config，代理自動配置）是一種由 Netscape 於 1996 年制定的網路技術標準。
 
@@ -92,7 +107,10 @@ PAC 檔案本質上是一段定義了名為 FindProxyForURL(url, host) 的 JavaS
 ③ iOS / iPadOS：
 進入「設定」➔「Wi-Fi」➔ 點擊目前已連線 Wi-Fi 最右側的「(i)」圖示 ➔ 滑至底部點擊「設定代理伺服器」➔ 勾選「自動」➔ 在 URL 欄位填入網址。
 
-④ 瀏覽器外掛 (如 SwitchyOmega)：
+④ Firefox 瀏覽器：
+進入「設定」➔「一般」➔ 滑動至「網路設定」點擊「設定...」➔ 選擇「自動代理設定網址 (PAC)」➔ 貼入 URL 並確定。
+
+⑤ 瀏覽器外掛 (如 SwitchyOmega)：
 在情境模式中新增「PAC 情境」，直接將腳本貼入程式碼區塊或填入 PAC 網址即可即時生效。`,
   },
   {

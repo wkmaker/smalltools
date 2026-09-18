@@ -57,11 +57,6 @@ const TRANSLATIONS = {
     optionsTitle: '進階輸出設定',
     enableIpv6Label: '啟用 IPv6 擴充支援 (isInNetEx)',
     resolveIpFirstLabel: '比對 IP 前先行解析主機網域名稱 (dnsResolve)',
-    guideTitle: '各平台 PAC 設定快速指南',
-    guideWindows: 'Windows 11 / 10：設定 ➔ 網路和網際網路 ➔ Proxy ➔ 使用安裝程式碼 (開啟) ➔ 貼上腳本網址或 Data URL。',
-    guideMac: 'macOS：系統設定 ➔ 網路 ➔ 點擊連線中的介面 ➔ 詳細資訊 ➔ 代理伺服器 ➔ 開啟「自動代理伺服器設定 (PAC)」➔ 輸入 URL。',
-    guideIos: 'iOS / iPadOS：設定 ➔ Wi-Fi ➔ 點擊已連線 Wi-Fi 右側「i」➔ 設定代理伺服器 ➔ 選擇「自動」➔ 貼入 URL。',
-    guideFirefox: 'Firefox：設定 ➔ 一般 ➔ 網路設定 ➔ 選擇「自動代理設定網址 (PAC)」➔ 貼入 URL。',
     conditionTypes: {
       plainHost: '純主機名稱',
       domainSuffix: '網域後綴',
@@ -114,6 +109,21 @@ const TRANSLATIONS = {
 採用 JavaScript 正則表達式進行深度比對。例如「^https?://.*\\.internal(:[0-9]+)?/」，適合複雜的多層過濾需求。`,
       },
       {
+        q: '比對 IP 前先行解析主機網域名稱 (dnsResolve) 有何差別？何時該開啟？',
+        a: `此選項決定在執行 IPv4/IPv6 網段比對（如 isInNet 或 isInNetEx）時，是否強制先將目標主機名稱轉換為 IP 位址：
+
+① 未開啟（預設建議，效能最佳）：
+腳本直接生成 isInNet(host, ...)。
+當請求的網址本身就是 IP（例如 http://192.168.1.1/ 或 http://[fc00::1]/）時直接比對；若為一般網域（如 google.com），現代瀏覽器底層會自動處理或快速略過，完全不會產生多餘的同步 DNS 阻塞延遲。
+
+② 開啟後（強制解析模式）：
+腳本會改為生成 isInNet(dnsResolve(host), ...)。
+在進行網段比對前，強制瀏覽器必須先發出一次同步 DNS 請求，將主機名稱解析為實體 IP 後再進行比對。
+
+適用場景：
+僅在特定舊型環境（例如舊版 Windows WinINet、部分 Android WebView 或特定代理客戶端中，其 isInNet 遇到網域名稱不會自動解析而直接回傳 false）才需要開啟。在一般現代瀏覽器中保持關閉即可獲得最流暢的連線體驗。`,
+      },
+      {
         q: '什麼是 PAC (Proxy Auto-Config) 檔案？運作原理是什麼？',
         a: `PAC（Proxy Auto-Config，代理自動配置）是一種由 Netscape 於 1996 年制定的網路技術標準。
 
@@ -138,7 +148,10 @@ PAC 檔案本質上是一段定義了名為 FindProxyForURL(url, host) 的 JavaS
 ③ iOS / iPadOS：
 進入「設定」➔「Wi-Fi」➔ 點擊目前已連線 Wi-Fi 最右側的「(i)」圖示 ➔ 滑至底部點擊「設定代理伺服器」➔ 勾選「自動」➔ 在 URL 欄位填入網址。
 
-④ 瀏覽器外掛 (如 SwitchyOmega)：
+④ Firefox 瀏覽器：
+進入「設定」➔「一般」➔ 滑動至「網路設定」點擊「設定...」➔ 選擇「自動代理設定網址 (PAC)」➔ 貼入 URL 並確定。
+
+⑤ 瀏覽器外掛 (如 SwitchyOmega)：
 在情境模式中新增「PAC 情境」，直接將腳本貼入程式碼區塊或填入 PAC 網址即可即時生效。`,
       },
       {
@@ -220,11 +233,6 @@ data:application/x-ns-proxy-autoconfig;base64,....
     optionsTitle: 'Advanced Output Options',
     enableIpv6Label: 'Enable IPv6 Extended Support (isInNetEx)',
     resolveIpFirstLabel: 'Resolve Host IP Before Subnet Check (dnsResolve)',
-    guideTitle: 'Quick OS PAC Setup Guide',
-    guideWindows: 'Windows 11 / 10: Settings ➔ Network & Internet ➔ Proxy ➔ Use setup script (Turn ON) ➔ Paste script URL or Data URI.',
-    guideMac: 'macOS: System Settings ➔ Network ➔ Active Interface ➔ Details ➔ Proxies ➔ Enable "Automatic Proxy Configuration (PAC)" ➔ Enter URL.',
-    guideIos: 'iOS / iPadOS: Settings ➔ Wi-Fi ➔ Tap "i" icon on active Wi-Fi ➔ Configure Proxy ➔ Select Automatic ➔ Paste URL.',
-    guideFirefox: 'Firefox: Settings ➔ General ➔ Network Settings ➔ Select "Automatic proxy configuration URL" ➔ Paste URL.',
     conditionTypes: {
       plainHost: 'Plain Hostname',
       domainSuffix: 'Domain Suffix',
@@ -277,6 +285,21 @@ Uses the modern isInNetEx() function for native IPv6 CIDR prefix matching, such 
 Evaluates arbitrary JavaScript regular expressions against the URL or host, such as "^https?://.*\\.internal(:[0-9]+)?/", ideal for complex routing logic.`,
       },
       {
+        q: 'What is the difference with "Resolve Host IP Before Subnet Check (dnsResolve)", and when should I enable it?',
+        a: `This setting controls whether the PAC script forces a synchronous DNS lookup before evaluating IP subnet rules (isInNet / isInNetEx):
+
+① Disabled (Default & Recommended for Performance):
+The script outputs isInNet(host, ...).
+When target URLs are IP literals (e.g., http://192.168.1.1/ or http://[fc00::1]/), subnets are matched immediately. When given standard domain names (e.g., google.com), modern browser engines handle lookups internally without triggering blocking synchronous DNS stalls.
+
+② Enabled (Forced DNS Resolution):
+The script outputs isInNet(dnsResolve(host), ...).
+The browser is forced to pause and synchronously resolve every hostname to an IP address before evaluating subnet rules.
+
+When to use:
+Enable this ONLY if you are deploying to legacy runtimes (such as older WinINet components or embedded WebViews) where isInNet fails to evaluate domain names automatically. In modern environments, keep it disabled for maximum browsing speed.`,
+      },
+      {
         q: 'What is a PAC (Proxy Auto-Config) file and how does it work?',
         a: `A PAC (Proxy Auto-Config) file is a standard introduced by Netscape in 1996.
 
@@ -301,7 +324,10 @@ Open System Settings ➔ Network ➔ Select your active connection ➔ Details..
 ③ iOS / iPadOS:
 Go to Settings ➔ Wi-Fi ➔ Tap the "i" info icon next to your network ➔ Scroll down to "Configure Proxy" ➔ Choose "Automatic" ➔ Paste the URL.
 
-④ Browser Extensions (e.g. SwitchyOmega):
+④ Mozilla Firefox:
+Open Settings ➔ General ➔ Network Settings ➔ Click "Settings..." ➔ Select "Automatic proxy configuration URL" ➔ Enter URL and confirm.
+
+⑤ Browser Extensions (e.g. SwitchyOmega):
 Create a new "PAC Profile", paste the generated script into the code box or point to the PAC URL for immediate switching.`,
       },
       {
@@ -880,34 +906,6 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                   {toastMessage}
                 </div>
               )}
-            </div>
-
-            {/* 系統設定速查 */}
-            <div className={styles.panel}>
-              <div className={styles.sectionTitle}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z" />
-                </svg>
-                <span>{t.guideTitle}</span>
-              </div>
-              <div className="flex flex-col gap-2.5 text-xs text-text-sub leading-relaxed">
-                <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
-                  <strong className="text-text-main block mb-1">Windows</strong>
-                  {t.guideWindows}
-                </div>
-                <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
-                  <strong className="text-text-main block mb-1">macOS</strong>
-                  {t.guideMac}
-                </div>
-                <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
-                  <strong className="text-text-main block mb-1">iOS / iPadOS</strong>
-                  {t.guideIos}
-                </div>
-                <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
-                  <strong className="text-text-main block mb-1">Firefox</strong>
-                  {t.guideFirefox}
-                </div>
-              </div>
             </div>
           </div>
         </div>

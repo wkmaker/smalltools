@@ -148,7 +148,12 @@ export function createPacSandbox(
   };
 
   const isPlainHostName = (host: string) => {
-    const res = typeof host === 'string' && host.indexOf('.') === -1;
+    if (typeof host !== 'string') return false;
+    // IPv6 位址 (含冒號或中括號) 不屬於純主機名稱
+    if (host.includes(':') || host.startsWith('[')) {
+      return recordTrace('isPlainHostName', [host], false);
+    }
+    const res = host.indexOf('.') === -1;
     return recordTrace('isPlainHostName', [host], res);
   };
 
@@ -284,12 +289,18 @@ export function parseTargetUrl(rawUrl: string): {
 
   try {
     const parsed = new URL(url);
-    const host = parsed.hostname;
+    let host = parsed.hostname;
+    if (host.startsWith('[') && host.endsWith(']')) {
+      host = host.slice(1, -1);
+    }
     const protocol = parsed.protocol.replace(':', '');
     const port = parsed.port || (protocol === 'https' ? '443' : protocol === 'http' ? '80' : '21');
     return { url, host, protocol, port };
   } catch {
-    const cleanHost = url.replace(/^[a-z]+:\/\//i, '').split('/')[0].split(':')[0];
+    let cleanHost = url.replace(/^[a-z]+:\/\//i, '').split('/')[0].split(':')[0];
+    if (cleanHost.startsWith('[') && cleanHost.endsWith(']')) {
+      cleanHost = cleanHost.slice(1, -1);
+    }
     return { url, host: cleanHost || url, protocol: 'https', port: '443' };
   }
 }
