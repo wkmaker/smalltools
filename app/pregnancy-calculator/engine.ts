@@ -191,3 +191,186 @@ export function calculateMaternityBenefits(
     parentalAllowanceTotal: toMoney(D(parentalMonthly).times(6)),
   };
 }
+
+export type ClinicalStageType = 'pre_checkup' | 'active_milestone' | 'stable_gap' | 'post_term';
+export type ClinicalGapKey = 'pre_6' | 'gap_9_10' | 'gap_14_15' | 'gap_33_34' | 'post_40';
+
+export interface ClinicalStageStatus {
+  statusType: ClinicalStageType;
+  /** 當前正在進行之重大檢查里程碑索引（0~7），若為空檔期則為 null */
+  activeMilestoneIndex: number | null;
+  /** 下一個即將到來的重大檢查里程碑索引（0~7），若超過足月則為 null */
+  nextMilestoneIndex: number | null;
+  /** 距離下一個里程碑開始尚餘天數 */
+  daysToNextMilestone: number | null;
+  /** 距離下一個里程碑開始尚餘週數（無條件捨去） */
+  weeksToNextMilestone: number | null;
+  /** 若處於空檔過渡期或極早期/足月，對應之語系 Key */
+  gapKey?: ClinicalGapKey;
+}
+
+/**
+ * 依當前懷孕天數 (currentGestationalDays) 推算臨床產檢階段狀態與空檔過渡期定位。
+ * 醫學上重大篩檢有其黃金檢查窗口（例如初唐 11~13週、羊穿 16~20週、高層次 20~24週、糖水 24~28週、GBS 35~37週）。
+ * 未列於重大篩檢清單之週數（如 9~10週、14~15週、33~34週）為生理平穩過渡期。
+ */
+export function getClinicalStageStatus(currentGestationalDays: number): ClinicalStageStatus {
+  const weeks = Math.floor(currentGestationalDays / 7);
+
+  // 1. 未滿 6 週：胚胎早期著床發育
+  if (weeks < 6) {
+    const daysLeft = Math.max(1, 42 - currentGestationalDays);
+    return {
+      statusType: 'pre_checkup',
+      activeMilestoneIndex: null,
+      nextMilestoneIndex: 0,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+      gapKey: 'pre_6',
+    };
+  }
+
+  // 2. 6 ~ 8 週：第一次產檢（照心跳領手冊）
+  if (weeks <= 8) {
+    const daysLeft = Math.max(1, 77 - currentGestationalDays);
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 0,
+      nextMilestoneIndex: 1,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+    };
+  }
+
+  // 3. 9 ~ 10 週：第一次空檔過渡期（胚胎穩定期）
+  if (weeks <= 10) {
+    const daysLeft = Math.max(1, 77 - currentGestationalDays);
+    return {
+      statusType: 'stable_gap',
+      activeMilestoneIndex: null,
+      nextMilestoneIndex: 1,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+      gapKey: 'gap_9_10',
+    };
+  }
+
+  // 4. 11 ~ 13 週：第一孕期唐氏症篩檢（頸部透明帶 NT）
+  if (weeks <= 13) {
+    const daysLeft = Math.max(1, 112 - currentGestationalDays);
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 1,
+      nextMilestoneIndex: 2,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+    };
+  }
+
+  // 5. 14 ~ 15 週：第二孕期初期空檔過渡期（舒適期過渡）
+  if (weeks <= 15) {
+    const daysLeft = Math.max(1, 112 - currentGestationalDays);
+    return {
+      statusType: 'stable_gap',
+      activeMilestoneIndex: null,
+      nextMilestoneIndex: 2,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+      gapKey: 'gap_14_15',
+    };
+  }
+
+  // 6. 16 ~ 19 週：羊膜穿刺 / 羊水晶片 / 第二孕期常規產檢
+  if (weeks < 20) {
+    const daysLeft = Math.max(1, 140 - currentGestationalDays);
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 2,
+      nextMilestoneIndex: 3,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+    };
+  }
+
+  // 7. 20 ~ 23 週：高層次超音波
+  if (weeks < 24) {
+    const daysLeft = Math.max(1, 168 - currentGestationalDays);
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 3,
+      nextMilestoneIndex: 4,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+    };
+  }
+
+  // 8. 24 ~ 27 週：妊娠糖尿病喝糖水篩檢
+  if (weeks < 28) {
+    const daysLeft = Math.max(1, 196 - currentGestationalDays);
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 4,
+      nextMilestoneIndex: 5,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+    };
+  }
+
+  // 9. 28 ~ 32 週：進入第三孕期例行密集產檢
+  if (weeks <= 32) {
+    const daysLeft = Math.max(1, 245 - currentGestationalDays);
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 5,
+      nextMilestoneIndex: 6,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+    };
+  }
+
+  // 10. 33 ~ 34 週：第三孕期空檔過渡期（產前準備平穩期）
+  if (weeks <= 34) {
+    const daysLeft = Math.max(1, 245 - currentGestationalDays);
+    return {
+      statusType: 'stable_gap',
+      activeMilestoneIndex: null,
+      nextMilestoneIndex: 6,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+      gapKey: 'gap_33_34',
+    };
+  }
+
+  // 11. 35 ~ 36 週：乙型鏈球菌 (GBS) 篩檢
+  if (weeks < 37) {
+    const daysLeft = Math.max(1, 259 - currentGestationalDays);
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 6,
+      nextMilestoneIndex: 7,
+      daysToNextMilestone: daysLeft,
+      weeksToNextMilestone: Math.floor(daysLeft / 7),
+    };
+  }
+
+  // 12. 37 ~ 40 週：正式足月迎接生產
+  if (weeks <= 40) {
+    return {
+      statusType: 'active_milestone',
+      activeMilestoneIndex: 7,
+      nextMilestoneIndex: null,
+      daysToNextMilestone: null,
+      weeksToNextMilestone: null,
+    };
+  }
+
+  // 13. > 40 週：過期妊娠待產監測
+  return {
+    statusType: 'post_term',
+    activeMilestoneIndex: null,
+    nextMilestoneIndex: null,
+    daysToNextMilestone: null,
+    weeksToNextMilestone: null,
+    gapKey: 'post_40',
+  };
+}

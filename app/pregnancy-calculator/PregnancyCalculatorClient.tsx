@@ -6,6 +6,7 @@ import {
   calculateGestationalAge,
   calculateMaternityBenefits,
   crlToGestationalAge,
+  getClinicalStageStatus,
   type CalcMode,
   type ScanInputType,
   type IvfType,
@@ -337,11 +338,17 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     return getBabySizeInfo(currentWeeks);
   }, [currentWeeks]);
 
+  // 臨床產檢里程碑狀態推算（純函數引擎）
+  const stageStatus = useMemo(
+    () => getClinicalStageStatus(currentGestationalDays),
+    [currentGestationalDays],
+  );
+
   // 產檢與里程碑時間軸清單
   const milestones = useMemo(() => {
     const lmpBase = addDays(estimatedDueDate, -280);
 
-    return [
+    const baseMilestones = [
       {
         weekRange: '6 ~ 8 週',
         weekRangeEn: 'Weeks 6 - 8',
@@ -351,8 +358,6 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: 'Confirms embryo heartbeat and intrauterine pregnancy. First blood & antibody panels.',
         startDate: addDays(lmpBase, 6 * 7),
         endDate: addDays(lmpBase, 8 * 7),
-        isCurrent: currentWeeks >= 6 && currentWeeks <= 8,
-        isPast: currentWeeks > 8,
       },
       {
         weekRange: '11 ~ 13 週',
@@ -363,8 +368,6 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: 'Nuchal translucency scan + maternal serum biochemistry or non-invasive prenatal testing (NIPT).',
         startDate: addDays(lmpBase, 11 * 7),
         endDate: addDays(lmpBase, 13 * 7),
-        isCurrent: currentWeeks >= 11 && currentWeeks <= 13,
-        isPast: currentWeeks > 13,
       },
       {
         weekRange: '16 ~ 20 週',
@@ -375,8 +378,6 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: 'Amniocentesis and microarray for high-risk or advanced maternal age (34+).',
         startDate: addDays(lmpBase, 16 * 7),
         endDate: addDays(lmpBase, 20 * 7),
-        isCurrent: currentWeeks >= 16 && currentWeeks <= 20,
-        isPast: currentWeeks > 20,
       },
       {
         weekRange: '20 ~ 24 週',
@@ -387,8 +388,6 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: 'Detailed anatomical scan evaluating heart chambers, brain, spine, kidneys, and limbs.',
         startDate: addDays(lmpBase, 20 * 7),
         endDate: addDays(lmpBase, 24 * 7),
-        isCurrent: currentWeeks >= 20 && currentWeeks <= 24,
-        isPast: currentWeeks > 24,
       },
       {
         weekRange: '24 ~ 28 週',
@@ -399,8 +398,6 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: '75g oral glucose tolerance test (OGTT) and complete blood count for gestational anemia.',
         startDate: addDays(lmpBase, 24 * 7),
         endDate: addDays(lmpBase, 28 * 7),
-        isCurrent: currentWeeks >= 24 && currentWeeks <= 28,
-        isPast: currentWeeks > 28,
       },
       {
         weekRange: '28 ~ 32 週',
@@ -411,8 +408,6 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: 'Visits increase to bi-weekly. Monitoring blood pressure, urine protein, and fetal growth.',
         startDate: addDays(lmpBase, 28 * 7),
         endDate: addDays(lmpBase, 32 * 7),
-        isCurrent: currentWeeks >= 28 && currentWeeks <= 32,
-        isPast: currentWeeks > 32,
       },
       {
         weekRange: '35 ~ 37 週',
@@ -423,8 +418,6 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: 'Vaginal and rectal GBS swab culture to prevent neonatal infection during labor.',
         startDate: addDays(lmpBase, 35 * 7),
         endDate: addDays(lmpBase, 37 * 7),
-        isCurrent: currentWeeks >= 35 && currentWeeks <= 37,
-        isPast: currentWeeks > 37,
       },
       {
         weekRange: '37 週 ~ 預產期',
@@ -435,11 +428,72 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
         descEn: 'Weekly checkups. Monitor labor signs: regular contractions, bloody show, water breaking.',
         startDate: addDays(lmpBase, 37 * 7),
         endDate: estimatedDueDate,
-        isCurrent: currentWeeks >= 37 && currentWeeks <= 40,
-        isPast: currentWeeks > 40,
       },
     ];
-  }, [estimatedDueDate, currentWeeks]);
+
+    const effectiveActive = stageStatus.activeMilestoneIndex;
+    const effectiveNext = stageStatus.nextMilestoneIndex;
+
+    return baseMilestones.map((item, idx) => {
+      const isCurrent = effectiveActive === idx;
+      const isPast =
+        effectiveActive !== null
+          ? idx < effectiveActive
+          : effectiveNext !== null
+          ? idx < effectiveNext
+          : true;
+      const isNextUpcoming = !isCurrent && effectiveNext === idx;
+
+      return {
+        ...item,
+        isCurrent,
+        isPast,
+        isNextUpcoming,
+      };
+    });
+  }, [estimatedDueDate, stageStatus]);
+
+  // 下一個里程碑標題與倒數文案
+  const nextMilestoneTitle = useMemo(() => {
+    if (stageStatus.nextMilestoneIndex === null) return '';
+    const nextM = milestones[stageStatus.nextMilestoneIndex];
+    if (!nextM) return '';
+    return lang === 'zh-TW' ? nextM.titleZh : nextM.titleEn;
+  }, [stageStatus.nextMilestoneIndex, milestones, lang]);
+
+  const countdownText = useMemo(() => {
+    if (stageStatus.daysToNextMilestone === null || !nextMilestoneTitle) return '';
+    const days = stageStatus.daysToNextMilestone;
+    const weeks = stageStatus.weeksToNextMilestone || 0;
+    if (weeks >= 1) {
+      return t.stageNextCountdownText
+        .replace('{nextTitle}', nextMilestoneTitle)
+        .replace('{days}', days.toString())
+        .replace('{weeks}', weeks.toString());
+    }
+    return t.stageNextCountdownTextDaysOnly
+      .replace('{nextTitle}', nextMilestoneTitle)
+      .replace('{days}', days.toString());
+  }, [stageStatus, nextMilestoneTitle, t]);
+
+  // 當前空檔期/特殊期詳細說明
+  const gapInfo = useMemo(() => {
+    if (!stageStatus.gapKey) return null;
+    switch (stageStatus.gapKey) {
+      case 'pre_6':
+        return { title: t.gapPre6Title, desc: t.gapPre6Desc };
+      case 'gap_9_10':
+        return { title: t.gap9To10Title, desc: t.gap9To10Desc };
+      case 'gap_14_15':
+        return { title: t.gap14To15Title, desc: t.gap14To15Desc };
+      case 'gap_33_34':
+        return { title: t.gap33To34Title, desc: t.gap33To34Desc };
+      case 'post_40':
+        return { title: t.gapPost40Title, desc: t.gapPost40Desc };
+      default:
+        return null;
+    }
+  }, [stageStatus.gapKey, t]);
 
   // 產假與津貼試算（純函數引擎，見 ./engine.ts）
   const benefits = useMemo(
@@ -1029,6 +1083,77 @@ Date: ${formatDate(new Date())}`;
             <p className="text-xs text-text-sub">{t.timelineSubtitle}</p>
           </div>
 
+          {/* 衛教說明小註解 */}
+          <div className={styles.timelineNoteBox}>
+            <svg className={`w-4 h-4 ${styles.accentText} shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-text-sub leading-relaxed">
+              {t.timelineNote}
+            </p>
+          </div>
+
+          {/* 即時產檢階段導引卡片 (空檔過渡期 / 重大檢查期) */}
+          <div
+            className={`${styles.stageBanner} ${
+              stageStatus.statusType === 'active_milestone'
+                ? styles.stageBannerActive
+                : stageStatus.statusType === 'stable_gap'
+                ? styles.stageBannerGap
+                : styles.stageBannerPre
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`${styles.badge} ${
+                    stageStatus.statusType === 'active_milestone'
+                      ? styles.badge
+                      : stageStatus.statusType === 'stable_gap'
+                      ? styles.badgeGap
+                      : styles.badgeSuccess
+                  }`}
+                >
+                  {stageStatus.statusType === 'active_milestone'
+                    ? t.stageStatusActiveBadge
+                    : stageStatus.statusType === 'stable_gap'
+                    ? t.stageStatusGapBadge
+                    : stageStatus.statusType === 'pre_checkup'
+                    ? t.stageStatusPreBadge
+                    : t.stageStatusPostBadge}
+                </span>
+                <span className="text-xs font-semibold text-text-sub font-mono">
+                  {currentWeeks} {t.weeksUnit} + {currentDays} {t.daysUnit}
+                </span>
+              </div>
+              {countdownText && (
+                <span className={`text-xs font-medium ${styles.accentText}`}>
+                  {countdownText}
+                </span>
+              )}
+            </div>
+
+            {/* 標題與說明 */}
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-bold text-text-main">
+                {stageStatus.statusType === 'active_milestone' && stageStatus.activeMilestoneIndex !== null
+                  ? `${lang === 'zh-TW' ? '進行中：' : 'Active: '}${
+                      lang === 'zh-TW'
+                        ? milestones[stageStatus.activeMilestoneIndex]?.titleZh
+                        : milestones[stageStatus.activeMilestoneIndex]?.titleEn
+                    }`
+                  : gapInfo?.title || ''}
+              </h3>
+              <p className="text-xs text-text-sub leading-relaxed">
+                {stageStatus.statusType === 'active_milestone' && stageStatus.activeMilestoneIndex !== null
+                  ? lang === 'zh-TW'
+                    ? milestones[stageStatus.activeMilestoneIndex]?.descZh
+                    : milestones[stageStatus.activeMilestoneIndex]?.descEn
+                  : gapInfo?.desc || ''}
+              </p>
+            </div>
+          </div>
+
           <div className={styles.timeline}>
             {milestones.map((m, idx) => (
               <div key={idx} className={styles.timelineItem}>
@@ -1065,6 +1190,8 @@ Date: ${formatDate(new Date())}`;
                         <span className={`${styles.badge} ${styles.badgeSuccess}`}>{t.tagPast}</span>
                       ) : m.isCurrent ? (
                         <span className={styles.badge}>{t.tagCurrent}</span>
+                      ) : m.isNextUpcoming ? (
+                        <span className={`${styles.badge} ${styles.badgeUpcoming}`}>{t.tagNextUpcoming}</span>
                       ) : (
                         <span className="text-xs text-text-sub px-2 py-0.5 rounded-md bg-surface-glass border border-border-glass">
                           {t.tagFuture}

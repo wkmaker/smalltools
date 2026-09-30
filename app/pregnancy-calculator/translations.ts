@@ -75,9 +75,31 @@ export const TRANSLATIONS = {
     // 產檢時間軸
     timelineTitle: '40 週關鍵產檢與里程碑時間軸',
     timelineSubtitle: '按個人預產期推算之各階段公費/自費產檢黃金檢查期',
-    tagPast: '已過期',
+    timelineNote: '醫學常識小叮嚀：本時間軸聚焦於各項重大公費/自費篩檢的「黃金檢查窗口」。未列出的空檔週數（如 9~10 週、14~15 週、33~34 週）為常規產檢與生理平穩成長期，遵照醫師門診預約回診即可，請準爸媽安心。',
+    tagPast: '已完成',
     tagCurrent: '當前階段',
     tagFuture: '預計時程',
+    tagNextUpcoming: '即將到來',
+
+    // 即時階段導引 Banner
+    stageStatusActiveBadge: '黃金檢查窗口進行中',
+    stageStatusGapBadge: '生理平穩過渡期',
+    stageStatusPreBadge: '早期著床確認期',
+    stageStatusPostBadge: '足月待產階段',
+
+    stageNextCountdownText: '距離下一項重大排檢「{nextTitle}」約剩 {days} 天（約 {weeks} 週）',
+    stageNextCountdownTextDaysOnly: '距離下一項重大排檢「{nextTitle}」約剩 {days} 天',
+
+    gapPre6Title: '受精卵著床與胚胎早期發育中',
+    gapPre6Desc: '胎兒神經管與重要器官正迅速分化，請持續補充葉酸 400~600 微克。滿 6~8 週即可前往婦產科照超音波確認心跳並領取媽媽手冊。',
+    gap9To10Title: '第 9 ~ 10 週：胚胎穩定期（常規修養）',
+    gap9To10Desc: '介於第一次產檢與頸部透明帶篩檢之間。胎盤正逐漸接手荷爾蒙分泌，如無異常出血或劇烈腹痛，維持規律作息與清淡飲食即可，無須頻繁侵入檢查。',
+    gap14To15Title: '第 14 ~ 15 週：邁入舒適孕中期',
+    gap14To15Desc: '初唐篩檢已告一段落，即將邁入食慾好轉、精神恢復的第二孕期。可開始規劃 16~20 週的羊膜穿刺或第二孕期常規產檢。',
+    gap33To34Title: '第 33 ~ 34 週：產前準備平穩期',
+    gap33To34Desc: '介於例行產檢與乙型鏈球菌 (GBS) 篩檢之間。請持續每天固定早中晚紀錄胎動，並著手準備待產包與新生兒用品。',
+    gapPost40Title: '已滿 40 週足月，隨時準備生產',
+    gapPost40Desc: '已達預估預產期，請密切注意產兆（規則陣痛、破水、落紅），並依照主治醫師指示進行每週 1~2 次胎兒監視器 (NST) 追蹤或催生評估。',
 
     // 法定假別與津貼
     benefitsTitle: '台灣法定產檢假、產假與生育給付試算',
@@ -227,9 +249,31 @@ export const TRANSLATIONS = {
     // Timeline
     timelineTitle: '40-Week Clinical Milestones Timeline',
     timelineSubtitle: 'Recommended schedule for prenatal tests and clinical milestones based on your due date',
+    timelineNote: 'Clinical Note: This timeline highlights optimal screening windows for key tests. Gap weeks (e.g. Weeks 9-10, 14-15, 33-34) represent routine monitoring and stable fetal growth; attend scheduled clinic visits as recommended.',
     tagPast: 'Completed',
     tagCurrent: 'Current Stage',
     tagFuture: 'Upcoming',
+    tagNextUpcoming: 'Next Upcoming',
+
+    // Current Stage Banner
+    stageStatusActiveBadge: 'Active Screening Window',
+    stageStatusGapBadge: 'Stable Growth Interval',
+    stageStatusPreBadge: 'Early Implantation Phase',
+    stageStatusPostBadge: 'Full-Term Delivery Phase',
+
+    stageNextCountdownText: 'Approx. {days} days ({weeks} weeks) until next milestone: "{nextTitle}"',
+    stageNextCountdownTextDaysOnly: 'Approx. {days} days until next milestone: "{nextTitle}"',
+
+    gapPre6Title: 'Early Blastocyst Implantation & Development',
+    gapPre6Desc: 'Vital neural tube and organ development in progress. Maintain daily folic acid intake. Schedule your 1st ultrasound at weeks 6-8 to confirm heartbeat and intrauterine pregnancy.',
+    gap9To10Title: 'Weeks 9 - 10: Stable Embryonic Interval',
+    gap9To10Desc: 'Transition period between initial scan and 1st-trimester NT screening. If there is no bleeding or severe cramping, maintain balanced nutrition and rest without need for invasive tests.',
+    gap14To15Title: 'Weeks 14 - 15: Entering the Golden 2nd Trimester',
+    gap14To15Desc: '1st trimester screenings complete. Approaching the comfortable second trimester. Prepare for amniocentesis (weeks 16-20) if recommended.',
+    gap33To34Title: 'Weeks 33 - 34: Late 3rd Trimester Preparation',
+    gap33To34Desc: 'Between routine bi-weekly checkups and Group B Strep (GBS) swab. Monitor daily fetal kick counts and finalize your hospital delivery bag.',
+    gapPost40Title: 'Full Term (40+ Weeks): Ready for Labor',
+    gapPost40Desc: 'Due date reached. Watch for labor symptoms (contractions, water breaking, bloody show) and follow your obstetrician\'s monitoring or induction schedule.',
 
     // Benefits
     benefitsTitle: 'Maternity Leave & Statutory Benefits Estimation',
