@@ -211,9 +211,11 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     };
 
     const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
       dragCounterRef.current = 0;
       setIsDraggingGlobal(false);
+      // 落在頁內拖放區時，該區 onDrop 已載入檔案並 preventDefault；冒泡到 window 不可再載入一次
+      if (e.defaultPrevented) return;
+      e.preventDefault();
       if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
         handleFilesLoad(e.dataTransfer.files, files.length > 0);
       }

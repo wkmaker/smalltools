@@ -4,6 +4,18 @@
 
 ---
 
+## [1.16.3] - 2026-10-07
+
+### 🐛 問題修正 (Fixed)
+
+- **檔案雜湊計算工具（`/checksum-verifier/`）、圖片處理工具（`/image-processor/`）拖入一個檔案會變成兩個**：拖放區的 `onDrop` 加入檔案後，事件冒泡到 `window` 的全域 `drop` 監聽又加入一次。全域監聽改為先檢查 `e.defaultPrevented`，已由拖放區處理的事件不再重複加入。
+
+### 🔄 重構變更 (Changed)
+
+- UI 規範檢查（`tests/check-ui-standards.mjs`）新增選用的整檔檢查介面 `checkFile`，並新增規則 `no-duplicate-drop-handling`：同時有全域 `drop` 監聽與 `onDrop` 拖放區、卻未檢查 `defaultPrevented` 的檔案會中斷建置。
+
+---
+
 ## [1.16.2] - 2026-10-06
 
 ### 🐛 問題修正 (Fixed)

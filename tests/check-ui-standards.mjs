@@ -60,6 +60,16 @@ tsxFiles.forEach((filePath) => {
       }
     });
   });
+
+  rules.forEach((rule) => {
+    const result = rule.checkFile?.({ content, relPath, isConfigFile });
+    if (!result) return;
+    console.error(`❌ [UI 規範硬性卡關 - ${rule.name}] ${result.message}:`);
+    console.error(`   檔案: ${relPath}:${result.lineNumber}`);
+    console.error(`   內容: ${lines[result.lineNumber - 1]?.trim() ?? ''}\n`);
+    hasErrors = true;
+    errorCount++;
+  });
 });
 
 if (hasErrors) {
