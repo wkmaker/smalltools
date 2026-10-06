@@ -5,6 +5,8 @@ import {
   crc32Hex,
   computeHashHex,
   computeAllHashes,
+  computeAllHashesFromSource,
+  ChecksumReadError,
   detectAlgorithmByLength,
   normalizeHex,
   parseChecksumText,
@@ -229,4 +231,100 @@ test('buildChecksumManifest：輸出可被自身 parseChecksumText 正確解析�
   assert.equal(entries[0].filename, 'installer.exe');
   assert.equal(entries[0].hash, files[0].hash);
   assert.equal(entries[0].algorithm, 'SHA-256');
+});
+
+// ── 大型檔案分塊串流計算（回歸：8 GB 檔案一次 arrayBuffer() 觸發 NotReadableError） ──
+
+async function nodeHashes(bytes) {
+  const nodeCrypto = await import('node:crypto');
+  const zlib = await import('node:zlib');
+  const h = algo => nodeCrypto.createHash(algo).update(bytes).digest('hex');
+  return {
+    MD5: h('md5'),
+    'SHA-1': h('sha1'),
+    'SHA-256': h('sha256'),
+    'SHA-512': h('sha512'),
+    CRC32: zlib.crc32(bytes).toString(16).padStart(8, '0'),
+  };
+}
+
+test('computeAllHashesFromSource：分塊邊界未對齊時，五種演算法結果與 Node 內建一致', async () => {
+  const bytes = new Uint8Array(100_003);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 7) & 0xff;
+  const expected = await nodeHashes(bytes);
+  for (const chunkSize of [4093, 4096, 4099, 99_999, 200_000]) {
+    const result = await computeAllHashesFromSource(new Blob([bytes]), undefined, undefined, { chunkSize });
+    assert.deepEqual(result, expected, `chunkSize=${chunkSize}`);
+  }
+  const small = toBytes('The quick brown fox jumps over the lazy dog');
+  assert.deepEqual(
+    await computeAllHashesFromSource(new Blob([small]), undefined, undefined, { chunkSize: 1 }),
+    await nodeHashes(small)
+  );
+});
+
+test('computeAllHashesFromSource：空檔案回傳各演算法的空字串雜湊', async () => {
+  const result = await computeAllHashesFromSource(new Blob([]));
+  assert.deepEqual(result, await nodeHashes(new Uint8Array(0)));
+});
+
+test('computeAllHashesFromSource：進度單調遞增且最終為 100', async () => {
+  const progress = [];
+  await computeAllHashesFromSource(new Blob([new Uint8Array(10_000)]), ['SHA-256'], p => progress.push(p), {
+    chunkSize: 1000,
+  });
+  assert.equal(progress.at(-1), 100);
+  for (let i = 1; i < progress.length; i++) assert.ok(progress[i] >= progress[i - 1]);
+});
+
+test('computeAllHashesFromSource：只讀取一次各區塊，不會把整個檔案載入記憶體', async () => {
+  const size = 50_000;
+  const chunkSize = 4096;
+  const reads = [];
+  const source = {
+    size,
+    slice(start, end) {
+      reads.push([start, end]);
+      return { arrayBuffer: async () => new ArrayBuffer(end - start) };
+    },
+  };
+  await computeAllHashesFromSource(source, undefined, undefined, { chunkSize });
+  assert.equal(reads.length, Math.ceil(size / chunkSize));
+  assert.ok(reads.every(([s, e]) => e - s <= chunkSize));
+});
+
+test('computeAllHashesFromSource：讀取失敗時拋出帶位移資訊的 ChecksumReadError', async () => {
+  const source = {
+    size: 10_000,
+    slice(start) {
+      return {
+        arrayBuffer: async () => {
+          if (start >= 4096) throw new DOMException('file could not be read', 'NotReadableError');
+          return new ArrayBuffer(4096);
+        },
+      };
+    },
+  };
+  await assert.rejects(
+    computeAllHashesFromSource(source, undefined, undefined, { chunkSize: 4096 }),
+    err => err instanceof ChecksumReadError && err.offset === 4096 && err.cause?.name === 'NotReadableError'
+  );
+});
+
+test('computeAllHashesFromSource：AbortSignal 中止後不再繼續讀取', async () => {
+  const controller = new AbortController();
+  let reads = 0;
+  const source = {
+    size: 100_000,
+    slice() {
+      reads++;
+      if (reads === 2) controller.abort();
+      return { arrayBuffer: async () => new ArrayBuffer(1000) };
+    },
+  };
+  await assert.rejects(
+    computeAllHashesFromSource(source, undefined, undefined, { chunkSize: 1000, signal: controller.signal }),
+    err => err.name === 'AbortError'
+  );
+  assert.equal(reads, 2);
 });

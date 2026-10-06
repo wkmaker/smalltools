@@ -4,6 +4,32 @@
 
 ---
 
+## [1.16.2] - 2026-10-06
+
+### 🐛 問題修正 (Fixed)
+
+- **檔案雜湊計算工具（`/checksum-verifier/`）無法計算大型檔案**：拖入數 GB（如 8GB）檔案時出現 `計算失敗: NotReadableError`。原因是整檔 `file.arrayBuffer()` 一次載入記憶體，超過瀏覽器單一緩衝區上限；且 `crypto.subtle.digest` 不支援分段計算。
+  - 引擎新增 `computeAllHashesFromSource`：以 16MB 區塊串流讀檔，一次讀檔同時計算 MD5 / SHA-1 / SHA-256 / SHA-512 / CRC32，記憶體用量固定、與檔案大小無關。
+  - 讀檔失敗改拋 `ChecksumReadError`，UI 顯示可操作的雙語提示（檔案被移動 / 修改、外接或網路磁碟中斷），並以 `console.error` 記錄檔名與大小。
+  - 移除檔案或清除全部時以 `AbortController` 中止進行中的計算，不再於背景空轉。
+  - 進度改為整體讀取百分比，五種演算法同步推進。
+
+### 🔒 安全性 (Security)
+
+- **`next` 升級至 16.3.8**（`package.json` 下限 `^16.3.8`，`eslint-config-next` 同步）：修補嚴重等級 RCE 漏洞 [GHSA-vcvr-r3jv-pc5j](https://github.com/advisories/GHSA-vcvr-r3jv-pc5j)（`next/og` ImageResponse，本站 OG 圖有使用）。屬安全急件，不受「發布未滿 3 個月暫緩」限制。
+- `npm audit fix` 一併更新 `brace-expansion`、`source-map-js`（DoS 類，僅建置／Lint 工具鏈）。
+- **已知未修、經評估暫不處理**：
+  - `braces`（經 `eslint-config-next` → `fast-glob` → `micromatch`）：上游所有版本皆受影響、無修補版；`npm audit fix --force` 會把 `eslint-config-next` 降回 14.x，不可接受。僅存在於開發期 Lint，輸入為專案自身的 glob，無外部攻擊面。
+  - `node-forge`（GHSA-86w9-cpqp-85rv，RSA PKCS#1 v1.5 簽章驗證）：無修補版。本站僅用於憑證／金鑰格式轉換與 DN、AKI/SKI 比對，簽章驗證走 `@peculiar/x509`，不會呼叫 node-forge 的簽章驗證。
+
+### 🔄 重構變更 (Changed)
+
+- 新增依賴 `hash-wasm@^4.12.0`（WebAssembly 漸進式雜湊），大型檔案的 MD5 速度大幅提升。既有 `md5Hex` / `crc32Hex` / `computeHashHex` / `computeAllHashes` 保留不變。
+- 更新雙語 FAQ（含 JSON-LD）：「MD5 為何較慢」改為「可以計算多大的檔案」，隱私說明改述為 File API 與 WebAssembly。
+- 新增回歸測試：分塊邊界未對齊、空檔案、進度單調、逐塊讀取、讀取失敗錯誤型別、中止行為。
+
+---
+
 ## [1.16.1] - 2026-10-01
 
 ### ✨ 新增功能 (Added)

@@ -11,7 +11,8 @@ import {
   type HashAlgorithm,
   type ChecksumEntry,
   type MatchStatus,
-  computeAllHashes,
+  computeAllHashesFromSource,
+  ChecksumReadError,
   parseChecksumText,
   matchEntryAgainstFile,
   entryAppliesToFileName,
@@ -31,7 +32,8 @@ interface HashedFile {
   file: File;
   status: 'hashing' | 'done' | 'error';
   hashes: Partial<Record<HashAlgorithm, string>>;
-  progress: { algorithm: HashAlgorithm; percent: number } | null;
+  /** 已讀取百分比（0~100），五種演算法同步推進；null 表示尚未開始 */
+  progress: number | null;
   errorMsg?: string;
 }
 
@@ -76,6 +78,7 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
 
   const dragCounterRef = useRef(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllersRef = useRef(new Map<string, AbortController>());
 
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', ACCENT);
@@ -88,19 +91,45 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
     toastTimer.current = setTimeout(() => setToast(s => ({ ...s, show: false })), 2500);
   }, []);
 
-  const processTargetFile = useCallback(async (id: string, file: File) => {
-    try {
-      const buffer = await file.arrayBuffer();
-      const hashes = await computeAllHashes(buffer, HASH_ALGORITHMS, (algorithm, percent) => {
-        setFiles(prev => prev.map(f => (f.id === id ? { ...f, progress: { algorithm, percent } } : f)));
-      });
-      setFiles(prev => prev.map(f => (f.id === id ? { ...f, status: 'done', hashes, progress: null } : f)));
-    } catch (err) {
-      setFiles(prev =>
-        prev.map(f => (f.id === id ? { ...f, status: 'error', errorMsg: String(err), progress: null } : f))
-      );
-    }
+  useEffect(() => {
+    const controllers = abortControllersRef.current;
+    return () => controllers.forEach(c => c.abort());
   }, []);
+
+  const abortHashing = useCallback((id: string) => {
+    abortControllersRef.current.get(id)?.abort();
+    abortControllersRef.current.delete(id);
+  }, []);
+
+  const processTargetFile = useCallback(
+    async (id: string, file: File) => {
+      const controller = new AbortController();
+      abortControllersRef.current.set(id, controller);
+      let lastPercent = -1;
+      try {
+        // 分塊串流計算，不把整個檔案載入記憶體（數 GB 大檔一次 arrayBuffer() 會觸發 NotReadableError）
+        const hashes = await computeAllHashesFromSource(
+          file,
+          HASH_ALGORITHMS,
+          percent => {
+            if (percent === lastPercent) return;
+            lastPercent = percent;
+            setFiles(prev => prev.map(f => (f.id === id ? { ...f, progress: percent } : f)));
+          },
+          { signal: controller.signal }
+        );
+        setFiles(prev => prev.map(f => (f.id === id ? { ...f, status: 'done', hashes, progress: null } : f)));
+      } catch (err) {
+        if (controller.signal.aborted) return; // 使用者已移除檔案，不需回報
+        console.error('[checksum-verifier] 雜湊計算失敗', { fileName: file.name, size: file.size, err });
+        const errorMsg = err instanceof ChecksumReadError ? t.errorReadFailed : String(err);
+        setFiles(prev => prev.map(f => (f.id === id ? { ...f, status: 'error', errorMsg, progress: null } : f)));
+      } finally {
+        if (abortControllersRef.current.get(id) === controller) abortControllersRef.current.delete(id);
+      }
+    },
+    [t]
+  );
 
   const loadManifestFiles = useCallback(
     (manifestFiles: File[]) => {
@@ -174,8 +203,12 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
     };
   }, [addFiles]);
 
-  const removeFile = (id: string) => setFiles(prev => prev.filter(f => f.id !== id));
+  const removeFile = (id: string) => {
+    abortHashing(id);
+    setFiles(prev => prev.filter(f => f.id !== id));
+  };
   const clearAll = () => {
+    files.forEach(f => abortHashing(f.id));
     setFiles([]);
     setChecksumText('');
   };
@@ -226,8 +259,6 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
       return { entry, kind: 'unsupported' as EntrySummaryKind, fileName: undefined };
     });
   }, [parsedEntries, files]);
-
-  const algoLabel = (algo: HashAlgorithm) => algo;
 
   return (
     <>
@@ -415,7 +446,7 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
                       {f.status === 'hashing' && (
                         <div className="flex items-center gap-2 text-xs text-text-sub">
                           <div className={styles.spinner} />
-                          {f.progress ? t.hashingLabel(algoLabel(f.progress.algorithm), f.progress.percent) : t.hashingLabelGeneric}
+                          {f.progress !== null ? t.hashingLabel(f.progress) : t.hashingLabelGeneric}
                         </div>
                       )}
 
