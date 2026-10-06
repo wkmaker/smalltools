@@ -6,7 +6,11 @@
  * - MD5 為純 JS 實作（RFC 1321），因 SubtleCrypto 未內建 MD5。
  * - CRC32 為純 JS 實作（CRC-32/ISO-HDLC，與 zlib/ZIP/PNG/SFV 相同變體），
  *   用於常見的 .sfv 校驗清單格式，非密碼學安全雜湊，僅供簡易錯誤偵測比對。
+ * - 檔案計算（UI 主路徑）走 `computeAllHashesFromSource`：以 hash-wasm 漸進式雜湊分塊串流，
+ *   記憶體用量固定，可處理數 GB 以上的大型檔案；上述整份緩衝區函式保留供小量資料與測試使用。
  */
+
+import { createCRC32, createMD5, createSHA1, createSHA256, createSHA512, type IHasher } from 'hash-wasm';
 
 export type HashAlgorithm = 'CRC32' | 'MD5' | 'SHA-1' | 'SHA-256' | 'SHA-512';
 
@@ -199,6 +203,79 @@ export async function computeAllHashes(
   for (const algorithm of algorithms) {
     result[algorithm] = await computeHashHex(data, algorithm, onProgress ? p => onProgress(algorithm, p) : undefined);
   }
+  return result;
+}
+
+// ── 大型檔案分塊串流計算 ─────────────────────────────────────────
+
+/** 每次從檔案讀取的區塊大小；記憶體用量固定在此量級，與檔案總大小無關。 */
+export const STREAM_CHUNK_SIZE = 16 * 1024 * 1024;
+
+const HASHER_FACTORIES: Record<HashAlgorithm, () => Promise<IHasher>> = {
+  CRC32: () => createCRC32(),
+  MD5: createMD5,
+  'SHA-1': createSHA1,
+  'SHA-256': createSHA256,
+  'SHA-512': createSHA512,
+};
+
+/** 可分段讀取的資料來源（瀏覽器 File / Blob 皆符合）。 */
+export interface SliceableSource {
+  readonly size: number;
+  slice(start: number, end: number): { arrayBuffer(): Promise<ArrayBuffer> };
+}
+
+/**
+ * 讀取檔案區塊失敗（檔案在計算途中被移動、刪除、修改，或被其他程式鎖定）。
+ * 與雜湊運算本身的錯誤區分，讓 UI 能給出可操作的提示。
+ */
+export class ChecksumReadError extends Error {
+  readonly offset: number;
+
+  constructor(offset: number, cause: unknown) {
+    super(`無法讀取檔案（位移 ${offset} bytes）：${String(cause)}`, { cause });
+    this.name = 'ChecksumReadError';
+    this.offset = offset;
+  }
+}
+
+/**
+ * 以固定大小區塊串流讀取來源，一次讀檔同時餵給所有演算法（WASM 漸進式雜湊），
+ * 不需把整個檔案載入記憶體，可處理數 GB 以上的大型檔案。
+ * 進度以「已讀取位元組 / 總大小」回報（0~100）。
+ */
+export async function computeAllHashesFromSource(
+  source: SliceableSource,
+  algorithms: HashAlgorithm[] = HASH_ALGORITHMS,
+  onProgress?: (percent: number) => void,
+  options: { chunkSize?: number; signal?: AbortSignal } = {}
+): Promise<Record<HashAlgorithm, string>> {
+  const chunkSize = Math.max(1, Math.floor(options.chunkSize ?? STREAM_CHUNK_SIZE));
+  const { signal } = options;
+  const hashers = await Promise.all(algorithms.map(a => HASHER_FACTORIES[a]().then(h => h.init())));
+  const total = source.size;
+
+  for (let offset = 0; offset < total; offset += chunkSize) {
+    signal?.throwIfAborted();
+    const end = Math.min(offset + chunkSize, total);
+    let chunk: Uint8Array;
+    try {
+      chunk = new Uint8Array(await source.slice(offset, end).arrayBuffer());
+    } catch (err) {
+      throw new ChecksumReadError(offset, err);
+    }
+    for (const hasher of hashers) hasher.update(chunk);
+    onProgress?.(Math.floor((end / total) * 100));
+    // 讓出主執行緒，確保頁面在處理大型檔案時仍可互動
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+
+  signal?.throwIfAborted();
+  onProgress?.(100);
+  const result = {} as Record<HashAlgorithm, string>;
+  algorithms.forEach((algorithm, i) => {
+    result[algorithm] = hashers[i].digest('hex');
+  });
   return result;
 }
 
