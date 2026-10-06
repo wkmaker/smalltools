@@ -62,6 +62,7 @@ app/[tool-name]/
 * 凡具備檔案處理能力的小工具，載入初始檔案後**絕不可將 Drag & Drop 互動入口完全刪除**。
 * 必須支援「全域拖曳感應 Overlay」與「列表底部輕量擴充 Dropzone」，保證使用者在任何操作階段皆能無縫拖曳追加新檔案。
 * **多層級拖曳隔離**：當組件同時具備「檔案上傳」與「內部卡片排序」時，必須透過 DataTransfer 類型嚴格隔離，防止排序操作誤觸上傳浮層。
+* **全域監聽與拖放區不可重複處理**：拖放區 `onDrop` 處理完會冒泡到 `window` 的全域 `drop` 監聽，全域監聽必須先 `if (e.defaultPrevented) return;`（拖放區已 `preventDefault`），否則拖入一個檔案會被加入兩次。`test:ui` 的 `no-duplicate-drop-handling` 規則會擋下漏寫的情況。
 
 ### 4. 中央工具註冊與 404 動態推薦機制
 * 全站所有工具之路由、分類、主題向量 SVG 圖示與簡介統一收錄於 `app/config/tools.tsx`。
