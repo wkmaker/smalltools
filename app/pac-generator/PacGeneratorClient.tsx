@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import ToolLayout from '@/app/components/ToolLayout';
 import FaqSection from '@/app/components/FaqSection';
 import { downloadBlob } from '@/app/utils/downloadBlob';
@@ -845,8 +846,8 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
           </div>
         </div>
 
-        {/* 匯入 PAC 腳本或專案設定彈窗 Modal */}
-        {isImportModalOpen && (
+        {/* 匯入 PAC 腳本或專案設定彈窗 Modal（DOM Portal 頂層隔離：避免祖先 backdrop-filter 讓 fixed 改相對容器定位） */}
+        {isImportModalOpen && typeof document !== 'undefined' && createPortal(
           <div
             className={styles.modalOverlay}
             role="dialog"
@@ -965,7 +966,8 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* FAQ 常見問題 */}
