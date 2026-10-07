@@ -262,9 +262,21 @@ export function splitTopLevelOr(condition: string): string[] {
 }
 
 /**
+ * 擷取網路環境偵測比對：dnsResolve("探測主機") === "IP"（左右對調、== 皆可），回傳「主機=IP」值清單
+ */
+function matchDnsProbes(clause: string): string[] {
+  const re =
+    /dnsResolve\s*\(\s*['"]([^'"]+)['"]\s*\)\s*===?\s*['"]([^'"]+)['"]|['"]([^'"]+)['"]\s*===?\s*dnsResolve\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+  return Array.from(clause.matchAll(re), (m) =>
+    m[1] !== undefined ? `${m[1].trim()}=${m[2].trim()}` : `${m[4].trim()}=${m[3].trim()}`
+  );
+}
+
+/**
  * 依規則解析的既有優先序，分類單一子句所屬的條件類型分組鍵（僅用於分組，不影響實際欄位解析）
  */
-function classifyConditionClauseBucket(clause: string): string {
+function classifyConditionClauseBucket(clause: string, helpers: ReadonlyMap<string, HostHelperKind>): string {
+  if (matchDnsProbes(clause).length > 0) return 'dnsProbe';
   if (clause.includes('isPlainHostName')) return 'plainHost';
   if (clause.includes('isInNet(') || clause.includes('isInNet (')) return 'ipv4';
   if (clause.includes('isInNetEx')) return 'ipv6';
@@ -276,7 +288,7 @@ function classifyConditionClauseBucket(clause: string): string {
     clause.includes('dnsDomainIs') ||
     clause.includes('host ==') ||
     clause.includes('host ===') ||
-    clause.includes('localHostOrDomainIs')
+    hasHostHelperCall(clause, helpers)
   ) {
     return 'domain';
   }
@@ -293,7 +305,10 @@ function classifyConditionClauseBucket(clause: string): string {
  * 混合類型條件，被單一判斷分支整個吃掉、導致其餘子句被靜默丟棄）。
  * 拆出的多段最終都會指向同一個 targetProxy，語意與原始 OR 完全等價（由上而下命中即離開）。
  */
-export function splitConditionByType(condition: string): string[] {
+export function splitConditionByType(
+  condition: string,
+  helpers: ReadonlyMap<string, HostHelperKind> = BUILTIN_HOST_HELPERS
+): string[] {
   const clauses = splitTopLevelOr(condition);
   if (clauses.length <= 1) {
     return [condition];
@@ -302,7 +317,7 @@ export function splitConditionByType(condition: string): string[] {
   const order: string[] = [];
   const buckets = new Map<string, string[]>();
   for (const clause of clauses) {
-    const key = classifyConditionClauseBucket(clause);
+    const key = classifyConditionClauseBucket(clause, helpers);
     if (!buckets.has(key)) {
       order.push(key);
       buckets.set(key, []);
@@ -311,6 +326,187 @@ export function splitConditionByType(condition: string): string[] {
   }
 
   return order.map((key) => buckets.get(key)!.join(' || '));
+}
+
+/**
+ * 移除 JS 註解（引號感知，避免誤刪字串內的 "http://"）
+ */
+export function stripJsComments(code: string): string {
+  let out = '';
+  let quote: string | null = null;
+  for (let i = 0; i < code.length; i++) {
+    const ch = code[i];
+    if (quote) {
+      out += ch;
+      if (ch === '\\' && i + 1 < code.length) {
+        out += code[++i];
+      } else if (ch === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      out += ch;
+    } else if (ch === '/' && code[i + 1] === '*') {
+      const end = code.indexOf('*/', i + 2);
+      i = end === -1 ? code.length : end + 1;
+      out += ' ';
+    } else if (ch === '/' && code[i + 1] === '/') {
+      const end = code.indexOf('\n', i + 2);
+      i = end === -1 ? code.length : end - 1;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
+}
+
+/**
+ * 從 start（指向 '{'）以大括號深度平衡找到對應的 '}'，回傳其索引；找不到回傳 -1
+ */
+function findMatchingBrace(code: string, start: number): number {
+  let depth = 0;
+  for (let i = start; i < code.length; i++) {
+    if (code[i] === '{') depth++;
+    else if (code[i] === '}') {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * 只保留 FindProxyForURL 的函式本體，並移除其中（或其外）定義的輔助函式
+ * （如 var hostOrDomainIs = function(host, val) { return ... }），
+ * 避免輔助函式內的 return 被誤認為代理字串、if 被誤認為分流規則。
+ */
+export function extractRoutingBody(code: string): string {
+  let body = code;
+  const mainMatch = /function\s+FindProxyForURL\s*\([^)]*\)\s*\{/.exec(code);
+  if (mainMatch) {
+    const open = mainMatch.index + mainMatch[0].length - 1;
+    const close = findMatchingBrace(code, open);
+    if (close !== -1) {
+      body = code.slice(open + 1, close);
+    }
+  }
+
+  const fnRegex = /\bfunction\b[^(]*\([^)]*\)\s*\{/g;
+  let result = '';
+  let cursor = 0;
+  let m: RegExpExecArray | null;
+  while ((m = fnRegex.exec(body)) !== null) {
+    const open = m.index + m[0].length - 1;
+    const close = findMatchingBrace(body, open);
+    if (close === -1) break;
+    result += body.slice(cursor, m.index);
+    cursor = close + 1;
+    fnRegex.lastIndex = close + 1;
+  }
+  return result + body.slice(cursor);
+}
+
+/** 主機比對輔助函式的語意：等同網域後綴或精確主機 */
+export type HostHelperKind = 'domainSuffix' | 'domainExact';
+
+/**
+ * PAC 內建函式。localHostOrDomainIs 的規格是「完全相符，或 host 不含網域時比對主機名」，
+ * 匯入時近似為精確主機；若腳本自行重新定義同名函式，則改以腳本中的定義為準。
+ */
+export const BUILTIN_HOST_HELPERS: ReadonlyMap<string, HostHelperKind> = new Map([
+  ['localHostOrDomainIs', 'domainExact'],
+]);
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** 比對 name(host, "值") 呼叫；排除 obj.name( 與名稱為其他識別碼一部分的情況 */
+function hostHelperCallRegex(name: string, flags = ''): RegExp {
+  return new RegExp(`(?<![\\w$.])${escapeRegExp(name)}\\s*\\(\\s*host\\s*,\\s*['"]([^'"]+)['"]\\s*\\)`, flags);
+}
+
+function hasHostHelperCall(clause: string, helpers: ReadonlyMap<string, HostHelperKind>): boolean {
+  for (const name of helpers.keys()) {
+    if (hostHelperCallRegex(name).test(clause)) return true;
+  }
+  return false;
+}
+
+/** 剝除包住整個運算式的外層括號，例如 ((a === b)) -> a === b */
+function stripOuterParens(expr: string): string {
+  let s = expr.trim();
+  while (s.startsWith('(')) {
+    let depth = 0;
+    let end = -1;
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '(') depth++;
+      else if (s[i] === ')') {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+    if (end !== s.length - 1) break;
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
+/**
+ * 依函式本體（而非函式名稱）判斷輔助函式語意。只接受「單一 return」且符合下列其一的寫法，
+ * 其餘一律視為無法辨識（回傳 null），交由一般流程產生警告，不做猜測：
+ * - 精確主機：return h === v（或 ==、左右對調）
+ * - 網域後綴：return h === v || dnsDomainIs(h, '.' + v)（子句順序不拘），與產生器輸出的後綴規則等價
+ */
+export function classifyHostHelper(params: string[], body: string): HostHelperKind | null {
+  if (params.length !== 2) return null;
+  const [h, v] = params;
+  if (!/^[A-Za-z_$][\w$]*$/.test(h) || !/^[A-Za-z_$][\w$]*$/.test(v) || h === v) return null;
+
+  const m = /^return\b([\s\S]*?);?$/.exec(stripJsComments(body).trim());
+  if (!m || /\breturn\b|;/.test(m[1])) return null;
+
+  // 參數改名為固定佔位符（# 不是合法識別碼字元，不會與腳本內其他名稱撞名），再去空白、統一引號
+  const rename = (s: string, from: string, to: string) =>
+    s.replace(new RegExp(`(?<![\\w$.])${escapeRegExp(from)}(?![\\w$])`, 'g'), to);
+  const expr = rename(rename(m[1], h, '#H'), v, '#V').replace(/\s+/g, '').replace(/'/g, '"');
+
+  const clauses = splitTopLevelOr(stripOuterParens(expr)).map(stripOuterParens);
+  const isEquality = (c: string) => ['#H===#V', '#H==#V', '#V===#H', '#V==#H'].includes(c);
+  const isDotSuffix = (c: string) => c === 'dnsDomainIs(#H,"."+#V)';
+
+  if (clauses.length === 1 && isEquality(clauses[0])) return 'domainExact';
+  if (clauses.length === 2 && clauses.some(isEquality) && clauses.some(isDotSuffix)) return 'domainSuffix';
+  return null;
+}
+
+/**
+ * 收集腳本中定義的主機比對輔助函式（function 宣告與 var x = function 兩種寫法），
+ * 依本體語意分類。同名重複定義以最後一次為準；無法辨識的定義會覆蓋掉同名內建函式的預設語意。
+ */
+export function collectHostHelpers(code: string): Map<string, HostHelperKind> {
+  const helpers = new Map(BUILTIN_HOST_HELPERS);
+  const src = stripJsComments(code);
+  const declRegex =
+    /\bfunction\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*\{|\b([A-Za-z_$][\w$]*)\s*=\s*function\b[^(]*\(([^)]*)\)\s*\{/g;
+  let m: RegExpExecArray | null;
+  while ((m = declRegex.exec(src)) !== null) {
+    const name = m[1] ?? m[3];
+    if (name === 'FindProxyForURL') continue;
+    const params = (m[2] ?? m[4]).split(',').map((p) => p.trim()).filter(Boolean);
+    const open = m.index + m[0].length - 1;
+    const close = findMatchingBrace(src, open);
+    if (close === -1) continue;
+    const kind = classifyHostHelper(params, src.slice(open + 1, close));
+    if (kind) helpers.set(name, kind);
+    else helpers.delete(name);
+  }
+  return helpers;
 }
 
 /**
@@ -354,15 +550,20 @@ export function parsePacScript(content: string): PacImportResult {
 
   // 2. PAC JavaScript 逆向解析
   const warnings: string[] = [];
-  let enableIpv6 = /isInNetEx|IPv6|dnsResolveEx|myIpAddressEx/i.test(raw);
-  let resolveIpFirst = /dnsResolve\s*\(\s*host\s*\)|hostIP\s*=|isResolvable/i.test(raw);
+  // 僅分析 FindProxyForURL 本體（排除輔助函式），旗標偵測另外排除註解，避免「Don't check IPv6」之類註解誤觸
+  const routingBody = extractRoutingBody(raw);
+  // 輔助函式先依本體語意分類，再從分析範圍中移除
+  const hostHelpers = collectHostHelpers(raw);
+  const codeOnly = stripJsComments(routingBody);
+  let enableIpv6 = /isInNetEx|dnsResolveEx|myIpAddressEx/.test(codeOnly);
+  let resolveIpFirst = /dnsResolve\s*\(\s*host\s*\)|hostIP\s*=|isResolvable/i.test(codeOnly);
   let defaultAction = 'DIRECT';
 
   const proxies: ProxyNode[] = [];
   const rules: RoutingRule[] = [];
 
   // 提取所有代理節點字串 (支援字串拼接與引號內分號)
-  const returnExpressions = extractReturnExpressions(raw);
+  const returnExpressions = extractReturnExpressions(stripJsComments(routingBody));
   const foundProxyStrings = new Set<string>();
 
   for (const expr of returnExpressions) {
@@ -391,7 +592,7 @@ export function parsePacScript(content: string): PacImportResult {
     defaultAction = matchedProxy ? matchedProxy.id : lastReturn;
   }
 
-  const ifBlocks = extractAllIfBlocks(raw);
+  const ifBlocks = extractAllIfBlocks(routingBody);
   let ruleIndex = 1;
 
   for (const block of ifBlocks) {
@@ -414,11 +615,26 @@ export function parsePacScript(content: string): PacImportResult {
 
     // 若同一個 if 內以最外層 || 混合了不同類型的條件（例如 isPlainHostName(host) || dnsDomainIs(host, ".x")），
     // 拆成多段各自解析，避免其中一段被單一判斷分支整個消化、導致其餘子句被靜默丟棄
-    const subConditions = splitConditionByType(condition);
+    const subConditions = splitConditionByType(condition, hostHelpers);
 
     for (const subCondition of subConditions) {
       // 是否為用戶端本機 IP (myIpAddress / myIpAddressEx)
       const isClientIp = subCondition.includes('myIpAddress');
+
+      // 0. 網路環境偵測 (dnsResolve("探測主機") === "IP")，常見於判斷是否位於公司內網
+      const dnsProbes = matchDnsProbes(subCondition);
+      if (dnsProbes.length > 0) {
+        rules.push({
+          id: `rule_${Date.now()}_${ruleIndex++}`,
+          name: blockComment || '網路環境偵測',
+          enabled: true,
+          conditionType: 'dnsProbe',
+          value: Array.from(new Set(dnsProbes)).join('\n'),
+          targetProxy,
+          description: blockComment || undefined,
+        });
+        continue;
+      }
 
       // 1. 純主機名
       if (subCondition.includes('isPlainHostName')) {
@@ -572,7 +788,7 @@ export function parsePacScript(content: string): PacImportResult {
         subCondition.includes('dnsDomainIs') ||
         subCondition.includes('host ==') ||
         subCondition.includes('host ===') ||
-        subCondition.includes('localHostOrDomainIs')
+        hasHostHelperCall(subCondition, hostHelpers)
       ) {
         const domainMatches = Array.from(
           subCondition.matchAll(/dnsDomainIs\s*\(\s*host,\s*['"]([^'"]+)['"]\s*\)/g)
@@ -580,32 +796,51 @@ export function parsePacScript(content: string): PacImportResult {
         const hostMatches = Array.from(
           subCondition.matchAll(/(?:host\s*===?|host\s*==)\s*['"]([^'"]+)['"]/g)
         );
+        // 輔助函式呼叫（如 Menlo / Zscaler PAC 的 hostOrDomainIs），語意已由 collectHostHelpers 依函式本體判定
+        const suffixHelperMatches: RegExpMatchArray[] = [];
+        const exactHelperMatches: RegExpMatchArray[] = [];
+        for (const [name, kind] of hostHelpers) {
+          const calls = Array.from(subCondition.matchAll(hostHelperCallRegex(name, 'g')));
+          (kind === 'domainSuffix' ? suffixHelperMatches : exactHelperMatches).push(...calls);
+        }
 
-        const domainList: string[] = [];
-        domainMatches.forEach((m) => domainList.push(m[1].trim()));
-        hostMatches.forEach((m) => domainList.push(m[1].trim()));
+        // 若同時有 .example.com 與 example.com，統一保留乾淨網域名稱
+        const normalizeDomain = (d: string) => {
+          const t = d.trim();
+          return t.startsWith('.') ? t.slice(1) : t;
+        };
+        const suffixDomains = Array.from(
+          new Set([...domainMatches, ...suffixHelperMatches].map((m) => normalizeDomain(m[1])))
+        );
+        // 精確主機與網域後綴分成兩條規則，避免精確主機（如 go.microsoft.com）被併入後綴、連子網域都一起命中；
+        // 已被後綴涵蓋的主機（後綴規則本身含 host === 頂層網域）不重複列出
+        const exactHosts = Array.from(
+          new Set([...hostMatches, ...exactHelperMatches].map((m) => m[1].trim()))
+        ).filter((h) => !suffixDomains.includes(h));
 
-        if (domainList.length > 0) {
-          // 整理去重
-          const cleanedDomains = Array.from(
-            new Set(
-              domainList.map((d) => {
-                // 若同時有 .example.com 與 example.com，統一保留乾淨網域名稱
-                return d.startsWith('.') ? d.slice(1) : d;
-              })
-            )
-          );
-
-          const hasSuffix = domainMatches.length > 0;
-          rules.push({
-            id: `rule_${Date.now()}_${ruleIndex++}`,
-            name: blockComment || (hasSuffix ? '特定網域分流' : '精確主機分流'),
-            enabled: true,
-            conditionType: hasSuffix ? 'domainSuffix' : 'domainExact',
-            value: cleanedDomains.join('\n'),
-            targetProxy,
-            description: blockComment || undefined,
-          });
+        if (suffixDomains.length > 0 || exactHosts.length > 0) {
+          if (suffixDomains.length > 0) {
+            rules.push({
+              id: `rule_${Date.now()}_${ruleIndex++}`,
+              name: blockComment || '特定網域分流',
+              enabled: true,
+              conditionType: 'domainSuffix',
+              value: suffixDomains.join('\n'),
+              targetProxy,
+              description: blockComment || undefined,
+            });
+          }
+          if (exactHosts.length > 0) {
+            rules.push({
+              id: `rule_${Date.now()}_${ruleIndex++}`,
+              name: blockComment || '精確主機分流',
+              enabled: true,
+              conditionType: 'domainExact',
+              value: exactHosts.join('\n'),
+              targetProxy,
+              description: blockComment || undefined,
+            });
+          }
           continue;
         }
       }

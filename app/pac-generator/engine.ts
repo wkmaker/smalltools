@@ -1,6 +1,6 @@
 import type { ConditionType, PacImportResult, PacPreset, PacProjectConfig, ProxyNode, RoutingRule } from './types.ts';
 import { isValidIpv4 as sharedIsValidIpv4, isValidIpv6 as sharedIsValidIpv6 } from '../utils/ipUtils.ts';
-export { netmaskToCidr, parsePacScript, parseProxyNodeFromString, splitConditionByType, splitTopLevelOr } from './importer.ts';
+export { classifyHostHelper, netmaskToCidr, parsePacScript, parseProxyNodeFromString, splitConditionByType, splitTopLevelOr } from './importer.ts';
 
 /**
  * 將 IPv4 CIDR 前綴 (0-32) 轉換為標準子網遮罩 (例如 24 -> 255.255.255.0)
@@ -87,6 +87,18 @@ export function splitRuleValues(input: string, conditionType?: ConditionType): s
     .split(/[\r\n,;]+/)
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+/**
+ * 解析網路環境偵測條件值「探測主機名=預期 IPv4」（如 dns2.corp.local=10.10.10.10）；格式不符回傳 null
+ */
+export function parseDnsProbeValue(input: string): { host: string; ip: string } | null {
+  const m = /^([^=\s]+)\s*=\s*([^=\s]+)$/.exec(input.trim());
+  if (!m) return null;
+  const host = m[1].toLowerCase();
+  const ip = m[2];
+  if (!/^[a-z0-9_.-]+$/.test(host) || !sharedIsValidIpv4(ip)) return null;
+  return { host, ip };
 }
 
 /**
@@ -212,6 +224,16 @@ export function validateSingleRuleValue(conditionType: ConditionType, value: str
       }
       return { isValid: true };
     }
+
+    case 'dnsProbe':
+      if (!parseDnsProbeValue(val)) {
+        return {
+          isValid: false,
+          messageZh: '請以「探測主機名=預期 IPv4」格式填寫，例如：dns2.corp.local=10.10.10.10',
+          messageEn: 'Use the format probe-host=expected-IPv4, e.g. dns2.corp.local=10.10.10.10',
+        };
+      }
+      return { isValid: true };
 
     case 'timeRange': {
       const parts = val.split(/[-:,\s]+/).map((s) => parseInt(s, 10));
@@ -430,6 +452,12 @@ export function buildSingleConditionExpression(
       const h1 = !isNaN(parts[0]) ? parts[0] : 9;
       const h2 = !isNaN(parts[1]) ? parts[1] : 18;
       return `timeRange(${h1}, ${h2})`;
+    }
+
+    case 'dnsProbe': {
+      // 格式不符時輸出 false，避免把未驗證的使用者輸入原樣拼進腳本
+      const probe = parseDnsProbeValue(val);
+      return probe ? `dnsResolve("${probe.host}") === "${probe.ip}"` : 'false';
     }
 
     case 'regex':

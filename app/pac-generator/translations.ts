@@ -72,6 +72,7 @@ export const TRANSLATIONS = {
       ipv6Cidr: '目標 IPv6 位址 / 網段 (CIDR)',
       clientIpv4: '用戶端本機 IPv4 網段 (myIpAddress)',
       clientIpv6: '用戶端本機 IPv6 網段 (myIpAddressEx)',
+      dnsProbe: '網路環境偵測 (dnsResolve)',
       protocol: '傳輸協定 (HTTP/HTTPS/FTP)',
       port: '通訊埠號 (Port)',
       weekday: '工作日 / 週末 (Weekday)',
@@ -88,6 +89,7 @@ export const TRANSLATIONS = {
       ipv6Cidr: '例如：2001:db8::1 或 fc00::/7 (每行一個)',
       clientIpv4: '例如：10.1.0.0/16 或 192.168.1.0/24 (每行一個)',
       clientIpv6: '例如：2001:db8::/32 或 fc00::/7 (每行一個)',
+      dnsProbe: '例如：dns2.corp.local=10.10.10.10 (該主機解析為此 IP 時命中，可判斷是否位於公司內網)',
       protocol: '例如：http、https、ftp、ws 或 wss',
       port: '例如：80、443、8080 或 1080',
       weekday: '例如：MON-FRI (平日) 或 SAT-SUN (週末)',
@@ -99,7 +101,7 @@ export const TRANSLATIONS = {
     faqItems: [
       {
         q: 'PAC 分流規則支援哪些條件模式？各自適用什麼場景？',
-        a: `本工具支援 14 種條件模式，涵蓋主機、網域、URL、IP、用戶端本機分流、傳輸協定、連接埠、時間排程與正則表達式：
+        a: `本工具支援 15 種條件模式，涵蓋主機、網域、URL、IP、用戶端本機分流、傳輸協定、連接埠、時間排程、正則表達式與網路環境偵測：
 
 ① 純主機名稱 (isPlainHostName)：
 比對不含任何點號「.」的主機名稱（如 http://intranet/ 或 http://hr/）。常用於將內部局域網服務設為 DIRECT 直連，免去繁瑣的網段列舉。
@@ -141,7 +143,10 @@ export const TRANSLATIONS = {
 根據當前小時範圍（如 9-18 代表上午 9 點至下午 6 點）動態切換上班時段專用代理。
 
 ⑭ 正則表達式 (RegExp.test)：
-提供最高自訂自由度，直接以正則表達式對完整目標網址進行高階樣式比對。`,
+提供最高自訂自由度，直接以正則表達式對完整目標網址進行高階樣式比對。
+
+⑮ 網路環境偵測 (dnsResolve)：
+解析指定的探測主機名稱，結果等於指定 IPv4 時命中，格式為「主機名=IP」（如 dns2.corp.local=10.10.10.10）。常用於判斷使用者目前是否位於公司內網：只有內網 DNS 會把探測主機解析成該內部 IP，藉此在內網代理與外部雲端代理之間切換。`,
       },
       {
         q: '可以指定單一 IPv4 或 IPv6 位址進行分流嗎？與「完整網域名稱」有何不同？',
@@ -325,6 +330,7 @@ data:application/x-ns-proxy-autoconfig;base64,....
       ipv6Cidr: 'Target IPv6 Address / Subnet (CIDR)',
       clientIpv4: 'Client Local IPv4 Subnet (myIpAddress)',
       clientIpv6: 'Client Local IPv6 Subnet (myIpAddressEx)',
+      dnsProbe: 'Network Detection (dnsResolve)',
       protocol: 'Protocol (HTTP/HTTPS/FTP)',
       port: 'Target Port',
       weekday: 'Weekday Range (Workdays/Weekends)',
@@ -341,6 +347,7 @@ data:application/x-ns-proxy-autoconfig;base64,....
       ipv6Cidr: 'e.g. 2001:db8::1 or fc00::/7 (one per line)',
       clientIpv4: 'e.g. 10.1.0.0/16 or 192.168.1.0/24 (one per line)',
       clientIpv6: 'e.g. 2001:db8::/32 or fc00::/7 (one per line)',
+      dnsProbe: 'e.g. dns2.corp.local=10.10.10.10 (matches when that host resolves to this IP, e.g. to detect the corporate network)',
       protocol: 'e.g. http, https, ftp, ws, or wss',
       port: 'e.g. 80, 443, 8080, or 1080',
       weekday: 'e.g. MON-FRI (workdays) or SAT-SUN (weekends)',
@@ -352,7 +359,7 @@ data:application/x-ns-proxy-autoconfig;base64,....
     faqItems: [
       {
         q: 'What condition match modes are supported in routing rules, and when should I use them?',
-        a: `The generator supports 14 matching conditions covering hostnames, domains, full URLs, IP subnets, client local network steering, protocols, ports, time schedules, and regular expressions:
+        a: `The generator supports 15 matching conditions covering hostnames, domains, full URLs, IP subnets, client local network steering, protocols, ports, time schedules, regular expressions, and network environment detection:
 
 ① Plain Hostname (isPlainHostName):
 Matches hostnames without any dot "." (such as http://intranet/ or http://hr/). Ideal for directing internal local intranet traffic to DIRECT bypass.
@@ -394,7 +401,10 @@ Dynamically switches proxy policies based on day of the week (e.g. MON-FRI for w
 Applies routing rules during specific hours of the day (e.g. 9-18 for standard business hours).
 
 ⑭ Regular Expression (RegExp.test):
-Provides maximum flexibility to test the entire URL against custom regular expressions.`,
+Provides maximum flexibility to test the entire URL against custom regular expressions.
+
+⑮ Network Detection (dnsResolve):
+Resolves a probe hostname and matches when the result equals the given IPv4 address, written as host=IP (e.g. dns2.corp.local=10.10.10.10). Commonly used to detect whether the user is on the corporate network: only the internal DNS resolves the probe host to that internal IP, so you can switch between an on-premises proxy and a cloud proxy.`,
       },
       {
         q: 'Can I route traffic by a single IPv4 or IPv6 address? How does it differ from Exact Hostname?',
