@@ -4,6 +4,22 @@
 
 ---
 
+## [1.17.0] - 2026-10-07
+
+### ✨ 新增功能 (Added)
+
+- **PAC 產生器（`/pac-generator/`）新增「網路環境偵測」條件（`dnsProbe`）**：以「探測主機名=預期 IPv4」格式（如 `dns2.corp.local=10.10.10.10`）產生 `dnsResolve("dns2.corp.local") === "10.10.10.10"`，用於判斷是否位於公司內網並切換代理。格式不符時輸出 `false`，不把原始輸入拼進腳本。匯入 PAC 時可自動辨識此寫法（左右對調、`==` 皆可）。FAQ 條件清單同步更新為 15 種。
+
+### 🐛 問題修正 (Fixed)
+
+- **PAC 產生器（`/pac-generator/`）匯入含內嵌輔助函式的 PAC（如 Menlo Security 雲端代理）解析錯誤**：
+  - `FindProxyForURL` 內以 `var hostOrDomainIs = function(...) { return ... }` 定義的輔助函式，其 `return` 被誤當成代理節點（產生 `.`、`(host === val)` 等垃圾節點）。現在只分析 `FindProxyForURL` 本體並排除輔助函式。
+  - `hostOrDomainIs(host, "x")` 等自訂輔助函式無法辨識、被轉成錯誤的 URL 萬用比對規則。現在依**函式本體**判斷語意（不看函式名稱）：`return h === v || dnsDomainIs(h, '.' + v)` 視為網域後綴、`return h === v` 視為精確主機，其他寫法不猜測、照常產生警告；內建 `localHostOrDomainIs` 近似為精確主機，若腳本重新定義則以腳本為準。
+  - 註解中出現「IPv6」字樣會誤開啟 IPv6 模式；旗標偵測改為排除註解後再判斷。
+  - 同一個 `if` 內混合精確主機（`hostIs` / `host ===`）與網域後綴（`dnsDomainIs`）時，精確主機被整批併入後綴規則，導致 `x.go.microsoft.com` 等子網域也被誤判命中。現在拆成「網域後綴」與「精確主機」兩條規則，已被後綴涵蓋的主機不重複列出。
+
+---
+
 ## [1.16.3] - 2026-10-07
 
 ### 🐛 問題修正 (Fixed)

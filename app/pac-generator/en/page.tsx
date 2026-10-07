@@ -41,7 +41,7 @@ const jsonLd = {
 const faqJsonLd = generateFaqSchema([
   {
     q: 'What condition match modes are supported in routing rules, and when should I use them?',
-    a: `The generator supports 14 matching conditions covering hostnames, domains, full URLs, IP subnets, client local network steering, protocols, ports, time schedules, and regular expressions:
+    a: `The generator supports 15 matching conditions covering hostnames, domains, full URLs, IP subnets, client local network steering, protocols, ports, time schedules, regular expressions, and network environment detection:
 
 ① Plain Hostname (isPlainHostName):
 Matches hostnames without any dot "." (such as http://intranet/ or http://hr/). Ideal for directing internal local intranet traffic to DIRECT bypass.
@@ -83,7 +83,10 @@ Dynamically switches proxy policies based on day of the week (e.g. MON-FRI for w
 Applies routing rules during specific hours of the day (e.g. 9-18 for standard business hours).
 
 ⑭ Regular Expression (RegExp.test):
-Provides maximum flexibility to test the entire URL against custom regular expressions.`,
+Provides maximum flexibility to test the entire URL against custom regular expressions.
+
+⑮ Network Detection (dnsResolve):
+Resolves a probe hostname and matches when the result equals the given IPv4 address, written as host=IP (e.g. dns2.corp.local=10.10.10.10). Commonly used to detect whether the user is on the corporate network: only the internal DNS resolves the probe host to that internal IP, so you can switch between an on-premises proxy and a cloud proxy.`,
   },
   {
     q: 'Can I route traffic by a single IPv4 or IPv6 address? How does it differ from Exact Hostname?',

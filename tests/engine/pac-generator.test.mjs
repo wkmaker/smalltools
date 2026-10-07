@@ -17,6 +17,7 @@ import {
   splitRuleValues,
   parsePacScript,
   splitConditionByType,
+  classifyHostHelper,
   PRESET_TEMPLATES,
 } from '../../app/pac-generator/engine.ts';
 
@@ -592,3 +593,189 @@ test('formatProxyString & CHAIN: 支援視覺化組合多重備援代理鏈與 D
 });
 
 
+
+test('parsePacScript: 內嵌輔助函式（hostOrDomainIs / hostIs）不應被誤判為代理節點或自訂規則', () => {
+  // 精簡自 Menlo Security 雲端代理 PAC：FindProxyForURL 內以 var 定義輔助函式，註解含「IPv6」字樣
+  const menloStyleScript = `
+function FindProxyForURL(url, host)
+{
+   var hostOrDomainIs = function(host, val) {
+      return (host === val) || dnsDomainIs(host, '.' + val);
+   };
+   var hostIs = function(host, val) {
+      return (host === val);
+   };
+   /* Don't check IPv6 addresses */
+   if (isResolvable(host))
+   {
+      var hostIP = dnsResolve(host);
+      if (!shExpMatch(hostIP, "*:*"))
+      {
+        if (isInNet(hostIP, '10.0.0.0', '255.0.0.0') || isInNet(hostIP, '192.168.0.0', '255.255.0.0'))
+        {
+           return 'DIRECT';
+        }
+      }
+   }
+   if ( hostOrDomainIs(host, "itunes.apple.com") || dnsDomainIs(host, ".icloud.com") )
+   {
+      return 'DIRECT';
+   }
+   if ( hostOrDomainIs(host, "netflix.com") || isInNet(host, "23.246.0.0","255.255.192.0") )
+   {
+      return 'DIRECT';
+   }
+   if ( hostIs(host, "sso.example.com") )
+   {
+      return 'DIRECT';
+   }
+   if ( url.substring(0, 6) === 'https:' )
+   {
+      return 'PROXY p0.menlosecurity.com:3131; PROXY p1.menlosecurity.com:3131; DIRECT';
+   }
+   return 'DIRECT';
+}
+`;
+  const result = parsePacScript(menloStyleScript);
+  assert.equal(result.success, true);
+  assert.equal(result.warnings, undefined, '不應有未能解析的條件');
+
+  // 輔助函式內的 return 不應被當成代理字串
+  assert.equal(result.proxies.length, 1);
+  assert.equal(result.proxies[0].customString, 'PROXY p0.menlosecurity.com:3131; PROXY p1.menlosecurity.com:3131; DIRECT');
+
+  // 註解中的「IPv6」不應開啟 IPv6 模式
+  assert.equal(result.enableIpv6, false);
+
+  const appleRule = result.rules.find((r) => r.value.includes('itunes.apple.com'));
+  assert.equal(appleRule.conditionType, 'domainSuffix');
+  assert.deepEqual(appleRule.value.split('\n').sort(), ['icloud.com', 'itunes.apple.com']);
+
+  const netflixDomain = result.rules.find((r) => r.value === 'netflix.com');
+  assert.equal(netflixDomain.conditionType, 'domainSuffix');
+  assert.ok(result.rules.some((r) => r.conditionType === 'ipv4Cidr' && r.value === '23.246.0.0/18'));
+
+  const exactRule = result.rules.find((r) => r.value === 'sso.example.com');
+  assert.equal(exactRule.conditionType, 'domainExact');
+
+  assert.ok(result.rules.every((r) => r.conditionType !== 'wildcardUrl'));
+});
+
+test('classifyHostHelper: 依函式本體判斷語意，而非函式名稱', () => {
+  // 網域後綴：子句順序、括號、空白、引號、參數名稱皆不影響
+  assert.equal(classifyHostHelper(['host', 'val'], "return (host === val) || dnsDomainIs(host, '.' + val);"), 'domainSuffix');
+  assert.equal(classifyHostHelper(['h', 'd'], 'return dnsDomainIs(h, "." + d) || d == h'), 'domainSuffix');
+  // 精確主機
+  assert.equal(classifyHostHelper(['host', 'val'], 'return (host === val);'), 'domainExact');
+  // 無法辨識：多敘述、額外條件、少了點號、參數數量不符
+  assert.equal(classifyHostHelper(['host', 'val'], 'if (!host) return false; return host === val;'), null);
+  assert.equal(classifyHostHelper(['host', 'val'], 'return host === val && isResolvable(host);'), null);
+  assert.equal(classifyHostHelper(['host', 'val'], 'return host === val || dnsDomainIs(host, val);'), null);
+  assert.equal(classifyHostHelper(['host'], 'return host === "x";'), null);
+});
+
+test('parsePacScript: 同名輔助函式意義不同時，以腳本中的實際定義為準', () => {
+  const script = `
+function hostOrDomainIs(host, val) {
+  return host === val;
+}
+function FindProxyForURL(url, host) {
+  var hostIs = function(host, val) {
+    return shExpMatch(host, val + "*");
+  };
+  if (hostOrDomainIs(host, "a.example.com")) {
+    return "DIRECT";
+  }
+  if (hostIs(host, "b.example.com")) {
+    return "DIRECT";
+  }
+  return "PROXY p.example.com:8080";
+}
+`;
+  const result = parsePacScript(script);
+
+  // 這裡的 hostOrDomainIs 定義成精確比對，不應被當成網域後綴
+  const a = result.rules.find((r) => r.value === 'a.example.com');
+  assert.ok(a);
+  assert.equal(a.conditionType, 'domainExact');
+
+  // 這裡的 hostIs 定義無法辨識，不應被猜成精確主機，而是產生警告
+  assert.ok(!result.rules.some((r) => r.value === 'b.example.com'));
+  assert.ok(result.warnings?.some((w) => w.includes('hostIs')));
+});
+
+test('parsePacScript: 同一個 if 內混合精確主機與網域後綴時，應拆成兩條規則，精確主機不可被併入後綴', () => {
+  const script = `
+function FindProxyForURL(url, host) {
+  var hostIs = function(host, val) { return (host === val); };
+  if ( dnsDomainIs(host, ".office.com") ||
+    hostIs(host, "go.microsoft.com") ||
+    host === "aka.ms" ||
+    hostIs(host, "office.com") )
+  {
+    return 'DIRECT';
+  }
+  return 'PROXY p.example.com:8080';
+}
+`;
+  const result = parsePacScript(script);
+  const suffix = result.rules.find((r) => r.conditionType === 'domainSuffix');
+  const exact = result.rules.find((r) => r.conditionType === 'domainExact');
+  assert.equal(suffix.value, 'office.com');
+  // office.com 已被後綴規則涵蓋，不重複列入精確主機
+  assert.deepEqual(exact.value.split('\n').sort(), ['aka.ms', 'go.microsoft.com']);
+  assert.equal(suffix.targetProxy, 'DIRECT');
+  assert.equal(exact.targetProxy, 'DIRECT');
+});
+
+test('dnsProbe: 網路環境偵測條件的驗證與腳本產生', () => {
+  assert.equal(validateRuleValue('dnsProbe', 'dns2.corp.local=10.10.10.10').isValid, true);
+  assert.equal(validateRuleValue('dnsProbe', 'dns2.corp.local = 10.10.10.10').isValid, true);
+  assert.equal(validateRuleValue('dnsProbe', 'dns2.corp.local').isValid, false);
+  assert.equal(validateRuleValue('dnsProbe', 'dns2.corp.local=10.10.10.300').isValid, false);
+  assert.equal(validateRuleValue('dnsProbe', 'a"b.com=10.0.0.1').isValid, false);
+
+  const rule = { id: 'r', name: 'n', enabled: true, conditionType: 'dnsProbe', value: 'DNS2.corp.local=10.10.10.10', targetProxy: 'DIRECT' };
+  assert.equal(buildConditionExpression(rule, false, false), 'dnsResolve("dns2.corp.local") === "10.10.10.10"');
+  // 格式不符時輸出 false，不把原始輸入拼進腳本
+  const injected = buildConditionExpression({ ...rule, value: 'x");alert(1);("=1' }, false, false);
+  assert.ok(!injected.includes('alert'));
+  assert.match(injected, /^false( \|\|\s+false)*$/);
+});
+
+test('parsePacScript & 往返：公司內網偵測 (dnsResolve === IP) 匯入後重新產生，行為與原始腳本一致', async () => {
+  const { runSinglePacTest } = await import('../../app/pac-tester/engine.ts');
+  const original = `
+function FindProxyForURL(url, host) {
+  if (isPlainHostName(host)) { return 'DIRECT'; }
+  /* Corporate network detection */
+  if ( dnsResolve('dns2.mydomain.com') === '10.10.10.10' )
+  {
+    return 'PROXY proxy.domain.local:8080';
+  }
+  if (dnsDomainIs(host, ".office.com")) { return 'DIRECT'; }
+  return 'PROXY cloud.example.com:3129';
+}
+`;
+  const parsed = parsePacScript(original);
+  assert.equal(parsed.warnings, undefined);
+  const probe = parsed.rules.find((r) => r.conditionType === 'dnsProbe');
+  assert.equal(probe.value, 'dns2.mydomain.com=10.10.10.10');
+  assert.equal(probe.name, 'Corporate network detection');
+
+  const regenerated = generatePacScript({
+    proxies: parsed.proxies,
+    rules: parsed.rules,
+    defaultAction: parsed.defaultAction,
+    enableIpv6: parsed.enableIpv6,
+    resolveIpFirst: parsed.resolveIpFirst,
+  });
+  const base = { clientIpv4: '192.168.1.100', clientIpv6: '2001:db8::100', simulatedDay: 'AUTO', simulatedHour: -1 };
+  for (const dnsMap of [{}, { 'dns2.mydomain.com': '10.10.10.10' }]) {
+    for (const url of ['http://intranet/', 'https://outlook.office.com/', 'https://www.google.com/']) {
+      const a = runSinglePacTest(original, url, { ...base, dnsMap });
+      const b = runSinglePacTest(regenerated, url, { ...base, dnsMap });
+      assert.equal(b.returnString, a.returnString, `${url} @ ${JSON.stringify(dnsMap)}`);
+    }
+  }
+});

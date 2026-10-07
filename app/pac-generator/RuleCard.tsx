@@ -17,6 +17,7 @@ const CONDITION_TYPE_OPTIONS: ConditionType[] = [
   'ipv6Cidr',
   'clientIpv4',
   'clientIpv6',
+  'dnsProbe',
   'protocol',
   'port',
   'weekday',

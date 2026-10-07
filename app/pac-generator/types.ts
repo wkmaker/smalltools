@@ -25,6 +25,7 @@ export type ConditionType =
   | 'port'           // 指定通訊埠 (如 80, 443, 8080)
   | 'weekday'        // weekdayRange("MON", "FRI") (MDN)
   | 'timeRange'      // timeRange(9, 18) (MDN)
+  | 'dnsProbe'       // dnsResolve("dns2.corp.local") === "10.10.10.10"（網路環境偵測）
   | 'regex';         // /pattern/.test(url)
 
 export interface RuleCondition {
