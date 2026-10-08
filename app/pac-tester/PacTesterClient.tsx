@@ -44,6 +44,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
   const [singleResult, setSingleResult] = useState<PacSingleTestResult | null>(null);
   const [isSingleRunning, setIsSingleRunning] = useState<boolean>(false);
   const [singleTimeoutError, setSingleTimeoutError] = useState<boolean>(false);
+  const [singleRunError, setSingleRunError] = useState<boolean>(false);
 
   // 批量測試狀態
   const [batchUrlsText, setBatchUrlsText] = useState<string>(DEFAULT_BATCH_TEST_URLS.join('\n'));
@@ -51,6 +52,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
   const [batchFilter, setBatchFilter] = useState<'ALL' | 'DIRECT' | 'PROXY' | 'ERROR'>('ALL');
   const [isBatchRunning, setIsBatchRunning] = useState<boolean>(false);
   const [batchTimeoutError, setBatchTimeoutError] = useState<boolean>(false);
+  const [batchRunError, setBatchRunError] = useState<boolean>(false);
 
   // 虛擬環境 Mock Context 狀態
   const [mockClientIpv4, setMockClientIpv4] = useState<string>('192.168.1.100');
@@ -98,13 +100,18 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     if (isSingleRunning) return;
     setIsSingleRunning(true);
     setSingleTimeoutError(false);
+    setSingleRunError(false);
     try {
       const res = await runSinglePacTestSafe(pacScript, singleUrl, mockContext);
       setSingleResult(res);
     } catch (err) {
+      setSingleResult(null);
       if (err instanceof PacScriptTimeoutError) {
         setSingleTimeoutError(true);
-        setSingleResult(null);
+      } else {
+        // Worker 載入失敗（如腳本檔 404）或崩潰：不可靜默吞掉，否則按鈕看起來完全沒反應
+        console.error('[pac-tester] 單次測試執行失敗', { singleUrl, err });
+        setSingleRunError(true);
       }
     } finally {
       setIsSingleRunning(false);
@@ -116,6 +123,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     setSingleUrl('');
     setSingleResult(null);
     setSingleTimeoutError(false);
+    setSingleRunError(false);
   };
 
   // 執行批量測試（於獨立 Worker 執行緒運行，逾時自動中止，避免頁面被使用者貼的腳本卡死）
@@ -124,13 +132,17 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     const urls = batchUrlsText.split('\n').filter((u) => u.trim().length > 0);
     setIsBatchRunning(true);
     setBatchTimeoutError(false);
+    setBatchRunError(false);
     try {
       const results = await runBatchPacTestSafe(pacScript, urls, mockContext);
       setBatchResults(results);
     } catch (err) {
+      setBatchResults([]);
       if (err instanceof PacScriptTimeoutError) {
         setBatchTimeoutError(true);
-        setBatchResults([]);
+      } else {
+        console.error('[pac-tester] 批量測試執行失敗', { urlCount: urls.length, err });
+        setBatchRunError(true);
       }
     } finally {
       setIsBatchRunning(false);
@@ -142,6 +154,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     setBatchUrlsText('');
     setBatchResults([]);
     setBatchTimeoutError(false);
+    setBatchRunError(false);
   };
 
   // 跨工具連動：送回 PAC 產生器匯入
@@ -162,9 +175,11 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     setSingleUrl('');
     setSingleResult(null);
     setSingleTimeoutError(false);
+    setSingleRunError(false);
     setBatchUrlsText('');
     setBatchResults([]);
     setBatchTimeoutError(false);
+    setBatchRunError(false);
   };
 
   // 重設 Mock Context 為預設值
@@ -432,6 +447,9 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                   {singleTimeoutError && (
                     <div className={styles.errorBanner}>{t.singleTest.timeoutError}</div>
                   )}
+                  {singleRunError && (
+                    <div className={styles.errorBanner}>{t.singleTest.workerError}</div>
+                  )}
 
                   {/* 測試結果看板 */}
                   {singleResult && (
@@ -611,6 +629,9 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
 
                   {batchTimeoutError && (
                     <div className={styles.errorBanner}>{t.batchTest.timeoutError}</div>
+                  )}
+                  {batchRunError && (
+                    <div className={styles.errorBanner}>{t.batchTest.workerError}</div>
                   )}
 
                   {/* 批量測試報表結果 */}

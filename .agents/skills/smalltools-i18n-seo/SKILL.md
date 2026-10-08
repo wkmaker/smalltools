@@ -117,3 +117,4 @@ alternates: {
 * 搭配 `trailingSlash: true`，Sitemap 內所有 `<loc>` 網址必須採用目錄結尾斜線（如 `https://tools.cjkuo.net/time/`），嚴禁帶 `/index.html`。
 * 部署至 AWS S3（搭配 CloudFront Rewrite）時，無檔名目錄路徑即可自動對應至 `[tool-name]/index.html`。
 * 啟用 `app/sitemap.ts` 後，需確認 `public/sitemap.xml` 已刪除，避免靜態資源覆蓋 Next.js 自動生成之 Sitemap。
+* **`public/` 根目錄放非雜湊 JS（如 Worker 腳本）時，必須確認 `deploy.yml` 有上傳**：S3 主同步步驟以 `--exclude "*.js"` 排除所有 JS，再個別上傳 `sw.js`、`_next/static`；當初 `pac-tester-worker.js` 就因此漏傳、線上 404，而前端又靜默吞錯，表現為「按鈕完全沒反應」。本機 `out/` 有檔案不代表線上有，上線後要實際請求一次確認 200。

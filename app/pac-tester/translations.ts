@@ -39,6 +39,7 @@ export const TRANSLATIONS = {
       targetPort: '目標連接埠',
       targetProtocol: '協議類型',
       timeoutError: '腳本執行逾時（可能包含無窮迴圈或效能極差的比對邏輯），已強制中止以避免頁面凍結，請檢查腳本邏輯。',
+      workerError: '模擬執行環境載入失敗，無法執行測試。請重新整理頁面後再試；若持續發生，請回報此問題。',
     },
     batchTest: {
       urlsLabel: '待測網址清單 (每行一個)',
@@ -58,6 +59,7 @@ export const TRANSLATIONS = {
       summary: '統計摘要',
       totalCount: '總計',
       timeoutError: '批量測試逾時（腳本可能含無窮迴圈），已強制中止以避免頁面凍結，請檢查腳本邏輯。',
+      workerError: '模擬執行環境載入失敗，無法執行批量測試。請重新整理頁面後再試；若持續發生，請回報此問題。',
     },
     mockContext: {
       title: '自訂虛擬客戶端網路環境 (Mock Context)',
@@ -198,6 +200,7 @@ export const TRANSLATIONS = {
       targetPort: 'Target Port',
       targetProtocol: 'Protocol',
       timeoutError: 'Script execution timed out (it may contain an infinite loop or extremely slow matching logic) and was force-stopped to prevent the page from freezing. Please review the script logic.',
+      workerError: 'Failed to load the simulation runtime, so the test could not run. Please reload the page and try again; if it keeps happening, please report it.',
     },
     batchTest: {
       urlsLabel: 'URLs to Test (One per line)',
@@ -217,6 +220,7 @@ export const TRANSLATIONS = {
       summary: 'Summary Stats',
       totalCount: 'Total',
       timeoutError: 'Batch test timed out (the script may contain an infinite loop) and was force-stopped to prevent the page from freezing. Please review the script logic.',
+      workerError: 'Failed to load the simulation runtime, so the batch test could not run. Please reload the page and try again; if it keeps happening, please report it.',
     },
     mockContext: {
       title: 'Client Network Mock Environment',
