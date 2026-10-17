@@ -107,6 +107,52 @@ test('與重構前浮點演算法在「整數元」層級完全一致（批次�
   }
 });
 
+test('回歸測試：月期間支援超過 100 個月（例如 120 個月與 10 年結果一致）', () => {
+  const byYear = calculateCompoundInterest({
+    principal: 100000, contribution: 5000, contribUnit: 'month',
+    ratePercent: 6, rateUnit: 'year', periodVal: 10, periodUnit: 'year',
+    compoundFreq: 12, labels: L,
+  });
+  const byMonth = calculateCompoundInterest({
+    principal: 100000, contribution: 5000, contribUnit: 'month',
+    ratePercent: 6, rateUnit: 'year', periodVal: 120, periodUnit: 'month',
+    compoundFreq: 12, labels: L,
+  });
+  assert.equal(byMonth.schedule.length, 121);
+  assert.equal(round(byMonth.totalAsset), round(byYear.totalAsset));
+  assert.equal(byMonth.totalPrincipal, byYear.totalPrincipal);
+});
+
+test('回歸測試：非整數年期間（1.5 年 = 18 個月）不遺失尾期 6 個月本息', () => {
+  const byFracYear = calculateCompoundInterest({
+    principal: 100000, contribution: 5000, contribUnit: 'month',
+    ratePercent: 6, rateUnit: 'year', periodVal: 1.5, periodUnit: 'year',
+    compoundFreq: 12, labels: L,
+  });
+  const by18Months = calculateCompoundInterest({
+    principal: 100000, contribution: 5000, contribUnit: 'month',
+    ratePercent: 6, rateUnit: 'year', periodVal: 18, periodUnit: 'month',
+    compoundFreq: 12, labels: L,
+  });
+  assert.equal(byFracYear.schedule.length, 3); // 初始 + 第 1 年 + 第 1.5 年
+  assert.equal(round(byFracYear.totalAsset), round(by18Months.totalAsset));
+  assert.equal(byFracYear.totalPrincipal, 190000);
+});
+
+test('通膨折現與次要指標（ROI / 利息佔比 / 72 法則）計算正確', () => {
+  const r = calculateCompoundInterest({
+    principal: 100000, contribution: 5000, contribUnit: 'month',
+    ratePercent: 6, rateUnit: 'year', periodVal: 10, periodUnit: 'year',
+    compoundFreq: 12, inflationPercent: 2, labels: L,
+  });
+  assert.ok(r.realTotalAsset < r.totalAsset, '通膨 > 0 時實質購買力應小於名目總資產');
+  assert.ok(r.realTotalAsset > r.totalPrincipal, '報酬率 6% > 通膨 2% 時實質購買力仍高於本金');
+  assert.equal(r.realSchedule.length, r.schedule.length);
+  assert.equal(r.ruleOf72Years, 12);
+  assert.ok(Math.abs(r.roiPercent - (r.totalInterest / r.totalPrincipal) * 100) < 1e-6);
+  assert.ok(Math.abs(r.interestSharePercent - (r.totalInterest / r.totalAsset) * 100) < 1e-6);
+});
+
 /** 重構前 CompoundInterestClient.runCalculation 的浮點演算法（凍結為對照基準） */
 function floatReference(inp) {
   const numPrincipal = Math.max(0, inp.principal);
