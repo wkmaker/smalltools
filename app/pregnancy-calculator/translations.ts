@@ -74,12 +74,15 @@ export const TRANSLATIONS = {
 
     // 產檢時間軸
     timelineTitle: '40 週關鍵產檢與里程碑時間軸',
-    timelineSubtitle: '按個人預產期推算之各階段公費/自費產檢黃金檢查期',
-    timelineNote: '醫學常識小叮嚀：本時間軸聚焦於各項重大公費/自費篩檢的「黃金檢查窗口」。未列出的空檔週數（如 9~10 週、14~15 週、33~34 週）為常規產檢與生理平穩成長期，遵照醫師門診預約回診即可，請準爸媽安心。',
+    timelineSubtitle: '按個人預產期推算之 9 大階段公費與自費產檢黃金檢查期',
+    timelineNote: '衛教小叮嚀：本時間軸整合《孕婦健康手冊》14 次公費產檢、3 次公費超音波與關鍵自費篩檢時程。標註「公費補助」為國健署常規給付項目，「自費選做」則可依個人年齡、體質與主治醫師評估決定。',
     tagPast: '已完成',
     tagCurrent: '當前階段',
     tagFuture: '預計時程',
     tagNextUpcoming: '即將到來',
+    tagPublic: '公費補助',
+    tagSelfPaid: '自費選做',
+    checkpointListLabel: '重點檢查與評估項目',
 
     // 即時階段導引 Banner
     stageStatusActiveBadge: '黃金檢查窗口進行中',
@@ -87,17 +90,13 @@ export const TRANSLATIONS = {
     stageStatusPreBadge: '早期著床確認期',
     stageStatusPostBadge: '足月待產階段',
 
-    stageNextCountdownText: '距離下一項重大排檢「{nextTitle}」約剩 {days} 天（約 {weeks} 週）',
-    stageNextCountdownTextDaysOnly: '距離下一項重大排檢「{nextTitle}」約剩 {days} 天',
+    stageNextCountdownText: '距離下一階段「{nextTitle}」約剩 {days} 天（約 {weeks} 週）',
+    stageNextCountdownTextDaysOnly: '距離下一階段「{nextTitle}」約剩 {days} 天',
 
-    gapPre6Title: '受精卵著床與胚胎早期發育中',
-    gapPre6Desc: '胎兒神經管與重要器官正迅速分化，請持續補充葉酸 400~600 微克。滿 6~8 週即可前往婦產科照超音波確認心跳並領取媽媽手冊。',
-    gap9To10Title: '第 9 ~ 10 週：胚胎穩定期（常規修養）',
-    gap9To10Desc: '介於第一次產檢與頸部透明帶篩檢之間。胎盤正逐漸接手荷爾蒙分泌，如無異常出血或劇烈腹痛，維持規律作息與清淡飲食即可，無須頻繁侵入檢查。',
-    gap14To15Title: '第 14 ~ 15 週：邁入舒適孕中期',
-    gap14To15Desc: '初唐篩檢已告一段落，即將邁入食慾好轉、精神恢復的第二孕期。可開始規劃 16~20 週的羊膜穿刺或第二孕期常規產檢。',
-    gap33To34Title: '第 33 ~ 34 週：產前準備平穩期',
-    gap33To34Desc: '介於例行產檢與乙型鏈球菌 (GBS) 篩檢之間。請持續每天固定早中晚紀錄胎動，並著手準備待產包與新生兒用品。',
+    gapPre5Title: '受精卵著床與胚胎早期發育中',
+    gapPre5Desc: '胎兒神經管與重要器官正迅速分化，請持續補充葉酸 400~600 微克。滿 5~8 週即可前往婦產科照超音波確認著床位置、心跳並領取媽媽手冊。',
+    gap15Title: '第 15 週：邁入舒適孕中期過渡階段',
+    gap15Desc: '第一孕期初唐與染色體篩檢已告一段落，即將邁入食慾好轉、精神恢復的第二孕期。可開始規劃 16~20 週的例行產檢與唐氏症/羊膜穿刺評估。',
     gapPost40Title: '已滿 40 週足月，隨時準備生產',
     gapPost40Desc: '已達預估預產期，請密切注意產兆（規則陣痛、破水、落紅），並依照主治醫師指示進行每週 1~2 次胎兒監視器 (NST) 追蹤或催生評估。',
 
@@ -128,11 +127,14 @@ export const TRANSLATIONS = {
     btnExpand: '展開',
     btnCollapse: '收合',
 
-    // Checklist
-    checklistTitle: '孕期重要準備與待產包 Check List',
-    checkStage1: '第一孕期 (1~12週) 重點準備',
-    checkStage2: '第二孕期 (13~27週) 重點準備',
-    checkStage3: '第三孕期 (28~40週) 與待產包必備',
+    // Checklist (扣除前 4 週未驗孕期，5~36 週每 8 週一階段 + 最後 4 週足月衝刺，純列自行準備物品與規劃)
+    checklistTitle: '孕期各階段自我準備與待產包 Check List',
+    checklistSubtitle: '不重複上方產檢排程，專注於準爸媽「各階段該看什麼、買什麼、打包什麼」的實戰準備清單（前 4 階段每 8 週一單位 + 最後 4 週待命）',
+    checkStage1: '第一階段 (5 ~ 12 週)：初期營養、生活調整與月子規劃',
+    checkStage2: '第二階段 (13 ~ 20 週)：媽咪舒適穿搭與托育初步規劃',
+    checkStage3: '第三階段 (21 ~ 28 週)：大型育兒設備實地試推與挑選定案',
+    checkStage4: '第四階段 (29 ~ 36 週)：待產包打包、新生兒衣物清洗與交接',
+    checkStage5: '第五階段 (37 ~ 40 週)：最後一個月大型設備採購安裝與足月待命',
     
     // 免責聲明
     disclaimerTitle: '專業醫療、營養補充與法規免責聲明',
@@ -145,6 +147,10 @@ export const TRANSLATIONS = {
       {
         q: '預產期 (EDD) 是如何計算的？為什麼跟實際生產日會有落差？',
         a: '醫學上最常用的標準公式為「奈格爾法則 (Naegele\'s Rule)」：以最後一次月經的第一天為基準，月份減 3 (或加 9)，日期加 7，並以 28 天月經週期計算（共 280 天 / 40 週）。\n\n由於每位女性排卵時間、受精卵著床時間及月經週期長短不同，只有約 5% 的孕婦會在預產期當天生產。通常在「懷孕滿 37 週至 41 週+6 天」之間生產皆屬正常足月分娩。婦產科醫師會在第 8~12 週產檢時透過超音波胎兒頭臀長 (CRL) 進行週數校正。',
+      },
+      {
+        q: '產檢的檢查項目這麼多，我真的每一個都要做嗎？',
+        a: '面對琳瑯滿目的公費與自費產檢項目，建議準爸媽以兩個核心原則來評估：\n\n① 首要原則：尊重婦產科醫生的專業判斷\n每位孕媽咪的年齡、體質、家族病史與胎兒發育狀況皆不同，主治醫師的專業判斷是誰都不能不聽從的第一準則。建議產檢時直接與醫師討論哪些是您現階段必須做或優先建議做的檢查。\n\n② 務實考量：評估自身的財力是否可以負擔\n除了國健署補助的公費產檢外，許多進階自費篩檢（如 NIPT、高層次超音波、基因檢測等）費用確實不低，務必考量家庭與自身的經濟負擔能力來做思考與取捨。\n\n【經驗分享】\n以我自己走過孕期的經驗來看，當時做各項檢查的確花了不少錢，但也很慶幸因為有做這些檢查，提早發現了許多潛在問題，讓我們能在早期就及時處理與解決。當然，產檢就跟「買保險」一樣——檢查出來全都正常、平安沒事最好，但這同時也是能夠提早發現狀況、大幅減低後續許多未知風險與問題的重要方式之一。',
       },
       {
         q: '台灣勞基法與性別平等工作法規定的「產檢假」有幾天？薪資如何計算？',
@@ -248,12 +254,15 @@ export const TRANSLATIONS = {
 
     // Timeline
     timelineTitle: '40-Week Clinical Milestones Timeline',
-    timelineSubtitle: 'Recommended schedule for prenatal tests and clinical milestones based on your due date',
-    timelineNote: 'Clinical Note: This timeline highlights optimal screening windows for key tests. Gap weeks (e.g. Weeks 9-10, 14-15, 33-34) represent routine monitoring and stable fetal growth; attend scheduled clinic visits as recommended.',
+    timelineSubtitle: '9 key prenatal checkup stages and screening windows tailored to your due date',
+    timelineNote: 'Clinical Note: This 9-stage timeline integrates statutory public prenatal checkups (including 3 public ultrasounds) and key optional screenings. Items marked "Public" are covered by routine prenatal care, while "Optional" tests can be discussed with your OB-GYN.',
     tagPast: 'Completed',
     tagCurrent: 'Current Stage',
     tagFuture: 'Upcoming',
     tagNextUpcoming: 'Next Upcoming',
+    tagPublic: 'Public',
+    tagSelfPaid: 'Optional',
+    checkpointListLabel: 'Key Checkups & Evaluations',
 
     // Current Stage Banner
     stageStatusActiveBadge: 'Active Screening Window',
@@ -261,17 +270,13 @@ export const TRANSLATIONS = {
     stageStatusPreBadge: 'Early Implantation Phase',
     stageStatusPostBadge: 'Full-Term Delivery Phase',
 
-    stageNextCountdownText: 'Approx. {days} days ({weeks} weeks) until next milestone: "{nextTitle}"',
-    stageNextCountdownTextDaysOnly: 'Approx. {days} days until next milestone: "{nextTitle}"',
+    stageNextCountdownText: 'Approx. {days} days ({weeks} weeks) until next stage: "{nextTitle}"',
+    stageNextCountdownTextDaysOnly: 'Approx. {days} days until next stage: "{nextTitle}"',
 
-    gapPre6Title: 'Early Blastocyst Implantation & Development',
-    gapPre6Desc: 'Vital neural tube and organ development in progress. Maintain daily folic acid intake. Schedule your 1st ultrasound at weeks 6-8 to confirm heartbeat and intrauterine pregnancy.',
-    gap9To10Title: 'Weeks 9 - 10: Stable Embryonic Interval',
-    gap9To10Desc: 'Transition period between initial scan and 1st-trimester NT screening. If there is no bleeding or severe cramping, maintain balanced nutrition and rest without need for invasive tests.',
-    gap14To15Title: 'Weeks 14 - 15: Entering the Golden 2nd Trimester',
-    gap14To15Desc: '1st trimester screenings complete. Approaching the comfortable second trimester. Prepare for amniocentesis (weeks 16-20) if recommended.',
-    gap33To34Title: 'Weeks 33 - 34: Late 3rd Trimester Preparation',
-    gap33To34Desc: 'Between routine bi-weekly checkups and Group B Strep (GBS) swab. Monitor daily fetal kick counts and finalize your hospital delivery bag.',
+    gapPre5Title: 'Early Blastocyst Implantation & Development',
+    gapPre5Desc: 'Vital neural tube and organ development in progress. Maintain daily folic acid intake. Schedule your 1st ultrasound at weeks 5-8 to confirm implantation, heartbeat, and obtain your handbook.',
+    gap15Title: 'Week 15: Entering the Comfortable 2nd Trimester',
+    gap15Desc: '1st trimester screenings complete. Approaching the comfortable second trimester. Prepare for routine 2nd-trimester checkups and quad screen / amniocentesis evaluation at weeks 16-20.',
     gapPost40Title: 'Full Term (40+ Weeks): Ready for Labor',
     gapPost40Desc: 'Due date reached. Watch for labor symptoms (contractions, water breaking, bloody show) and follow your obstetrician\'s monitoring or induction schedule.',
 
@@ -302,11 +307,14 @@ export const TRANSLATIONS = {
     btnExpand: 'Expand',
     btnCollapse: 'Collapse',
 
-    // Checklist
-    checklistTitle: 'Pregnancy Preparation & Hospital Bag Checklist',
-    checkStage1: '1st Trimester (Weeks 1-12) Essentials',
-    checkStage2: '2nd Trimester (Weeks 13-27) Preparation',
-    checkStage3: '3rd Trimester (Weeks 28-40) & Hospital Bag',
+    // Checklist (Starting Week 5: four 8-week stages + final 4 weeks, focused on self-preparation & shopping)
+    checklistTitle: 'Stage-by-Stage Self-Preparation & Hospital Bag Checklist',
+    checklistSubtitle: 'Focused entirely on what parents need to test, shortlist, buy, and pack—4 evenly spaced 8-week stages (Weeks 5-36) plus the final 4-week purchase & standby (Weeks 37-40)',
+    checkStage1: 'Stage 1 (Weeks 5 - 12): Nutrition, Lifestyle & Confinement Booking',
+    checkStage2: 'Stage 2 (Weeks 13 - 20): Maternity Comfort & Childcare Planning',
+    checkStage3: 'Stage 3 (Weeks 21 - 28): Showroom Testing & Shortlisting Baby Gear',
+    checkStage4: 'Stage 4 (Weeks 29 - 36): Hospital Bag Packing, Laundry & Handover',
+    checkStage5: 'Stage 5 (Weeks 37 - 40): Final-Month Gear Purchase, Setup & Standby',
 
     // Disclaimer
     disclaimerTitle: 'Medical, Nutritional Supplements & Legal Disclaimer',
@@ -319,6 +327,10 @@ export const TRANSLATIONS = {
       {
         q: 'How is the Estimated Due Date (EDD) calculated? Why do actual delivery dates vary?',
         a: 'The most common standard is Naegele\'s Rule: 280 days (40 weeks) from the first day of the last menstrual period (LMP), assuming a 28-day cycle.\n\nOnly about 5% of babies are born precisely on their due date. Delivery between 37 and 42 weeks is considered full term. Ultrasound measurements (crown-rump length) in the first trimester are often used to refine the due date.',
+      },
+      {
+        q: 'There are so many prenatal checkup items—do I really need to do every single one?',
+        a: 'When facing numerous public and optional self-paid prenatal tests, parents-to-be can evaluate their choices through two core principles:\n\n① First Priority: Respect Your Doctor\'s Professional Judgment\nEvery pregnancy differs by maternal age, medical history, and fetal condition. Your OB-GYN\'s clinical judgment is paramount and must always be respected first. Discuss directly with your doctor which tests are medically necessary for your stage.\n\n② Practical Consideration: Assess What You Can Financially Afford\nBeyond government-funded routine checkups, advanced optional screenings (such as NIPT, detailed Level II anatomy ultrasound, or genetic panels) can be expensive. Weigh these options thoughtfully based on what your household budget can comfortably afford.\n\n[Personal Experience]\nFrom my own experience, doing all these prenatal tests admittedly cost quite a lot of money—yet I am genuinely glad we did them, because they helped us catch several issues early on so we could resolve them in time. Ultimately, prenatal testing is just like buying insurance: the best outcome is that nothing is wrong, but it is also one of the best ways to detect and reduce potential problems early.',
       },
       {
         q: 'How many days of paid prenatal checkup leave are granted by law?',

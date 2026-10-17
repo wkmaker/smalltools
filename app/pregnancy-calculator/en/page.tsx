@@ -44,6 +44,10 @@ const faqJsonLd = generateFaqSchema([
     a: 'The most common standard is Naegele\'s Rule: 280 days (40 weeks) from the first day of the last menstrual period (LMP), assuming a 28-day cycle.\n\nOnly about 5% of babies are born precisely on their due date. Delivery between 37 and 42 weeks is considered full term. Ultrasound measurements (crown-rump length) in the first trimester are often used to refine the due date.',
   },
   {
+    q: 'There are so many prenatal checkup items—do I really need to do every single one?',
+    a: 'When facing numerous public and optional self-paid prenatal tests, parents-to-be can evaluate their choices through two core principles:\n\n① First Priority: Respect Your Doctor\'s Professional Judgment\nEvery pregnancy differs by maternal age, medical history, and fetal condition. Your OB-GYN\'s clinical judgment is paramount and must always be respected first. Discuss directly with your doctor which tests are medically necessary for your stage.\n\n② Practical Consideration: Assess What You Can Financially Afford\nBeyond government-funded routine checkups, advanced optional screenings (such as NIPT, detailed Level II anatomy ultrasound, or genetic panels) can be expensive. Weigh these options thoughtfully based on what your household budget can comfortably afford.\n\n[Personal Experience]\nFrom my own experience, doing all these prenatal tests admittedly cost quite a lot of money—yet I am genuinely glad we did them, because they helped us catch several issues early on so we could resolve them in time. Ultimately, prenatal testing is just like buying insurance: the best outcome is that nothing is wrong, but it is also one of the best ways to detect and reduce potential problems early.',
+  },
+  {
     q: 'How many days of paid prenatal checkup leave are granted by law?',
     a: 'Under gender equality labor laws (such as Taiwan Act of Gender Equality in Employment Article 15):\n\n① Duration: Female employees are entitled to 8 days of paid prenatal checkup leave.\n② Wage: Full salary is paid during checkup leaves.\n③ Flexibility: Checkup leave can be taken in increments of full days, half days, or hours.',
   },
