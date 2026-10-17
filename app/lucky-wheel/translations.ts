@@ -1,77 +1,129 @@
 /**
- * 幸運轉盤頁面中英文案（從 LuckyWheelClient.tsx 抽離，避免單檔過長）。
+ * 幸運轉盤頁面中英文案（完整雙語對稱，繁中介面純淨無冗餘英文括號）。
  */
 export const TRANSLATIONS = {
   'zh-TW': {
     title: '幸運轉盤與拉霸抽獎小工具',
     subtitle: 'LUCKY WHEEL & SLOT SPINNER',
     description:
-      '免費線上幸運轉盤與擬真拉霸機抽獎小工具！支援雙視覺模式切換、預設年會與遊戲模板、數量限制與展場無限抽獎、TXT 名單一鍵匯入匯出、全螢幕抽獎舞台與彩帶音效。',
+      '免費線上幸運轉盤與擬真拉霸機抽獎小工具！支援雙視覺模式切換、尾牙雙抽獎項池、多人連抽、快速批次貼上名單、不在場放棄重抽、網址分享轉盤與全螢幕舞台展示。',
     latestWinnerTag: '最新中獎',
     justWon: '剛抽出：',
-    welcomeMsg: '歡迎使用幸運轉盤抽獎小工具！自訂獎項即刻體驗！',
-    historyBtn: '紀錄',
-    soundOn: '音效: 開',
-    soundOff: '音效: 關',
-    fullscreenBtn: '全螢幕',
+    welcomeMsg: '歡迎使用幸運轉盤抽獎小工具！自訂獎項或貼上名單即刻體驗！',
+    historyBtn: '中獎紀錄',
+    soundOn: '音效：開',
+    soundOff: '音效：關',
+    fullscreenBtn: '全螢幕舞台',
+    shareLinkBtn: '分享轉盤',
     wheelMode: '幸運轉盤',
     slotMode: '擬真拉霸機',
-    enableQtyLimit: '啟用數量限制 (關閉為展場無限抽)',
-    spinReadySlot: '準備就緒，點擊抽獎！',
+    enableQtyLimit: '啟用數量限制（關閉即為無限抽模式）',
+    enableAwardMode: '尾牙雙抽模式（先選獎項、轉盤抽得獎人）',
+    spinSpeedLabel: '轉速：',
+    speedFast: '極速 1.8秒',
+    speedNormal: '標準 4.8秒',
+    speedSuspense: '懸念 7.8秒',
+    drawCountLabel: '連抽人數：',
+    drawSingle: '單抽 1 名',
+    drawThree: '連抽 3 名',
+    drawFive: '連抽 5 名',
+    drawTen: '連抽 10 名',
+    currentAwardLabel: '目前抽取獎項：',
+    awardExhausted: '此獎項名額已抽完',
+    awardRemainFmt: '剩餘 {remain} / {total} 名',
+    manageAwardsBtn: '管理獎項池',
+    closeAwardModeBtn: '關閉雙抽模式',
+    addAwardBtn: '＋ 新增獎項',
+    awardNamePlaceholder: '輸入獎項名稱，例如：頭獎 iPhone 16',
+    awardQtyLabel: '名額：',
+    resetAwardsBtn: '重置獎項名額',
+    spinReadySlot: '準備就緒，點擊開始抽獎！',
     spinWheelBtn: '開始幸運抽獎',
     spinSlotBtn: '開始拉霸抽獎',
-    spinning: '旋轉中...',
-    allDrawn: '全部抽完',
-    prizesSettingsTitle: '獎項與人員設定',
-    presetSelectDefault: '快速範例模板...',
-    presetAnnual: '公司年會尾牙',
-    presetLucky: '幸運大轉盤 (6項)',
-    presetPunish: '歡樂懲罰遊戲',
-    presetDinner: '晚餐吃什麼？',
-    presetEmpty: '清空全新自訂',
+    spinCountSuffix: '（連抽 {n} 名）',
+    latestBatchLabel: '本次抽出得主：',
+    multiSpinningFmt: '連抽進行中（第 {current} / {total} 抽）...',
+    multiRevealTitle: '連抽即時開獎進度（{current} / {total}）',
+    spinning: '幸運旋轉中...',
+    allDrawn: '項目已全部抽完',
+    spacebarHint: '支援空白鍵快速啟動抽獎與關閉彈窗',
+    prizesSettingsTitle: '轉盤項目與名單設定',
+    viewModeList: '逐項設定',
+    viewModeBatch: '快速貼上名單',
+    batchTextareaLabel: '批次輸入名單或獎項（每行一項，或以逗號分隔「名稱, 權重, 數量」）：',
+    batchTextareaPlaceholder: '王小明\n林怡君\n張家豪\n\n或帶權重與數量：\n頭獎 iPhone, 1, 2\n普獎禮券, 5, 10',
+    applyBatchBtn: '套用批次名單至轉盤',
+    shuffleListBtn: '隨機打亂順序',
+    dedupListBtn: '去除重複名稱',
+    saveSlotsTitle: '本地存檔槽：',
+    saveSlotPlaceholder: '輸入存檔名稱（如：晚場尾牙名單）',
+    saveCurrentSlotBtn: '儲存目前轉盤',
+    loadSlotBtn: '載入',
+    deleteSlotBtn: '刪除存檔',
+    noSavedSlots: '尚無已儲存的轉盤配置',
+    presetSelectDefault: '載入快速範例...',
+    presetAnnual: '公司年會獎項盤',
+    presetStaff: '尾牙員工姓名盤（10人範例）',
+    presetLucky: '幸運數字轉盤',
+    presetPunish: '聚會懲罰遊戲',
+    presetDinner: '今天晚餐吃什麼',
+    presetEmpty: '清空全部項目',
     exportTxt: '匯出 TXT',
-    importTxt: '匯入 TXT/名單',
-    resetCount: '重置次數',
+    importTxt: '匯入檔案',
+    resetCount: '重置已抽次數',
     addPrize: '＋ 新增項目',
-    newPrizeDefault: '新獎項',
+    newPrizeDefault: '新項目',
     prizeTitlePlaceholder: '獎項或人員姓名',
-    weightLabel: '權重:',
-    qtyLabel: '數量:',
+    weightLabel: '權重：',
+    qtyLabel: '數量：',
     remainLabel: '剩',
     drawnDoneLabel: '已抽完',
-    unlimitedLabel: '展場不限數量模式',
-    isFinishedLabel: '抽完',
-    deleteLabel: '刪除',
+    unlimitedLabel: '不限數量模式',
+    isFinishedLabel: '標記抽完',
+    deleteLabel: '刪除此項目',
     stageTitleWheel: '幸運轉盤抽獎舞台',
     stageTitleSlot: '擬真拉霸機抽獎舞台',
-    exitFullscreen: '✕ 退出全螢幕 (Esc)',
+    browserFullscreenBtn: '視窗滿版',
+    exitFullscreen: '✕ 退出舞台',
     stageSpin: '抽獎',
-    availableItems: '可抽項目',
-    liveList: 'LIVE LIST',
-    allFinishedMsg: '所有項目已抽完！',
-    lastWinner: '上一位得獎者',
+    availableItems: '待抽項目',
+    liveList: '即時名單',
+    allFinishedMsg: '所有項目皆已抽出！',
+    lastWinner: '最新得獎結果',
     noRecord: '尚無紀錄',
-    historyModalTitle: '歷史中獎紀錄',
-    noHistory: '尚無抽獎紀錄',
-    clearHistory: '清空紀錄',
-    close: '關閉',
-    congrats: 'CONGRATULATIONS!',
-    continueSpin: '太棒了！繼續抽獎',
+    historyModalTitle: '歷史中獎紀錄與名單匯出',
+    noHistory: '目前尚無任何中獎紀錄',
+    exportCsvBtn: '匯出 CSV 報表',
+    copyWinnersBtn: '複製得獎名單',
+    revertSingleBtn: '撤銷並回補',
+    clearHistory: '清空所有紀錄',
+    close: '關閉視窗',
+    congrats: '恭喜幸運得主！',
+    batchResultSubtitle: '本次共抽出 {n} 名幸運得主',
+    continueSpin: '確認領獎，繼續抽獎',
+    abandonRedrawBtn: '不在場放棄（回補庫存重抽）',
     toastLoadedTemplate: '已成功載入範例模板！',
-    toastResetCount: '已重置所有項目抽中次數！',
+    toastResetCount: '已重置所有項目與獎項之抽中次數！',
     toastImportPeople: '成功匯入 {n} 位人員名單！',
-    toastImportPrizes: '成功匯入 {n} 個獎項！',
-    toastInvalidFile: '未找到有效名單，請檢查檔案格式',
-    toastClearedHistory: '已清空歷史紀錄',
-    faqTitle: '常問問題與抽獎指南 (FAQ)',
-    faqSubtitle: '深入了解隨機抽獎演算法、機率權重分配、全螢幕舞台展示與名單管理技巧',
+    toastImportPrizes: '成功匯入 {n} 個獎項項目！',
+    toastInvalidFile: '未找到有效名單，請檢查內容格式',
+    toastClearedHistory: '已清空歷史中獎紀錄',
+    toastRevertedWinner: '已作廢該筆結果並將庫存無損回補至轉盤！',
+    toastCopiedShareLink: '已複製專屬轉盤分享連結至剪貼簿！',
+    toastCopiedWinners: '已複製全部得獎名單至剪貼簿！',
+    toastSavedSlot: '已儲存轉盤配置：{name}',
+    toastLoadedSlot: '已載入轉盤配置：{name}',
+    toastShuffled: '已隨機打亂轉盤項目順序！',
+    toastDeduped: '已清除重複項目，目前共 {n} 項！',
+    faqTitle: '常見問題與抽獎指南',
+    faqSubtitle: '深入了解密碼學隨機抽獎演算法、尾牙雙抽模式、批次名單貼上與大螢幕舞台展示技巧',
     faqItems: [
       {
         q: '幸運轉盤的抽獎演算法是如何運作的？真的完全公平隨機嗎？',
-        a: `100% 公平且完全隨機！本工具採用瀏覽器底層的密碼學級安全亂數產生器（Web Cryptography API - crypto.getRandomValues）與高隨機度亂數演算法，確保每一次旋轉的落點角度均具備極高的熵值（Entropy），徹底杜絕任何人工操控或規律預測。`,
+        a: `100% 公平且完全隨機！本工具採用瀏覽器底層的密碼學級安全亂數產生器（Web Cryptography API - crypto.getRandomValues）與高隨機度亂數演算法，並搭配扇區內隨機偏移落點，確保每一次旋轉的結果與停靠角度均具備極高熵值，徹底杜絕任何人工操控或規律預測。`,
       },
       {
-        q: '獎項的「權重 (Weight)」是如何影響中獎機率與扇區面積的？',
+        q: '獎項的「權重」是如何影響中獎機率與扇區面積的？',
         a: `每個獎項的中獎機率由該獎項的「權重值」除以「所有未抽完獎項的權重總和」決定：
 
 ① 扇區面積視覺連動：在幸運轉盤模式中，每個獎項所佔據的圓弧角度與其權重比例嚴格呈正比（角度 = 360° × 該獎項權重 / 總權重）。
@@ -79,38 +131,32 @@ export const TRANSLATIONS = {
 ② 浮動機率再平衡：當特定獎項數量抽完（或被手動標記為抽完）時，系統會動態剔除該項目，並將其機率比例無損平攤給剩餘所有可抽獎項。`,
       },
       {
-        q: '「幸運轉盤」與「擬真拉霸機 (Slot Machine)」兩種模式有何不同？',
-        a: `兩者共享同一套獎項清單與機率設定，但提供截然不同的視覺與活動氛圍：
+        q: '什麼是「尾牙雙抽模式」？如何先選獎項再抽出得獎員工？',
+        a: `真實公司尾牙或活動抽獎時，轉盤上通常是「全體員工姓名」，而非獎品名稱。開啟「尾牙雙抽模式」後：
 
-① 幸運轉盤 (Lucky Wheel)：經典圓形轉盤，具備指針停靠與動態扇區視覺，適合聚會、懲罰遊戲與快速做決定。
+① 獨立獎項池管理：您可預先設定「特等獎 1 名、頭獎 2 名、普獎 10 名」等獎項階層。
 
-② 擬真拉霸機 (Slot Machine)：霓虹三滾輪動態旋轉與跑馬燈音效，帶來沉浸刺激感，特別適合公司尾牙、展覽攤位抽獎或大型發表會。`,
+② 自動綁定得獎紀錄：抽獎前於舞台上方選擇當前要抽出的獎項，再轉動人員轉盤（支援單抽或連抽），系統會自動記錄「得獎人 — 所屬獎項」並同步扣減該獎項名額與得獎人資格。`,
       },
       {
-        q: '如何設定「數量限制」？「展場無限抽模式」適用於什麼情境？',
-        a: `本工具支援彈性的庫存扣減機制：
+        q: '抽出的得獎者不在現場怎麼辦？支援「作廢重抽」與「多人連抽」嗎？',
+        a: `完全支援！針對活動現場常見突發狀況提供兩大機制：
 
-① 啟用數量限制：可針對每個獎項設定總數量（例如頭獎 1 台、二獎 3 台）。抽中時自動扣減庫存，扣至 0 時自動標記為已抽完並移出轉盤，防止重複抽出超額大獎。
+① 不在場放棄重抽：當得獎彈窗跳出但得獎人不在現場時，點擊「不在場放棄（回補庫存重抽）」，系統會立即撤銷本次紀錄並將名額無損加回轉盤中。
 
-② 關閉數量限制 (展場無限抽)：所有項目均無數量上限，抽中後不會扣減庫存，適合展覽現場發放宣傳品、無限次互動遊戲或輪盤日常決策。`,
+② 多人連抽與轉速切換：抽普獎時可切換為「連抽 3 / 5 / 10 名」並搭配「極速 1.8 秒」模式，一次抽出多位得主，大幅加快尾牙活動節奏。`,
       },
       {
-        q: '如何快速匯入大量人員名單或自訂獎項？支援什麼檔案格式？',
-        a: `點擊「匯入 TXT/名單」按鈕，支援以下兩種便捷格式：
-
-① 單純人員名單：每行輸入一個姓名或編號（如「王小明」），系統會自動以相同權重批次生成名單項目。
-
-② 完整獎項格式 (CSV/TXT)：每行以逗號分隔「獎項名稱, 權重, 數量」（例如「iPad, 2, 3」），即可一次性匯入完整權重與數量設定。
-
-同時可點擊「匯出 TXT」隨時備份目前設定，便於跨電腦或未來活動重複載入。`,
+        q: '如何快速匯入大量人員名單？一定要上傳檔案嗎？',
+        a: `除了點擊「匯入檔案」上傳 TXT/CSV 外，您也可以切換至「快速貼上名單」模式，直接從 Excel、Line 或網頁複製整列姓名貼進文字框，一鍵生成轉盤，並內建「隨機打亂順序」與「去除重複名稱」工具。同時支援「分享轉盤」將配置編碼為專屬網址傳給同事。`,
       },
       {
         q: '在公司尾牙或大型活動中，如何配合大螢幕投影機進行「全螢幕抽獎」？',
-        a: `點擊右上角的「全螢幕」按鈕即可切換至專屬的抽獎舞台模式：
+        a: `點擊右上角的「全螢幕舞台」按鈕即可切換至專屬的活動投影模式：
 
-① 獨立沉浸舞台：自動隱藏所有設定面板與邊框，僅保留高畫質轉盤/拉霸機、即時可抽獎項列表以及「上一位中獎者」名牌。
+① 獨立沉浸舞台與空白鍵盲按：自動隱藏設定面板，支援按鍵盤「空白鍵」直接啟動抽獎或關閉得獎彈窗，方便主持人使用簡報筆或無線鍵盤操作。
 
-② 歡慶彩帶與音效：抽中大獎時會自動播放慶祝音效，並在全螢幕觸發滿版五彩碎紙彩帶動畫（Confetti），將現場氣氛推至最高潮！`,
+② 歡慶彩帶與 CSV 核銷報表：抽中時自動播放慶祝音效與滿版五彩碎紙彩帶，活動結束後可於中獎紀錄一鍵匯出 Excel 相容的 CSV 完整得獎名單。`,
       },
       {
         q: '我輸入的員工名單或獎項資料會被上傳到伺服器嗎？網頁關閉後資料會遺失嗎？',
@@ -118,7 +164,7 @@ export const TRANSLATIONS = {
 
 ① 本地純前端運算：所有名單、中獎紀錄與機率運算均 100% 於您的瀏覽器本機記憶體處理，甚至無網路狀態下也能順暢抽獎。
 
-② 自動持久化儲存：系統會自動將您的最新獎項清單與中獎歷史保存在瀏覽器的 localStorage 中，即使重新整理或關閉網頁，下次開啟依然能完整還原所有設定。`,
+② 自動儲存與多組存檔槽：系統會自動將最新清單與歷史保存在瀏覽器的 localStorage 中，並提供「本地存檔槽」讓您預先保存早場、晚場等多組活動名單隨時切換。`,
       },
     ],
   },
@@ -126,34 +172,73 @@ export const TRANSLATIONS = {
     title: 'Lucky Wheel & Slot Spinner',
     subtitle: 'LUCKY WHEEL & SLOT SPINNER',
     description:
-      'Free online Lucky Wheel and realistic Slot Machine prize drawer! Customize prize titles, weights, quantities, and colors. Features fullscreen stage, physics spin animation, sound effects, and TXT import/export.',
+      'Free online Lucky Wheel and realistic Slot Machine prize drawer! Supports dual-draw award tiers, multi-winner batch draws, quick text list paste, absent winner redraw, shareable wheel URLs, and fullscreen stage mode.',
     latestWinnerTag: 'LATEST WINNER',
     justWon: 'Just drawn: ',
-    welcomeMsg: 'Welcome to Lucky Wheel! Customize your prizes and spin to win!',
+    welcomeMsg: 'Welcome to Lucky Wheel! Customize prizes or paste your participant list to start!',
     historyBtn: 'History',
     soundOn: 'Sound: ON',
     soundOff: 'Sound: OFF',
-    fullscreenBtn: 'Fullscreen',
+    fullscreenBtn: 'Stage Mode',
+    shareLinkBtn: 'Share URL',
     wheelMode: 'Lucky Wheel',
     slotMode: 'Slot Machine',
     enableQtyLimit: 'Enable quantity limit (Disable for unlimited draws)',
+    enableAwardMode: 'Gala Dual-Draw Mode (Select Award Tier + Spin Participants)',
+    spinSpeedLabel: 'Speed:',
+    speedFast: 'Fast 1.8s',
+    speedNormal: 'Normal 4.8s',
+    speedSuspense: 'Suspense 7.8s',
+    drawCountLabel: 'Draw Count:',
+    drawSingle: '1 Winner',
+    drawThree: '3 Winners',
+    drawFive: '5 Winners',
+    drawTen: '10 Winners',
+    currentAwardLabel: 'Current Award Tier:',
+    awardExhausted: 'All slots for this award have been drawn',
+    awardRemainFmt: '{remain} / {total} left',
+    manageAwardsBtn: 'Manage Award Pool',
+    closeAwardModeBtn: 'Exit Dual-Draw',
+    addAwardBtn: '＋ Add Award Tier',
+    awardNamePlaceholder: 'Award name, e.g., 1st Prize iPhone 16',
+    awardQtyLabel: 'Quota:',
+    resetAwardsBtn: 'Reset Award Quotas',
     spinReadySlot: 'Ready! Click to spin!',
     spinWheelBtn: 'Spin Lucky Wheel',
     spinSlotBtn: 'Spin Slot Machine',
+    spinCountSuffix: ' ({n} Winners)',
+    latestBatchLabel: 'Latest Draw Winners:',
+    multiSpinningFmt: 'Auto-Spinning ({current} / {total})...',
+    multiRevealTitle: 'Live Multi-Draw ({current} / {total})',
     spinning: 'Spinning...',
-    allDrawn: 'All Prizes Drawn',
-    prizesSettingsTitle: 'Prizes & Participants',
-    presetSelectDefault: 'Preset Templates...',
-    presetAnnual: 'Annual Party Raffle',
-    presetLucky: 'Lucky Wheel (6 items)',
+    allDrawn: 'All Items Drawn',
+    spacebarHint: 'Press Spacebar to spin or dismiss winner dialog',
+    prizesSettingsTitle: 'Wheel Items & Participant List',
+    viewModeList: 'Item List',
+    viewModeBatch: 'Quick Paste Text',
+    batchTextareaLabel: 'Paste names (one per line) or "Title, Weight, Quantity":',
+    batchTextareaPlaceholder: 'Alice Smith\nBob Jones\nCharlie Brown\n\nOr with weight & quantity:\n1st Prize iPhone, 1, 2\nGift Card, 5, 10',
+    applyBatchBtn: 'Apply Text List to Wheel',
+    shuffleListBtn: 'Shuffle Order',
+    dedupListBtn: 'Remove Duplicates',
+    saveSlotsTitle: 'Saved Presets:',
+    saveSlotPlaceholder: 'Preset name (e.g., Evening Gala)',
+    saveCurrentSlotBtn: 'Save Current Wheel',
+    loadSlotBtn: 'Load',
+    deleteSlotBtn: 'Delete',
+    noSavedSlots: 'No saved wheel presets yet',
+    presetSelectDefault: 'Load Sample Template...',
+    presetAnnual: 'Annual Gala Prizes',
+    presetStaff: 'Employee Name List (10 names)',
+    presetLucky: 'Lucky Numbers (1-6)',
     presetPunish: 'Party Game Penalties',
     presetDinner: 'What to Eat for Dinner?',
-    presetEmpty: 'Clear & Start Custom',
+    presetEmpty: 'Clear All Items',
     exportTxt: 'Export TXT',
-    importTxt: 'Import TXT/List',
+    importTxt: 'Import File',
     resetCount: 'Reset Counts',
     addPrize: '＋ Add Item',
-    newPrizeDefault: 'New Prize',
+    newPrizeDefault: 'New Item',
     prizeTitlePlaceholder: 'Prize name or participant',
     weightLabel: 'Weight:',
     qtyLabel: 'Qty:',
@@ -161,34 +246,47 @@ export const TRANSLATIONS = {
     drawnDoneLabel: 'Finished',
     unlimitedLabel: 'Unlimited Mode',
     isFinishedLabel: 'Done',
-    deleteLabel: 'Delete',
+    deleteLabel: 'Delete item',
     stageTitleWheel: 'Lucky Wheel Stage',
     stageTitleSlot: 'Slot Machine Stage',
-    exitFullscreen: '✕ Exit Fullscreen (Esc)',
+    browserFullscreenBtn: 'Fullscreen Window',
+    exitFullscreen: '✕ Exit Stage',
     stageSpin: 'SPIN',
     availableItems: 'Available Items',
     liveList: 'LIVE LIST',
     allFinishedMsg: 'All items have been drawn!',
-    lastWinner: 'LAST WINNER',
+    lastWinner: 'LATEST WINNER',
     noRecord: 'No Record',
-    historyModalTitle: 'Draw History',
-    noHistory: 'No history records',
-    clearHistory: 'Clear History',
+    historyModalTitle: 'Draw History & Winner Export',
+    noHistory: 'No draw history records yet',
+    exportCsvBtn: 'Export CSV',
+    copyWinnersBtn: 'Copy Winner List',
+    revertSingleBtn: 'Revoke & Restore',
+    clearHistory: 'Clear All',
     close: 'Close',
     congrats: 'CONGRATULATIONS!',
-    continueSpin: 'Awesome! Keep Spinning',
-    toastLoadedTemplate: 'Successfully loaded template!',
-    toastResetCount: 'Reset drawn counts for all items!',
+    batchResultSubtitle: 'Selected {n} lucky winners in this draw',
+    continueSpin: 'Confirm & Continue',
+    abandonRedrawBtn: 'Absent / Forfeit (Restore Stock)',
+    toastLoadedTemplate: 'Successfully loaded sample template!',
+    toastResetCount: 'Reset drawn counts for all items and awards!',
     toastImportPeople: 'Successfully imported {n} participants!',
-    toastImportPrizes: 'Successfully imported {n} prizes!',
-    toastInvalidFile: 'No valid items found. Please check file format.',
+    toastImportPrizes: 'Successfully imported {n} prize items!',
+    toastInvalidFile: 'No valid items found. Please check the format.',
     toastClearedHistory: 'History cleared',
-    faqTitle: 'Frequently Asked Questions & Guide (FAQ)',
-    faqSubtitle: 'Guide to random drawing math, probability weight distribution, fullscreen stage setup, and list management',
+    toastRevertedWinner: 'Reverted winner record and restored stock to the wheel!',
+    toastCopiedShareLink: 'Shareable wheel URL copied to clipboard!',
+    toastCopiedWinners: 'Winner list copied to clipboard!',
+    toastSavedSlot: 'Saved wheel preset: {name}',
+    toastLoadedSlot: 'Loaded wheel preset: {name}',
+    toastShuffled: 'Randomly shuffled wheel items!',
+    toastDeduped: 'Removed duplicate names ({n} unique items remaining)!',
+    faqTitle: 'Frequently Asked Questions & Guide',
+    faqSubtitle: 'Guide to cryptographic random drawing, dual-draw gala mode, batch list pasting, and fullscreen stage presentation',
     faqItems: [
       {
         q: 'How does the random drawing algorithm work? Is it completely fair and unbiased?',
-        a: `100% fair and mathematically unbiased! The tool utilizes the browser's cryptographic-grade random number generator (Web Cryptography API - crypto.getRandomValues) and high-entropy randomness algorithms. Every spin angle and outcome is determined independently, eliminating any possibility of bias or predictable patterns.`,
+        a: `100% fair and mathematically unbiased! The tool utilizes the browser's cryptographic-grade random number generator (Web Cryptography API - crypto.getRandomValues) combined with intra-sector random landing offsets. Every spin angle and outcome is determined independently with high entropy, eliminating any possibility of bias or predictable patterns.`,
       },
       {
         q: "How does the 'Weight' setting affect win probability and slice proportions?",
@@ -199,38 +297,32 @@ export const TRANSLATIONS = {
 2. Dynamic Rebalancing: When a prize runs out of stock (or is marked finished), it is excluded from future draws, and its probability is automatically redistributed proportionally among the remaining available items.`,
       },
       {
-        q: "What is the difference between 'Lucky Wheel' and 'Slot Machine' modes?",
-        a: `Both modes share the identical prize pool and probability calculations, offering distinct visual experiences:
+        q: "What is 'Gala Dual-Draw Mode' and how do I draw employees for specific award tiers?",
+        a: `At company galas, the wheel usually holds participant names while the host draws for specific prize tiers. When you enable 'Gala Dual-Draw Mode':
 
-1. Lucky Wheel: Classic circular wheel with an indicator pointer and visual slice proportions. Ideal for small gatherings, party games, and quick decisions.
+1. Dedicated Award Pool: Configure your prize tiers in advance (e.g., Grand Prize × 1, 1st Prize × 2, Consolation × 10).
 
-2. Slot Machine: Features glowing three-reel animations, flashing neon lights, and slot sound effects. Creates casino-grade excitement, perfect for annual company galas, trade shows, and live events.`,
+2. Automatic Pairing: Select the active award tier above the wheel and spin (single or multi-draw). Each winner is automatically logged alongside the selected award tier while deducting both the award quota and participant eligibility.`,
       },
       {
-        q: "How does 'Quantity Limit' work? When should I use 'Unlimited Mode'?",
-        a: `The tool offers flexible inventory management:
+        q: 'What if a drawn winner is absent? Can I forfeit and redraw or draw multiple winners at once?',
+        a: `Yes! We built two dedicated event-hosting features:
 
-1. Quantity Limit Enabled: Set a fixed inventory count for each prize (e.g., Grand Prize × 1, Second Prize × 3). Each draw automatically deducts stock, and exhausted items are removed from the wheel to prevent over-awarding.
+1. Absent Winner Redraw: Click 'Absent / Forfeit (Restore Stock)' directly inside the winner celebration popup (or inside History) to revoke the draw and immediately restore the item's stock back to the wheel.
 
-2. Unlimited Mode (Exhibition Mode): Disables stock limits, allowing items to be drawn indefinitely. Best suited for trade show giveaways, recurring party games, or daily decision-making.`,
+2. Multi-Winner Batch Draw & Speed Control: Choose 3, 5, or 10 winners per spin and switch between Fast (1.8s), Normal (4.8s), or Suspense (7.8s) spin speeds to keep large events moving smoothly.`,
       },
       {
-        q: 'How can I quickly import large participant or prize lists? What formats are supported?',
-        a: `Click the 'Import TXT/List' button to import data in two convenient formats:
-
-1. Simple Name List: Enter one name or ID per line (e.g., 'Alice Smith'). The system automatically generates equal-weighted items.
-
-2. Full Prize Format (CSV/TXT): Use comma-separated values 'Prize Name, Weight, Quantity' per line (e.g., 'iPad, 2, 3') to batch configure names, probabilities, and stock counts at once.
-
-You can also click 'Export TXT' to backup your configuration for future events.`,
+        q: 'How can I quickly import large participant lists without uploading a file?',
+        a: `Switch to the 'Quick Paste Text' tab to paste names directly from Excel, Google Sheets, or chat apps (one name per line, or 'Name, Weight, Quantity'). You can also one-click shuffle or deduplicate names, and click 'Share URL' to generate a self-contained link to share your wheel setup with colleagues.`,
       },
       {
-        q: "How do I use 'Fullscreen Stage Mode' for projector presentations at events?",
-        a: `Click the 'Fullscreen' button at the top right to enter dedicated stage presentation mode:
+        q: "How do I use 'Stage Mode' for projector presentations at live events?",
+        a: `Click 'Stage Mode' at the top right for a distraction-free presentation layout:
 
-1. Immersive Display: Hides administrative settings, highlighting the high-definition wheel/slot spinner, available prize counter, and recent winner banner.
+1. Spacebar Control & Fullscreen Window: Press the Spacebar to trigger spins or dismiss the winner popup hands-free with a presentation remote.
 
-2. Celebratory Confetti & Sounds: Winning a prize triggers celebratory sound effects alongside full-screen physics confetti particles to hype up the audience.`,
+2. Celebratory Confetti & CSV Export: Winning triggers celebratory fanfare and physics confetti. After the event, export the complete winner log with timestamps as a UTF-8 CSV file for Excel.`,
       },
       {
         q: 'Are employee names or prize data uploaded to any server? Will data be lost if I close the browser?',
@@ -238,8 +330,10 @@ You can also click 'Export TXT' to backup your configuration for future events.`
 
 1. Zero-Server Architecture: All participant lists, draw history, and random logic operate purely inside your browser's local memory. The tool works 100% offline without internet connectivity.
 
-2. Local Persistence: Settings and history are automatically preserved in your browser's localStorage. Refreshing or closing the tab will not lose your configured prizes or winners log.`,
+2. Local Persistence & Presets: Settings and history are automatically saved in localStorage, plus you can save multiple named wheel presets to switch between different event sessions effortlessly.`,
       },
     ],
   },
 };
+
+export type LuckyWheelTranslations = (typeof TRANSLATIONS)['zh-TW'];
