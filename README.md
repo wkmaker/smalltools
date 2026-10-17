@@ -33,7 +33,7 @@
 * **[信貸計算機](https://tools.cjkuo.net/personal-loan/)** (`/personal-loan`) - 支援本息/本金平均攤還與實質年利率 (APR) 估算。
 * **[車貸計算機](https://tools.cjkuo.net/car-loan/)** (`/car-loan`) - 支援車價與自備款成數試算、寬限期設定與月付金分析。
 * **[房貸計算機](https://tools.cjkuo.net/mortgage-loan/)** (`/mortgage-loan`) - 支援自備款連動、寬限期試算與多段式階梯利率設定。
-* **[股票質押與維持率壓力測試器](https://tools.cjkuo.net/pledge-calculator/)** (`/pledge-calculator`) - 支援股價與張數雙向連動、追繳門檻與大跌幅壓力測試模擬。
+* **[股票質押維持率計算機](https://tools.cjkuo.net/pledge-calculator/)** (`/pledge-calculator`) - 支援張/股單位切換、台股連續跌停板天數預警、質押年利率與每月利息負擔試算、0%~60% 大盤大跌壓力測試，以及追加現股擔保品/還本/補繳現金三合一補救方案與摘要報告複製。
 * **[台股期貨槓桿與逆風點數估算器](https://tools.cjkuo.net/futures-calculator/)** (`/futures-calculator`) - 即時計算大台/小台/微台實質槓桿倍數，模擬逆風損益與追繳強平臨界點。
 
 ### 💼 職場與生活 (Workplace & Life)

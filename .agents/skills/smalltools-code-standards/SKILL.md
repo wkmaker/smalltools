@@ -125,6 +125,15 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 ### 2. Windows UTF-8 編碼保護避坑原則
 * 在 Windows 環境下避免使用 PowerShell 預設管道（如 `Get-Content | Set-Content`），防止將 TypeScript/JSX 中的繁體中文字串轉為 ANSI/OEM 亂碼 (`?`)。必須確保所有原始碼檔案儲存為無 BOM 之 UTF-8 編碼。
 
+### 3. 股票質押連續跌停板複利推算與擔保品追加整數標準
+* **台股單日 10% 跌停板複利天數換算**：
+  - 容許跌幅 $D$（百分比）換算為可承受跌停板天數 $n$，採複利模型 $(1 - 0.1)^n = 1 - D / 100$：
+  - 算式：$n = \frac{\ln(1 - D / 100)}{\ln(0.9)}$。當 $D \le 0$ 時 $n = 0$；$D \ge 99.9$ 時夾在安全上限 99，結果精確保留一位小數（如 2.4 根跌停板）。
+* **追加擔保品整數進位防護**：
+  - 當整戶維持率低於安全門檻需追加現股擔保品時，計算需追加股數與張數必須採 **無條件進位 (ROUND_CEIL)**：
+    `cashAmount.div(collateralPrice).integerValue(BigNumber.ROUND_CEIL)`
+  - 確保投資人追加該數量股票後，市值必定能拉回安全門檻，絕不因浮點捨去而產生 $159.99\%$ 差一股告急的風險。
+
 ---
 
 ## 七、 Canvas / 動態圖形排版安全呼吸留白 (Canvas Safe Margins)
