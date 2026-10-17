@@ -29,7 +29,7 @@
 ## 🛠️ 收錄工具一覽
  
 ### 🏦 金融理財 (Finance)
-* **[複利計算機](https://tools.cjkuo.net/compound-interest/)** (`/compound-interest`) - 支援年/月利率與定期定額，透過動態堆疊圖表呈現財富增長軌跡。
+* **[複利計算機](https://tools.cjkuo.net/compound-interest/)** (`/compound-interest`) - 支援單筆與定期定額、年/月利率、快速情境帶入、通膨折現實質購買力、72 法則翻倍估算與 CSV 報表匯出，透過動態堆疊圖表呈現財富增長軌跡。
 * **[信貸計算機](https://tools.cjkuo.net/personal-loan/)** (`/personal-loan`) - 支援本息/本金平均攤還與實質年利率 (APR) 估算。
 * **[車貸計算機](https://tools.cjkuo.net/car-loan/)** (`/car-loan`) - 支援車價與自備款成數試算、寬限期設定與月付金分析。
 * **[房貸計算機](https://tools.cjkuo.net/mortgage-loan/)** (`/mortgage-loan`) - 支援自備款連動、寬限期試算與多段式階梯利率設定。
