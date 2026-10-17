@@ -50,7 +50,7 @@ test('壓力測試：股價與市值等比下修，維持率隨之下降', () =>
   assert.equal(r.isBelowSafe, false);
 });
 
-test('低於安全維持率時給出償還本金 / 補繳現金金額', () => {
+test('低於安全維持率時給出償還本金 / 補繳現金 / 追加現股擔保品', () => {
   const r = calculatePledge({ ...base, stressDropPercent: 60 });
   // simMarketValue = 8,000,000 → ratio = 133.33% < 160% → isBelowSafe
   assert.equal(r.isBelowSafe, true);
@@ -59,15 +59,39 @@ test('低於安全維持率時給出償還本金 / 補繳現金金額', () => {
   assert.equal(r.repayAmount, 1_000_000);
   // 方案 B：loan × 1.6 − simMV = 9,600,000 − 8,000,000 = 1,600,000
   assert.equal(r.cashAmount, 1_600_000);
+  // 方案 C：追加現股，若以原價 200 元計算，1,600,000 / 200 = 8000 股 = 8 張
+  assert.equal(r.addSharesRequired, 8000);
+  assert.equal(r.addLotsRequired, 8);
 });
 
-test('借款為 0：維持率與補繳金額皆為 0，不觸發補繳', () => {
+test('台股跌停板天數換算 (10% 複利)', () => {
+  // 10% 跌幅恰為 1 根跌停
+  const r1 = calculatePledge({ ...base, loanAmount: 6_000_000 });
+  // warnDrop = 61% => (1 - 0.61) = 0.39, ln(0.39)/ln(0.9) ≈ 8.94 => 8.9 根
+  assert.equal(r1.warnLimitDownDays, 8.9);
+  // safeDrop = 52% => (1 - 0.52) = 0.48, ln(0.48)/ln(0.9) ≈ 6.96 => 7.0 根
+  assert.equal(r1.safeLimitDownDays, 7);
+});
+
+test('質押利息與現金流支出試算', () => {
+  // 借款 600 萬，年利率 2.4%
+  const r = calculatePledge({ ...base, loanAmount: 6_000_000, loanAnnualRate: 2.4 });
+  // 年利息 = 144,000，每月 = 12,000，半年 = 72,000
+  assert.equal(r.monthlyInterest, 12_000);
+  assert.equal(r.semiAnnualInterest, 72_000);
+});
+
+test('借款為 0：維持率、利息與補繳金額皆為 0，不觸發補繳', () => {
   const r = calculatePledge({ ...base, loanAmount: 0 });
   assert.equal(r.ratio, 0);
   assert.equal(r.isBelowSafe, false);
   assert.equal(r.repayAmount, 0);
   assert.equal(r.cashAmount, 0);
   assert.equal(r.warnPrice, 0);
+  assert.equal(r.monthlyInterest, 0);
+  assert.equal(r.semiAnnualInterest, 0);
+  assert.equal(r.addSharesRequired, 0);
+  assert.equal(r.addLotsRequired, 0);
 });
 
 test('與浮點基準交叉驗證（整數元 / 小數 4 位比率）', () => {
