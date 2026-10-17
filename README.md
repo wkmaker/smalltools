@@ -73,7 +73,7 @@
 * **[日曆切割助手](https://tools.cjkuo.net/calendar-split/)** (`/calendar-split`) - 純前端 Google 行事曆 `.ics` 大檔案分割神器！支援 RFC 5545 規範、VTIMEZONE 完整繼承、多種檔案大小與筆數分割模式及一鍵 ZIP 打包下載。
 * **[Designer QR Code 產生器](https://tools.cjkuo.net/qr-generator/)** (`/qr-generator`) - 支援碼體與定位點樣式自訂、漸層色彩設定與置中 Logo 嵌入。
 * **[目標計時器](https://tools.cjkuo.net/time/)** (`/time`) - 全螢幕極簡數位時鐘與目標計時器，支援多種時間格式與主題色設定。
-* **[幸運轉盤抽獎小工具](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 支援自訂獎項、權重與色彩，提供全螢幕舞台、物理動畫與音效。
+* **[幸運轉盤抽獎小工具](https://tools.cjkuo.net/lucky-wheel/)** (`/lucky-wheel`) - 支援轉盤與擬真拉霸機雙模式、尾牙雙抽獎項池、多人連抽、免傳檔快速貼上名單、不在場放棄回補重抽、網址分享轉盤、CSV 核銷報表匯出與全螢幕舞台空白鍵操控。
 * **[吹牛骰子搖骰器](https://tools.cjkuo.net/liars-dice/)** (`/liars-dice`) - 專為酒吧派對吹牛遊戲打造！具備防作弊計時器、中央手勢窺視、歷史 5 次紀錄、全螢幕舞台、擬真物理音效與手機觸覺震動。
 
 ---

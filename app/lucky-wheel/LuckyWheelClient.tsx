@@ -1,126 +1,30 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
-import { createPortal } from 'react-dom';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import PrizeEditorPanel from './components/PrizeEditorPanel';
+import FullscreenStageModal from './components/FullscreenStageModal';
+import { WinnerModal, HistoryModal } from './components/Modals';
 import styles from './lucky-wheel.module.css';
+import type { PrizeItem, AwardTier, HistoryRecord, SpinSpeed, SaveSlot } from './types';
+import { PRESET_COLORS, PRIZE_TEMPLATES, DEFAULT_AWARD_TIERS, SPIN_SPEED_MS } from './constants';
 import {
   calculateSectors as calculateSectorsEngine,
-  pickWeightedIndex,
+  computeTargetSpinAngle,
+  drawBatchWinners,
+  revertWinnerRecords,
+  parseBatchText,
+  encodeWheelShareState,
+  decodeWheelShareState,
+  formatHistoryCsv,
+  secureRandomFloat,
   generateId,
   getContrastYIQ,
+  getAvailablePrizes,
 } from './engine';
 import { downloadBlob } from '../utils/downloadBlob';
 import { TRANSLATIONS } from './translations';
-
-// 預設轉盤色彩盤
-const PRESET_COLORS = [
-  '#ff0055',
-  '#ff7700',
-  '#ffb800',
-  '#00f0ff',
-  '#00f5a0',
-  '#7000ff',
-  '#ff00b7',
-  '#0099ff',
-  '#eab308',
-  '#ec4899',
-  '#10b981',
-  '#6366f1',
-];
-
-export interface PrizeItem {
-  id: string;
-  title: string;
-  weight: number;
-  quantity: number;
-  drawnCount: number;
-  color: string;
-  isFinished?: boolean;
-}
-
-export interface HistoryRecord {
-  id: string;
-  prizeTitle: string;
-  timestamp: number;
-}
-
-// 快速模板預設資料 (雙語)
-const PRIZE_TEMPLATES: Record<string, { 'zh-TW': Omit<PrizeItem, 'id'>[]; en: Omit<PrizeItem, 'id'>[] }> = {
-  annual: {
-    'zh-TW': [
-      { title: '特等獎 - Mac Mini', weight: 1, quantity: 1, drawnCount: 0, color: '#ff0055' },
-      { title: '頭獎 - iPhone 16', weight: 2, quantity: 2, drawnCount: 0, color: '#ff7700' },
-      { title: '二獎 - iPad Air', weight: 3, quantity: 3, drawnCount: 0, color: '#ffb800' },
-      { title: '三獎 - AirPods Pro', weight: 5, quantity: 5, drawnCount: 0, color: '#00f0ff' },
-      { title: '普獎 - 7-11 禮券 500元', weight: 10, quantity: 10, drawnCount: 0, color: '#00f5a0' },
-      { title: '銘謝惠顧', weight: 15, quantity: 99, drawnCount: 0, color: '#7000ff' },
-    ],
-    en: [
-      { title: 'Grand Prize - Mac Mini', weight: 1, quantity: 1, drawnCount: 0, color: '#ff0055' },
-      { title: '1st Prize - iPhone 16', weight: 2, quantity: 2, drawnCount: 0, color: '#ff7700' },
-      { title: '2nd Prize - iPad Air', weight: 3, quantity: 3, drawnCount: 0, color: '#ffb800' },
-      { title: '3rd Prize - AirPods Pro', weight: 5, quantity: 5, drawnCount: 0, color: '#00f0ff' },
-      { title: 'Consolation - $20 Gift Card', weight: 10, quantity: 10, drawnCount: 0, color: '#00f5a0' },
-      { title: 'Better Luck Next Time', weight: 15, quantity: 99, drawnCount: 0, color: '#7000ff' },
-    ],
-  },
-  lucky: {
-    'zh-TW': [
-      { title: '幸運數字 1', weight: 10, quantity: 1, drawnCount: 0, color: '#ff0055' },
-      { title: '幸運數字 2', weight: 10, quantity: 1, drawnCount: 0, color: '#ff7700' },
-      { title: '幸運數字 3', weight: 10, quantity: 1, drawnCount: 0, color: '#ffb800' },
-      { title: '幸運數字 4', weight: 10, quantity: 1, drawnCount: 0, color: '#00f0ff' },
-      { title: '幸運數字 5', weight: 10, quantity: 1, drawnCount: 0, color: '#00f5a0' },
-      { title: '幸運數字 6', weight: 10, quantity: 1, drawnCount: 0, color: '#7000ff' },
-    ],
-    en: [
-      { title: 'Lucky Number 1', weight: 10, quantity: 1, drawnCount: 0, color: '#ff0055' },
-      { title: 'Lucky Number 2', weight: 10, quantity: 1, drawnCount: 0, color: '#ff7700' },
-      { title: 'Lucky Number 3', weight: 10, quantity: 1, drawnCount: 0, color: '#ffb800' },
-      { title: 'Lucky Number 4', weight: 10, quantity: 1, drawnCount: 0, color: '#00f0ff' },
-      { title: 'Lucky Number 5', weight: 10, quantity: 1, drawnCount: 0, color: '#00f5a0' },
-      { title: 'Lucky Number 6', weight: 10, quantity: 1, drawnCount: 0, color: '#7000ff' },
-    ],
-  },
-  punish: {
-    'zh-TW': [
-      { title: '鬼臉三連拍', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
-      { title: '喝苦瓜汁一杯', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
-      { title: '現場大唱一首歌', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
-      { title: '伏地挺身 10 下', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
-      { title: '對隔壁深情告白', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
-      { title: '安全過關 免受懲罰', weight: 2, quantity: 99, drawnCount: 0, color: '#7000ff' },
-    ],
-    en: [
-      { title: 'Take 3 Funny Photos', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
-      { title: 'Drink a Sour Shot', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
-      { title: 'Sing a Song Solo', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
-      { title: 'Do 10 Push-ups', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
-      { title: 'Tell a Funny Joke', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
-      { title: 'Safe! No Penalty', weight: 2, quantity: 99, drawnCount: 0, color: '#7000ff' },
-    ],
-  },
-  dinner: {
-    'zh-TW': [
-      { title: '日式拉麵', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
-      { title: '韓式燒肉', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
-      { title: '義大利麵', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
-      { title: '台式便當', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
-      { title: '麥當勞速食', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
-      { title: '健康沙拉餐', weight: 1, quantity: 99, drawnCount: 0, color: '#7000ff' },
-    ],
-    en: [
-      { title: 'Japanese Ramen', weight: 1, quantity: 99, drawnCount: 0, color: '#ff0055' },
-      { title: 'Korean BBQ', weight: 1, quantity: 99, drawnCount: 0, color: '#ff7700' },
-      { title: 'Italian Pasta', weight: 1, quantity: 99, drawnCount: 0, color: '#ffb800' },
-      { title: 'Local Bento', weight: 1, quantity: 99, drawnCount: 0, color: '#00f0ff' },
-      { title: 'Burger Fast Food', weight: 1, quantity: 99, drawnCount: 0, color: '#00f5a0' },
-      { title: 'Fresh Healthy Salad', weight: 1, quantity: 99, drawnCount: 0, color: '#7000ff' },
-    ],
-  },
-};
 
 interface LuckyWheelClientProps {
   lang?: 'zh-TW' | 'en';
@@ -131,39 +35,59 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [displayMode, setDisplayMode] = useState<'wheel' | 'slot'>('wheel');
   const [enableQuantityLimit, setEnableQuantityLimit] = useState<boolean>(true);
+  const [enableAwardMode, setEnableAwardMode] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [spinSpeed, setSpinSpeed] = useState<SpinSpeed>('normal');
+  const [drawCount, setDrawCount] = useState<number>(1);
 
-  // 狀態存儲
+  // 核心資料狀態
   const [prizes, setPrizes] = useState<PrizeItem[]>([]);
+  const [awardTiers, setAwardTiers] = useState<AwardTier[]>([]);
+  const [selectedAwardId, setSelectedAwardId] = useState<string>('');
   const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([]);
 
-  // 全螢幕與彈窗
+  // 彈窗與舞台狀態
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
-  const [winnerModalData, setWinnerModalData] = useState<{ prize: PrizeItem; timestamp: number } | null>(null);
+  const [winnerModalData, setWinnerModalData] = useState<{
+    winners: PrizeItem[];
+    recordIds: string[];
+    awardName?: string;
+    timestamp: number;
+  } | null>(null);
 
-  // 轉盤動畫控制
+  // 轉盤動畫與指針物理彈動控制
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
+  const [multiSpinProgress, setMultiSpinProgress] = useState<{
+    current: number;
+    total: number;
+    revealed: PrizeItem[];
+  } | null>(null);
   const [currentRotationAngle, setCurrentRotationAngle] = useState<number>(0);
+  const pointerDeflectionRef = useRef<number>(0);
   const animFrameIdRef = useRef<number | null>(null);
 
   // 拉霸機動畫控制
   const [slotStripItems, setSlotStripItems] = useState<PrizeItem[]>([]);
   const [slotTranslateY, setSlotTranslateY] = useState<number>(0);
 
-  // Canvas Refs
+  // DOM & Canvas Refs
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fullscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const templateSelectId = useId();
   const qtyLimitToggleId = useId();
+  const awardModeToggleId = useId();
+  const speedSelectId = useId();
+  const drawCountSelectId = useId();
+  const activeAwardSelectId = useId();
 
   // 音效 Engine (Web Audio API)
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const playTickSound = () => {
+  const playTickSound = useCallback(() => {
     if (!soundEnabled) return;
     try {
       if (!audioCtxRef.current) {
@@ -176,22 +100,50 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.05);
+      osc.frequency.setValueAtTime(480, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.045);
 
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.045);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
-      osc.stop(ctx.currentTime + 0.05);
+      osc.stop(ctx.currentTime + 0.045);
     } catch {
-      // 忽略音效錯誤
+      // 瀏覽器阻擋自動播放時安全略過
     }
-  };
+  }, [soundEnabled]);
 
-  const playWinFanfare = () => {
+  const playSubWinDing = useCallback(() => {
+    if (!soundEnabled) return;
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+
+      [659.25, 880].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const startTime = ctx.currentTime + i * 0.09;
+        gain.gain.setValueAtTime(0.24, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + 0.25);
+      });
+    } catch {
+      // ignore
+    }
+  }, [soundEnabled]);
+
+  const playWinFanfare = useCallback(() => {
     if (!soundEnabled) return;
     try {
       if (!audioCtxRef.current) {
@@ -207,35 +159,62 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.value = freq;
-        const startTime = ctx.currentTime + i * 0.12;
+        const startTime = ctx.currentTime + i * 0.11;
 
-        gain.gain.setValueAtTime(0.3, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+        gain.gain.setValueAtTime(0.28, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.38);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(startTime);
-        osc.stop(startTime + 0.4);
+        osc.stop(startTime + 0.38);
       });
     } catch {
       // 忽略音效錯誤
     }
-  };
+  }, [soundEnabled]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#f59e0b');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(245, 158, 11, 0.6)');
   }, []);
 
-  // 讀取 LocalStorage 數據
+  // 讀取 LocalStorage 與 URL 分享參數
   useEffect(() => {
     setIsMounted(true);
     try {
+      const params = new URLSearchParams(window.location.search);
+      const sharedWheel = params.get('wheel');
+      if (sharedWheel) {
+        const decoded = decodeWheelShareState(sharedWheel);
+        if (decoded) {
+          setPrizes(decoded.prizes);
+          setEnableQuantityLimit(decoded.enableQuantityLimit);
+          setEnableAwardMode(decoded.enableAwardMode);
+          if (decoded.awardTiers.length > 0) {
+            setAwardTiers(decoded.awardTiers);
+            setSelectedAwardId(decoded.awardTiers[0].id);
+          } else {
+            const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
+              ...a,
+              id: generateId(),
+            }));
+            setAwardTiers(defAwards);
+            setSelectedAwardId(defAwards[0]?.id || '');
+          }
+          return;
+        }
+      }
+
       const savedMode = localStorage.getItem('lw_display_mode');
-      if (savedMode) setDisplayMode(savedMode as 'wheel' | 'slot');
+      if (savedMode === 'wheel' || savedMode === 'slot') setDisplayMode(savedMode);
 
       const savedLimit = localStorage.getItem('lw_qty_limit');
       if (savedLimit !== null) setEnableQuantityLimit(savedLimit === 'true');
+
+      // 預設不自動強制開啟尾牙雙抽獎項池，避免切換模板或重整後卡住顯示
+      setEnableAwardMode(false);
+      localStorage.removeItem('lw_award_mode');
 
       const savedPrizes = localStorage.getItem('lw_prizes');
       if (savedPrizes) {
@@ -245,47 +224,72 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         setPrizes(tList.map((p) => ({ ...p, id: generateId() })));
       }
 
+      const savedAwards = localStorage.getItem('lw_award_tiers');
+      if (savedAwards) {
+        const parsedAwards: AwardTier[] = JSON.parse(savedAwards);
+        setAwardTiers(parsedAwards);
+        if (parsedAwards.length > 0) setSelectedAwardId(parsedAwards[0].id);
+      } else {
+        const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
+          ...a,
+          id: generateId(),
+        }));
+        setAwardTiers(defAwards);
+        setSelectedAwardId(defAwards[0]?.id || '');
+      }
+
       const savedHistory = localStorage.getItem('lw_history');
       if (savedHistory) setHistory(JSON.parse(savedHistory));
+
+      const savedSlots = localStorage.getItem('lw_save_slots');
+      if (savedSlots) setSaveSlots(JSON.parse(savedSlots));
     } catch {
       const tList = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
       setPrizes(tList.map((p) => ({ ...p, id: generateId() })));
     }
   }, [lang]);
 
-  // 寫入 LocalStorage 數據
+  // 寫入 LocalStorage
   const saveState = useCallback(
-    (newPrizes?: PrizeItem[], newHistory?: HistoryRecord[]) => {
+    (
+      nextPrizes?: PrizeItem[],
+      nextHistory?: HistoryRecord[],
+      nextAwards?: AwardTier[],
+      nextAwardMode?: boolean,
+      nextQtyLimit?: boolean
+    ) => {
       try {
         localStorage.setItem('lw_display_mode', displayMode);
-        localStorage.setItem('lw_qty_limit', enableQuantityLimit.toString());
-        localStorage.setItem('lw_prizes', JSON.stringify(newPrizes || prizes));
-        localStorage.setItem('lw_history', JSON.stringify(newHistory || history));
+        localStorage.setItem('lw_qty_limit', String(nextQtyLimit ?? enableQuantityLimit));
+        localStorage.setItem('lw_award_mode', String(nextAwardMode ?? enableAwardMode));
+        localStorage.setItem('lw_prizes', JSON.stringify(nextPrizes ?? prizes));
+        localStorage.setItem('lw_award_tiers', JSON.stringify(nextAwards ?? awardTiers));
+        localStorage.setItem('lw_history', JSON.stringify(nextHistory ?? history));
       } catch {
-        // 忽略
+        // 忽略容量上限錯誤
       }
     },
-    [displayMode, enableQuantityLimit, prizes, history]
+    [displayMode, enableQuantityLimit, enableAwardMode, prizes, awardTiers, history]
   );
 
-  // 獲取尚未抽完之可用獎項
-  const getUnfinishedPrizes = useCallback(() => {
-    return prizes.filter((p) => {
-      if (p.weight <= 0) return false;
-      if (p.isFinished) return false;
-      if (enableQuantityLimit && p.drawnCount >= p.quantity) return false;
-      return true;
-    });
-  }, [prizes, enableQuantityLimit]);
+  const getUnfinishedPrizes = useCallback(
+    () => getAvailablePrizes(prizes, enableQuantityLimit),
+    [prizes, enableQuantityLimit]
+  );
 
-  // 計算扇區角度與總權重
   const calculateSectors = useCallback(
     () => calculateSectorsEngine(getUnfinishedPrizes()),
     [getUnfinishedPrizes]
   );
 
-  // 繪製 12 點鐘頂部指針 (Pointer)
-  const drawPointer = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number) => {
+  // 繪製 12 點鐘頂部指針（支援物理彈動偏角 deflectionDeg）
+  const drawPointer = (
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    deflectionDeg: number
+  ) => {
     ctx.save();
     const wheelTop = centerY - radius;
     const ballR = 15;
@@ -293,6 +297,11 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     const tipY = wheelTop + 22;
     const baseY = wheelTop - 4;
     const halfW = 18;
+
+    // 以指針頂部圓球中心為軸進行物理彈動旋轉
+    ctx.translate(centerX, ballY);
+    ctx.rotate((deflectionDeg * Math.PI) / 180);
+    ctx.translate(-centerX, -ballY);
 
     ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
     ctx.shadowBlur = 16;
@@ -335,7 +344,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     ctx.restore();
   };
 
-  // 繪製轉盤 Canvas（動態感應亮/暗主題背景與文字色彩）
+  // 繪製轉盤 Canvas
   const drawWheelOnCanvas = useCallback(
     (canvas: HTMLCanvasElement | null) => {
       if (!canvas) return;
@@ -384,7 +393,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         ctx.textBaseline = 'middle';
         ctx.fillText(t.allDrawn, centerX, centerY);
         ctx.restore();
-        drawPointer(ctx, centerX, centerY, radius);
+        drawPointer(ctx, centerX, centerY, radius, 0);
         return;
       }
 
@@ -392,7 +401,6 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       ctx.translate(centerX, centerY);
       ctx.rotate((currentRotationAngle * Math.PI) / 180);
 
-      // 繪製各扇區
       sectors.forEach((sec) => {
         const startRad = (sec.startAngle * Math.PI) / 180;
         const endRad = (sec.endAngle * Math.PI) / 180;
@@ -460,7 +468,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       ctx.stroke();
       ctx.restore();
 
-      // 繪製文字
+      // 繪製扇區文字
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate((currentRotationAngle * Math.PI) / 180);
@@ -476,7 +484,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
 
         const contrastColor = getContrastYIQ(sec.prize.color);
         const n = sectors.length;
-        const fontSize = n > 14 ? 14 : n > 10 ? 16 : n > 6 ? 19 : 22;
+        const fontSize = n > 18 ? 13 : n > 12 ? 15 : n > 6 ? 19 : 22;
 
         ctx.shadowColor = contrastColor === '#ffffff' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.35)';
         ctx.shadowBlur = 4;
@@ -486,7 +494,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         ctx.font = `700 ${fontSize}px sans-serif`;
 
         let text = sec.prize.title;
-        const maxLen = angleSpan < 0.35 ? 5 : angleSpan < 0.6 ? 7 : 10;
+        const maxLen = angleSpan < 0.25 ? 5 : angleSpan < 0.5 ? 7 : 10;
         if (text.length > maxLen) text = text.substring(0, maxLen - 1) + '…';
 
         const textR = radius * 0.78;
@@ -495,7 +503,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       });
 
       ctx.restore();
-      drawPointer(ctx, centerX, centerY, radius);
+      drawPointer(ctx, centerX, centerY, radius, pointerDeflectionRef.current);
     },
     [calculateSectors, currentRotationAngle, t.allDrawn]
   );
@@ -517,153 +525,14 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   }, [prizes, enableQuantityLimit, displayMode, isSpinning, getUnfinishedPrizes]);
 
   useEffect(() => {
-    if (displayMode === 'wheel') {
-      const timer = setTimeout(() => {
-        drawWheelOnCanvas(previewCanvasRef.current);
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [displayMode, drawWheelOnCanvas]);
-
-  useEffect(() => {
     drawWheelOnCanvas(previewCanvasRef.current);
     if (isFullscreen) {
       drawWheelOnCanvas(fullscreenCanvasRef.current);
     }
-  }, [drawWheelOnCanvas, isFullscreen]);
-
-  // 抽獎結束觸發處理
-  const onSpinEnd = useCallback(
-    (winningPrize: PrizeItem) => {
-      setIsSpinning(false);
-      playWinFanfare();
-
-      const updatedPrizes = prizes.map((p) => {
-        if (p.id === winningPrize.id) {
-          const newDrawn = p.drawnCount + 1;
-          const isFin = enableQuantityLimit ? newDrawn >= p.quantity : false;
-          return { ...p, drawnCount: newDrawn, isFinished: isFin };
-        }
-        return p;
-      });
-
-      const newRec: HistoryRecord = {
-        id: 'h_' + Date.now(),
-        prizeTitle: winningPrize.title,
-        timestamp: Date.now(),
-      };
-      const updatedHistory = [newRec, ...history];
-
-      setPrizes(updatedPrizes);
-      setHistory(updatedHistory);
-      saveState(updatedPrizes, updatedHistory);
-      setWinnerModalData({ prize: winningPrize, timestamp: Date.now() });
-
-      // 觸發彩帶禮花砲
-      triggerConfetti();
-    },
-    [prizes, history, enableQuantityLimit, saveState]
-  );
-
-  // 啟動 🎡 轉盤旋轉
-  const startWheelSpin = () => {
-    const { sectors, totalWeight } = calculateSectors();
-    if (sectors.length === 0 || totalWeight === 0 || isSpinning) return;
-
-    setIsSpinning(true);
-
-    const randVal = Math.random() * totalWeight;
-    const selectedSector = sectors[pickWeightedIndex(sectors.map((s) => s.prize.weight), randVal)];
-
-    const midAngle = (selectedSector.startAngle + selectedSector.endAngle) / 2;
-    // 頂部指針位於 12 點鐘方向 (270度)，需計算目標旋轉角度使扇區中心對齊 270 度
-    const targetRotation = (270 - midAngle + 360) % 360;
-    const extraRounds = (5 + Math.floor(Math.random() * 4)) * 360;
-    const deltaAngle = (targetRotation - (currentRotationAngle % 360) + 360) % 360;
-    const finalAngle = currentRotationAngle + extraRounds + deltaAngle;
-
-    const startTime = performance.now();
-    const duration = 5000;
-    let lastTickAngle = currentRotationAngle;
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(1, elapsed / duration);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentAngle = currentRotationAngle + (finalAngle - currentRotationAngle) * easeOut;
-
-      setCurrentRotationAngle(currentAngle);
-
-      if (currentAngle - lastTickAngle >= 25) {
-        playTickSound();
-        lastTickAngle = currentAngle;
-      }
-
-      if (progress < 1) {
-        animFrameIdRef.current = requestAnimationFrame(animate);
-      } else {
-        onSpinEnd(selectedSector.prize);
-      }
-    };
-
-    animFrameIdRef.current = requestAnimationFrame(animate);
-  };
-
-  // 啟動 🎰 拉霸機抽獎
-  const startSlotSpin = () => {
-    const validPrizes = getUnfinishedPrizes();
-    if (validPrizes.length === 0 || isSpinning) return;
-
-    setIsSpinning(true);
-
-    const totalWeight = validPrizes.reduce((sum, p) => sum + p.weight, 0);
-    const randVal = Math.random() * totalWeight;
-    const winningPrize = validPrizes[pickWeightedIndex(validPrizes.map((p) => p.weight), randVal)];
-
-    const stripPrizes: PrizeItem[] = [];
-    for (let r = 0; r < 12; r++) {
-      stripPrizes.push(...validPrizes);
-    }
-    stripPrizes.push(winningPrize);
-    for (let r = 0; r < 2; r++) {
-      stripPrizes.push(...validPrizes);
-    }
-
-    setSlotStripItems(stripPrizes);
-
-    const cardHeight = isFullscreen ? 104 : 76;
-    const targetIdx = stripPrizes.length - 3;
-    const targetTranslateY = -(targetIdx * cardHeight);
-
-    const startTime = performance.now();
-    const duration = 4500;
-    let lastSoundTime = 0;
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(1, elapsed / duration);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentY = targetTranslateY * easeOut;
-
-      setSlotTranslateY(currentY);
-
-      if (now - lastSoundTime > 120) {
-        playTickSound();
-        lastSoundTime = now;
-      }
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        onSpinEnd(winningPrize);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  };
+  }, [drawWheelOnCanvas, isFullscreen, displayMode]);
 
   // 彩帶禮花 Confetti 動畫
-  const triggerConfetti = () => {
+  const triggerConfetti = useCallback(() => {
     const canvas = confettiCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -689,12 +558,12 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       particles.push({
         x: canvas.width / 2,
         y: canvas.height * 0.4,
-        vx: (Math.random() - 0.5) * 22,
-        vy: (Math.random() - 0.7) * 20,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        size: Math.random() * 10 + 6,
-        rotation: Math.random() * 360,
-        vr: (Math.random() - 0.5) * 12,
+        vx: (secureRandomFloat() - 0.5) * 22,
+        vy: (secureRandomFloat() - 0.7) * 20,
+        color: colors[Math.floor(secureRandomFloat() * colors.length)],
+        size: secureRandomFloat() * 10 + 6,
+        rotation: secureRandomFloat() * 360,
+        vr: (secureRandomFloat() - 0.5) * 12,
       });
     }
 
@@ -725,30 +594,392 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     };
 
     requestAnimationFrame(renderConfetti);
-  };
+  }, []);
 
-  // 模板載入
-  const loadTemplate = (templateKey: string) => {
-    if (PRIZE_TEMPLATES[templateKey]) {
-      const templateData = PRIZE_TEMPLATES[templateKey][lang] || PRIZE_TEMPLATES[templateKey]['zh-TW'];
-      const newItems = templateData.map((p) => ({ ...p, id: generateId() }));
-      setPrizes(newItems);
-      saveState(newItems);
-      showToast(t.toastLoadedTemplate);
-    } else if (templateKey === 'empty') {
-      setPrizes([]);
-      saveState([]);
+  // 計算本次有效連抽人數（不再被單一獎項剩餘 1 名靜默截斷為 1）
+  const getEffectiveDrawCount = useCallback(() => {
+    return Math.max(1, drawCount);
+  }, [drawCount]);
+
+  // 抽獎結束統一結算（支援單抽、連抽與尾牙獎項綁定）
+  const finalizeSpinBatch = useCallback(
+    (winners: PrizeItem[], updatedPrizes: PrizeItem[]) => {
+      pointerDeflectionRef.current = 0;
+      setIsSpinning(false);
+      playWinFanfare();
+
+      const now = Date.now();
+      const batchId = 'b_' + now;
+      const activeAward = enableAwardMode ? awardTiers.find((a) => a.id === selectedAwardId) : undefined;
+
+      const newRecords: HistoryRecord[] = winners.map((w, idx) => ({
+        id: `h_${now}_${idx}_${w.id}`,
+        prizeId: w.id,
+        prizeTitle: w.title,
+        awardId: activeAward?.id,
+        awardName: activeAward?.name,
+        batchId,
+        timestamp: now,
+      }));
+
+      let nextAwards = awardTiers;
+      if (activeAward) {
+        nextAwards = awardTiers.map((a) => {
+          if (a.id !== activeAward.id) return a;
+          const nextDrawn = a.drawnCount + winners.length;
+          return {
+            ...a,
+            quantity: Math.max(a.quantity, nextDrawn),
+            drawnCount: nextDrawn,
+          };
+        });
+        // 若當前獎項已抽完，自動切換至下一個尚有名額的獎項
+        const currentAfter = nextAwards.find((a) => a.id === activeAward.id);
+        if (currentAfter && currentAfter.drawnCount >= currentAfter.quantity) {
+          const nextAvailableAward = nextAwards.find((a) => a.drawnCount < a.quantity);
+          if (nextAvailableAward) setSelectedAwardId(nextAvailableAward.id);
+        }
+      }
+
+      const updatedHistory = [...newRecords, ...history];
+      setPrizes(updatedPrizes);
+      setAwardTiers(nextAwards);
+      setHistory(updatedHistory);
+      saveState(updatedPrizes, updatedHistory, nextAwards);
+
+      setWinnerModalData({
+        winners,
+        recordIds: newRecords.map((r) => r.id),
+        awardName: activeAward?.name,
+        timestamp: now,
+      });
+
+      triggerConfetti();
+    },
+    [enableAwardMode, awardTiers, selectedAwardId, history, playWinFanfare, saveState, triggerConfetti]
+  );
+
+  // 啟動轉盤旋轉（單抽轉 1 次；多人連抽則自動逐輪連續轉動 N 次，每次指針真實停靠於該位得主）
+  const startWheelSpin = useCallback(() => {
+    const initialAvailable = getAvailablePrizes(prizes, enableQuantityLimit);
+    if (initialAvailable.length === 0 || isSpinning) return;
+
+    const activeAward = enableAwardMode ? awardTiers.find((a) => a.id === selectedAwardId) : undefined;
+    if (enableAwardMode && activeAward && activeAward.drawnCount >= activeAward.quantity) return;
+
+    const effectiveCount = getEffectiveDrawCount();
+    const { winners, updatedPrizes } = drawBatchWinners(
+      prizes,
+      effectiveCount,
+      enableQuantityLimit,
+      secureRandomFloat
+    );
+    if (winners.length === 0) return;
+
+    setIsSpinning(true);
+
+    const isMulti = winners.length > 1;
+    const subDuration = isMulti
+      ? spinSpeed === 'fast'
+        ? 1150
+        : spinSpeed === 'normal'
+        ? 2100
+        : 3100
+      : SPIN_SPEED_MS[spinSpeed].wheel;
+
+    const runStep = (
+      stepIdx: number,
+      baseAngle: number,
+      stepWorkingPrizes: PrizeItem[],
+      revealedSoFar: PrizeItem[]
+    ) => {
+      const currentWinner = winners[stepIdx];
+      if (isMulti) {
+        setMultiSpinProgress({
+          current: stepIdx + 1,
+          total: winners.length,
+          revealed: revealedSoFar,
+        });
+      }
+
+      const stepAvailable = getAvailablePrizes(stepWorkingPrizes, enableQuantityLimit);
+      const { sectors } = calculateSectorsEngine(stepAvailable);
+      const selectedSector = sectors.find((s) => s.prize.id === currentWinner.id) || sectors[0];
+      if (!selectedSector) {
+        setMultiSpinProgress(null);
+        finalizeSpinBatch(winners, updatedPrizes);
+        return;
+      }
+
+      const extraRounds = isMulti ? 3 + Math.floor(secureRandomFloat() * 2) : 5 + Math.floor(secureRandomFloat() * 4);
+      const finalAngle = computeTargetSpinAngle(
+        baseAngle,
+        selectedSector,
+        extraRounds,
+        secureRandomFloat()
+      );
+
+      const startTime = performance.now();
+      let lastTickAngle = baseAngle;
+
+      const animate = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / subDuration);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentAngle = baseAngle + (finalAngle - baseAngle) * easeOut;
+
+        if (currentAngle - lastTickAngle >= 24) {
+          playTickSound();
+          lastTickAngle = currentAngle;
+          pointerDeflectionRef.current = -18 * (1 - progress * 0.7);
+        } else {
+          pointerDeflectionRef.current *= 0.82;
+        }
+
+        setCurrentRotationAngle(currentAngle);
+
+        if (progress < 1) {
+          animFrameIdRef.current = requestAnimationFrame(animate);
+        } else {
+          pointerDeflectionRef.current = 0;
+          const nextRevealed = [...revealedSoFar, currentWinner];
+
+          if (stepIdx < winners.length - 1) {
+            playSubWinDing();
+            setMultiSpinProgress({
+              current: stepIdx + 1,
+              total: winners.length,
+              revealed: nextRevealed,
+            });
+
+            // 扣減該位得主庫存，若抽完則下一抽前自動從轉盤剔除該扇區
+            const nextStepPrizes = stepWorkingPrizes.map((p) => {
+              if (p.id !== currentWinner.id) return p;
+              const nextDrawn = p.drawnCount + 1;
+              return {
+                ...p,
+                drawnCount: nextDrawn,
+                isFinished: enableQuantityLimit ? nextDrawn >= p.quantity : false,
+              };
+            });
+
+            setTimeout(() => {
+              setPrizes(nextStepPrizes);
+              runStep(stepIdx + 1, finalAngle, nextStepPrizes, nextRevealed);
+            }, 680);
+          } else {
+            if (isMulti) {
+              setMultiSpinProgress({
+                current: winners.length,
+                total: winners.length,
+                revealed: nextRevealed,
+              });
+              setTimeout(() => {
+                setMultiSpinProgress(null);
+                finalizeSpinBatch(winners, updatedPrizes);
+              }, 450);
+            } else {
+              setMultiSpinProgress(null);
+              finalizeSpinBatch(winners, updatedPrizes);
+            }
+          }
+        }
+      };
+
+      animFrameIdRef.current = requestAnimationFrame(animate);
+    };
+
+    runStep(0, currentRotationAngle, prizes, []);
+  }, [
+    prizes,
+    enableQuantityLimit,
+    isSpinning,
+    enableAwardMode,
+    awardTiers,
+    selectedAwardId,
+    getEffectiveDrawCount,
+    currentRotationAngle,
+    spinSpeed,
+    playTickSound,
+    playSubWinDing,
+    finalizeSpinBatch,
+  ]);
+
+  // 啟動拉霸機抽獎（多人連抽時亦逐輪自動捲動並停靠於每位得主）
+  const startSlotSpin = useCallback(() => {
+    const initialAvailable = getAvailablePrizes(prizes, enableQuantityLimit);
+    if (initialAvailable.length === 0 || isSpinning) return;
+
+    const activeAward = enableAwardMode ? awardTiers.find((a) => a.id === selectedAwardId) : undefined;
+    if (enableAwardMode && activeAward && activeAward.drawnCount >= activeAward.quantity) return;
+
+    const effectiveCount = getEffectiveDrawCount();
+    const { winners, updatedPrizes } = drawBatchWinners(
+      prizes,
+      effectiveCount,
+      enableQuantityLimit,
+      secureRandomFloat
+    );
+    if (winners.length === 0) return;
+
+    setIsSpinning(true);
+
+    const isMulti = winners.length > 1;
+    const subDuration = isMulti
+      ? spinSpeed === 'fast'
+        ? 1050
+        : spinSpeed === 'normal'
+        ? 1900
+        : 2800
+      : SPIN_SPEED_MS[spinSpeed].slot;
+
+    const runSlotStep = (
+      stepIdx: number,
+      stepWorkingPrizes: PrizeItem[],
+      revealedSoFar: PrizeItem[]
+    ) => {
+      const currentWinner = winners[stepIdx];
+      if (isMulti) {
+        setMultiSpinProgress({
+          current: stepIdx + 1,
+          total: winners.length,
+          revealed: revealedSoFar,
+        });
+      }
+
+      const validPrizes = getAvailablePrizes(stepWorkingPrizes, enableQuantityLimit);
+      const poolForStrip = validPrizes.length > 0 ? validPrizes : [currentWinner];
+      const stripPrizes: PrizeItem[] = [];
+      const repeatRounds = Math.max(6, Math.ceil(28 / poolForStrip.length));
+      for (let r = 0; r < repeatRounds; r++) {
+        stripPrizes.push(...poolForStrip);
+      }
+      const winIdx = stripPrizes.length;
+      stripPrizes.push(currentWinner);
+      for (let i = 0; i < 4; i++) {
+        stripPrizes.push(poolForStrip[i % poolForStrip.length]);
+      }
+
+      setSlotStripItems(stripPrizes);
+      setSlotTranslateY(0);
+
+      const targetTranslateY = 92 - winIdx * 76;
+      const startTime = performance.now();
+      let lastSoundTime = 0;
+
+      const animate = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / subDuration);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentY = targetTranslateY * easeOut;
+
+        setSlotTranslateY(currentY);
+
+        if (now - lastSoundTime > 110) {
+          playTickSound();
+          lastSoundTime = now;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          const nextRevealed = [...revealedSoFar, currentWinner];
+
+          if (stepIdx < winners.length - 1) {
+            playSubWinDing();
+            setMultiSpinProgress({
+              current: stepIdx + 1,
+              total: winners.length,
+              revealed: nextRevealed,
+            });
+
+            const nextStepPrizes = stepWorkingPrizes.map((p) => {
+              if (p.id !== currentWinner.id) return p;
+              const nextDrawn = p.drawnCount + 1;
+              return {
+                ...p,
+                drawnCount: nextDrawn,
+                isFinished: enableQuantityLimit ? nextDrawn >= p.quantity : false,
+              };
+            });
+
+            setTimeout(() => {
+              setPrizes(nextStepPrizes);
+              runSlotStep(stepIdx + 1, nextStepPrizes, nextRevealed);
+            }, 680);
+          } else {
+            if (isMulti) {
+              setMultiSpinProgress({
+                current: winners.length,
+                total: winners.length,
+                revealed: nextRevealed,
+              });
+              setTimeout(() => {
+                setMultiSpinProgress(null);
+                finalizeSpinBatch(winners, updatedPrizes);
+              }, 450);
+            } else {
+              setMultiSpinProgress(null);
+              finalizeSpinBatch(winners, updatedPrizes);
+            }
+          }
+        }
+      };
+
+      requestAnimationFrame(animate);
+    };
+
+    runSlotStep(0, prizes, []);
+  }, [
+    prizes,
+    enableQuantityLimit,
+    isSpinning,
+    enableAwardMode,
+    awardTiers,
+    selectedAwardId,
+    getEffectiveDrawCount,
+    spinSpeed,
+    playTickSound,
+    playSubWinDing,
+    finalizeSpinBatch,
+  ]);
+
+  const handleStartSpin = useCallback(() => {
+    if (displayMode === 'wheel') {
+      startWheelSpin();
+    } else {
+      startSlotSpin();
     }
-  };
+  }, [displayMode, startWheelSpin, startSlotSpin]);
 
-  const showToast = (msg: string) => {
+  // 鍵盤快捷鍵：空白鍵啟動抽獎或關閉得獎彈窗、Esc 退出全螢幕舞台
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      if (e.code === 'Space') {
+        if (winnerModalData) {
+          e.preventDefault();
+          setWinnerModalData(null);
+        } else if (!showHistoryModal && !isSpinning) {
+          e.preventDefault();
+          handleStartSpin();
+        }
+      } else if (e.code === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [winnerModalData, showHistoryModal, isSpinning, isFullscreen, handleStartSpin]);
+
+  const showToast = useCallback((msg: string) => {
     const isLight = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
     const toastEl = document.createElement('div');
     toastEl.className = isLight
       ? 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-[#d97706] bg-white/95 border border-[#d97706]/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md'
       : 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-amber-500/20 border border-amber-500/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md';
-    // 圖示為固定靜態 SVG，訊息文字則一律用 textContent 賦值，避免未來有人把使用者可控文字
-    // 傳進這支函式時被當成 HTML 解析而構成 DOM XSS。
     toastEl.insertAdjacentHTML(
       'afterbegin',
       '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
@@ -760,110 +991,198 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     setTimeout(() => {
       if (document.body.contains(toastEl)) document.body.removeChild(toastEl);
     }, 2200);
+  }, []);
+
+  // 不在場放棄重抽 / 撤銷單筆或整批紀錄
+  const handleRevertRecords = (recordIds: string[]) => {
+    const { updatedPrizes, updatedAwardTiers, updatedHistory } = revertWinnerRecords(
+      prizes,
+      awardTiers,
+      history,
+      recordIds,
+      enableQuantityLimit
+    );
+    setPrizes(updatedPrizes);
+    setAwardTiers(updatedAwardTiers);
+    setHistory(updatedHistory);
+    saveState(updatedPrizes, updatedHistory, updatedAwardTiers);
+    setWinnerModalData(null);
+    showToast(t.toastRevertedWinner);
   };
 
-  // TXT 匯出
+  // 載入快速模板（切換模板時自動關閉雙抽獎項池，除非使用者手動勾選）
+  const loadTemplate = (templateKey: string) => {
+    if (PRIZE_TEMPLATES[templateKey]) {
+      const templateData = PRIZE_TEMPLATES[templateKey][lang] || PRIZE_TEMPLATES[templateKey]['zh-TW'];
+      const newItems = templateData.map((p) => ({ ...p, id: generateId() }));
+      setPrizes(newItems);
+      setEnableAwardMode(false);
+      saveState(newItems, undefined, undefined, false);
+      showToast(t.toastLoadedTemplate);
+    } else if (templateKey === 'empty') {
+      setPrizes([]);
+      setEnableAwardMode(false);
+      saveState([], undefined, undefined, false);
+    }
+  };
+
+  // 批次文字套用
+  const handleApplyBatchText = (rawText: string) => {
+    const { items, isParticipantList } = parseBatchText(rawText, PRESET_COLORS);
+    if (items.length > 0) {
+      setPrizes(items);
+      saveState(items);
+      showToast(
+        (isParticipantList ? t.toastImportPeople : t.toastImportPrizes).replace('{n}', String(items.length))
+      );
+    } else {
+      showToast(t.toastInvalidFile);
+    }
+  };
+
+  // 檔案上傳匯入
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) handleApplyBatchText(text);
+    };
+    reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
+  };
+
+  // 隨機打亂與去重
+  const handleShufflePrizes = () => {
+    const copy = [...prizes];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(secureRandomFloat() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    setPrizes(copy);
+    saveState(copy);
+    showToast(t.toastShuffled);
+  };
+
+  const handleDeduplicatePrizes = () => {
+    const seen = new Set<string>();
+    const deduped = prizes.filter((p) => {
+      const key = p.title.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    setPrizes(deduped);
+    saveState(deduped);
+    showToast(t.toastDeduped.replace('{n}', String(deduped.length)));
+  };
+
+  // 分享連結與匯出
+  const handleShareUrl = async () => {
+    const encoded = encodeWheelShareState({
+      prizes,
+      enableQuantityLimit,
+      enableAwardMode,
+      awardTiers,
+    });
+    const url = `${window.location.origin}${window.location.pathname}?wheel=${encoded}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast(t.toastCopiedShareLink);
+    } catch {
+      window.history.replaceState(null, '', `?wheel=${encoded}`);
+      showToast(t.toastCopiedShareLink);
+    }
+  };
+
   const exportTxt = () => {
     const textContent = prizes.map((p) => `${p.title}\t${p.weight}\t${p.quantity}\t${p.color}`).join('\n');
     const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
     downloadBlob(blob, `LuckyWheel_Prizes_${new Date().toISOString().slice(0, 10)}.txt`);
   };
 
-  // TXT 匯入
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const exportHistoryCsv = () => {
+    const csv = formatHistoryCsv(history, lang);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    downloadBlob(blob, `LuckyWheel_Winners_${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
+  const copyWinnersText = async () => {
+    const lines = history.map((rec, idx) =>
+      rec.awardName ? `${idx + 1}. ${rec.prizeTitle} — ${rec.awardName}` : `${idx + 1}. ${rec.prizeTitle}`
+    );
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      showToast(t.toastCopiedWinners);
+    } catch {
+      // ignore
+    }
+  };
 
-      const lines = text.split(/\r?\n/);
-      const newPrizes: PrizeItem[] = [];
-      let singleColumnLines = 0;
-
-      lines.forEach((line) => {
-        const clean = line.trim();
-        if (!clean || clean.startsWith('#') || clean.startsWith('//')) return;
-
-        const parts = clean.split(/[,;\t]/).map((p) => p.trim()).filter(Boolean);
-        if (parts.length > 0) {
-          const title = parts[0];
-          const weight = parts.length > 1 && parts[1] ? Math.max(0, parseInt(parts[1], 10) || 1) : 1;
-          const quantity = parts.length > 2 && parts[2] ? Math.max(1, parseInt(parts[2], 10) || 1) : 1;
-          const color =
-            parts.length > 3 && /^#[0-9A-Fa-f]{6}$/.test(parts[3])
-              ? parts[3]
-              : PRESET_COLORS[newPrizes.length % PRESET_COLORS.length];
-
-          if (parts.length === 1) singleColumnLines++;
-
-          newPrizes.push({
-            id: generateId(),
-            title,
-            weight,
-            quantity,
-            drawnCount: 0,
-            color,
-            isFinished: false,
-          });
-        }
-      });
-
-      if (newPrizes.length > 0) {
-        setPrizes(newPrizes);
-        saveState(newPrizes);
-        if (singleColumnLines / newPrizes.length >= 0.7) {
-          showToast(t.toastImportPeople.replace('{n}', newPrizes.length.toString()));
-        } else {
-          showToast(t.toastImportPrizes.replace('{n}', newPrizes.length.toString()));
-        }
-      } else {
-        showToast(t.toastInvalidFile);
-      }
+  // 本地存檔槽操作
+  const handleSaveSlot = (slotName: string) => {
+    const cleanName = slotName.trim() || `${t.title} #${saveSlots.length + 1}`;
+    const newSlot: SaveSlot = {
+      id: generateId(),
+      name: cleanName,
+      updatedAt: Date.now(),
+      prizes,
+      enableQuantityLimit,
+      enableAwardMode,
+      awardTiers,
     };
-    reader.readAsText(file, 'UTF-8');
-    e.target.value = '';
+    const nextSlots = [newSlot, ...saveSlots].slice(0, 12);
+    setSaveSlots(nextSlots);
+    try {
+      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots));
+    } catch {
+      // ignore
+    }
+    showToast(t.toastSavedSlot.replace('{name}', cleanName));
+  };
+
+  const handleLoadSlot = (slot: SaveSlot) => {
+    setPrizes(slot.prizes);
+    setEnableQuantityLimit(slot.enableQuantityLimit);
+    setEnableAwardMode(Boolean(slot.enableAwardMode));
+    if (slot.awardTiers && slot.awardTiers.length > 0) {
+      setAwardTiers(slot.awardTiers);
+      setSelectedAwardId(slot.awardTiers[0].id);
+    }
+    saveState(slot.prizes, undefined, slot.awardTiers, Boolean(slot.enableAwardMode), slot.enableQuantityLimit);
+    showToast(t.toastLoadedSlot.replace('{name}', slot.name));
+  };
+
+  const handleDeleteSlot = (slotId: string) => {
+    const nextSlots = saveSlots.filter((s) => s.id !== slotId);
+    setSaveSlots(nextSlots);
+    try {
+      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots));
+    } catch {
+      // ignore
+    }
+  };
+
+  const toggleBrowserFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
   };
 
   const unfinishedPrizes = getUnfinishedPrizes();
   const totalWeight = unfinishedPrizes.reduce((sum, p) => sum + p.weight, 0);
+  const selectedAward = awardTiers.find((a) => a.id === selectedAwardId);
+  const selectedAwardRemain = selectedAward ? Math.max(0, selectedAward.quantity - selectedAward.drawnCount) : 0;
+  const isAwardExhausted = enableAwardMode && selectedAward && selectedAwardRemain === 0;
 
-  // 獎項編輯更新
-  const updatePrizeItem = (id: string, field: keyof PrizeItem, value: unknown) => {
-    const updated = prizes.map((p) => (p.id === id ? { ...p, [field]: value } : p));
-    setPrizes(updated);
-    saveState(updated);
-  };
-
-  const removePrizeItem = (id: string) => {
-    const updated = prizes.filter((p) => p.id !== id);
-    setPrizes(updated);
-    saveState(updated);
-  };
-
-  const addPrizeItem = () => {
-    const newItem: PrizeItem = {
-      id: generateId(),
-      title: `${t.newPrizeDefault} ${prizes.length + 1}`,
-      weight: 1,
-      quantity: 1,
-      drawnCount: 0,
-      color: PRESET_COLORS[prizes.length % PRESET_COLORS.length],
-      isFinished: false,
-    };
-    const updated = [...prizes, newItem];
-    setPrizes(updated);
-    saveState(updated);
-  };
-
-  const resetDrawnCounts = () => {
-    const updated = prizes.map((p) => ({ ...p, drawnCount: 0, isFinished: false }));
-    setPrizes(updated);
-    saveState(updated);
-    showToast(t.toastResetCount);
-  };
+  const latestBatchId = history[0]?.batchId;
+  const latestBatchRecords = latestBatchId
+    ? history.filter((r) => r.batchId === latestBatchId)
+    : history.slice(0, 1);
+  const latestBatchTitles = latestBatchRecords.map((r) => r.prizeTitle).join('、');
 
   if (!isMounted) return null;
 
@@ -875,28 +1194,32 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       accentColor="#f59e0b"
       accentGlow="rgba(245, 158, 11, 0.6)"
     >
-      <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
-        {/* 頂部雙語切換與最新中獎動態公告列 */}
-        <div className="bg-gradient-to-r from-amber-600 via-purple-600 to-indigo-600 rounded-2xl p-3.5 sm:px-6 sm:py-3 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 shadow-lg min-w-0">
+      <div className="flex flex-col gap-6 text-left w-full px-4 max-sm:px-0">
+        {/* 頂部最新中獎動態與快捷列 */}
+        <div
+          className={`rounded-2xl p-3.5 sm:px-6 sm:py-3.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 shadow-lg min-w-0 ${styles.bannerGradient}`}
+        >
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-full overflow-hidden">
             <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide shrink-0">
               {t.latestWinnerTag}
             </span>
             <span className="text-xs sm:text-sm font-medium flex items-center gap-1.5 min-w-0 truncate">
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-amber-300 shrink-0">
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className={`shrink-0 ${styles.bannerTrophyIcon}`}>
                 <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
               </svg>
               <span className="truncate">
-                {history.length > 0 ? `${t.justWon}${history[0].prizeTitle}` : t.welcomeMsg}
+                {history.length > 0
+                  ? `${t.justWon}${latestBatchTitles}${history[0].awardName ? ` (${history[0].awardName})` : ''}`
+                  : t.welcomeMsg}
               </span>
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3 min-w-0">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto min-w-0">
             <button
               type="button"
               onClick={() => setShowHistoryModal(true)}
-              className="px-2 sm:px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap min-w-0"
+              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
             >
               <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
@@ -907,78 +1230,119 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
             </button>
             <button
               type="button"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="px-2 sm:px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap min-w-0"
+              onClick={handleShareUrl}
+              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
             >
-              {soundEnabled ? (
-                <>
-                  <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-                  </svg>
-                  <span className="truncate">{t.soundOn}</span>
-                </>
-              ) : (
-                <>
-                  <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-                  </svg>
-                  <span className="truncate">{t.soundOff}</span>
-                </>
-              )}
+              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+              </svg>
+              <span className="truncate">{t.shareLinkBtn}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
+            >
+              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+              </svg>
+              <span className="truncate">{soundEnabled ? t.soundOn : t.soundOff}</span>
             </button>
             <button
               type="button"
               onClick={() => setIsFullscreen(true)}
-              className="px-2 sm:px-3.5 py-1.5 text-xs sm:text-sm font-semibold bg-white text-indigo-900 rounded-xl hover:bg-slate-100 shadow-md transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap min-w-0"
+              className="px-3.5 py-1.5 text-xs sm:text-sm font-bold bg-white text-slate-950 rounded-xl hover:bg-slate-100 shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
             >
               <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
               </svg>
-              <span className="truncate font-bold">{t.fullscreenBtn}</span>
+              <span className="truncate">{t.fullscreenBtn}</span>
             </button>
           </div>
         </div>
 
-        {/* 模式切換與控制列 */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 bg-surface-glass border border-border-glass rounded-2xl p-3.5 sm:p-4 shadow-sm">
-          <div className="flex bg-select-bg p-1 rounded-xl border border-border-glass w-full sm:w-auto grid grid-cols-2 sm:flex">
-            <button
-              type="button"
-              onClick={() => setDisplayMode('wheel')}
-              className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
-                displayMode === 'wheel'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
-                  : 'text-text-sub hover:text-text-main'
-              }`}
-            >
-              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-              </svg>
-              {t.wheelMode}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDisplayMode('slot')}
-              className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
-                displayMode === 'slot'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
-                  : 'text-text-sub hover:text-text-main'
-              }`}
-            >
-              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-              </svg>
-              {t.slotMode}
-            </button>
+        {/* 模式切換、連抽人數、轉速與尾牙雙抽開關列 */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3.5 bg-surface-glass border border-border-glass rounded-2xl p-3.5 sm:p-4 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex bg-select-bg p-1 rounded-xl border border-border-glass">
+              <button
+                type="button"
+                onClick={() => setDisplayMode('wheel')}
+                className={`px-3.5 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
+                  displayMode === 'wheel' ? styles.activeSegmentBtn : 'text-text-sub hover:text-text-main'
+                }`}
+              >
+                {t.wheelMode}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDisplayMode('slot')}
+                className={`px-3.5 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
+                  displayMode === 'slot' ? styles.activeSegmentBtn : 'text-text-sub hover:text-text-main'
+                }`}
+              >
+                {t.slotMode}
+              </button>
+            </div>
+
+            {/* 連抽人數與轉速選擇 */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <label htmlFor={drawCountSelectId} className="text-xs sm:text-sm font-medium text-text-sub">
+                {t.drawCountLabel}
+              </label>
+              <select
+                id={drawCountSelectId}
+                value={drawCount}
+                onChange={(e) => setDrawCount(Number(e.target.value))}
+                className={`rounded-xl px-2.5 py-1.5 text-sm font-semibold outline-none cursor-pointer ${styles.selectInput}`}
+              >
+                <option value={1}>{t.drawSingle}</option>
+                <option value={3}>{t.drawThree}</option>
+                <option value={5}>{t.drawFive}</option>
+                <option value={10}>{t.drawTen}</option>
+              </select>
+
+              <label htmlFor={speedSelectId} className="text-xs sm:text-sm font-medium text-text-sub ml-1">
+                {t.spinSpeedLabel}
+              </label>
+              <select
+                id={speedSelectId}
+                value={spinSpeed}
+                onChange={(e) => setSpinSpeed(e.target.value as SpinSpeed)}
+                className={`rounded-xl px-2.5 py-1.5 text-sm font-semibold outline-none cursor-pointer ${styles.selectInput}`}
+              >
+                <option value="fast">{t.speedFast}</option>
+                <option value="normal">{t.speedNormal}</option>
+                <option value="suspense">{t.speedSuspense}</option>
+              </select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 justify-start sm:justify-end">
+          {/* 數量限制與尾牙雙抽開關 */}
+          <div className="flex flex-wrap items-center gap-4">
+            <label htmlFor={awardModeToggleId} className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-text-main cursor-pointer">
+              <input
+                id={awardModeToggleId}
+                type="checkbox"
+                checked={enableAwardMode}
+                onChange={(e) => {
+                  setEnableAwardMode(e.target.checked);
+                  saveState(undefined, undefined, undefined, e.target.checked);
+                }}
+                className="w-4 h-4 rounded cursor-pointer accent-amber-500 shrink-0"
+              />
+              {t.enableAwardMode}
+            </label>
+
             <label htmlFor={qtyLimitToggleId} className="flex items-center gap-2 text-xs sm:text-sm font-medium text-text-sub cursor-pointer">
               <input
                 id={qtyLimitToggleId}
                 type="checkbox"
                 checked={enableQuantityLimit}
-                onChange={(e) => setEnableQuantityLimit(e.target.checked)}
+                onChange={(e) => {
+                  setEnableQuantityLimit(e.target.checked);
+                  saveState(undefined, undefined, undefined, undefined, e.target.checked);
+                }}
                 className="w-4 h-4 rounded cursor-pointer accent-amber-500 shrink-0"
               />
               {t.enableQtyLimit}
@@ -988,15 +1352,59 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
 
         {/* 主 Layout (兩欄式) */}
         <div className="grid grid-cols-2 gap-8 max-lg:grid-cols-1 items-start">
-          {/* 左欄：轉盤 / 拉霸機 渲染區 */}
-          <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-6 shadow-lg backdrop-blur-md">
+          {/* 左欄：轉盤 / 拉霸機 舞台區 */}
+          <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-5 shadow-lg backdrop-blur-md min-w-0">
+            {/* 若開啟尾牙雙抽模式，於轉盤正上方顯示「目前抽取獎項」切換列 */}
+            {enableAwardMode && awardTiers.length > 0 && (
+              <div className="w-full bg-select-bg border border-border-glass rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor={activeAwardSelectId} className={`text-xs sm:text-sm font-bold ${styles.accentText}`}>
+                  {t.currentAwardLabel}
+                </label>
+                <div className="flex items-center gap-2 flex-1 min-w-[180px] justify-end">
+                  <select
+                    id={activeAwardSelectId}
+                    value={selectedAwardId}
+                    onChange={(e) => setSelectedAwardId(e.target.value)}
+                    className={`rounded-xl px-3 py-1.5 text-sm font-bold outline-none cursor-pointer flex-1 max-w-[240px] ${styles.selectInput}`}
+                  >
+                    {awardTiers.map((tier) => (
+                      <option key={tier.id} value={tier.id}>
+                        {tier.name}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedAward && (
+                    <span
+                      className={`text-xs font-mono font-bold px-2.5 py-1 rounded-lg shrink-0 ${
+                        selectedAwardRemain === 0 ? styles.redTag : styles.emeraldTag
+                      }`}
+                    >
+                      {t.awardRemainFmt
+                        .replace('{remain}', String(selectedAwardRemain))
+                        .replace('{total}', String(selectedAward.quantity))}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    aria-label={t.closeAwardModeBtn}
+                    onClick={() => {
+                      setEnableAwardMode(false);
+                      saveState(undefined, undefined, undefined, false);
+                    }}
+                    className={`px-2 py-1 text-xs font-bold rounded-lg cursor-pointer shrink-0 ${styles.redTag}`}
+                    title={t.closeAwardModeBtn}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+
             {displayMode === 'wheel' ? (
-              /* 🎡 轉盤 */
               <div className={styles.wheelContainer}>
                 <canvas ref={previewCanvasRef} width={800} height={800} className={styles.wheelCanvas} />
               </div>
             ) : (
-              /* 🎰 拉霸機 */
               <div className={styles.slotWrapper}>
                 <div className={styles.slotFrame}>
                   <div className={styles.slotLights}>
@@ -1016,7 +1424,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
                         slotStripItems.map((item, idx) => (
                           <div key={idx} className={styles.slotCard}>
                             <div className={styles.slotCardDot} style={{ background: item.color }} />
-                            <span>{item.title}</span>
+                            <span className="truncate">{item.title}</span>
                           </div>
                         ))
                       )}
@@ -1026,445 +1434,247 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
               </div>
             )}
 
-            {/* 抽獎按鈕 */}
+            {/* 抽獎啟動按鈕 */}
             <button
               type="button"
-              onClick={displayMode === 'wheel' ? startWheelSpin : startSlotSpin}
-              disabled={isSpinning || unfinishedPrizes.length === 0}
-              className={`w-full max-w-[360px] h-[54px] font-bold text-lg rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${styles.spinBtn}`}
+              onClick={handleStartSpin}
+              disabled={isSpinning || unfinishedPrizes.length === 0 || Boolean(isAwardExhausted)}
+              className={`w-full max-w-[380px] h-[54px] font-bold text-base sm:text-lg rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${styles.spinBtn}`}
             >
-              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor">
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
                 <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
               </svg>
               {isSpinning
-                ? t.spinning
+                ? multiSpinProgress
+                  ? t.multiSpinningFmt
+                      .replace('{current}', String(multiSpinProgress.current))
+                      .replace('{total}', String(multiSpinProgress.total))
+                  : t.spinning
                 : unfinishedPrizes.length === 0
                 ? t.allDrawn
-                : displayMode === 'wheel'
-                ? t.spinWheelBtn
-                : t.spinSlotBtn}
+                : isAwardExhausted
+                ? t.awardExhausted
+                : `${displayMode === 'wheel' ? t.spinWheelBtn : t.spinSlotBtn}${
+                    drawCount > 1 ? t.spinCountSuffix.replace('{n}', String(drawCount)) : ''
+                  }`}
             </button>
-          </div>
 
-          {/* 右欄：獎項編輯與設定 */}
-          <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg backdrop-blur-md">
-            <div className="flex justify-between items-center flex-wrap gap-3 border-b border-border-glass pb-4">
-              <h3 className="text-sm font-semibold text-text-main flex items-center gap-2">
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className={styles.accentText}>
-                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-                </svg>
-                {t.prizesSettingsTitle} ({prizes.length})
-              </h3>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                <select
-                  id={templateSelectId}
-                  aria-label={t.presetSelectDefault}
-                  defaultValue=""
-                  onChange={(e) => {
-                    loadTemplate(e.target.value);
-                    e.target.selectedIndex = 0;
-                  }}
-                  className={`rounded-xl px-2.5 py-1.5 text-sm font-medium outline-none cursor-pointer ${styles.selectInput}`}
-                >
-                  <option value="" disabled>
-                    {t.presetSelectDefault}
-                  </option>
-                  <option value="annual">{t.presetAnnual}</option>
-                  <option value="lucky">{t.presetLucky}</option>
-                  <option value="punish">{t.presetPunish}</option>
-                  <option value="dinner">{t.presetDinner}</option>
-                  <option value="empty">{t.presetEmpty}</option>
-                </select>
-
-                <button
-                  type="button"
-                  onClick={exportTxt}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
-                >
-                  <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-                    <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" />
-                  </svg>
-                  {t.exportTxt}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 text-sm font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:border-slate-400 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
-                >
-                  <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                  </svg>
-                  {t.importTxt}
-                </button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept=".txt,.csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={resetDrawnCounts}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-xl transition-all cursor-pointer flex items-center gap-1 ${styles.spinBtn}`}
-                >
-                  <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-                    <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
-                  </svg>
-                  {t.resetCount}
-                </button>
-                <button
-                  type="button"
-                  onClick={addPrizeItem}
-                  className="px-3 py-1.5 text-sm font-bold text-slate-950 bg-amber-500 rounded-xl hover:bg-amber-400 transition-all cursor-pointer shadow-sm"
-                >
-                  {t.addPrize}
-                </button>
-              </div>
-            </div>
-
-            {/* 獎項清單列表 */}
-            <div className="flex flex-col gap-3">
-              {prizes.map((p) => {
-                const isUnfinished = unfinishedPrizes.some((item) => item.id === p.id);
-                const ratioStr =
-                  isUnfinished && totalWeight > 0 ? ((p.weight / totalWeight) * 100).toFixed(2) + '%' : '0.00%';
-                const remain = Math.max(0, p.quantity - p.drawnCount);
-                const isZero = remain === 0;
-
-                const colorInputId = `p_color_${p.id}`;
-                const titleInputId = `p_title_${p.id}`;
-                const weightInputId = `p_weight_${p.id}`;
-                const qtyInputId = `p_qty_${p.id}`;
-                const finishCheckId = `p_finish_${p.id}`;
-
-                return (
+            {/* 連抽進行中：逐輪即時揭曉卡 */}
+            {multiSpinProgress && (
+              <div
+                className="w-full bg-select-bg border border-border-glass rounded-xl p-3 flex flex-col gap-2"
+                aria-live="polite"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-bold ${styles.accentText}`}>
+                    {t.multiRevealTitle
+                      .replace('{current}', String(multiSpinProgress.revealed.length))
+                      .replace('{total}', String(multiSpinProgress.total))}
+                  </span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-surface-glass border border-border-glass overflow-hidden">
                   <div
-                    key={p.id}
-                    className={`flex items-center gap-3 bg-select-bg p-3 rounded-xl border border-border-glass flex-wrap shadow-sm ${
-                      p.isFinished ? styles.prizeFinished : ''
-                    }`}
-                  >
-                    {/* 顏色選擇 */}
-                    <label htmlFor={colorInputId} className="sr-only">
-                      {t.prizesSettingsTitle} Color
-                    </label>
-                    <input
-                      id={colorInputId}
-                      type="color"
-                      value={p.color}
-                      onChange={(e) => updatePrizeItem(p.id, 'color', e.target.value)}
-                      className="w-7 h-7 rounded border-none cursor-pointer bg-transparent shrink-0"
-                    />
+                    className="h-full transition-all duration-300"
+                    style={{
+                      background: 'var(--theme-color)',
+                      width: `${(multiSpinProgress.revealed.length / multiSpinProgress.total) * 100}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-1.5 min-h-[30px]">
+                  {multiSpinProgress.revealed.map((w, idx) => (
+                    <span
+                      key={`${w.id}_${idx}`}
+                      className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-xs sm:text-sm font-bold text-text-main flex items-center gap-1.5"
+                    >
+                      <span className="text-xs font-mono text-text-sub">#{idx + 1}</span>
+                      {w.title}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    {/* 獎項名稱 */}
-                    <label htmlFor={titleInputId} className="sr-only">
-                      {t.prizeTitlePlaceholder}
-                    </label>
-                    <input
-                      id={titleInputId}
-                      type="text"
-                      value={p.title}
-                      onChange={(e) => updatePrizeItem(p.id, 'title', e.target.value)}
-                      placeholder={t.prizeTitlePlaceholder}
-                      className={`flex-1 min-w-[140px] px-3 py-1.5 rounded-lg text-xs outline-none ${styles.prizeInput}`}
-                    />
+            {/* 最新一批連抽得獎名單即時展示卡 */}
+            {!multiSpinProgress && latestBatchRecords.length > 0 && (
+              <div className="w-full bg-select-bg border border-border-glass rounded-xl p-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-bold ${styles.accentText}`}>
+                    {t.latestBatchLabel} ({latestBatchRecords.length})
+                  </span>
+                  {latestBatchRecords[0]?.awardName && (
+                    <span className={`text-xs px-2 py-0.5 rounded font-semibold ${styles.emeraldTag}`}>
+                      {latestBatchRecords[0].awardName}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {latestBatchRecords.map((rec, idx) => (
+                    <span
+                      key={rec.id}
+                      className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-xs sm:text-sm font-bold text-text-main flex items-center gap-1.5"
+                    >
+                      <span className="text-xs font-mono text-text-sub">#{idx + 1}</span>
+                      {rec.prizeTitle}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    {/* 權重與機率 */}
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-text-sub">
-                      <label htmlFor={weightInputId} className="text-xs">
-                        {t.weightLabel}
-                      </label>
-                      <input
-                        id={weightInputId}
-                        type="number"
-                        min="0"
-                        value={p.weight === 0 ? '' : p.weight}
-                        onChange={(e) => updatePrizeItem(p.id, 'weight', e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        className={`w-14 px-2 py-1 rounded-lg text-xs outline-none font-mono text-center ${styles.prizeInput}`}
-                      />
-                      <span className={`font-mono text-xs px-1.5 py-0.5 rounded font-bold ${styles.skyTag}`}>
-                        {ratioStr}
-                      </span>
-                    </div>
-
-                    {/* 數量上限 */}
-                    {enableQuantityLimit ? (
-                      <div className="flex items-center gap-1.5 text-sm font-medium text-text-sub">
-                        <label htmlFor={qtyInputId} className="text-xs">
-                          {t.qtyLabel}
-                        </label>
-                        <input
-                          id={qtyInputId}
-                          type="number"
-                          min="1"
-                          value={p.quantity === 0 ? '' : p.quantity}
-                          onChange={(e) => updatePrizeItem(p.id, 'quantity', e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value, 10) || 1))}
-                          className={`w-14 px-2 py-1 rounded-lg text-xs outline-none font-mono text-center ${styles.prizeInput}`}
-                        />
-                        <span
-                          className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded border ${
-                            isZero ? styles.redTag : styles.emeraldTag
-                          }`}
-                        >
-                          {remain > 0 ? `${t.remainLabel} ${remain}` : t.drawnDoneLabel}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className={`text-xs font-bold px-2 ${styles.skyTag}`} title={t.unlimitedLabel}>
-                        ∞
-                      </span>
-                    )}
-
-                    <div className="flex items-center gap-2 ml-auto">
-                      <label htmlFor={finishCheckId} className="flex items-center gap-1 text-sm font-medium text-text-sub cursor-pointer">
-                        <input
-                          id={finishCheckId}
-                          type="checkbox"
-                          checked={p.isFinished}
-                          onChange={(e) => updatePrizeItem(p.id, 'isFinished', e.target.checked)}
-                          className="w-3.5 h-3.5 rounded cursor-pointer accent-amber-500"
-                        />
-                        {t.isFinishedLabel}
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => removePrizeItem(p.id)}
-                        className={`text-xs px-1.5 py-0.5 transition-colors cursor-pointer ${styles.redTag}`}
-                        title={t.deleteLabel}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <span className="text-xs text-text-sub text-center">{t.spacebarHint}</span>
           </div>
+
+          {/* 右欄：獎項與人員名單編輯面板 */}
+          <PrizeEditorPanel
+            t={t}
+            prizes={prizes}
+            unfinishedPrizes={unfinishedPrizes}
+            totalWeight={totalWeight}
+            enableQuantityLimit={enableQuantityLimit}
+            enableAwardMode={enableAwardMode}
+            awardTiers={awardTiers}
+            selectedAwardId={selectedAwardId}
+            saveSlots={saveSlots}
+            onLoadTemplate={loadTemplate}
+            onExportTxt={exportTxt}
+            onTriggerFileUpload={() => fileInputRef.current?.click()}
+            onResetCounts={() => {
+              const resetP = prizes.map((p) => ({ ...p, drawnCount: 0, isFinished: false }));
+              const resetA = awardTiers.map((a) => ({ ...a, drawnCount: 0 }));
+              setPrizes(resetP);
+              setAwardTiers(resetA);
+              saveState(resetP, undefined, resetA);
+              showToast(t.toastResetCount);
+            }}
+            onAddPrize={() => {
+              const newItem: PrizeItem = {
+                id: generateId(),
+                title: `${t.newPrizeDefault} ${prizes.length + 1}`,
+                weight: 1,
+                quantity: 1,
+                drawnCount: 0,
+                color: PRESET_COLORS[prizes.length % PRESET_COLORS.length],
+                isFinished: false,
+              };
+              const updated = [...prizes, newItem];
+              setPrizes(updated);
+              saveState(updated);
+            }}
+            onUpdatePrize={(id, field, value) => {
+              const updated = prizes.map((p) => (p.id === id ? { ...p, [field]: value } : p));
+              setPrizes(updated);
+              saveState(updated);
+            }}
+            onRemovePrize={(id) => {
+              const updated = prizes.filter((p) => p.id !== id);
+              setPrizes(updated);
+              saveState(updated);
+            }}
+            onApplyBatchText={handleApplyBatchText}
+            onShufflePrizes={handleShufflePrizes}
+            onDeduplicatePrizes={handleDeduplicatePrizes}
+            onAddAwardTier={() => {
+              const newTier: AwardTier = {
+                id: generateId(),
+                name: `${t.newPrizeDefault} ${awardTiers.length + 1}`,
+                quantity: 1,
+                drawnCount: 0,
+              };
+              const next = [...awardTiers, newTier];
+              setAwardTiers(next);
+              if (!selectedAwardId) setSelectedAwardId(newTier.id);
+              saveState(undefined, undefined, next);
+            }}
+            onUpdateAwardTier={(id, field, value) => {
+              const next = awardTiers.map((a) => (a.id === id ? { ...a, [field]: value } : a));
+              setAwardTiers(next);
+              saveState(undefined, undefined, next);
+            }}
+            onRemoveAwardTier={(id) => {
+              const next = awardTiers.filter((a) => a.id !== id);
+              setAwardTiers(next);
+              if (selectedAwardId === id) setSelectedAwardId(next[0]?.id || '');
+              saveState(undefined, undefined, next);
+            }}
+            onSelectAwardId={setSelectedAwardId}
+            onCloseAwardMode={() => {
+              setEnableAwardMode(false);
+              saveState(undefined, undefined, undefined, false);
+            }}
+            onSaveSlot={handleSaveSlot}
+            onLoadSlot={handleLoadSlot}
+            onDeleteSlot={handleDeleteSlot}
+          />
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".txt,.csv"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
         </div>
       </div>
 
       {/* 通用 FAQ 常見問題區塊 */}
-      <FaqSection
-        items={t.faqItems}
-        title={t.faqTitle}
-        subtitle={t.faqSubtitle}
-        accentColor="#f59e0b"
-      />
+      <FaqSection items={t.faqItems} title={t.faqTitle} subtitle={t.faqSubtitle} accentColor="#f59e0b" />
 
-      {/* 全螢幕抽獎舞台 Fullscreen Stage (Portal 至 document.body 脫離外層 ToolLayout 外框) */}
-      {isFullscreen &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div className={styles.fullscreenStage}>
-            {/* 獨立頂部列 */}
-            <div className={styles.fullscreenHeader}>
-              <div className="flex items-center gap-2 font-bold text-xs sm:text-sm tracking-wider uppercase">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse" />
-                <span>{displayMode === 'wheel' ? t.stageTitleWheel : t.stageTitleSlot}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsFullscreen(false)}
-                className="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white bg-red-600 border border-red-500 rounded-xl hover:bg-red-700 hover:scale-105 transition-all cursor-pointer shadow-md shrink-0"
-              >
-                {t.exitFullscreen}
-              </button>
-            </div>
-
-            {/* 舞台主要區域：768px+ 自動橫向並排，768px- 垂直堆疊並適度控制高度 */}
-            <div className="flex-1 flex items-center justify-start md:justify-center gap-5 sm:gap-8 lg:gap-14 p-3 sm:p-6 w-full max-w-full overflow-y-auto max-md:flex-col box-border">
-              {displayMode === 'wheel' ? (
-                <div className={`${styles.fullscreenWheelWrapper} md:my-auto`}>
-                  <canvas ref={fullscreenCanvasRef} width={1600} height={1600} className="w-full h-full" />
-                  <button
-                    type="button"
-                    onClick={startWheelSpin}
-                    disabled={isSpinning || unfinishedPrizes.length === 0}
-                    className="absolute w-[min(18vh,165px)] h-[min(18vh,165px)] rounded-full bg-gradient-to-r from-pink-600 to-amber-500 text-white font-extrabold text-[min(4.2vh,34px)] border-4 border-white shadow-[0_0_60px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40 disabled:scale-100 min-w-[70px] min-h-[70px]"
-                  >
-                    {t.stageSpin}
-                  </button>
-                </div>
-              ) : (
-                <div className={`${styles.slotWrapper} ${styles.fullscreenSlotWrapper} md:my-auto`}>
-                  <div className={styles.slotFrame} style={{ padding: 'min(2.8vh, 1.75rem)', width: '100%' }}>
-                    <div className={styles.slotLights}>
-                      <span />
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                    <div className={`${styles.slotWindow} ${styles.fullscreenSlotWindow}`}>
-                      <div className={styles.slotPayline} style={{ height: 'min(16vh, 125px)' }} />
-                      <div className={styles.slotStrip} style={{ transform: `translateY(${slotTranslateY}px)` }}>
-                        {slotStripItems.map((item, idx) => (
-                          <div key={idx} className={styles.slotCard} style={{ height: 'min(14vh, 110px)', fontSize: 'min(3.8vh, 2rem)' }}>
-                            <div className={styles.slotCardDot} style={{ background: item.color, width: 'min(2.8vh, 20px)', height: 'min(2.8vh, 20px)' }} />
-                            <span className="truncate">{item.title}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={startSlotSpin}
-                    disabled={isSpinning || unfinishedPrizes.length === 0}
-                    className="mt-4 sm:mt-6 px-12 sm:px-18 py-3.5 sm:py-4.5 text-[min(3.8vh,28px)] font-extrabold text-white bg-gradient-to-r from-pink-600 to-amber-500 border-4 border-white rounded-full shadow-[0_0_45px_rgba(255,0,85,0.85)] hover:scale-105 transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
-                  >
-                    <svg viewBox="0 0 24 24" width={26} height={26} fill="currentColor">
-                      <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-                    </svg>
-                    {t.stageSpin}
-                  </button>
-                </div>
-              )}
-
-              {/* 全螢幕資訊側板 */}
-              <div className={`${styles.fullscreenSidePanel} md:my-auto`}>
-                <h4 className="text-base sm:text-lg uppercase tracking-widest font-bold border-b pb-3 flex items-center justify-between shrink-0 border-slate-200/20">
-                  <span className={styles.accentText}>
-                    {t.availableItems} ({unfinishedPrizes.length})
-                  </span>
-                  <span className="text-xs font-mono font-normal opacity-70">{t.liveList}</span>
-                </h4>
-
-                <div className="flex flex-col gap-2.5 w-full">
-                  {unfinishedPrizes.length === 0 ? (
-                    <span className="opacity-70 italic flex items-center justify-center gap-2 py-8 text-base font-medium">
-                      <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.emeraldTag}>
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                      </svg>
-                      {t.allFinishedMsg}
-                    </span>
-                  ) : (
-                    unfinishedPrizes.map((p) => (
-                      <div key={p.id} className={styles.fullscreenSideItem}>
-                        <div className="w-3.5 h-3.5 rounded-full shrink-0 shadow-[0_0_8px_currentColor]" style={{ background: p.color, color: p.color }} />
-                        <span className="font-semibold text-sm sm:text-base truncate flex-1">{p.title}</span>
-                        {enableQuantityLimit && (
-                          <span className={`text-xs sm:text-sm font-mono font-bold px-2 py-0.5 rounded-lg shrink-0 ${styles.spinBtn}`}>
-                            {t.remainLabel} {Math.max(0, p.quantity - p.drawnCount)}
-                          </span>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* 上一位得獎者小卡 */}
-                <div className={styles.fullscreenWinnerCard}>
-                  <span className="text-xs sm:text-sm uppercase tracking-wider font-bold flex items-center gap-1.5 opacity-80">
-                    <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className={styles.accentText}>
-                      <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-                    </svg>
-                    {t.lastWinner}
-                  </span>
-                  <span className={`text-lg sm:text-xl font-extrabold font-mono tracking-wide truncate ${styles.accentText}`}>
-                    {history.length > 0 ? history[0].prizeTitle : t.noRecord}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-
-      {/* 歷史紀錄 Modal */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[20000] flex items-center justify-center p-4">
-          <div className="bg-select-bg border border-border-glass rounded-2xl w-full max-w-md p-6 flex flex-col gap-4 text-left shadow-2xl">
-            <div className="flex justify-between items-center border-b border-border-glass pb-3">
-              <h3 className="text-base font-bold text-text-main flex items-center gap-2">
-                <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className={styles.accentText}>
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                </svg>
-                {t.historyModalTitle}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowHistoryModal(false)}
-                className="text-text-sub text-lg hover:text-text-main transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto font-mono text-xs">
-              {history.length === 0 ? (
-                <span className="text-text-sub text-center py-6">{t.noHistory}</span>
-              ) : (
-                history.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="flex justify-between items-center bg-surface-glass px-3.5 py-2.5 rounded-xl border border-border-glass"
-                  >
-                    <span className="font-sans text-text-main font-semibold flex items-center gap-1.5">
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className={styles.accentText}>
-                        <path d="M12 2L1 21h22L12 2zm0 3.8L18.4 17H5.6L12 5.8z" />
-                      </svg>
-                      {rec.prizeTitle}
-                    </span>
-                    <span className="text-text-sub text-xs">
-                      {new Date(rec.timestamp).toLocaleTimeString(lang === 'en' ? 'en-US' : 'zh-TW', { hour12: false })}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-between gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setHistory([]);
-                  saveState(undefined, []);
-                  showToast(t.toastClearedHistory);
-                }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-xl transition-all cursor-pointer ${styles.redTag}`}
-              >
-                {t.clearHistory}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowHistoryModal(false)}
-                className="px-4 py-1.5 text-xs font-medium text-text-main bg-select-bg border border-border-glass rounded-xl hover:bg-surface-glass transition-all cursor-pointer shadow-sm"
-              >
-                {t.close}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* 全螢幕抽獎舞台 */}
+      {isFullscreen && (
+        <FullscreenStageModal
+          t={t}
+          displayMode={displayMode}
+          isSpinning={isSpinning}
+          unfinishedPrizes={unfinishedPrizes}
+          enableQuantityLimit={enableQuantityLimit}
+          enableAwardMode={enableAwardMode}
+          awardTiers={awardTiers}
+          selectedAwardId={selectedAwardId}
+          spinSpeed={spinSpeed}
+          drawCount={drawCount}
+          multiSpinProgress={multiSpinProgress}
+          history={history}
+          slotStripItems={slotStripItems}
+          slotTranslateY={slotTranslateY}
+          fullscreenCanvasRef={fullscreenCanvasRef}
+          onSelectAwardId={setSelectedAwardId}
+          onChangeSpinSpeed={setSpinSpeed}
+          onChangeDrawCount={setDrawCount}
+          onStartSpin={handleStartSpin}
+          onToggleBrowserFullscreen={toggleBrowserFullscreen}
+          onExitStage={() => setIsFullscreen(false)}
+        />
       )}
 
-      {/* 中獎歡呼 Modal */}
-      {winnerModalData && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[25000] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-select-bg border-2 border-amber-500 rounded-3xl w-full max-w-lg p-8 flex flex-col items-center gap-6 text-center shadow-[0_0_80px_rgba(245,158,11,0.5)]">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.4)] ${styles.spinBtn}`}>
-              <svg viewBox="0 0 24 24" width={40} height={40} fill="currentColor">
-                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-              </svg>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className={`text-xs uppercase tracking-widest font-bold ${styles.accentText}`}>{t.congrats}</span>
-              <h2 className="text-3xl font-extrabold text-text-main">{winnerModalData.prize.title}</h2>
-              <span className="text-xs text-text-sub font-mono">
-                {new Date(winnerModalData.timestamp).toLocaleString(lang === 'en' ? 'en-US' : 'zh-TW')}
-              </span>
-            </div>
+      {/* 歷史紀錄與 CSV 匯出 Modal */}
+      {showHistoryModal && (
+        <HistoryModal
+          t={t}
+          lang={lang}
+          history={history}
+          onClose={() => setShowHistoryModal(false)}
+          onClearAll={() => {
+            setHistory([]);
+            saveState(undefined, []);
+            showToast(t.toastClearedHistory);
+          }}
+          onRevertRecord={(recId) => handleRevertRecords([recId])}
+          onExportCsv={exportHistoryCsv}
+          onCopyWinners={copyWinnersText}
+        />
+      )}
 
-            <button
-              type="button"
-              onClick={() => setWinnerModalData(null)}
-              className="w-full py-3 bg-amber-500 text-slate-950 font-extrabold text-base rounded-xl hover:bg-amber-400 transition-all cursor-pointer shadow-lg"
-            >
-              {t.continueSpin}
-            </button>
-          </div>
-        </div>
+      {/* 中獎歡呼與「不在場放棄重抽」Modal */}
+      {winnerModalData && (
+        <WinnerModal
+          t={t}
+          lang={lang}
+          winners={winnerModalData.winners}
+          awardName={winnerModalData.awardName}
+          timestamp={winnerModalData.timestamp}
+          onConfirm={() => setWinnerModalData(null)}
+          onAbandonRedraw={() => handleRevertRecords(winnerModalData.recordIds)}
+        />
       )}
 
       {/* 彩帶 Canvas */}

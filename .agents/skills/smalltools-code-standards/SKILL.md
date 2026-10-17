@@ -141,3 +141,6 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 * 在 Canvas 2D / SVG 等動態排版場景中，頁尾元素（如 Logo、作者署名、發布日期）：
   - 必須動態依據 Logo 尺寸與畫布高度計算安全底邊距：`Math.max(innerPad * 0.75, logoSize * 0.5 + 32)`。
   - **嚴禁使用靜態微縮邊距**（如 5px~10px），防範大尺寸 Logo 或頭像貼齊外框邊界造成視覺擁擠。
+* **轉盤扇區安全隨機落點與拉霸機 Payline 固定步進對齊**：
+  - 圓形轉盤計算目標旋轉角度時，應於命中扇區中心角基礎上加入 `±36%` 扇區寬度內之安全隨機偏移（`jitterOffset = (unit - 0.5) * 0.72 * angleSpan`），兼顧真實擦邊物理感與不壓線無爭議性。
+  - 拉霸機（Slot Machine）滾輪帶在一般視窗與全螢幕舞台必須維持同一套內部像素座標系（如視窗高 `270px`、卡片高 `66px` + 間距 `10px` = 步進 `76px`），以 `targetTranslateY = windowHalf - (firstCardCenter + winIdx * stride)` 精準停靠於紅線正中央，嚴禁讓全螢幕容器改用 `vh` 動態高度卻沿用固定像素位移常數。
