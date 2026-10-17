@@ -39,7 +39,7 @@
 ### 💼 職場與生活 (Workplace & Life)
 * **[薪資、勞保、健保、預扣稅計算機](https://tools.cjkuo.net/my-salary-calculator/)** (`/my-salary-calculator`) - 查表比對勞健保、勞退與預扣稅金額，呈現員工實領薪資與雇主總營運成本。
 * **[真實時薪計算器](https://tools.cjkuo.net/hourly-rate-calculator/)** (`/hourly-rate-calculator`) - 扣除通勤時間、無酬加班與額外支出，精準計算每小時生命真實淨收益並對照全台薪資 PR 排行。
-* **[離職時間與預告期計算機](https://tools.cjkuo.net/resignation-calculator/)** (`/resignation-calculator`) - 依台灣勞基法第 16 條與 38 條精準計算法定預告天數、離職生效日、最後在職日與特休排休/折現代金試算，並一鍵產生離職預告範本。
+* **[離職時間與預告期計算機](https://tools.cjkuo.net/resignation-calculator/)** (`/resignation-calculator`) - 依台灣勞基法第 16 條、第 38 條與勞退條例第 12 條精準計算法定預告天數、離職生效日、最後在職日、台灣國定假日（2025–2027）排休扣除、特休代金與勞退新制資遣費試算，支援互動式排休月曆、月底破月薪資與健保歸屬建議、`.ics` 行事曆匯出與多情境離職信範本。
 * **[孕期與產檢假計算機](https://tools.cjkuo.net/pregnancy-calculator/)** (`/pregnancy-calculator`) - 支援 LMP、預產期、超音波 CRL 與試管推算，精算 40 週 9 大產檢里程碑（含公費/自費標記）、5 階段孕期自我準備與待產包 Check List、胎兒成長尺寸，並整合台灣勞基法試算 8 天產檢假、8 週產假、育嬰留停 8 成薪與勞保生育給付。
 
 ### 💻 開發輔助 (Developer Tools)

@@ -6,7 +6,13 @@ import {
   getStatutoryAnnualLeave,
   formatDateStr,
   parseYmd,
+  isNonWorkingDay,
 } from '../../app/resignation-calculator/engine.ts';
+import {
+  generateResignationEmail,
+  buildResignationIcsContent,
+} from '../../app/resignation-calculator/icsExport.ts';
+import { TRANSLATIONS } from '../../app/resignation-calculator/translations.ts';
 
 const baseInput = {
   calcDirection: 'noticeToLast',
@@ -125,3 +131,171 @@ test('時區安全：YYYY-MM-DD 以本地零時解析，不因 UTC 退一天', (
   assert.equal(d.getDate(), 15);
   assert.equal(d.getHours(), 0);
 });
+
+test('台灣國定假日與補班日整合：2026-06-19 端午節跳過不扣特休，實際最後出勤日提前 1 天', () => {
+  // 2026-06-01 ~ 2026-06-21 期間內，2026-06-19 (五) 為端午節國定假日
+  const withHolidays = calculateResignation({
+    ...baseInput,
+    annualLeaveDays: 2,
+    leaveDaysToTake: 2,
+    useTaiwanHolidays: true,
+  });
+  const withoutHolidays = calculateResignation({
+    ...baseInput,
+    annualLeaveDays: 2,
+    leaveDaysToTake: 2,
+    useTaiwanHolidays: false,
+  });
+
+  assert.equal(withHolidays.holidaysInPeriod.length, 1);
+  assert.equal(withHolidays.holidaysInPeriod[0].date, '2026-06-19');
+  // 扣除端午節後，預告期可排休工作天減少 1 天
+  assert.equal(withHolidays.maxTakeableLeaveDays, withoutHolidays.maxTakeableLeaveDays - 1);
+  // 排休 2 天：不含國定假日時請 6/18、6/19，最後出勤為 6/17；含國定假日時 6/19 本就放假，請 6/17、6/18，最後出勤提前至 6/16！
+  assert.equal(formatDateStr(withoutHolidays.actualOfficeDate), '2026-06-17');
+  assert.equal(formatDateStr(withHolidays.actualOfficeDate), '2026-06-16');
+
+  // 補班日（2025-02-08 週六）應視為工作日
+  assert.equal(isNonWorkingDay(parseYmd('2025-02-08'), true), false);
+});
+
+test('非自願離職（資遣）：勞退新制第 12 條資遣費、上限 6 個月與預告工資試算', () => {
+  // 年資正好滿 2 年（2024-06-22 到職，2026-06-21 最後在職日 → 2026-06-22 生效）→ 基數 1.0 個月
+  const r2yr = calculateResignation({
+    ...baseInput,
+    onboardingDate: '2024-06-22',
+    noticeDate: '2026-06-01',
+    resignationType: 'involuntary',
+    annualLeaveDays: 5,
+    leaveDaysToTake: 0,
+    monthlySalary: 60000,
+    employerShortNoticeDays: 10,
+  });
+  assert.equal(r2yr.severanceMonths, 1);
+  assert.equal(r2yr.estimatedSeverancePay, 60000);
+  assert.equal(r2yr.estimatedNoticePay, 20000); // 10 天 × 2000
+  assert.equal(r2yr.estimatedLeavePayout, 10000); // 5 天 × 2000
+  assert.equal(r2yr.totalEstimatedPayout, 90000);
+
+  // 年資 20 年 → 資遣費基數上限夾緊為 6 個月
+  const r20yr = calculateResignation({
+    ...baseInput,
+    onboardingDate: '2004-01-01',
+    resignationType: 'involuntary',
+    monthlySalary: 50000,
+  });
+  assert.equal(r20yr.severanceMonths, 6);
+  assert.equal(r20yr.estimatedSeverancePay, 300000);
+});
+
+test('互動式排休月曆自訂點選與週末順延洞察', () => {
+  // 最後在職日落在週五 (2026-06-19)，應提示可順延至週日 (2026-06-21) 多領 2 天例假薪資
+  const rFri = calculateResignation({
+    ...baseInput,
+    calcDirection: 'lastToNotice',
+    targetLastWorkingDate: '2026-06-19',
+    annualLeaveDays: 5,
+    leaveDaysToTake: 2,
+    customLeaveDates: ['2026-06-10', '2026-06-11'],
+  });
+  assert.equal(rFri.actualTakeLeaveDays, 2);
+  assert.equal(rFri.payoutDaysTotal, 3);
+  assert.equal(rFri.monthEndInsight.canExtendToSunday, true);
+  assert.equal(rFri.monthEndInsight.sundayDateStr, '2026-06-21');
+  assert.equal(rFri.monthEndInsight.extraWeekendDays, 2);
+  assert.equal(rFri.monthEndInsight.extraWeekendSalary, 4000);
+});
+
+test('ICS 行事曆與多情境離職信產生器', () => {
+  const r = calculateResignation(baseInput);
+  const ics = buildResignationIcsContent({
+    lang: 'zh-TW',
+    calculatedNoticeDate: r.calculatedNoticeDate,
+    actualOfficeDate: r.actualOfficeDate,
+    calculatedLastWorkingDate: r.calculatedLastWorkingDate,
+    effectiveDate: r.effectiveDate,
+    requiredNoticeDays: r.requiredNoticeDays,
+    actualTakeLeaveDays: r.actualTakeLeaveDays,
+  });
+  assert.ok(ics.includes('BEGIN:VCALENDAR'));
+  assert.ok(ics.includes('DTSTART;VALUE=DATE:20260601'));
+  assert.ok(ics.includes('DTSTART;VALUE=DATE:20260622'));
+
+  const warmMail = generateResignationEmail({
+    lang: 'zh-TW',
+    variant: 'warm',
+    senderName: '王小明',
+    handoverPerson: '陳大華',
+    tenureYears: r.tenureYears,
+    tenureMonths: r.tenureMonths,
+    requiredNoticeDays: r.requiredNoticeDays,
+    calculatedNoticeDate: r.calculatedNoticeDate,
+    noticeStartDate: r.noticeStartDate,
+    calculatedLastWorkingDate: r.calculatedLastWorkingDate,
+    actualOfficeDate: r.actualOfficeDate,
+    effectiveDate: r.effectiveDate,
+    actualTakeLeaveDays: r.actualTakeLeaveDays,
+    payoutDaysTotal: r.payoutDaysTotal,
+    estimatedLeavePayout: r.estimatedLeavePayout,
+    estimatedSeverancePay: r.estimatedSeverancePay,
+    maxJobSeekingLeaveDays: r.maxJobSeekingLeaveDays,
+  });
+  assert.ok(warmMail.includes('王小明'));
+  assert.ok(warmMail.includes('陳大華'));
+});
+
+test('TRANSLATIONS 繁中與英文雙語鍵值 100% 對稱', () => {
+  const zhKeys = Object.keys(TRANSLATIONS['zh-TW']).sort();
+  const enKeys = Object.keys(TRANSLATIONS.en).sort();
+  assert.deepEqual(zhKeys, enKeys);
+  assert.equal(TRANSLATIONS['zh-TW'].faqItems.length, TRANSLATIONS.en.faqItems.length);
+});
+
+test('officeDayMode 為 lastWorkingDay 與 custom 時，月曆應正確標記特休且特休區間不反轉', () => {
+  // 選擇最後在職日當天出勤（2026-06-18 週四為最後在職日，排休 2 天應排在 06-16、06-17，保留 06-18 出勤）
+  const rLastDay = calculateResignation({
+    ...baseInput,
+    calcDirection: 'lastToNotice',
+    targetLastWorkingDate: '2026-06-18',
+    annualLeaveDays: 5,
+    leaveDaysToTake: 2,
+    officeDayMode: 'lastWorkingDay',
+    useTaiwanHolidays: true,
+  });
+
+  assert.equal(formatDateStr(rLastDay.calculatedLastWorkingDate), '2026-06-18');
+  assert.equal(formatDateStr(rLastDay.actualOfficeDate), '2026-06-18');
+  const leaveCells = rLastDay.calendarDays.filter((c) => c.status === 'annualLeave');
+  assert.equal(leaveCells.length, 2);
+  assert.deepEqual(
+    leaveCells.map((c) => c.dateStr),
+    ['2026-06-16', '2026-06-17']
+  );
+  assert.ok(rLastDay.leaveStartDate && rLastDay.leaveEndDate);
+  assert.equal(formatDateStr(rLastDay.leaveStartDate), '2026-06-16');
+  assert.equal(formatDateStr(rLastDay.leaveEndDate), '2026-06-17');
+
+  // 最後在職日（06-18）本身不可被標記為特休，且同時具備 isLastWorkingDate 與 isActualOfficeDate
+  const lastDayCell = rLastDay.calendarDays.find((c) => c.dateStr === '2026-06-18');
+  assert.ok(lastDayCell);
+  assert.equal(lastDayCell.status, 'work');
+  assert.equal(lastDayCell.isLastWorkingDate, true);
+  assert.equal(lastDayCell.isActualOfficeDate, true);
+
+  // 自訂最後出勤日若超過契約最後在職日（例如設定 2026-12-31），應自動夾緊為契約最後在職日（2026-06-21）
+  const rCustomTooLate = calculateResignation({
+    ...baseInput,
+    officeDayMode: 'custom',
+    customOfficeDate: '2026-12-31',
+  });
+  assert.equal(formatDateStr(rCustomTooLate.actualOfficeDate), '2026-06-21');
+
+  // 自訂最後出勤日若早於提出預告日（例如設定 2026-01-01），應自動夾緊為提出預告日（2026-06-01）
+  const rCustomTooEarly = calculateResignation({
+    ...baseInput,
+    officeDayMode: 'custom',
+    customOfficeDate: '2026-01-01',
+  });
+  assert.equal(formatDateStr(rCustomTooEarly.actualOfficeDate), '2026-06-01');
+});
+
