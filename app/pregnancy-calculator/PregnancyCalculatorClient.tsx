@@ -7,10 +7,10 @@ import {
   calculateMaternityBenefits,
   crlToGestationalAge,
   getClinicalStageStatus,
+  buildClinicalMilestones,
   type CalcMode,
   type ScanInputType,
   type IvfType,
-  addDays,
   formatDate,
 } from './engine';
 import ToolLayout from '../components/ToolLayout';
@@ -344,114 +344,11 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     [currentGestationalDays],
   );
 
-  // 產檢與里程碑時間軸清單
-  const milestones = useMemo(() => {
-    const lmpBase = addDays(estimatedDueDate, -280);
-
-    const baseMilestones = [
-      {
-        weekRange: '6 ~ 8 週',
-        weekRangeEn: 'Weeks 6 - 8',
-        titleZh: '第一次產檢：超音波確認胚胎著床與心跳',
-        titleEn: '1st Visit: Ultrasound confirms heartbeat & gestational sac',
-        descZh: '確認胎兒心跳與著床位置，領取【孕婦健康手冊（媽媽手冊）】。血液常規、梅毒、愛滋、德國麻疹抗體檢查。',
-        descEn: 'Confirms embryo heartbeat and intrauterine pregnancy. First blood & antibody panels.',
-        startDate: addDays(lmpBase, 6 * 7),
-        endDate: addDays(lmpBase, 8 * 7),
-      },
-      {
-        weekRange: '11 ~ 13 週',
-        weekRangeEn: 'Weeks 11 - 13',
-        titleZh: '第一孕期唐氏症篩檢 (頸部透明帶超音波)',
-        titleEn: '1st Trimester Nuchal Translucency & Down Syndrome Screen',
-        descZh: '測量胎兒頸部透明帶 (NT) 厚度搭配母血游離 β-hCG 與 PAPP-A，或選擇自費 NIPT 非侵入性胎兒染色體基因檢測。',
-        descEn: 'Nuchal translucency scan + maternal serum biochemistry or non-invasive prenatal testing (NIPT).',
-        startDate: addDays(lmpBase, 11 * 7),
-        endDate: addDays(lmpBase, 13 * 7),
-      },
-      {
-        weekRange: '16 ~ 20 週',
-        weekRangeEn: 'Weeks 16 - 20',
-        titleZh: '羊膜穿刺 / 羊水晶片 / 第二孕期常規產檢',
-        titleEn: 'Amniocentesis & 2nd Trimester Routine Visit',
-        descZh: '高齡產婦（滿 34 歲享國健署補助 5,000 元）或高風險孕婦建議進行羊膜穿刺與基因晶片檢查，確認染色體數目與微片段缺失。',
-        descEn: 'Amniocentesis and microarray for high-risk or advanced maternal age (34+).',
-        startDate: addDays(lmpBase, 16 * 7),
-        endDate: addDays(lmpBase, 20 * 7),
-      },
-      {
-        weekRange: '20 ~ 24 週',
-        weekRangeEn: 'Weeks 20 - 24',
-        titleZh: '【黃金期】健保與自費高層次超音波 (Level II Scan)',
-        titleEn: 'Level II Detailed Anatomy Scan (Gold Standard)',
-        descZh: '全面系統性檢查胎兒腦部、心臟四腔室、面部脊椎、四肢五官與內部重要臟器結構是否發育完整。',
-        descEn: 'Detailed anatomical scan evaluating heart chambers, brain, spine, kidneys, and limbs.',
-        startDate: addDays(lmpBase, 20 * 7),
-        endDate: addDays(lmpBase, 24 * 7),
-      },
-      {
-        weekRange: '24 ~ 28 週',
-        weekRangeEn: 'Weeks 24 - 28',
-        titleZh: '妊娠糖尿病篩檢 (75g 喝糖水耐糖試驗) & 貧血複查',
-        titleEn: 'Gestational Diabetes Glucose Tolerance Test (OGTT)',
-        descZh: '空腹 8 小時後喝 75g 葡萄糖水，檢測空腹、1小時、2小時血糖值，預防妊娠糖尿病併發症。',
-        descEn: '75g oral glucose tolerance test (OGTT) and complete blood count for gestational anemia.',
-        startDate: addDays(lmpBase, 24 * 7),
-        endDate: addDays(lmpBase, 28 * 7),
-      },
-      {
-        weekRange: '28 ~ 32 週',
-        weekRangeEn: 'Weeks 28 - 32',
-        titleZh: '進入第三孕期：密集例行產檢 & 評估胎位',
-        titleEn: '3rd Trimester Visits & Fetal Position Assessment',
-        descZh: '產檢頻率改為每兩週一次。監測母體血壓、尿蛋白（預防子癇前症）、胎心音及胎兒體重成長曲線。',
-        descEn: 'Visits increase to bi-weekly. Monitoring blood pressure, urine protein, and fetal growth.',
-        startDate: addDays(lmpBase, 28 * 7),
-        endDate: addDays(lmpBase, 32 * 7),
-      },
-      {
-        weekRange: '35 ~ 37 週',
-        weekRangeEn: 'Weeks 35 - 37',
-        titleZh: '乙型鏈球菌篩檢 (GBS) & 待產包確認',
-        titleEn: 'Group B Streptococcus (GBS) Screening',
-        descZh: '陰道與肛門抹片篩檢乙型鏈球菌，若為陽性於待產時給予預防性抗生素注射，保護新生兒產道感染。',
-        descEn: 'Vaginal and rectal GBS swab culture to prevent neonatal infection during labor.',
-        startDate: addDays(lmpBase, 35 * 7),
-        endDate: addDays(lmpBase, 37 * 7),
-      },
-      {
-        weekRange: '37 週 ~ 預產期',
-        weekRangeEn: 'Week 37 - Due Date',
-        titleZh: '正式足月 (Full Term)！隨時準備迎接新生命',
-        titleEn: 'Full Term! Ready for Delivery Anytime',
-        descZh: '每週例行產檢與胎兒監視器 (NST) 監測宮縮與胎心率。注意產兆：落紅、規則陣痛、破水。',
-        descEn: 'Weekly checkups. Monitor labor signs: regular contractions, bloody show, water breaking.',
-        startDate: addDays(lmpBase, 37 * 7),
-        endDate: estimatedDueDate,
-      },
-    ];
-
-    const effectiveActive = stageStatus.activeMilestoneIndex;
-    const effectiveNext = stageStatus.nextMilestoneIndex;
-
-    return baseMilestones.map((item, idx) => {
-      const isCurrent = effectiveActive === idx;
-      const isPast =
-        effectiveActive !== null
-          ? idx < effectiveActive
-          : effectiveNext !== null
-          ? idx < effectiveNext
-          : true;
-      const isNextUpcoming = !isCurrent && effectiveNext === idx;
-
-      return {
-        ...item,
-        isCurrent,
-        isPast,
-        isNextUpcoming,
-      };
-    });
-  }, [estimatedDueDate, stageStatus]);
+  // 產檢與里程碑時間軸清單（9 大階段結構化引擎）
+  const milestones = useMemo(
+    () => buildClinicalMilestones(estimatedDueDate, stageStatus),
+    [estimatedDueDate, stageStatus],
+  );
 
   // 下一個里程碑標題與倒數文案
   const nextMilestoneTitle = useMemo(() => {
@@ -480,14 +377,10 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const gapInfo = useMemo(() => {
     if (!stageStatus.gapKey) return null;
     switch (stageStatus.gapKey) {
-      case 'pre_6':
-        return { title: t.gapPre6Title, desc: t.gapPre6Desc };
-      case 'gap_9_10':
-        return { title: t.gap9To10Title, desc: t.gap9To10Desc };
-      case 'gap_14_15':
-        return { title: t.gap14To15Title, desc: t.gap14To15Desc };
-      case 'gap_33_34':
-        return { title: t.gap33To34Title, desc: t.gap33To34Desc };
+      case 'pre_5':
+        return { title: t.gapPre5Title, desc: t.gapPre5Desc };
+      case 'gap_15':
+        return { title: t.gap15Title, desc: t.gap15Desc };
       case 'post_40':
         return { title: t.gapPost40Title, desc: t.gapPost40Desc };
       default:
@@ -1071,6 +964,82 @@ Date: ${formatDate(new Date())}`;
           </div>
         </div>
 
+        {/* 一鍵生成請假範本 (支援摺疊) */}
+        <div className={styles.glassCard}>
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none"
+            onClick={() => setIsTemplateExpanded((prev) => !prev)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsTemplateExpanded((prev) => !prev);
+              }
+            }}
+          >
+            <div className="flex flex-col">
+              <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>
+                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                </svg>
+                {t.templateTitle}
+              </h2>
+              {!isTemplateExpanded && (
+                <span className="text-xs text-text-sub mt-1">
+                  {t.templateToggleDesc}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-text-sub">
+                {isTemplateExpanded ? t.btnCollapse : t.btnExpand}
+              </span>
+              <div
+                className={`w-7 h-7 rounded-lg bg-surface-glass border border-border-glass flex items-center justify-center text-text-sub transition-transform duration-200 ${
+                  isTemplateExpanded ? 'rotate-180' : ''
+                }`}
+              >
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {isTemplateExpanded && (
+            <div className="mt-4 pt-4 border-t border-border-glass flex flex-col gap-3">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyTemplate();
+                  }}
+                  className={styles.accentBtn}
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                  </svg>
+                  {t.templateCopyBtn}
+                </button>
+              </div>
+
+              {copiedToast && (
+                <div className={`mb-2 ${styles.copiedToastBanner}`}>
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                  {t.copiedSuccess}
+                </div>
+              )}
+
+              <div className={styles.templateBox}>{leaveApplicationTemplate}</div>
+            </div>
+          )}
+        </div>
+
         {/* 40 週產檢里程碑時間軸 */}
         <div className={styles.glassCard}>
           <div className="flex flex-col gap-1 mb-4">
@@ -1159,33 +1128,51 @@ Date: ${formatDate(new Date())}`;
               <div key={idx} className={styles.timelineItem}>
                 <div
                   className={`${styles.timelineDot} ${
-                    m.isCurrent ? styles.timelineDotActive : m.isPast ? styles.timelineDotCompleted : ''
+                    m.isCurrent
+                      ? styles.timelineDotActive
+                      : m.isPast
+                      ? styles.timelineDotCompleted
+                      : m.isNextUpcoming
+                      ? styles.timelineDotUpcoming
+                      : ''
                   }`}
                 >
                   {m.isPast && (
-                    <svg viewBox="0 0 24 24" width={12} height={12} fill="white">
+                    <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor" className={styles.dotCheckIcon}>
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                     </svg>
                   )}
                 </div>
+
                 <div
                   className={`${styles.timelineContent} ${
-                    m.isCurrent ? styles.timelineContentActive : ''
+                    m.isCurrent
+                      ? styles.timelineContentActive
+                      : m.isPast
+                      ? styles.timelineContentPast
+                      : m.isNextUpcoming
+                      ? styles.timelineContentUpcoming
+                      : ''
                   }`}
                 >
+                  {/* 第一層 (Tier 1)：週數膠囊 + 預估日期區間 + 狀態徽章 */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-text-main">
-                        {lang === 'zh-TW' ? m.titleZh : m.titleEn}
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <span className={`${styles.weekPill} ${m.isCurrent ? styles.weekPillActive : ''}`}>
+                        <svg viewBox="0 0 24 24" width={13} height={13} fill="currentColor" className="shrink-0">
+                          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                        </svg>
+                        {lang === 'zh-TW' ? m.weekRange : m.weekRangeEn}
                       </span>
-                      <span className="text-xs font-medium text-text-sub">
-                        ({lang === 'zh-TW' ? m.weekRange : m.weekRangeEn})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-sub font-mono">
+                      <span className="text-xs text-text-sub font-mono inline-flex items-center gap-1">
+                        <svg viewBox="0 0 24 24" width={13} height={13} fill="currentColor" className="opacity-70 shrink-0">
+                          <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z" />
+                        </svg>
                         {formatDate(m.startDate)} ~ {formatDate(m.endDate)}
                       </span>
+                    </div>
+
+                    <div className="flex items-center shrink-0">
                       {m.isPast ? (
                         <span className={`${styles.badge} ${styles.badgeSuccess}`}>{t.tagPast}</span>
                       ) : m.isCurrent ? (
@@ -1193,187 +1180,196 @@ Date: ${formatDate(new Date())}`;
                       ) : m.isNextUpcoming ? (
                         <span className={`${styles.badge} ${styles.badgeUpcoming}`}>{t.tagNextUpcoming}</span>
                       ) : (
-                        <span className="text-xs text-text-sub px-2 py-0.5 rounded-md bg-surface-glass border border-border-glass">
+                        <span className="text-xs text-text-sub px-2.5 py-0.5 rounded-full bg-surface-glass border border-border-glass">
                           {t.tagFuture}
                         </span>
                       )}
                     </div>
                   </div>
-                  <p className="text-xs text-text-sub leading-relaxed">
-                    {lang === 'zh-TW' ? m.descZh : m.descEn}
-                  </p>
+
+                  {/* 第二層 (Tier 2)：階段主標題 + 簡要衛教說明 */}
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <h3 className="text-base font-bold text-text-main leading-snug">
+                      {lang === 'zh-TW' ? m.titleZh : m.titleEn}
+                    </h3>
+                    <p className="text-xs text-text-sub leading-relaxed">
+                      {lang === 'zh-TW' ? m.descZh : m.descEn}
+                    </p>
+                  </div>
+
+                  {/* 第三層 (Tier 3)：雙欄結構化檢查細項清單 + 公費/自費小標籤 */}
+                  {m.items && m.items.length > 0 && (
+                    <div className={styles.checkpointGrid}>
+                      {m.items.map((item, itemIdx) => (
+                        <div key={itemIdx} className={styles.checkpointItem}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <svg
+                              viewBox="0 0 24 24"
+                              width={14}
+                              height={14}
+                              fill="currentColor"
+                              className={`shrink-0 ${m.isPast ? styles.pastCheckIcon : styles.accentText}`}
+                            >
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                            </svg>
+                            <span className="text-xs font-medium text-text-main leading-snug min-w-0 break-words">
+                              {lang === 'zh-TW' ? item.labelZh : item.labelEn}
+                            </span>
+                          </div>
+                          {item.tag === 'public' && (
+                            <span className={styles.tagPublicPill}>{t.tagPublic}</span>
+                          )}
+                          {item.tag === 'self' && (
+                            <span className={styles.tagSelfPill}>{t.tagSelfPaid}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* 一鍵生成請假範本 (支援摺疊) */}
+        {/* 孕期與待產包 Checklist（5~36 週每 8 週一階段 + 最後 4 週足月衝刺） */}
         <div className={styles.glassCard}>
-          <div
-            className="flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none"
-            onClick={() => setIsTemplateExpanded((prev) => !prev)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setIsTemplateExpanded((prev) => !prev);
-              }
-            }}
-          >
-            <div className="flex flex-col">
-              <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>
-                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
-                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                </svg>
-                {t.templateTitle}
-              </h2>
-              {!isTemplateExpanded && (
-                <span className="text-xs text-text-sub mt-1">
-                  {t.templateToggleDesc}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-text-sub">
-                {isTemplateExpanded ? t.btnCollapse : t.btnExpand}
-              </span>
-              <div
-                className={`w-7 h-7 rounded-lg bg-surface-glass border border-border-glass flex items-center justify-center text-text-sub transition-transform duration-200 ${
-                  isTemplateExpanded ? 'rotate-180' : ''
-                }`}
-              >
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-                </svg>
-              </div>
-            </div>
+          <div className="flex flex-col gap-1 mb-4">
+            <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+              {t.checklistTitle}
+            </h2>
+            <p className="text-xs text-text-sub">{t.checklistSubtitle}</p>
           </div>
 
-          {isTemplateExpanded && (
-            <div className="mt-4 pt-4 border-t border-border-glass flex flex-col gap-3">
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopyTemplate();
-                  }}
-                  className={styles.accentBtn}
-                >
-                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                  </svg>
-                  {t.templateCopyBtn}
-                </button>
-              </div>
-
-              {copiedToast && (
-                <div className={`mb-2 ${styles.copiedToastBanner}`}>
-                  <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                  </svg>
-                  {t.copiedSuccess}
-                </div>
-              )}
-
-              <div className={styles.templateBox}>{leaveApplicationTemplate}</div>
-            </div>
-          )}
-        </div>
-
-        {/* 孕期與待產包 Checklist */}
-        <div className={styles.glassCard}>
-          <h2 className={styles.cardTitle}>
-            <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" className={styles.accentText}>
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-            </svg>
-            {t.checklistTitle}
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 第一孕期 */}
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-xs font-bold text-text-main pb-1 border-b border-border-glass">{t.checkStage1}</h3>
-              {[
-                { id: 'folicAcid', labelZh: '每日補充葉酸 400~600 mcg (劑量請依醫囑為主)', labelEn: 'Daily folic acid 400-600 mcg (Consult doctor for dosage)' },
-                { id: 'dietHabits', labelZh: '戒菸、戒酒、避免生食生乳', labelEn: 'Avoid alcohol, tobacco & raw foods' },
-                { id: 'maternityBook', labelZh: '領取媽媽手冊與產檢假規劃', labelEn: 'Obtain handbook & plan checkup leaves' },
-                { id: 'confinementCenter', labelZh: '熱門月子中心 / 產後護理之家參觀預約', labelEn: 'Book postpartum confinement center' },
-              ].map((item) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              {
+                key: 'stage1',
+                title: t.checkStage1,
+                weekBadgeZh: '5 ~ 12 週',
+                weekBadgeEn: 'Weeks 5 - 12',
+                isCurrentStage: currentWeeks <= 12,
+                spanFullOnMd: false,
+                items: [
+                  { id: 'folicAcid', labelZh: '備妥葉酸與孕初期營養補充品（劑量請依醫囑為主）', labelEn: 'Prepare folic acid & early prenatal vitamins (Consult doctor for dosage)' },
+                  { id: 'dietHabits', labelZh: '調整日常飲食與作息（戒菸酒、減少咖啡因、避免生食與未全熟肉蛋）', labelEn: 'Adjust daily diet & routine (avoid alcohol, tobacco & raw/undercooked foods)' },
+                  { id: 'confinementCenter', labelZh: '參觀與下訂月子中心（產後護理之家）或預約到府月嫂、月子餐', labelEn: 'Tour & book postpartum confinement center, postpartum nanny, or meal delivery' },
+                  { id: 'maternityBook', labelZh: '準備止吐舒緩小點心（蘇打餅、氣泡水）與防滑舒適平底鞋', labelEn: 'Prepare anti-nausea snacks (crackers, sparkling water) & non-slip flat shoes' },
+                  { id: 'skincareSwitch', labelZh: '檢視日常保養品與用藥成分（停用含 A 酸、高濃度水楊酸保養品與不明成藥）', labelEn: 'Review daily skincare & medications (avoid retinoids/vitamin A derivatives)' },
+                ],
+              },
+              {
+                key: 'stage2',
+                title: t.checkStage2,
+                weekBadgeZh: '13 ~ 20 週',
+                weekBadgeEn: 'Weeks 13 - 20',
+                isCurrentStage: currentWeeks >= 13 && currentWeeks <= 20,
+                spanFullOnMd: false,
+                items: [
+                  { id: 'nutrition', labelZh: '備妥孕中期營養品：鈣質、鐵質、維生素 D 與藻油/魚油 DHA（依醫囑為主）', labelEn: 'Prepare 2nd-trimester supplements: Calcium, Iron, Vit D & DHA (per doctor)' },
+                  { id: 'stretchMark', labelZh: '採購孕婦妊娠霜與撫紋油，養成每日早晚塗抹肚皮與大腿保養習慣', labelEn: 'Buy belly stretch-mark cream & oil for daily morning/night care' },
+                  { id: 'chromosomalScreen', labelZh: '添購無鋼圈孕哺內衣、托腹帶、孕婦褲與側睡月亮枕（減緩腰背壓力）', labelEn: 'Buy wireless maternity bras, belly support band, pants & pregnancy pillow' },
+                  { id: 'dentalScaling', labelZh: '預約孕婦健保洗牙與口腔檢查（健保補助每 90 天一次，孕中期躺診療椅最舒適）', labelEn: 'Schedule prenatal dental scaling & checkup (best done comfortably in 2nd trimester)' },
+                  { id: 'anatomyScan', labelZh: '討論產後育兒分工，提前參觀住家周邊托嬰中心（公托/準公共）或諮詢保母', labelEn: 'Discuss childcare division & tour local daycare centers or inquire nannies early' },
+                ],
+              },
+              {
+                key: 'stage3',
+                title: t.checkStage3,
+                weekBadgeZh: '21 ~ 28 週',
+                weekBadgeEn: 'Weeks 21 - 28',
+                isCurrentStage: currentWeeks >= 21 && currentWeeks <= 28,
+                spanFullOnMd: false,
+                items: [
+                  { id: 'babyStroller', labelZh: '實地試推與挑選嬰兒推車、揹帶（趁體力佳逛門市/婦幼展，實測收折、重量與車廂空間並定案型號）', labelEn: 'Test & shortlist baby strollers and carriers in-store (test folding, weight & trunk space)' },
+                  { id: 'babyCarSeat', labelZh: '選定新生兒汽車安全座椅 / 提籃，並一併評估「汽車隔熱紙 / 後座遮陽簾與後座寶寶觀察鏡」（列入清單最後買）', labelEn: 'Shortlist infant car seat / carrier, plus evaluate car window tint / sunshade & rear-facing baby mirror' },
+                  { id: 'babyCrib', labelZh: '丈量房間尺寸並挑選定案嬰兒床、透氣床墊與尿布台（預先規劃嬰兒睡眠安全動線）', labelEn: 'Measure room space & shortlist baby crib, breathable mattress & changing table' },
+                  { id: 'daycareSurvey', labelZh: '比較並選定奶瓶消毒烘乾鍋、調乳器 / 溫奶器與嬰兒澡盆（先定案清單，避免太早買佔空間與起算保固）', labelEn: 'Compare & shortlist bottle sterilizer, warmer & bathtub (finalize list first to save space & warranty)' },
+                  { id: 'babyNaming', labelZh: '預先構思寶寶名字 / 小名，並可預約「孕婦寫真留念」（建議 28~32 週肚型最圓潤且未水腫時拍攝）', labelEn: 'Brainstorm baby names / nicknames early & book maternity photoshoot (best shot at weeks 28-32)' },
+                ],
+              },
+              {
+                key: 'stage4',
+                title: t.checkStage4,
+                weekBadgeZh: '29 ~ 36 週',
+                weekBadgeEn: 'Weeks 29 - 36',
+                isCurrentStage: currentWeeks >= 29 && currentWeeks <= 36,
+                spanFullOnMd: false,
+                items: [
+                  { id: 'deliveryKit', labelZh: '打包待產包【媽媽衛生】：產褥墊、看護墊、免洗內褲、會陰沖洗瓶、衛生紙與拖鞋', labelEn: 'Pack Hospital Bag [Mom Hygiene]: maternity pads, underpads, disposable underwear, peri bottle & slippers' },
+                  { id: 'breastfeedingKit', labelZh: '打包待產包【哺育日用】：哺乳內衣、溢乳墊、羊脂膏、保溫杯、長充電線', labelEn: 'Pack Hospital Bag [Nursing & Daily]: nursing bras, pads, lanolin cream, thermos & long charger' },
+                  { id: 'gearSetup', labelZh: '採買新生兒耗材（奶瓶奶嘴、NB 尿布、洗沐乳、屁屁膏）並預先清洗紗布衣與包巾', labelEn: 'Buy newborn consumables (bottles, NB diapers, wash, diaper cream) & pre-wash gauze clothes/swaddles' },
+                  { id: 'newbornInsurance', labelZh: '拍攝孕婦寫真留念、申請彌月蛋糕 / 油飯試吃，並預先規劃「新生兒醫療保險」方案', labelEn: 'Take maternity photos, sample full-month gift cakes/meals & pre-plan newborn health insurance' },
+                  { id: 'leaveHandover', labelZh: '整理職場產假工作交接清單，並確認生產醫院待產流程與月子中心入住通知方式', labelEn: 'Prepare work maternity leave handover list & confirm hospital/confinement center check-in process' },
+                ],
+              },
+              {
+                key: 'stage5',
+                title: t.checkStage5,
+                weekBadgeZh: '37 ~ 40 週',
+                weekBadgeEn: 'Weeks 37 - 40',
+                isCurrentStage: currentWeeks >= 37,
+                spanFullOnMd: true,
+                items: [
+                  { id: 'babyClothes', labelZh: '最後一個月正式採購 / 安排到貨前期選定的「嬰兒推車、汽座提籃、遮陽簾與後視觀察鏡、嬰兒床、消毒鍋與溫奶器」', labelEn: 'Purchase / receive pre-selected stroller, car seat, sunshade/mirror, crib & sterilizer in the final month' },
+                  { id: 'carSeatInstall', labelZh: '完成嬰兒床組裝，並施工/安裝汽車隔熱紙或後座遮陽簾、將「安全座椅與後座寶寶觀察鏡」穩固鎖定於車內待命', labelEn: 'Assemble baby crib & install car window tint/sunshade, infant car seat, and rear baby mirror on standby' },
+                  { id: 'hospitalDocuments', labelZh: '備妥【入院隨身證件袋】（夫妻身分證、健保卡、媽媽手冊）與待產包，設定產房電話與叫車路線', labelEn: 'Prepare [Hospital Document Pouch] (both IDs, health cards, handbook) & hospital bag; save transport route' },
+                  { id: 'laborSignsCheck', labelZh: '隨時留意足月產兆（規則陣痛、破水、落紅），並確認住院期間家中大寶或寵物照顧後援', labelEn: 'Watch closely for labor signs (contractions, water breaking, bloody show) & confirm home/pet care backup' },
+                  { id: 'postpartumBenefits', labelZh: '備妥戶口名簿、印章與存摺影本（供產後報戶口、新生兒投保及申請生育給付/育嬰津貼）', labelEn: 'Prepare household registry, seals & bankbook copy for birth registration, baby insurance & benefit claims' },
+                ],
+              },
+            ].map((group) => {
+              const doneCount = group.items.filter((i) => !!checkedItems[i.id]).length;
+              return (
                 <div
-                  key={item.id}
-                  onClick={() => toggleCheck(item.id)}
-                  className={`${styles.checklistItem} ${checkedItems[item.id] ? styles.checklistItemDone : ''}`}
+                  key={group.key}
+                  className={`${styles.checklistGroupCard} ${
+                    group.isCurrentStage ? styles.checklistGroupCardActive : ''
+                  } ${group.spanFullOnMd ? 'md:col-span-2' : ''}`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={!!checkedItems[item.id]}
-                    onChange={() => {}}
-                    className="mt-0.5 accent-[#ff4081]"
-                  />
-                  <span className={`${styles.checklistText} text-xs leading-relaxed text-text-main`}>
-                    {lang === 'zh-TW' ? item.labelZh : item.labelEn}
-                  </span>
-                </div>
-              ))}
-            </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-border-glass">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`${styles.weekPill} ${group.isCurrentStage ? styles.weekPillActive : ''}`}>
+                        {lang === 'zh-TW' ? group.weekBadgeZh : group.weekBadgeEn}
+                      </span>
+                      {group.isCurrentStage && (
+                        <span className={styles.badge}>{t.tagCurrent}</span>
+                      )}
+                    </div>
+                    <span className="text-xs font-mono text-text-sub">
+                      {doneCount} / {group.items.length}
+                    </span>
+                  </div>
 
-            {/* 第二孕期 */}
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-xs font-bold text-text-main pb-1 border-b border-border-glass">{t.checkStage2}</h3>
-              {[
-                { id: 'nutrition', labelZh: '補充鈣質、維生素 D 與藻油/魚油 DHA (請依醫囑為主)', labelEn: 'Supplement calcium, Vit D & DHA (Please follow medical advice)' },
-                { id: 'anatomyScan', labelZh: '預約高層次超音波 (20~24週)', labelEn: 'Book detailed anatomy scan (Weeks 20-24)' },
-                { id: 'stretchMark', labelZh: '早晚塗抹孕婦妊娠霜與撫紋油', labelEn: 'Apply belly moisturizer/oil' },
-                { id: 'daycareSurvey', labelZh: '托嬰中心登記或保母初步諮詢', labelEn: 'Inquire daycare or nanny services' },
-              ].map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => toggleCheck(item.id)}
-                  className={`${styles.checklistItem} ${checkedItems[item.id] ? styles.checklistItemDone : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!checkedItems[item.id]}
-                    onChange={() => {}}
-                    className="mt-0.5 accent-[#ff4081]"
-                  />
-                  <span className={`${styles.checklistText} text-xs leading-relaxed text-text-main`}>
-                    {lang === 'zh-TW' ? item.labelZh : item.labelEn}
-                  </span>
-                </div>
-              ))}
-            </div>
+                  <h3 className="text-sm font-bold text-text-main leading-snug">
+                    {group.title}
+                  </h3>
 
-            {/* 第三孕期 */}
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-xs font-bold text-text-main pb-1 border-b border-border-glass">{t.checkStage3}</h3>
-              {[
-                { id: 'hospitalDocuments', labelZh: '夫妻身分證、健保卡、媽媽手冊', labelEn: 'IDs, health cards & maternity book' },
-                { id: 'deliveryKit', labelZh: '產褥墊、看護墊、免洗內褲、沖洗瓶', labelEn: 'Maternity pads, disposable underwear' },
-                { id: 'breastfeedingKit', labelZh: '溢乳墊、集乳器、羊脂膏、哺乳內衣', labelEn: 'Nursing pads, breast pump & bras' },
-                { id: 'babyClothes', labelZh: '新生兒出院包巾、紗布衣、汽車安全座椅', labelEn: 'Baby going-home outfit & car seat' },
-              ].map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => toggleCheck(item.id)}
-                  className={`${styles.checklistItem} ${checkedItems[item.id] ? styles.checklistItemDone : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!checkedItems[item.id]}
-                    onChange={() => {}}
-                    className="mt-0.5 accent-[#ff4081]"
-                  />
-                  <span className={`${styles.checklistText} text-xs leading-relaxed text-text-main`}>
-                    {lang === 'zh-TW' ? item.labelZh : item.labelEn}
-                  </span>
+                  <div className={group.spanFullOnMd ? 'grid grid-cols-1 md:grid-cols-2 gap-2.5' : 'flex flex-col gap-2.5'}>
+                    {group.items.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => toggleCheck(item.id)}
+                        className={`${styles.checklistItem} ${checkedItems[item.id] ? styles.checklistItemDone : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!checkedItems[item.id]}
+                          onChange={() => {}}
+                          className="mt-0.5 accent-[#ff4081] shrink-0"
+                        />
+                        <span className={`${styles.checklistText} text-xs leading-relaxed text-text-main`}>
+                          {lang === 'zh-TW' ? item.labelZh : item.labelEn}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
 
