@@ -76,8 +76,8 @@
 }
 
 .gaugeNeedle {
-  transform-origin: 100px 90px;
-  transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform-origin: 120px 105px;
+  transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .rangeSlider {
@@ -124,7 +124,7 @@
 }
 
 :global([data-theme='light']) .accentText {
-  color: #dc2626; /* Red 600 - 高對比深紅 */
+  color: #b91c1c; /* Red 700 - 高對比深紅 */
 }
 
 .aprText {
@@ -132,7 +132,7 @@
 }
 
 :global([data-theme='light']) .aprText {
-  color: #16a34a; /* Green 600 */
+  color: #15803d; /* Green 700 */
 }
 
 .activeScheme {
@@ -143,8 +143,120 @@
 }
 
 :global([data-theme='light']) .activeScheme {
-  background-color: rgba(220, 38, 38, 0.12);
-  border-color: rgba(220, 38, 38, 0.4);
-  color: #dc2626;
+  background-color: rgba(185, 28, 28, 0.12);
+  border-color: rgba(185, 28, 28, 0.4);
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* 多空部位切換按鈕（台股慣例：多頭紅、空頭綠，亮暗雙模 WCAG AA） */
+.longBtnActive {
+  background-color: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #f87171;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .longBtnActive {
+  background-color: rgba(185, 28, 28, 0.12);
+  border-color: rgba(185, 28, 28, 0.4);
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.shortBtnActive {
+  background-color: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34d399;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .shortBtnActive {
+  background-color: rgba(4, 120, 87, 0.12);
+  border-color: rgba(4, 120, 87, 0.4);
+  color: #047857;
+  font-weight: 600;
+}
+
+/* 狀態徽章（滿足 WCAG AA 4.5:1 對比規範） */
+.statusSafeBadge {
+  background-color: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+:global([data-theme='light']) .statusSafeBadge {
+  background-color: rgba(4, 120, 87, 0.1);
+  border-color: rgba(4, 120, 87, 0.35);
+  color: #047857; /* Emerald 700，對比度 > 4.8:1 */
+}
+
+.statusWarningBadge {
+  background-color: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+:global([data-theme='light']) .statusWarningBadge {
+  background-color: rgba(180, 83, 9, 0.1);
+  border-color: rgba(180, 83, 9, 0.35);
+  color: #b45309; /* Amber 700，對比度 > 4.6:1 */
+}
+
+.statusDangerBadge {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+:global([data-theme='light']) .statusDangerBadge {
+  background-color: rgba(185, 28, 28, 0.1);
+  border-color: rgba(185, 28, 28, 0.35);
+  color: #b91c1c; /* Red 700，對比度 > 5.0:1 */
+}
+
+/* 快捷按鈕 Chip */
+.chipBtn {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.75rem;
+  background: var(--surface-glass, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  color: var(--text-sub, #94a3b8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.chipBtn:hover {
+  color: var(--text-main, #ffffff);
+  border-color: rgba(255, 59, 48, 0.5);
+  background: rgba(255, 59, 48, 0.08);
+}
+
+:global([data-theme='light']) .chipBtn {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(203, 213, 225, 0.8);
+  color: #475569;
+}
+
+:global([data-theme='light']) .chipBtn:hover {
+  color: #0f172a;
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.chipBtnActive {
+  background-color: rgba(255, 59, 48, 0.2) !important;
+  border-color: #ff3b30 !important;
+  color: #ff3b30 !important;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .chipBtnActive {
+  background-color: rgba(185, 28, 28, 0.15) !important;
+  border-color: #dc2626 !important;
+  color: #b91c1c !important;
   font-weight: 600;
 }

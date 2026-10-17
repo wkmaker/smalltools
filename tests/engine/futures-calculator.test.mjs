@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateFutures } from '../../app/futures-calculator/engine.ts';
+import { calculateFutures, calculateLimitMoveDays } from '../../app/futures-calculator/engine.ts';
 
 const base = {
   indexPrice: 22000,
@@ -20,48 +20,83 @@ test('契約名目價值與實質槓桿（FAQ 範例：22000 點大台）', () =
   assert.equal(r.totalMaintMargin, 186000);
   // 4,400,000 / 242,000 ≈ 18.18x
   assert.ok(Math.abs(r.actualLeverage - 4_400_000 / 242_000) < 1e-9);
+  assert.ok(Math.abs(r.maintMarginRatioPct - (186000 / 242000) * 100) < 1e-9);
 });
 
-test('多單追繳逆風點數 = (權益 − 維持保證金) ÷ 每點價值', () => {
+test('多單追繳逆風點數 = (權益 − 維持保證金) ÷ 每點價值，並含容許逆風幅度 %', () => {
   const r = calculateFutures({ ...base, capital: 300000 });
   // (300000 − 186000) / 200 = 570
   assert.equal(r.marginCallPoints, 570);
   assert.equal(r.marginCallPrice, 22000 - 570);
+  assert.ok(Math.abs(r.marginCallDropPct - (570 / 22000) * 100) < 1e-9);
+  assert.equal(r.marginCallLimitDays, calculateLimitMoveDays((570 / 22000) * 100, 'long'));
   // 斷頭：(300000 − 242000×0.25) / 200 = (300000 − 60500)/200 = 1197.5
   assert.equal(r.liquidationPoints, 1197.5);
   assert.equal(r.liquidationPrice, 22000 - 1197.5);
+  assert.ok(Math.abs(r.liquidationDropPct - (1197.5 / 22000) * 100) < 1e-9);
 });
 
-test('空單方向：臨界價位於指數上方', () => {
+test('空單方向：臨界價位於指數上方，漲停板天數以 1.1 複利推算', () => {
   const r = calculateFutures({ ...base, capital: 300000, position: 'short' });
   assert.equal(r.marginCallPrice, 22000 + 570);
   assert.equal(r.liquidationPrice, 22000 + 1197.5);
+  assert.equal(r.marginCallLimitDays, calculateLimitMoveDays((570 / 22000) * 100, 'short'));
 });
 
-test('逆風壓力測試：多單指數下修、權益扣除逐點虧損', () => {
+test('calculateLimitMoveDays 單日 10% 漲跌停板複利換算', () => {
+  assert.equal(calculateLimitMoveDays(0, 'long'), 0);
+  assert.equal(calculateLimitMoveDays(-5, 'long'), 0);
+  assert.equal(calculateLimitMoveDays(10, 'long'), 1.0);
+  assert.equal(calculateLimitMoveDays(19, 'long'), 2.0); // 1 - 0.9^2 = 0.19
+  assert.equal(calculateLimitMoveDays(10, 'short'), 1.0);
+  assert.equal(calculateLimitMoveDays(21, 'short'), 2.0); // 1.1^2 - 1 = 0.21
+});
+
+test('逆風壓力測試：多單指數下修、權益扣除逐點虧損與風控距離', () => {
   const r = calculateFutures({ ...base, quantity: 2, capital: 600000, stressDropPercent: 5 });
   // dropPoints = 22000 × 5% = 1100
   assert.equal(r.dropPoints, 1100);
   assert.equal(r.simIndex, 22000 - 1100);
   // simLoss = 1100 × 2 × 200 = 440,000
   assert.equal(r.simLoss, 440000);
-  assert.equal(r.simCapital, 600000 - 440000);
+  assert.equal(r.simCapital, 600000 - 440000); // 160,000
+  assert.equal(r.excessMargin, 160000 - 484000); // -324,000
+  assert.equal(r.simMarginCallPoints, (160000 - 372000) / 400); // -530
+  assert.equal(r.simLiquidationPoints, (160000 - 121000) / 400); // +97.5
   // riskRatio = 160000 / (242000×2) × 100
   assert.ok(Math.abs(r.riskRatio - (160000 / 484000) * 100) < 1e-9);
 });
 
-test('壓力測試後低於原始保證金 → 補繳現金補足至 100%', () => {
-  const r = calculateFutures({ ...base, quantity: 2, capital: 600000, stressDropPercent: 5 });
+test('壓力測試後低於原始與維持保證金 → 方案 A 補繳現金與方案 B 減倉口數', () => {
+  // 4 口小台 (單口原始 60,500，總原始 242,000；單口維持 46,500，總維持 186,000)
+  // 本金 250,000，逆風下跌使權益剩 150,000 (逆風 1,000 點，每點 50×4=200 => 虧 200,000? 設逆風點數讓權益為 150,000)
+  const r = calculateFutures({
+    indexPrice: 20000,
+    quantity: 4,
+    capital: 250000,
+    multiplier: 50,
+    initialMargin: 60500,
+    maintMargin: 46500,
+    position: 'long',
+    stressDropPercent: 2.5, // dropPoints = 500, simLoss = 500 * 4 * 50 = 100,000 => simCapital = 150,000
+  });
+  assert.equal(r.simCapital, 150000);
   assert.equal(r.isBelowInit, true);
-  // 484000 − 160000 = 324000
-  assert.equal(r.topupCash, 324000);
+  assert.equal(r.isBelowMaint, true);
+  assert.equal(r.topupCash, 242000 - 150000); // 92,000
+  assert.equal(r.maintGapCash, 186000 - 150000); // 36,000
+  // 150,000 / 60,500 = 2.479 => 最多維持 2 口，需平倉減少 4 - 2 = 2 口
+  assert.equal(r.maxAffordableLots, 2);
+  assert.equal(r.reduceLotsRequired, 2);
 });
 
-test('本金為 0：槓桿與臨界點皆為 0', () => {
-  const r = calculateFutures({ ...base, capital: 0 });
+test('本金為 0 或負數輸入：自動夾緊為 0，槓桿與臨界點皆為 0', () => {
+  const r = calculateFutures({ ...base, capital: 0, quantity: -2 });
   assert.equal(r.actualLeverage, 0);
   assert.equal(r.marginCallPoints, 0);
   assert.equal(r.liquidationPoints, 0);
+  assert.equal(r.marginCallDropPct, 0);
+  assert.equal(r.liquidationDropPct, 0);
 });
 
 test('與浮點基準交叉驗證', () => {
