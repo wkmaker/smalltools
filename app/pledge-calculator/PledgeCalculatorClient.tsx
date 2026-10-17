@@ -307,21 +307,33 @@ ${stressDropPct > 0 ? `• Stress Test (-${stressDropPct}%): Simulated price $${
                   <button
                     type="button"
                     onClick={() => applyPreset('tsmc')}
-                    className={styles.chipBtn}
+                    className={`${styles.chipBtn} ${
+                      numPrice === 1000 && numQty === 20 && qtyUnit === 1000 && numLoan === 12000000
+                        ? styles.chipBtnActive
+                        : ''
+                    }`}
                   >
                     {t.presetTsmc}
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPreset('etf')}
-                    className={styles.chipBtn}
+                    className={`${styles.chipBtn} ${
+                      numPrice === 25 && numQty === 200 && qtyUnit === 1000 && numLoan === 2000000
+                        ? styles.chipBtnActive
+                        : ''
+                    }`}
                   >
                     {t.presetEtf}
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPreset('alert')}
-                    className={styles.chipBtn}
+                    className={`${styles.chipBtn} ${
+                      numPrice === 200 && numQty === 50 && qtyUnit === 1000 && numLoan === 6000000 && stressDropPct === 20
+                        ? styles.chipBtnActive
+                        : ''
+                    }`}
                   >
                     {t.presetAlert}
                   </button>
@@ -411,14 +423,18 @@ ${stressDropPct > 0 ? `• Stress Test (-${stressDropPct}%): Simulated price $${
                 <button
                   type="button"
                   onClick={() => setLoanPercent(0.6)}
-                  className={`py-2 px-2 text-xs ${styles.activeScheme} rounded-xl transition-all cursor-pointer font-mono font-medium`}
+                  className={`${styles.chipBtn} py-2 px-2 text-xs font-mono ${
+                    marketValue > 0 && numLoan === Math.round(marketValue * 0.6) ? styles.chipBtnActive : ''
+                  }`}
                 >
                   {t.loanBtn60}
                 </button>
                 <button
                   type="button"
                   onClick={() => setLoanPercent(0.5)}
-                  className="py-2 px-2 text-xs bg-surface-glass border border-border-glass text-text-sub rounded-xl hover:text-text-main transition-all cursor-pointer font-mono font-medium"
+                  className={`${styles.chipBtn} py-2 px-2 text-xs font-mono ${
+                    marketValue > 0 && numLoan === Math.round(marketValue * 0.5) ? styles.chipBtnActive : ''
+                  }`}
                 >
                   {t.loanBtn50}
                 </button>
