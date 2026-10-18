@@ -233,6 +233,44 @@ export const CATEGORIES: CategorySection[] = [
           </svg>
         ),
       },
+      {
+        name: '宮縮計時器',
+        nameEn: 'Contraction Timer',
+        subtitle: 'CONTRACTION TIMER',
+        subtitleEn: 'CONTRACTION TIMER',
+        description: '按一下開始、再按一下停止，以最近 5 次宮縮自動算出多久痛一次、一次痛多久、規律程度與已維持時間，繪製 6 小時趨勢並一鍵複製摘要。資料只存本機，6 小時後自動刪除。',
+        descriptionEn: 'Tap to start and stop. Uses your latest 5 contractions to calculate frequency, duration, regularity and how long the pattern has lasted, with a 6-hour trend and one-tap shareable summary. Data stays on your device.',
+        href: '/contraction-timer/',
+        hrefEn: '/contraction-timer/en/',
+        cardClass: 'contractionCard',
+        category: 'workplace',
+        keywords: '宮縮計時器 宮縮紀錄 陣痛計時 陣痛紀錄 宮縮頻率 宮縮間隔 規律宮縮 待產 產兆 contraction timer',
+        keywordsEn: 'contraction timer tracker labor contractions frequency duration regularity early labor',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#8b5cf6]">
+            <path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
+          </svg>
+        ),
+      },
+      {
+        name: '胎動計數器',
+        nameEn: 'Fetal Kick Counter',
+        subtitle: 'FETAL KICK COUNTER',
+        subtitleEn: 'FETAL KICK COUNTER',
+        description: '寶寶有動就按！支援「數滿 10 次」與「1 小時定時」雙模式，自動依 2 分鐘門檻識別連環踢，精算有效胎動波數與總踢擊數，繪製每日活力趨勢並提供防慌報備小抄。資料僅留本機。',
+        descriptionEn: 'Tap whenever baby moves! Supports Count to 10 and 1-hour observation modes, auto-tagging combo kicks within 2 minutes. Tracks clinical episodes vs total taps with vitality trends and phone scripts.',
+        href: '/kick-counter/',
+        hrefEn: '/kick-counter/en/',
+        cardClass: 'kickCard',
+        category: 'workplace',
+        keywords: '胎動計數器 數胎動 胎動記錄 胎動計算 連環踢 胎動次數 28週胎動 kick counter',
+        keywordsEn: 'kick counter fetal movement tracker count to 10 baby kicks cardiff pregnancy',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#fb7185]">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+        ),
+      },
     ],
   },
   {

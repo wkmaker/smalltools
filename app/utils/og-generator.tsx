@@ -58,6 +58,8 @@ const CARD_ACCENT_COLORS: Record<string, string> = {
   textUtilityCard: '#059669', // 深翠綠
   urlCard: '#0d9488', // 深藍綠
   pregnancyCard: '#e11d48', // 玫瑰深紅
+  contractionCard: '#7c3aed', // 深紫羅蘭
+  kickCard: '#e11d48', // 玫瑰深紅
   resignationCard: '#0284c7', // 深天藍
   calendarCard: '#059669', // 深翠綠
   wheelCard: '#c026d3', // 深洋紅
