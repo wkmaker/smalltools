@@ -164,6 +164,7 @@ jobs:
         if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
           STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
+          echo "🔍 Current CloudFormation stack status for $STACK_NAME: $STACK_STATUS"
           if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
             echo "⚠️ Stack $STACK_NAME is in ROLLBACK_COMPLETE state. Deleting failed stack..."
             aws cloudformation delete-stack --stack-name "$STACK_NAME"
@@ -204,7 +205,7 @@ jobs:
       - name: Deploy CloudFormation Stack
         if: steps.changes.outputs.build_and_deploy == 'true'
         run: |
-          aws cloudformation deploy \
+          if ! aws cloudformation deploy \
             --stack-name "$STACK_NAME" \
             --template-file template.yml \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
@@ -216,7 +217,15 @@ jobs:
               EnableNoIndexHeader="$ENABLE_NOINDEX" \
               DomainName="$DOMAIN_NAME" \
               WebACLArn="$WEB_ACL_ARN" \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset; then
+            echo "❌ CloudFormation deploy failed! Fetching recent error events:"
+            aws cloudformation describe-stack-events \
+              --stack-name "$STACK_NAME" \
+              --max-items 30 \
+              --query "StackEvents[?ResourceStatusReason!=null].[LogicalResourceId, ResourceStatus, ResourceStatusReason]" \
+              --output table || true
+            exit 1
+          fi
 
       # ── 9. 動態獲取 Stack Outputs (CloudFront ID & Bucket Name) ──
       - name: Fetch CloudFormation Stack Outputs
