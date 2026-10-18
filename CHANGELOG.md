@@ -4,6 +4,16 @@
 
 ---
 
+## [1.26.1] - 2026-10-18
+
+### 👶 胎動計數器演算法優化 (Kick Counter & Clinical Episode Protection)
+- **連鎖連環踢保護（錨定本波起點）**：針對寶寶極度活潑、每隔 1~2 分鐘頻繁揮拳的邊界情境，修復滾動間隔導致連鎖連環踢無限續約的演算法陷阱。引入 `getLastEpisodeStartTime` 錨定機制，設定單波連續活動上限為 2 分鐘；距離本波起點超過 2 分鐘之踢擊自動晉級為新一波有效胎動，徹底避免超時卡死。
+- **單元測試補齊**：`tests/engine/kick-counter.test.mjs` 新增 `getLastEpisodeStartTime` 與「連續 90 秒踢擊（19 拳 27 分鐘達標 10 波）」完整場景回歸測試。
+- **雙語 FAQ 擴充**：於 `app/kick-counter/translations.ts` 中英文常見問題增補「防卡死時窗保護 (Active Window Protection)」臨床原理解析。
+- **CI 依賴修復 (GitHub Actions Build Fix)**：恢復 `package.json` 中的 `reflect-metadata` 依賴，修復 `@peculiar/x509` 底層 `tsyringe` 依賴的 reflect polyfill，解決 GitHub Actions 在乾淨環境下執行憑證生成器單元測試時的 `ERR_MODULE_NOT_FOUND` 錯誤。
+
+---
+
 ## [1.26.0] - 2026-10-18
 
 ### 🏗️ 巨型組件模組化拆解 (Architecture & Component Decomposition)

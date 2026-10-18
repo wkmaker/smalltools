@@ -85,13 +85,43 @@ export function calculateSevenDayAverage(
 
 // ── 連環踢與點擊標記 ──────────────────────────────────────
 
-export function markKick(timestamp: number, lastKickTime: number | null, id: string): KickRecord {
+/**
+ * 取得當前會話最後一波有效胎動的起始時間點（最後一筆 isCombo === false 的紀錄）
+ */
+export function getLastEpisodeStartTime(records: KickRecord[]): number | null {
+  for (let i = records.length - 1; i >= 0; i--) {
+    if (!records[i].isCombo) {
+      return records[i].timestamp;
+    }
+  }
+  return null;
+}
+
+export function markKick(
+  timestamp: number,
+  lastKickTime: number | null,
+  id: string,
+  lastEpisodeStartTime?: number | null,
+): KickRecord {
   if (lastKickTime === null) {
     return { id, timestamp, isCombo: false, gapFromPrevMs: null };
   }
-  const gap = timestamp - lastKickTime;
-  const isCombo = gap > 0 && gap < COMBO_THRESHOLD_MS;
-  return { id, timestamp, isCombo, gapFromPrevMs: gap >= 0 ? gap : null };
+  const gapFromPrev = timestamp - lastKickTime;
+  const episodeStart =
+    lastEpisodeStartTime !== null && lastEpisodeStartTime !== undefined
+      ? lastEpisodeStartTime
+      : lastKickTime;
+  const gapFromEpisodeStart = timestamp - episodeStart;
+
+  // 連環踢判定（方案 A：錨定本波起點，防止滾動連鎖）：
+  // 1. 距離上一動必須在時間門檻內（間隔 < 2 分鐘）
+  // 2. 且距離「本波起點」未超過門檻（單波最長 2 分鐘上限，避免每 1.5 分鐘來一拳導致無限連環踢）
+  const isCombo =
+    gapFromPrev > 0 &&
+    gapFromPrev < COMBO_THRESHOLD_MS &&
+    gapFromEpisodeStart < COMBO_THRESHOLD_MS;
+
+  return { id, timestamp, isCombo, gapFromPrevMs: gapFromPrev >= 0 ? gapFromPrev : null };
 }
 
 /** 統計一組點擊紀錄中的「有效波數」與「連環踢次數」 */

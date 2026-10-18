@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   markKick,
+  getLastEpisodeStartTime,
   countEpisodes,
   evaluateVitality,
   sanitizeKickSessions,
@@ -142,4 +143,50 @@ test('calculateSevenDayAverage accurately computes average of past 7 days', () =
   assert.equal(res?.averageMinutes, 25);
   assert.equal(res?.daysCount, 2);
   assert.equal(res?.sessionCount, 2);
+});
+
+test('getLastEpisodeStartTime finds the start timestamp of current episode', () => {
+  assert.equal(getLastEpisodeStartTime([]), null);
+  const records = [
+    { id: '1', timestamp: 1000, isCombo: false, gapFromPrevMs: null },
+    { id: '2', timestamp: 2000, isCombo: true, gapFromPrevMs: 1000 },
+    { id: '3', timestamp: 3000, isCombo: true, gapFromPrevMs: 1000 },
+  ];
+  assert.equal(getLastEpisodeStartTime(records), 1000);
+
+  records.push({ id: '4', timestamp: 130000, isCombo: false, gapFromPrevMs: 127000 });
+  records.push({ id: '5', timestamp: 140000, isCombo: true, gapFromPrevMs: 10000 });
+  assert.equal(getLastEpisodeStartTime(records), 130000);
+});
+
+test('markKick with lastEpisodeStartTime prevents infinite rolling combo chain (寶寶每 90 秒來一拳)', () => {
+  const records = [];
+  const t0 = 0;
+  const GAP_90S = 90 * SEC;
+
+  // 模擬每 90 秒點一次，連續點擊 19 次（總耗時 27 分鐘）
+  for (let i = 0; i < 19; i++) {
+    const current = t0 + i * GAP_90S;
+    const lastRecord = records[records.length - 1];
+    const lastTime = lastRecord ? lastRecord.timestamp : null;
+    const lastEpisodeStartTime = getLastEpisodeStartTime(records);
+    const kick = markKick(current, lastTime, `k-${i}`, lastEpisodeStartTime);
+    records.push(kick);
+  }
+
+  // 驗證第 1 拳 (0s): 獨立有效首動 (Episode 1)
+  assert.equal(records[0].isCombo, false);
+  // 第 2 拳 (90s): 距離首動 90s < 120s，為連環踢 (Combo)
+  assert.equal(records[1].isCombo, true);
+  // 第 3 拳 (180s = 3m): 距離首動 180s >= 120s，單波上限觸發，自動結算為新一波 (Episode 2)
+  assert.equal(records[2].isCombo, false);
+  // 第 4 拳 (270s = 4.5m): 距離 Episode 2 起點 90s < 120s，為連環踢
+  assert.equal(records[3].isCombo, true);
+  // 第 5 拳 (360s = 6m): 距離 Episode 2 起點 180s >= 120s，自動開啟新一波 (Episode 3)
+  assert.equal(records[4].isCombo, false);
+
+  const { validEpisodes, comboCount } = countEpisodes(records);
+  // 19 拳中應順利累計 10 波有效胎動與 9 次連環踢，成功於 27 分鐘達標，絕不超時卡死
+  assert.equal(validEpisodes, 10);
+  assert.equal(comboCount, 9);
 });
