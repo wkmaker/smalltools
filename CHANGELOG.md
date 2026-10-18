@@ -4,6 +4,22 @@
 
 ---
 
+## [1.26.0] - 2026-10-18
+
+### 🏗️ 巨型組件模組化拆解 (Architecture & Component Decomposition)
+- **全面落實「六分拆解法」與「三層分離」**：針對專案中 8 個千行以上巨型 Client/Modal 組件進行架構重構，平均單一檔案程式碼行數減少 60%~82%，大幅提升程式碼可讀性、維護性與渲染效能：
+  1. `app/qr-generator/QrGeneratorClient.tsx`：1925 行 ➔ 642 行（-66.6%），抽出獨立 `engine.ts`、`QrParamsPanel`、`QrHistoryDrawer`。
+  2. `app/har-cleaner/components/EntryDetailModal.tsx`：1582 行 ➔ 274 行（-82.7%），抽出 `components/detail/` 6 個分頁面板與標頭組件。
+  3. `app/lucky-wheel/LuckyWheelClient.tsx`：1686 行 ➔ 532 行（-68.4%），抽出 `components/` 4 個核心設定、獎項機率清單與歷史統計卡片。
+  4. `app/pregnancy-calculator/PregnancyCalculatorClient.tsx`：1395 行 ➔ 396 行（-71.6%），抽出 `components/` 6 個模式輸入、超音波換算、津貼試算與臨床產檢看板。
+  5. `app/mortgage-loan/MortgageLoanClient.tsx`：1267 行 ➔ 432 行（-65.9%），抽出 `components/` 5 個貸款試算輸入、提前還款試算與還款時程卡片。
+  6. `app/og-generator/OgGeneratorClient.tsx`：1260 行 ➔ 393 行（-68.8%），抽出 `components/` 7 個樣式面板、即時預覽、社群模擬與批次抽屜組件。
+  7. `app/ssl-converter/SslConverterClient.tsx`：1191 行 ➔ 404 行（-66.1%），抽出 `types.ts` 與 `components/` 6 個拖曳上傳、格式轉換與憑證鏈視覺化看板。
+  8. `app/resignation-calculator/ResignationCalculatorClient.tsx`：1283 行 ➔ 484 行（-62.3%），抽出 `components/` 5 個預告警示橫幅、參數側邊欄、里程碑指標、離職時間軸與財務結算卡片。
+- **全站 295 個單元測試與 208/208 個靜態頁面 SSG 100% 通過**，功能行為、雙語鍵值與無障礙標籤無任何回歸。
+
+---
+
 ## [1.25.0] - 2026-10-18
 
 ### ♿ 無障礙與語意標籤 (Accessibility & A11y)

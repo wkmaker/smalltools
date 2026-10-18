@@ -14,7 +14,7 @@
 | **批次 A** | **P0** | **線上 Bug、記憶體洩漏、CI/CD 漏監聽與首頁 SSG 修復** | 8 個檔案 | ✅ **100% 已完成** (`v1.24.1`) | 消除渲染期 Blob 洩漏、跨日時區錯亂、CI 漏觸發部署，並讓首頁靜態 HTML 完整預渲染 36 個工具卡片 |
 | **批次 B** | **P1** | **薪資 JSON 瘦身 96%、檔案大小上限防護、主題 `dark:` 與 UI 守門員** | 約 25 個檔案 | ✅ **100% 已完成** (`v1.24.2`) | 薪資計算機設定檔體積減少 91.5%；14 個工具防大檔撐爆記憶體；修復亮暗切換色偏與 `< 12px` 微縮字體 |
 | **批次 C** | **P1** | **多語系 (i18n) 英文版漏翻補齊、三元判斷收斂與繁中純淨化** | 約 22 個檔案 | ✅ **100% 已完成** (`v1.24.3`) | 補齊全站 `/en/` 英文翻譯、清除繁中 UI 標籤冗餘英文括號，建立全站 39 字典對稱自動測試 |
-| **批次 D** | **P2 / P3** | **A11y 表單對稱綁定、浮點數轉 BigNumber、零靜默失敗與單元測試** | 54 個檔案 | 🚀 **D-1~D-4, D-6 已完成** (`v1.25.0`)；僅餘 D-5 大型組件維護 | 補齊 7 個核心模組單元測試（全站 295 測試通過）、消除浮點數誤差與靜默吞錯、CloudFront OWASP 安全標頭 |
+| **批次 D** | **P2 / P3** | **A11y 表單對稱綁定、浮點數轉 BigNumber、零靜默失敗、巨型組件拆解與單元測試** | 62 個檔案 | ✅ **100% 已完成** (`v1.26.0`) | 補齊 7 個核心模組單元測試（全站 295 測試通過）、消除浮點數誤差與靜默吞錯、CloudFront OWASP 安全標頭、8 個大型組件模組化拆解（平均瘦身 60%~80%） |
 
 ---
 
@@ -451,16 +451,16 @@
 ---
 
 ### D-5. 巨型組件模組化（全域鐵則 10）
-
-- [ ] **大型組件後續迭代維護清單**：
-  1. [`app/qr-generator/QrGeneratorClient.tsx`](app/qr-generator/QrGeneratorClient.tsx)（已成功將 payload 與編碼器抽離至獨立 `engine.ts`）
-  2. [`app/har-cleaner/components/EntryDetailModal.tsx`](app/har-cleaner/components/EntryDetailModal.tsx)
-  3. [`app/lucky-wheel/LuckyWheelClient.tsx`](app/lucky-wheel/LuckyWheelClient.tsx)
-  4. [`app/pregnancy-calculator/PregnancyCalculatorClient.tsx`](app/pregnancy-calculator/PregnancyCalculatorClient.tsx)
-  5. [`app/mortgage-loan/MortgageLoanClient.tsx`](app/mortgage-loan/MortgageLoanClient.tsx)
-  6. [`app/og-generator/OgGeneratorClient.tsx`](app/og-generator/OgGeneratorClient.tsx)
-  7. [`app/ssl-converter/SslConverterClient.tsx`](app/ssl-converter/SslConverterClient.tsx)
-  8. [`app/resignation-calculator/ResignationCalculatorClient.tsx`](app/resignation-calculator/ResignationCalculatorClient.tsx)
+ 
+- [x] **大型組件模組化完成清單（8/8 完整落實「六分拆解」與「三層分離」，295 題測試全綠，208/208 頁 SSG 通過）**：
+  1. [`app/qr-generator/QrGeneratorClient.tsx`](app/qr-generator/QrGeneratorClient.tsx)：1925 行 ➔ 642 行（瘦身 66.6%），抽出獨立 `engine.ts`、`QrParamsPanel`、`QrHistoryDrawer`。
+  2. [`app/har-cleaner/components/EntryDetailModal.tsx`](app/har-cleaner/components/EntryDetailModal.tsx)：1582 行 ➔ 274 行（瘦身 82.7%），抽出 `components/detail/` 6 個分頁與標頭組件。
+  3. [`app/lucky-wheel/LuckyWheelClient.tsx`](app/lucky-wheel/LuckyWheelClient.tsx)：1686 行 ➔ 532 行（瘦身 68.4%），抽出 `components/` 4 個核心設定與歷史卡片。
+  4. [`app/pregnancy-calculator/PregnancyCalculatorClient.tsx`](app/pregnancy-calculator/PregnancyCalculatorClient.tsx)：1395 行 ➔ 396 行（瘦身 71.6%），抽出 `components/` 6 個模式輸入與產檢看板。
+  5. [`app/mortgage-loan/MortgageLoanClient.tsx`](app/mortgage-loan/MortgageLoanClient.tsx)：1267 行 ➔ 432 行（瘦身 65.9%），抽出 `components/` 5 個貸款參數、提前還款與還款時程卡片。
+  6. [`app/og-generator/OgGeneratorClient.tsx`](app/og-generator/OgGeneratorClient.tsx)：1260 行 ➔ 393 行（瘦身 68.8%），抽出 `components/` 7 個樣式、預覽、社群模擬與批次抽屜組件。
+  7. [`app/ssl-converter/SslConverterClient.tsx`](app/ssl-converter/SslConverterClient.tsx)：1191 行 ➔ 404 行（瘦身 66.1%），抽出 `types.ts` 與 `components/` 6 個上傳、格式轉換與憑證鏈看板。
+  8. [`app/resignation-calculator/ResignationCalculatorClient.tsx`](app/resignation-calculator/ResignationCalculatorClient.tsx)：1283 行 ➔ 484 行（瘦身 62.3%），抽出 `components/` 5 個預告警示橫幅、參數側邊欄、里程碑指標、離職時間軸與財務試算卡片。
 
 ---
 
