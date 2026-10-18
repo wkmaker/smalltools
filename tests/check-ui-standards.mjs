@@ -6,8 +6,10 @@ import { rules } from './ui-rules/index.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const appDir = path.resolve(__dirname, '../app');
+const componentsDir = path.resolve(__dirname, '../components');
 
 function getAllTsxFiles(dir) {
+  if (!fs.existsSync(dir)) return [];
   let results = [];
   const list = fs.readdirSync(dir);
   list.forEach((file) => {
@@ -24,7 +26,7 @@ function getAllTsxFiles(dir) {
   return results;
 }
 
-const tsxFiles = getAllTsxFiles(appDir);
+const tsxFiles = [...getAllTsxFiles(appDir), ...getAllTsxFiles(componentsDir)];
 let hasErrors = false;
 let errorCount = 0;
 
@@ -34,7 +36,7 @@ tsxFiles.forEach((filePath) => {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const relPath = path.relative(appDir, filePath);
-  const isConfigFile = relPath.includes('config') || relPath.includes('ToolLayout');
+  const isConfigFile = relPath.includes('config');
 
   lines.forEach((line, index) => {
     const trimmed = line.trim();

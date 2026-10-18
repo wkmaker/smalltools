@@ -4,6 +4,13 @@
 import raw2026 from './config/2026.json' with { type: 'json' };
 import raw2025 from './config/2025.json' with { type: 'json' };
 import raw2024 from './config/2024.json' with { type: 'json' };
+import rawTaxTables from './config/taxTables.json' with { type: 'json' };
+
+const TAX_TABLES: Record<number, number[][]> = {
+  2024: (rawTaxTables as Record<string, number[][]>)['2024'],
+  2025: (rawTaxTables as Record<string, number[][]>)['2024'], // 2024 與 2025 扣繳稅額表 100% 相同共用
+  2026: (rawTaxTables as Record<string, number[][]>)['2026'],
+};
 
 export interface Bracket {
   min: number;
@@ -89,23 +96,38 @@ export function lookupMatrixTax(salary: number, dependents: number, year: number
   }
 }
 
-// 根據 JSON 設定檔計算所得稅
+// 根據 JSON 設定檔或緊湊扣繳稅額表計算所得稅
 export function calculateTaxFromConfig(
   taxSalary: number,
   taxDependents: number,
   config: YearConfigJSON,
   year: number
 ): number {
-  if (config.withholding_tax_table) {
-    const match = config.withholding_tax_table.find(row => taxSalary >= row[0] && taxSalary <= row[1]);
-    if (match) {
-      const depIndex = Math.min(11, taxDependents);
-      return match[2 + depIndex];
-    } else if (taxSalary < 80001) {
-      return 0;
-    } else {
+  if (config.withholding_tax_table && config.withholding_tax_table.length > 0) {
+    if (taxSalary < 80001) return 0;
+    const rowIndex = Math.floor((taxSalary - 80001) / 500);
+    const row = config.withholding_tax_table[rowIndex];
+    if (row && taxSalary >= row[0] && taxSalary <= row[1]) {
+      const depIndex = Math.min(11, Math.max(0, taxDependents));
+      return row[2 + depIndex];
+    } else if (taxSalary > 500000) {
       return lookupMatrixTax(taxSalary, taxDependents, year);
     }
   }
+
+  const taxTable = TAX_TABLES[year] || TAX_TABLES[2026];
+  if (taxTable) {
+    if (taxSalary < 80001) {
+      return 0;
+    }
+    const rowIndex = Math.floor((taxSalary - 80001) / 500);
+    const row = taxTable[rowIndex];
+    if (row) {
+      const depIndex = Math.min(11, Math.max(0, taxDependents));
+      return row[depIndex];
+    }
+    return lookupMatrixTax(taxSalary, taxDependents, year);
+  }
+
   return lookupMatrixTax(taxSalary, taxDependents, year);
 }

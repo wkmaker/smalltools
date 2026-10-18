@@ -159,6 +159,10 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
   // 上傳檔案處理
   const handleFileLoaded = (file: File) => {
     if (!file) return;
+    if (file.size > 150 * 1024 * 1024) {
+      alert(t.fileTooLarge);
+      return;
+    }
     setFileName(file.name);
     setOriginalFileSize(file.size);
     setExcludedHeaders({});

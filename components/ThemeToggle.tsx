@@ -72,7 +72,7 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
           strokeLinecap="round"
           strokeLinejoin="round"
           className={`
-            w-5 h-5 text-cyan-400 absolute transition-all duration-500 ease-in-out
+            w-5 h-5 text-[#00f0ff] absolute transition-all duration-500 ease-in-out
             ${!isLight ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}
           `}
         >

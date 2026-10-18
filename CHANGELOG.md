@@ -4,6 +4,27 @@
 
 ---
 
+## [1.24.2] - 2026-10-18
+
+### ⚡ 效能優化與 UI 設計規範 (Performance & UI Standards)
+
+- **批次 B 深度修復（薪資設定檔瘦身、檔案上限防護、Tailwind 主題變體與 UI 守門員強化）**：
+  - **薪資計算機 JSON 體積縮減 91.5%**：
+    - 將 `2024.json`, `2025.json`, `2026.json` 總計 42,328 行薪資扣繳稅表抽離為緊湊矩陣 `taxTables.json`，並在 `salaryConfig.ts` 改為 $O(1)$ 常數級查表，大幅減輕 Initial Client Bundle 與記憶體佔用。
+  - **14 處檔案上傳工具補齊檔案大小上限防護（全域鐵則 36）**：
+    - 為 HAR 清理器 (150MB)、ICS 行事曆分割器 (100MB)、SSL 憑證轉換器 (5MB)、PDF 頁面組合器 (100MB)、PDF 壓縮大師 (150MB)、萬能圖片處理大師 (50MB)、JSON 格式化美化器 (50MB) 補齊大小上限檢查與友善雙語錯誤 Toast，防止使用者誤丟巨大檔案癱瘓瀏覽器與記憶體。
+  - **修復 Tailwind v4 `dark:` 主題變體脫節問題**：
+    - 在 `app/globals.css` 明確宣告 `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));`，使全站所有 `dark:` utility 嚴格跟隨 `<html data-theme="...">` 手動切換，不再與系統原生配色產生衝突。
+    - 修復 `app/not-found.tsx` 中無效的 `light:` 變體，以及 `app/https-dns-generator/HttpsDnsGeneratorClient.tsx` 中未自適應亮暗模式的主題文字色彩。
+  - **修復 18 處微縮字級與裸露 Emoji 符號（全域鐵則 16, 18）**：
+    - 將全站 11 處 TSX 與 7 處 `.module.css` 中的 `< 12px` 微縮字級（如 `text-[0.65rem]`, `text-[0.7rem]`, `font-size: 0.7rem;` 等）全數提升至 `text-xs` (`0.75rem` / 12px)。
+    - 全面移除 `ServiceWorkerRegister.tsx` 的裸露 `🎉`、`ToolLayout.tsx` 的贊助重複 `☕`、`tools.tsx` 首頁與 404 分類 Emoji（全面改為雙主題自適應 SVG 向量圖示）。
+    - 移除 `hourly-rate-calculator` 中在 Windows 系統易發生字體撕裂破圖的國旗 Emoji 與卡片 Emoji（💳, 💬, ⚖️）。
+  - **強化 UI 守門員單元測試**：
+    - `tests/check-ui-standards.mjs` 擴充涵蓋 `components/` 目錄並移除對 `ToolLayout` 的全域豁免；`tests/ui-rules/no-undersized-font.mjs` 擴充支援攔截 `0.75rem` 以下的微縮 rem 字級語法。
+
+---
+
 ## [1.24.1] - 2026-10-18
 
 ### 🐛 問題修復與效能優化 (Fixed & Performance)

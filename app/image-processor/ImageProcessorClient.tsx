@@ -141,12 +141,22 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       return;
     }
 
+    const acceptedFiles: File[] = [];
+    for (const f of validFiles) {
+      if (f.size > 50 * 1024 * 1024) {
+        showToast(t.fileTooLarge(f.name));
+      } else {
+        acceptedFiles.push(f);
+      }
+    }
+    if (acceptedFiles.length === 0) return;
+
     if (append && files.length > 0) {
-      const combined = [...files, ...validFiles];
+      const combined = [...files, ...acceptedFiles];
       setFiles(combined);
       setIsBatchMode(true);
 
-      const appendItems: BatchItem[] = validFiles.map((file, idx) => ({
+      const appendItems: BatchItem[] = acceptedFiles.map((file, idx) => ({
         file,
         id: `b_${files.length + idx}_${file.name}_${Date.now()}`,
         thumbUrl: URL.createObjectURL(file),
@@ -162,10 +172,10 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
           URL.revokeObjectURL(item.thumbUrl);
         }
       });
-      setFiles(validFiles);
-      if (validFiles.length > 1) {
+      setFiles(acceptedFiles);
+      if (acceptedFiles.length > 1) {
         setIsBatchMode(true);
-        const items: BatchItem[] = validFiles.map((file, idx) => ({
+        const items: BatchItem[] = acceptedFiles.map((file, idx) => ({
           file,
           id: `b_${idx}_${Date.now()}`,
           thumbUrl: URL.createObjectURL(file),
@@ -175,7 +185,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         setBatchItems(items);
       } else {
         setIsBatchMode(false);
-        const file = validFiles[0];
+        const file = acceptedFiles[0];
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
@@ -925,7 +935,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
                           />
                           <div className="flex flex-col min-w-0">
                             <span className="text-xs font-semibold text-text-main truncate">{item.file.name}</span>
-                            <span className="text-[0.7rem] font-mono text-text-sub">
+                            <span className="text-xs font-mono text-text-sub">
                               {formatBytes(item.file.size)}
                             </span>
                           </div>

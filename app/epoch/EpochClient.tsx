@@ -455,7 +455,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
                   <div className="flex items-center gap-2 min-w-0 flex-wrap">
                     <span className="text-text-sub text-[0.75rem]">{t.laTimeLabel}</span>
                     {parsedTsResult && (
-                      <span className={`text-[0.65rem] px-1.5 py-0.5 rounded font-sans font-semibold shrink-0 ${styles.badgeAccent}`}>
+                      <span className={`text-xs px-1.5 py-0.5 rounded font-sans font-semibold shrink-0 ${styles.badgeAccent}`}>
                         {parsedTsResult.laBadge}
                       </span>
                     )}

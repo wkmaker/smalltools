@@ -26,7 +26,7 @@ export default function NotFound() {
         {/* 頂部霓虹 404 大字與雙語標題 */}
         <div className="flex flex-col items-center gap-3">
           <div className="relative flex items-center justify-center">
-            <span className="text-[#ff0055] dark:text-[#ff0055] light:text-[#dc2626] font-mono text-7xl sm:text-9xl font-extrabold tracking-wider drop-shadow-[0_0_35px_rgba(255,0,85,0.6)]">
+            <span className="text-[#dc2626] dark:text-[#ff0055] font-mono text-7xl sm:text-9xl font-extrabold tracking-wider drop-shadow-[0_0_35px_rgba(255,0,85,0.6)]">
               404
             </span>
           </div>
@@ -60,7 +60,7 @@ export default function NotFound() {
         {/* 核心重點：全站 4 大領域微型地圖 (Tool Navigation Hub) */}
         <div className="flex flex-col gap-5 w-full border-t border-border-glass pt-8">
           <div className="flex items-center justify-between px-2">
-            <span className="text-[#ff0055] dark:text-[#ff0055] light:text-[#dc2626] text-xs font-bold uppercase tracking-[1.5px] flex items-center gap-2">
+            <span className="text-[#dc2626] dark:text-[#ff0055] text-xs font-bold uppercase tracking-[1.5px] flex items-center gap-2">
               <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                 <path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z" />
               </svg>
@@ -82,13 +82,13 @@ export default function NotFound() {
               >
                 <div className="flex items-center justify-between border-b border-border-glass pb-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">{cat.emoji}</span>
+                    <span className="flex items-center justify-center shrink-0">{cat.icon}</span>
                     <span className="text-sm font-bold text-text-main">{cat.label}</span>
                     <span className="text-xs text-text-sub font-mono">
                       / {CATEGORY_EN_LABELS[cat.id] || cat.id}
                     </span>
                   </div>
-                  <span className="text-[0.7rem] bg-select-bg px-2 py-0.5 rounded-full text-text-sub font-mono">
+                  <span className="text-xs bg-select-bg px-2 py-0.5 rounded-full text-text-sub font-mono">
                     {cat.tools.length} Tools
                   </span>
                 </div>
@@ -108,7 +108,7 @@ export default function NotFound() {
                         <span className="text-xs font-bold text-text-main group-hover:text-[#ff0055] transition-colors truncate">
                           {tool.name}
                         </span>
-                        <span className="text-[0.65rem] font-mono text-text-sub truncate">
+                        <span className="text-xs font-mono text-text-sub truncate">
                           {tool.subtitle}
                         </span>
                       </div>

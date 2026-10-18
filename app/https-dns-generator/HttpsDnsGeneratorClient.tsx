@@ -212,11 +212,11 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
       <div className="grid grid-cols-[1.1fr_1.9fr] gap-10 items-start text-left max-[1024px]:grid-cols-1 max-[1024px]:gap-8">
         {/* 左欄：設定參數 (勾選與填空) */}
         <div className={styles.cardPanel}>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#00f0ff] dark:text-[#00f0ff] uppercase tracking-[1px]">
+          <div className={`flex items-center gap-2 text-xs font-semibold ${styles.accentText} uppercase tracking-[1px]`}>
             <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
               <path d="M7 2v11h3v9l7-12h-4l4-8z" />
             </svg>
-            <span className={styles.accentText}>{t.configTitle}</span>
+            <span>{t.configTitle}</span>
           </div>
 
           {/* 常用預設情境 Chips */}

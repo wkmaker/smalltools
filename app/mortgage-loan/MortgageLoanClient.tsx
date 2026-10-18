@@ -719,7 +719,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                       onChange={e => setLoanName1(e.target.value)}
                       className={`bg-transparent border-b border-dashed border-[var(--theme-color)] ${styles.accentText} text-sm font-semibold outline-none px-1 py-0.5`}
                     />
-                    <span className={`text-[0.7rem] ${styles.activeScheme} px-2 py-0.5 rounded-md font-mono`}>
+                    <span className={`text-xs ${styles.activeScheme} px-2 py-0.5 rounded-md font-mono`}>
                       {t.firstLoan}
                     </span>
                   </div>
@@ -741,14 +741,14 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                       <button
                         type="button"
                         onClick={() => setLoanAQuickValue(1000)}
-                        className={`flex-1 py-1 text-[0.7rem] ${styles.activeScheme} rounded-md cursor-pointer`}
+                        className={`flex-1 py-1 text-xs ${styles.activeScheme} rounded-md cursor-pointer`}
                       >
                         {t.quick1000m}
                       </button>
                       <button
                         type="button"
                         onClick={() => setLoanAQuickValue(null)}
-                        className="flex-1 py-1 text-[0.7rem] bg-surface-glass border border-border-glass text-text-sub rounded-md cursor-pointer hover:text-text-main"
+                        className="flex-1 py-1 text-xs bg-surface-glass border border-border-glass text-text-sub rounded-md cursor-pointer hover:text-text-main"
                       >
                         {t.allToA}
                       </button>
@@ -829,7 +829,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                                 <button
                                   type="button"
                                   onClick={() => removeStage1(sIdx)}
-                                  className="text-[0.7rem] text-[#ef4444] hover:underline cursor-pointer"
+                                  className="text-xs text-[#ef4444] hover:underline cursor-pointer"
                                 >
                                   移除
                                 </button>
@@ -939,7 +939,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                       onChange={e => setLoanName2(e.target.value)}
                       className={`bg-transparent border-b border-dashed border-amber-500/40 ${styles.interestText} text-sm font-semibold outline-none px-1 py-0.5`}
                     />
-                    <span className={`text-[0.7rem] bg-amber-500/15 border border-amber-500/30 ${styles.interestText} px-2 py-0.5 rounded-md font-mono`}>
+                    <span className={`text-xs bg-amber-500/15 border border-amber-500/30 ${styles.interestText} px-2 py-0.5 rounded-md font-mono`}>
                       {t.secondLoan}
                     </span>
                   </div>
@@ -1033,7 +1033,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                                 <button
                                   type="button"
                                   onClick={() => removeStage2(sIdx)}
-                                  className="text-[0.7rem] text-[#ef4444] hover:underline cursor-pointer"
+                                  className="text-xs text-[#ef4444] hover:underline cursor-pointer"
                                 >
                                   {t.remove}
                                 </button>

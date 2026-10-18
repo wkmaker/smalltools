@@ -55,6 +55,11 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
 
       setRawFilename(file.name);
       setRawFileSize(file.size);
+      if (file.size > 100 * 1024 * 1024) {
+        setErrorMessage(t.fileTooLarge);
+        return;
+      }
+
       setIsParsing(true);
 
       const defaultPrefix = file.name.replace(/\.ics$/i, '') || 'calendar';
@@ -78,7 +83,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
               });
             }
           } catch {
-            setErrorMessage('解析檔案時發生錯誤，請確認檔案格式是否正確。');
+            setErrorMessage(t.parseError);
             setParsedData(null);
           } finally {
             setIsParsing(false);
@@ -86,7 +91,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
         }, 16);
       };
       reader.onerror = () => {
-        setErrorMessage('讀取檔案失敗');
+        setErrorMessage(t.readError);
         setIsParsing(false);
       };
       reader.readAsText(file, 'utf-8');

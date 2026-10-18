@@ -207,6 +207,10 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
 
     for (let fIdx = 0; fIdx < validFiles.length; fIdx++) {
       const file = validFiles[fIdx];
+      if (file.size > 100 * 1024 * 1024) {
+        showToast(t.toastFileTooLarge(file.name));
+        continue;
+      }
       setProcessingMsg(`Parsing (${fIdx + 1}/${validFiles.length}): ${file.name}`);
 
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {

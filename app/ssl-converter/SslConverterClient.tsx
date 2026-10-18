@@ -248,6 +248,11 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     setAiaError(null);
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setAiaError(t.fileTooLarge);
+      e.target.value = '';
+      return;
+    }
     try {
       const parsedAia = await parseSslPayload({ file });
       if (parsedAia.certs.length === 0) {
@@ -608,7 +613,13 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
                       className={styles.fileInput}
                       onChange={e => {
                         if (e.target.files && e.target.files[0]) {
-                          setCerFile(e.target.files[0]);
+                          const f = e.target.files[0];
+                          if (f.size > 5 * 1024 * 1024) {
+                            showAlertMsg(t.fileTooLarge, 'error');
+                            e.target.value = '';
+                            return;
+                          }
+                          setCerFile(f);
                           hideAlertMsg();
                         }
                       }}
@@ -703,7 +714,13 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
                       className={styles.fileInput}
                       onChange={e => {
                         if (e.target.files && e.target.files[0]) {
-                          setPfxFile(e.target.files[0]);
+                          const f = e.target.files[0];
+                          if (f.size > 5 * 1024 * 1024) {
+                            showAlertMsg(t.fileTooLarge, 'error');
+                            e.target.value = '';
+                            return;
+                          }
+                          setPfxFile(f);
                           hideAlertMsg();
                         }
                       }}
@@ -884,7 +901,13 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
                       className={styles.fileInput}
                       onChange={e => {
                         if (e.target.files && e.target.files[0]) {
-                          setDerFile(e.target.files[0]);
+                          const f = e.target.files[0];
+                          if (f.size > 5 * 1024 * 1024) {
+                            showAlertMsg(t.fileTooLarge, 'error');
+                            e.target.value = '';
+                            return;
+                          }
+                          setDerFile(f);
                           hideAlertMsg();
                         }
                       }}

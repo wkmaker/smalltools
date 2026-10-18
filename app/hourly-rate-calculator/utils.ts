@@ -226,43 +226,43 @@ export function getTravelTiers(
       },
       standard: {
         easy: {
-          destinations: ['🇹🇭 Thailand (Chiang Mai/Bangkok)', '🇻🇳 Vietnam (Ho Chi Minh/Hanoi)', '🇮🇩 Indonesia (Bali)', '🇵🇭 Philippines (Cebu)'],
+          destinations: ['Thailand (Chiang Mai/Bangkok)', 'Vietnam (Ho Chi Minh/Hanoi)', 'Indonesia (Bali)', 'Philippines (Cebu)'],
           description: 'Expenses 40~50% lower than Taiwan; enjoy Thai tea, dining out, and SPA massages without stress!',
         },
         medium: {
-          destinations: ['🇯🇵 Japan (Kansai/Fukuoka/Tokyo)', '🇰🇷 South Korea (Seoul/Busan)', '🇨🇿 Czechia (Prague)', '🇵🇱 Poland (Warsaw)'],
+          destinations: ['Japan (Kansai/Fukuoka/Tokyo)', 'South Korea (Seoul/Busan)', 'Czechia (Prague)', 'Poland (Warsaw)'],
           description: 'Living costs close to Taiwan; enjoy Yakiniku izakayas and European ancient cities!',
         },
         hard: {
-          destinations: ['🇨🇭 Switzerland (Zurich/Geneva)', '🇺🇸 USA (New York/Silicon Valley)', '🇬🇧 UK (London)', '🇸🇬 Singapore (Central)'],
+          destinations: ['Switzerland (Zurich/Geneva)', 'USA (New York/Silicon Valley)', 'UK (London)', 'Singapore (Central)'],
           description: 'Higher dining and housing costs; budget carefully.',
         },
       },
       mid_tier: {
         easy: {
-          destinations: ['🇹🇭 Thailand (Chiang Mai/Bangkok)', '🇻🇳 Vietnam (Ho Chi Minh)', '🇲🇽 Mexico (Mexico City)'],
+          destinations: ['Thailand (Chiang Mai/Bangkok)', 'Vietnam (Ho Chi Minh)', 'Mexico (Mexico City)'],
           description: 'Stay in pool apartments, enjoy local dining and massages comfortably!',
         },
         medium: {
-          destinations: ['🇯🇵 Japan (Kansai/Fukuoka)', '🇰🇷 South Korea (Busan/Seoul)', '🇭🇺 Hungary (Budapest)'],
+          destinations: ['Japan (Kansai/Fukuoka)', 'South Korea (Busan/Seoul)', 'Hungary (Budapest)'],
           description: 'Favorable Yen rate and romantic Eastern European ancient capitals.',
         },
         hard: {
-          destinations: ['🇩🇪 Germany (Berlin/Munich)', '🇸🇪 Sweden (Stockholm)', '🇺🇸 USA (New York/California)'],
+          destinations: ['Germany (Berlin/Munich)', 'Sweden (Stockholm)', 'USA (New York/California)'],
           description: 'High price levels and rents; plan travel budget carefully.',
         },
       },
       top_tier: {
         easy: {
-          destinations: ['🇹🇭 Thailand (Bangkok First Class)', '🇻🇳 Vietnam (Luxury Beach Resort)', '🇲🇾 Malaysia (KL Prime District)'],
+          destinations: ['Thailand (Bangkok First Class)', 'Vietnam (Luxury Beach Resort)', 'Malaysia (KL Prime District)'],
           description: 'Unbeatable purchasing power upgrade! Star hotels, infinity pools, and fine dining.',
         },
         medium: {
-          destinations: ['🇯🇵 Tokyo Downtown (Minato/Shinjuku)', '🇪🇸 Spain (Barcelona)', '🇮🇹 Italy (Rome/Milan)'],
+          destinations: ['Tokyo Downtown (Minato/Shinjuku)', 'Spain (Barcelona)', 'Italy (Rome/Milan)'],
           description: 'Traverse Japan, Korea, and Mediterranean coasts freely; enjoy rich coffee and European culture.',
         },
         hard: {
-          destinations: ['🇨🇭 Switzerland (Alps First Class)', '🇺🇸 Silicon Valley / Manhattan Luxury', '🇸🇬 Singapore Financial Hub'],
+          destinations: ['Switzerland (Alps First Class)', 'USA (Silicon Valley / Manhattan Luxury)', 'Singapore Financial Hub'],
           description: 'Conquer high-cost paradises with high income, enjoying top prestige quality.',
         },
       },

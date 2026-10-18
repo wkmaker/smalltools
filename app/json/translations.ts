@@ -27,6 +27,7 @@ export const TRANSLATIONS = {
     toastCopyFailed: '複製失敗',
     toastNoContent: '無可複製的內容',
     toastEmptyExport: '內容為空無法匯出',
+    toastFileTooLarge: '檔案大小超過 50MB 上限，請選擇較小的 JSON 檔案',
     toastExported: '已匯出 JSON 檔案',
 
     // FAQ
@@ -88,6 +89,7 @@ export const TRANSLATIONS = {
     toastCopyFailed: 'Copy failed',
     toastNoContent: 'Nothing to copy',
     toastEmptyExport: 'Cannot export empty content',
+    toastFileTooLarge: 'File size exceeds 50MB limit. Please upload a smaller JSON file',
     toastExported: 'Exported JSON file',
 
     // FAQ

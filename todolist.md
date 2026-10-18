@@ -179,7 +179,7 @@
 
 ### B-1. 薪資計算機 42,328 行 JSON 結構重構（縮減 96.5% Bundle 體積）
 
-- [ ] **目標檔案**：
+- [x] **目標檔案**：
   - [`app/my-salary-calculator/salaryConfig.ts:4-6, 93-111`](app/my-salary-calculator/salaryConfig.ts#L93-L111)
   - [`app/my-salary-calculator/config/2024.json`](app/my-salary-calculator/config/2024.json)（14,091 行）
   - [`app/my-salary-calculator/config/2025.json`](app/my-salary-calculator/config/2025.json)（14,116 行）
@@ -215,7 +215,7 @@
 
 ### B-2. 為一次讀入記憶體的檔案上傳工具補齊 `file.size` 上限檢查（全域鐵則 36）
 
-- [ ] **對照範本**：目前僅 [`app/base64/Base64Client.tsx:192`](app/base64/Base64Client.tsx#L192) 與 [`app/diff-checker/DiffCheckerClient.tsx:278`](app/diff-checker/DiffCheckerClient.tsx#L278) 有檢查大小，以下 14 個工具直接呼叫 `readAsText` / `arrayBuffer()` 無上限防護：
+- [x] **對照範本**：目前僅 [`app/base64/Base64Client.tsx:192`](app/base64/Base64Client.tsx#L192) 與 [`app/diff-checker/DiffCheckerClient.tsx:278`](app/diff-checker/DiffCheckerClient.tsx#L278) 有檢查大小，以下 14 個工具直接呼叫 `readAsText` / `arrayBuffer()` 無上限防護：
   1. [`app/har-cleaner/HarCleanerClient.tsx:167`](app/har-cleaner/HarCleanerClient.tsx#L167)：
      - **❌ Before**：`const reader = new FileReader(); ... reader.readAsText(file);`（無大小檢查）
      - **✅ After**：在 `L165` 檢查 `if (file.size > 150 * 1024 * 1024) { showErrorToast(t.fileTooLarge); return; }`
@@ -229,7 +229,7 @@
 
 ### B-3. 修復 Tailwind v4 `dark:` 變體與 `<html data-theme="...">` 脫節問題
 
-- [ ] **目標 1**：[`app/globals.css:6-8`](app/globals.css#L6-L8)
+- [x] **目標 1**：[`app/globals.css:6-8`](app/globals.css#L6-L8)
   - **問題根因**：未定義 `@custom-variant dark`，導致全站 18 處 `dark:` 跟隨作業系統 `@media (prefers-color-scheme: dark)` 而非 `<html data-theme="dark">`。
   - **❌ 問題程式碼現況 (Before)**：
     ```css
@@ -242,7 +242,7 @@
     @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
     ```
 
-- [ ] **目標 2**：[`app/not-found.tsx:29, 63`](app/not-found.tsx#L29) 與 [`app/https-dns-generator/HttpsDnsGeneratorClient.tsx:215`](app/https-dns-generator/HttpsDnsGeneratorClient.tsx#L215)
+- [x] **目標 2**：[`app/not-found.tsx:29, 63`](app/not-found.tsx#L29) 與 [`app/https-dns-generator/HttpsDnsGeneratorClient.tsx:215`](app/https-dns-generator/HttpsDnsGeneratorClient.tsx#L215)
   - **❌ 問題程式碼現況 (Before)**：
     ```tsx
     // app/not-found.tsx:29 & L63（light: 為無效變體，導致亮色模式仍顯示刺眼霓虹 #ff0055）
@@ -262,7 +262,7 @@
 
 ### B-4. 修復 18 處 `< 12px` (`0.75rem`) 微縮字級與裸露 Emoji，並強化守門員腳本（全域鐵則 16, 18）
 
-- [ ] **目標 1（11 處 TSX 微縮字級改為 `text-xs`）**：
+- [x] **目標 1（11 處 TSX 微縮字級改為 `text-xs`）**：
   1. [`app/not-found.tsx:91`](app/not-found.tsx#L91)：`text-[0.7rem]` ➔ `text-xs`
   2. [`app/not-found.tsx:111`](app/not-found.tsx#L111)：`text-[0.65rem]` ➔ `text-xs`
   3. [`app/epoch/EpochClient.tsx:458`](app/epoch/EpochClient.tsx#L458)：`text-[0.65rem]` ➔ `text-xs`
@@ -270,14 +270,14 @@
   5. [`app/image-processor/ImageProcessorClient.tsx:915`](app/image-processor/ImageProcessorClient.tsx#L915)：`text-[0.7rem]` ➔ `text-xs`
   6. [`app/mortgage-loan/MortgageLoanClient.tsx:722, 744, 751, 832, 942, 1036`](app/mortgage-loan/MortgageLoanClient.tsx#L722)：6 處 `text-[0.7rem]` ➔ `text-xs`
 
-- [ ] **目標 2（7 處 `.module.css` 微縮字級改為 `0.75rem`）**：
+- [x] **目標 2（7 處 `.module.css` 微縮字級改為 `0.75rem`）**：
   1. [`app/calendar-split/calendar-split.module.css:443`](app/calendar-split/calendar-split.module.css#L443)：`font-size: 0.72rem;` ➔ `font-size: 0.75rem;`
   2. [`app/cert-generator/cert-generator.module.css:394`](app/cert-generator/cert-generator.module.css#L394)：`font-size: 0.7rem;` ➔ `font-size: 0.75rem;`
   3. [`app/har-cleaner/har-cleaner.module.css:261, 282, 844`](app/har-cleaner/har-cleaner.module.css#L261)：`0.72rem` / `0.7rem` ➔ `0.75rem`
   4. [`app/liars-dice/liars-dice.module.css:465`](app/liars-dice/liars-dice.module.css#L465)：`font-size: 0.625rem;` ➔ `font-size: 0.75rem;`
   5. [`app/pac-generator/pac-generator.module.css:488`](app/pac-generator/pac-generator.module.css#L488)：`font-size: 0.6875rem;` ➔ `font-size: 0.75rem;`
 
-- [ ] **目標 3（移除裸露原生 Emoji，改用 SVG 圖示）**：
+- [x] **目標 3（移除裸露原生 Emoji，改用 SVG 圖示）**：
   1. [`components/ServiceWorkerRegister.tsx:92`](components/ServiceWorkerRegister.tsx#L92)：
      - **❌ Before**：`<p className="font-semibold text-cyan-300">🎉 已檢測到全新內容</p>`
      - **✅ After**：移除 `🎉`，並支援英文版與亮暗雙主題配色。
@@ -287,7 +287,7 @@
   3. [`app/config/tools.tsx:34, 158, 242, 423, 545, 667`](app/config/tools.tsx#L34)、[`app/HomeClient.tsx:455`](app/HomeClient.tsx#L455)、[`app/not-found.tsx:85`](app/not-found.tsx#L85)：將分類 `emoji: '🏦' | '💼' | '💻' | '🌐' | '📄' | '🎲'` 替換為主題色向量 `icon: ReactNode`（SVG）。
   4. [`app/hourly-rate-calculator/utils.ts:229-265`](app/hourly-rate-calculator/utils.ts#L229-L265) & [`HourlyRateCalculatorClient.tsx:289-292`](app/hourly-rate-calculator/HourlyRateCalculatorClient.tsx#L289-L292)：移除國旗 Emoji（Windows 會撕裂顯示為雙字母 `TH`/`VN`/`JP`）與卡片 Emoji `💳, 💬, ⚖️`。
 
-- [ ] **目標 4（修補 UI 守門員腳本漏洞）**：
+- [x] **目標 4（修補 UI 守門員腳本漏洞）**：
   - [`tests/check-ui-standards.mjs:8, 37`](tests/check-ui-standards.mjs#L8)：將 `components/` 加入掃描目錄，並移除 `relPath.includes('ToolLayout')` 的豁免。
   - [`tests/ui-rules/no-undersized-font.mjs:2`](tests/ui-rules/no-undersized-font.mjs#L2)：將正則擴充為同時攔截 `text-[0.6...rem]` / `text-[0.7...rem]`。
 

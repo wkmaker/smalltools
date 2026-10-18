@@ -229,7 +229,17 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
       return;
     }
 
-    const newItems: QueueItem[] = pdfFiles.map((file, idx) => ({
+    const acceptedFiles: File[] = [];
+    for (const f of pdfFiles) {
+      if (f.size > 150 * 1024 * 1024) {
+        showToast(t.toastFileTooLarge(f.name));
+      } else {
+        acceptedFiles.push(f);
+      }
+    }
+    if (acceptedFiles.length === 0) return;
+
+    const newItems: QueueItem[] = acceptedFiles.map((file, idx) => ({
       id: `q_${Date.now()}_${idx}_${randomToken(4)}`,
       file,
       name: file.name,

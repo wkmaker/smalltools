@@ -458,7 +458,10 @@ export default function HomeClient({ lang }: HomeClientProps) {
         return (
           <div key={section.id} className={styles.categorySection} data-section={section.id}>
             <h2 className={styles.sectionTitle}>
-              {section.emoji} {sectionLabel}
+              <span className="inline-flex items-center gap-2">
+                {section.icon}
+                <span>{sectionLabel}</span>
+              </span>
             </h2>
 
             <div className={styles.toolsGrid}>

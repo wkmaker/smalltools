@@ -82,15 +82,21 @@ export default function ServiceWorkerRegister() {
 
   if (!showUpdateToast) return null;
 
+  const isEn = pathname?.includes('/en') ?? false;
+
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border border-cyan-500/30 bg-slate-900/90 p-4 shadow-2xl backdrop-blur-md animate-fade-in text-white text-sm">
+    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border border-[#00f0ff]/30 bg-slate-900/90 dark:bg-slate-900/95 p-4 shadow-2xl backdrop-blur-md animate-fade-in text-white text-sm">
       <div className="flex h-3 w-3 relative">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00f0ff] opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#00c8e0]"></span>
       </div>
       <div>
-        <p className="font-semibold text-cyan-300">🎉 已檢測到全新內容</p>
-        <p className="text-xs text-slate-300">正為您自動同步至最新工具版本...</p>
+        <p className="font-semibold text-[#00f0ff]">
+          {isEn ? 'Update Available' : '已檢測到全新內容'}
+        </p>
+        <p className="text-xs text-slate-300">
+          {isEn ? 'Syncing to the latest version...' : '正為您自動同步至最新工具版本...'}
+        </p>
       </div>
     </div>
   );
