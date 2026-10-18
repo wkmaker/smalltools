@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import HomeClient from './HomeClient';
 
@@ -57,15 +56,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJsonLd) }}
       />
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center min-h-screen text-text-sub">
-            載入中...
-          </div>
-        }
-      >
-        <HomeClient lang="zh-TW" />
-      </Suspense>
+      <HomeClient lang="zh-TW" />
     </>
   );
 }

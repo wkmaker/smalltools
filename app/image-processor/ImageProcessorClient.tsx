@@ -57,6 +57,8 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
   const [files, setFiles] = useState<File[]>([]);
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+  const batchItemsRef = useRef<BatchItem[]>([]);
+  batchItemsRef.current = batchItems;
 
   // 單圖狀態
   const [singleImgElement, setSingleImgElement] = useState<HTMLImageElement | null>(null);
@@ -144,16 +146,22 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       setFiles(combined);
       setIsBatchMode(true);
 
-      const newItems: BatchItem[] = combined.map((file, idx) => ({
+      const appendItems: BatchItem[] = validFiles.map((file, idx) => ({
         file,
-        id: `b_${idx}_${file.name}_${Date.now()}`,
+        id: `b_${files.length + idx}_${file.name}_${Date.now()}`,
         thumbUrl: URL.createObjectURL(file),
         estimatedSize: null,
         status: 'pending',
       }));
-      setBatchItems(newItems);
+      setBatchItems((prev) => [...prev, ...appendItems]);
       showToast(lang === 'en' ? `Appended ${validFiles.length} new images` : `已追加 ${validFiles.length} 張新圖片`);
     } else {
+      // 替換前先釋放既有的 thumbUrl，避免記憶體洩漏
+      batchItemsRef.current.forEach((item) => {
+        if (item.thumbUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(item.thumbUrl);
+        }
+      });
       setFiles(validFiles);
       if (validFiles.length > 1) {
         setIsBatchMode(true);
@@ -292,16 +300,16 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     setTargetHeight(newH);
   };
 
-  // 釋放 Blob Object URLs
+  // 組件 Unmount 時釋放所有殘留的 Blob Object URLs
   useEffect(() => {
     return () => {
-      batchItems.forEach((item) => {
+      batchItemsRef.current.forEach((item) => {
         if (item.thumbUrl.startsWith('blob:')) {
           URL.revokeObjectURL(item.thumbUrl);
         }
       });
     };
-  }, [batchItems]);
+  }, []);
 
   // 核心圖片 Canvas 繪製處理 (含旋轉、翻轉與最大像素安全限制)
   const renderProcessedCanvas = useCallback(
@@ -529,6 +537,11 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
               <button
                 type="button"
                 onClick={() => {
+                  batchItemsRef.current.forEach((item) => {
+                    if (item.thumbUrl.startsWith('blob:')) {
+                      URL.revokeObjectURL(item.thumbUrl);
+                    }
+                  });
                   setFiles([]);
                   setSingleImgElement(null);
                   setBatchItems([]);

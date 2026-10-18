@@ -24,6 +24,7 @@ import {
   getAvailablePrizes,
 } from './engine';
 import { downloadBlob } from '../utils/downloadBlob';
+import { getLocalDateString } from '../utils/dateUtils';
 import { TRANSLATIONS } from './translations';
 
 interface LuckyWheelClientProps {
@@ -1099,13 +1100,13 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const exportTxt = () => {
     const textContent = prizes.map((p) => `${p.title}\t${p.weight}\t${p.quantity}\t${p.color}`).join('\n');
     const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(blob, `LuckyWheel_Prizes_${new Date().toISOString().slice(0, 10)}.txt`);
+    downloadBlob(blob, `LuckyWheel_Prizes_${getLocalDateString()}.txt`);
   };
 
   const exportHistoryCsv = () => {
     const csv = formatHistoryCsv(history, lang);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, `LuckyWheel_Winners_${new Date().toISOString().slice(0, 10)}.csv`);
+    downloadBlob(blob, `LuckyWheel_Winners_${getLocalDateString()}.csv`);
   };
 
   const copyWinnersText = async () => {

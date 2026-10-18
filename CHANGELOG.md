@@ -4,6 +4,26 @@
 
 ---
 
+## [1.24.1] - 2026-10-18
+
+### 🐛 問題修復與效能優化 (Fixed & Performance)
+
+- **批次 A 深度修復（線上 Bug、記憶體洩漏、首頁 SSG 預渲染、CI/CD 部署）**：
+  - **修復 PDF 壓縮器 Render 期 Blob URL 記憶體洩漏**：
+    - 將 `app/pdf-compressor/PdfCompressorClient.tsx` 單檔下載連結由 `<a href={URL.createObjectURL(...)}>` 改為按鈕點擊動態呼叫 `downloadBlob`，消除每次組件 re-render 重新生成新 ObjectURL 導致的記憶體堆積。
+  - **修復圖片處理器 Blob Object URLs 生命週期管理**：
+    - 在 `app/image-processor/ImageProcessorClient.tsx` 中透過 `batchItemsRef` 追蹤縮圖，組件 Unmount、重置清空或非追加重新載入檔案時確實回收 ObjectURL，並避免追加圖片時對既有檔案重複建立縮圖 URL。
+  - **修復 SSL 憑證轉換器日期時區混用跨日錯亂**：
+    - 修正 `app/ssl-converter/engine.ts` 的 `formatValidityDate`，消除前半段 UTC 日期與後半段本地時間混用導致台灣時間凌晨相差一整天的 Bug，全程使用使用者本地時區格式化。
+  - **新增共用本地日期格式化工具函式**：
+    - 新增 `app/utils/dateUtils.ts` 的 `getLocalDateString()`，全面取代 LuckyWheel、PdfCompressor、PdfProcessor 等匯出檔名誤用 `toISOString().slice(0, 10)`（UTC 前一天）的寫法。
+  - **修復首頁靜態匯出 SSG 首屏空白問題**：
+    - 移除 `app/HomeClient.tsx` 的 `useSearchParams()`，改於 Client 掛載後讀取網址參數與本地儲存；移除 `app/page.tsx` 與 `app/en/page.tsx` 的 `<Suspense fallback={<div>載入中...</div>}>` 包裹，使靜態匯出的 `out/index.html` 完整預渲染 36 個工具卡片，大幅提升 SEO 與無 JS 環境可讀性。
+  - **補齊 CI/CD 路徑過濾**：
+    - 在 `.github/workflows/deploy.yml` 的 `paths-filter` 補齊根目錄 `components/**`，防止修改全站共用元件時漏觸發建置與部署。
+
+---
+
 ## [1.24.0] - 2026-10-18
 
 ### ✨ 新增功能 (Added)

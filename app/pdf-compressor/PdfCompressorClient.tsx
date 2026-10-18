@@ -10,6 +10,7 @@ import {
 } from '../utils/pdfHelper';
 import { formatBytes } from '../utils/formatBytes';
 import { downloadBlob } from '../utils/downloadBlob';
+import { getLocalDateString } from '../utils/dateUtils';
 import { randomToken } from '../utils/randomToken';
 import styles from './pdf-compressor.module.css';
 import { TRANSLATIONS } from './translations';
@@ -429,7 +430,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
     }
 
     const zipBlob = createSimpleZip(zipFiles);
-    downloadBlob(zipBlob, `PDF_Compressed_Batch_${new Date().toISOString().slice(0, 10)}.zip`, 5000);
+    downloadBlob(zipBlob, `PDF_Compressed_Batch_${getLocalDateString()}.zip`, 5000);
     showToast(t.toastZipDone);
   };
 
@@ -845,16 +846,23 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                         </span>
                       </div>
 
-                      <a
-                        href={URL.createObjectURL(item.compressedBlob)}
-                        download={`${item.name.replace(/\.pdf$/i, '')}_compressed.pdf`}
-                        className={`${styles.actionBtn} text-xs flex items-center gap-1.5`}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          item.compressedBlob &&
+                          downloadBlob(
+                            item.compressedBlob,
+                            `${item.name.replace(/\.pdf$/i, '')}_compressed.pdf`,
+                            5000
+                          )
+                        }
+                        className={`${styles.actionBtn} text-xs flex items-center gap-1.5 cursor-pointer`}
                       >
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
                         </svg>
                         {t.downloadPdf}
-                      </a>
+                      </button>
                     </div>
                   )}
 

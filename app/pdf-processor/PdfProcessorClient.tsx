@@ -11,6 +11,7 @@ import {
   PdfComposerItem,
 } from '../utils/pdfHelper';
 import { downloadBlob } from '../utils/downloadBlob';
+import { getLocalDateString } from '../utils/dateUtils';
 import { randomToken } from '../utils/randomToken';
 import styles from './pdf-processor.module.css';
 import { TRANSLATIONS } from './translations';
@@ -385,7 +386,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         },
         exportEngine
       );
-      downloadBlob(pdfBlob, `Combined_PDF_${new Date().toISOString().slice(0, 10)}.pdf`, 5000);
+      downloadBlob(pdfBlob, `Combined_PDF_${getLocalDateString()}.pdf`, 5000);
       showToast(t.toastExportSuccess);
     } catch (err) {
       console.error('PDF 匯出失敗:', err);

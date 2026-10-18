@@ -22,7 +22,7 @@
 
 ### A-1. 修復 JSX Render 期直接呼叫 `URL.createObjectURL` 造成的嚴重記憶體洩漏
 
-- [ ] **目標 1**：[`app/pdf-compressor/PdfCompressorClient.tsx:848-857`](app/pdf-compressor/PdfCompressorClient.tsx#L848-L857)
+- [x] **目標 1**：[`app/pdf-compressor/PdfCompressorClient.tsx:848-857`](app/pdf-compressor/PdfCompressorClient.tsx#L848-L857)
   - **問題根因**：直接在 JSX render 屬性中呼叫 `URL.createObjectURL(item.compressedBlob)`。只要組件發生任何 re-render（例如其他檔案壓縮進度更新、滑桿變動、Toast 顯示），React 就會對每個已完成的 PDF Blob 重新建立一個新的 ObjectURL，且舊 URL 永遠不會呼叫 `URL.revokeObjectURL`。
   - **❌ 問題程式碼現況 (Before)**：
     ```tsx
@@ -55,7 +55,7 @@
     </button>
     ```
 
-- [ ] **目標 2**：[`app/image-processor/ImageProcessorClient.tsx:148-169, 300`](app/image-processor/ImageProcessorClient.tsx#L148-L169)
+- [x] **目標 2**：[`app/image-processor/ImageProcessorClient.tsx:148-169, 300`](app/image-processor/ImageProcessorClient.tsx#L148-L169)
   - **問題根因**：上傳圖片時建立 `thumbUrl: URL.createObjectURL(file)`，雖然 `removeBatchItem` (`L300`) 有呼叫 `URL.revokeObjectURL(item.thumbUrl)`，但當組件 Unmount（離開頁面）或清空時，未釋放尚在列表中的 `thumbUrl`。
   - **❌ 問題程式碼現況 (Before)**：
     ```tsx
@@ -78,7 +78,7 @@
 
 ### A-2. 修復日期與時區混用 Bug（違反全域鐵則 7 & 8）
 
-- [ ] **目標 1（嚴重跨日錯亂 Bug）**：[`app/ssl-converter/engine.ts:46-48`](app/ssl-converter/engine.ts#L46-L48)
+- [x] **目標 1（嚴重跨日錯亂 Bug）**：[`app/ssl-converter/engine.ts:46-48`](app/ssl-converter/engine.ts#L46-L48)
   - **問題根因**：前半段日期使用 `date.toISOString().split('T')[0]`（取 **UTC 日期**），後半段時間卻使用 `date.toTimeString().split(' ')[0]`（取**使用者本地時區時間**）！當憑證時間落在台灣時間（UTC+8）`00:00:00 ~ 07:59:59` 時，UTC 日期還在昨天，拼出來的字串會差整整一天。
   - **❌ 問題程式碼現況 (Before)**：
     ```ts
@@ -102,7 +102,7 @@
     }
     ```
 
-- [ ] **目標 2（匯出檔名誤用 UTC 日期）**：
+- [x] **目標 2（匯出檔名誤用 UTC 日期）**：
   - [`app/lucky-wheel/LuckyWheelClient.tsx:769`](app/lucky-wheel/LuckyWheelClient.tsx#L769)
   - [`app/pdf-compressor/PdfCompressorClient.tsx:432`](app/pdf-compressor/PdfCompressorClient.tsx#L432)
   - [`app/pdf-processor/PdfProcessorClient.tsx:388`](app/pdf-processor/PdfProcessorClient.tsx#L388)
@@ -122,7 +122,7 @@
 
 ### A-3. 修復首頁因 `<Suspense>` 包裹 `useSearchParams()` 導致靜態匯出 HTML 只有「載入中...」的問題（全域鐵則 26）
 
-- [ ] **目標檔案**：
+- [x] **目標檔案**：
   - [`app/page.tsx:60-68`](app/page.tsx#L60-L68)
   - [`app/en/page.tsx:60-68`](app/en/page.tsx#L60-L68)
   - [`app/HomeClient.tsx:5, 62-75`](app/HomeClient.tsx#L62-L75)
@@ -152,7 +152,7 @@
 
 ### A-4. 修補 CI/CD `.github/workflows/deploy.yml` 路徑過濾遺漏根目錄 `components/**`
 
-- [ ] **目標檔案**：[`.github/workflows/deploy.yml:45-54`](.github/workflows/deploy.yml#L45-L54)
+- [x] **目標檔案**：[`.github/workflows/deploy.yml:45-54`](.github/workflows/deploy.yml#L45-L54)
   - **問題根因**：根目錄 `components/` 下有 `CommandPalette.tsx`、`ThemeProvider.tsx`、`ThemeToggle.tsx`、`ParticleCanvas.tsx`、`ServiceWorkerRegister.tsx`，但 `dorny/paths-filter` 只列了 `app/**`，漏列 `components/**`。
   - **❌ 問題程式碼現況 (Before)**：
     ```yaml
