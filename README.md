@@ -41,6 +41,8 @@
 * **[真實時薪計算器](https://tools.cjkuo.net/hourly-rate-calculator/)** (`/hourly-rate-calculator`) - 扣除通勤時間、無酬加班與額外支出，精準計算每小時生命真實淨收益並對照全台薪資 PR 排行。
 * **[離職時間與預告期計算機](https://tools.cjkuo.net/resignation-calculator/)** (`/resignation-calculator`) - 依台灣勞基法第 16 條、第 38 條與勞退條例第 12 條精準計算法定預告天數、離職生效日、最後在職日、台灣國定假日（2025–2027）排休扣除、特休代金與勞退新制資遣費試算，支援互動式排休月曆、月底破月薪資與健保歸屬建議、`.ics` 行事曆匯出與多情境離職信範本。
 * **[孕期與產檢假計算機](https://tools.cjkuo.net/pregnancy-calculator/)** (`/pregnancy-calculator`) - 支援 LMP、預產期、超音波 CRL 與試管推算，精算 40 週 9 大產檢里程碑（含公費/自費標記）、5 階段孕期自我準備與待產包 Check List、胎兒成長尺寸，並整合台灣勞基法試算 8 天產檢假、8 週產假、育嬰留停 8 成薪與勞保生育給付。
+* **[宮縮計時器](https://tools.cjkuo.net/contraction-timer/)** (`/contraction-timer`) - 按一下開始、再按一下停止，以最近 5 次宮縮滑動視窗中位數精算頻率、持續秒數、規律程度與已維持時長，並提供 6 小時 ECharts 雙軸趨勢圖、螢幕常亮與一鍵複製狀態小抄。資料僅存本機、6 小時自動清除。
+* **[胎動計數器](https://tools.cjkuo.net/kick-counter/)** (`/kick-counter`) - 寶寶有動就按！支援「數滿 10 次法」與「1 小時定時法」雙模式，自動依 2 分鐘門檻智能判定連環踢，精算有效胎動波數與總次數、達標耗時活力走勢、螢幕常亮與防慌報備小抄。資料僅存本機。
 
 ### 💻 開發輔助 (Developer Tools)
 * **[Base64 編碼/解碼](https://tools.cjkuo.net/base64/)** (`/base64`) - 支援文字即時雙向編解碼（UTF-8 不亂碼）、檔案拖曳編碼與多媒體預覽。
