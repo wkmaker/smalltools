@@ -437,7 +437,8 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         let img: HTMLImageElement;
         try {
           img = await safeLoadImage(item.thumbUrl);
-        } catch {
+        } catch (err) {
+          console.error('[ImageProcessor] Failed to load image item:', item.file.name, err);
           setBatchItems((prev) =>
             prev.map((it, idx) => (idx === i ? { ...it, status: 'error' } : it))
           );
@@ -483,6 +484,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
 
       showToast(t.zipCompleted);
     } catch (err) {
+      console.error('[ImageProcessor] Failed to create batch ZIP:', err);
       showToast(t.zipFailed((err as Error).message));
     } finally {
       setIsProcessing(false);
@@ -1012,6 +1014,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
                     <div className={`${styles.compLabel} ${styles.compLabelAfter}`}>{t.compAfter}</div>
 
                     {/* 拖曳輸入條 */}
+                    <label htmlFor={compRangeId} className="sr-only">{t.srComp}</label>
                     <input
                       id={compRangeId}
                       type="range"

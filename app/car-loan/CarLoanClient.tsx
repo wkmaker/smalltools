@@ -6,6 +6,7 @@ import FaqSection from '../components/FaqSection';
 import TrendChart from '../components/TrendChart';
 import styles from './car-loan.module.css';
 import { calculateCarLoan, type LoanRow, type RepayType, type LoanScheme } from './engine';
+import { D, toNumber } from '../utils/decimal';
 import { TRANSLATIONS } from './translations';
 
 function formatNumber(val: number): string {
@@ -100,7 +101,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
       } else if (pDpPct && !isNaN(Number(pDpPct))) {
         const pct = Number(pDpPct);
         setDownPaymentPercent(pct);
-        setDownPaymentAmount(Math.round(priceVal * (pct / 100)));
+        setDownPaymentAmount(toNumber(D(priceVal).times(pct).div(100).dp(0)));
       }
       if (pLoan && !isNaN(Number(pLoan))) {
         setLoanAmount(Number(pLoan));
@@ -169,7 +170,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
       return;
     }
     const numPct = downPaymentPercent === '' ? 0 : downPaymentPercent;
-    const newDpAmount = Math.round(val * (numPct / 100));
+    const newDpAmount = toNumber(D(val).times(numPct).div(100).dp(0));
     setDownPaymentAmount(newDpAmount);
     setLoanAmount(Math.max(0, val - newDpAmount));
   };
@@ -182,7 +183,7 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
     const validPct = Math.min(100, Math.max(0, pct));
     setDownPaymentPercent(validPct);
     const numCar = carPrice === '' ? 0 : carPrice;
-    const newDpAmount = Math.round(numCar * (validPct / 100));
+    const newDpAmount = toNumber(D(numCar).times(validPct).div(100).dp(0));
     setDownPaymentAmount(newDpAmount);
     setLoanAmount(Math.max(0, numCar - newDpAmount));
   };
@@ -194,8 +195,8 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
       return;
     }
     const numCar = carPrice === '' ? 0 : carPrice;
-    const newPct = numCar > 0 ? (amt / numCar) * 100 : 0;
-    setDownPaymentPercent(parseFloat(newPct.toFixed(1)));
+    const newPct = numCar > 0 ? toNumber(D(amt).div(numCar).times(100).dp(1)) : 0;
+    setDownPaymentPercent(newPct);
     setLoanAmount(Math.max(0, numCar - amt));
   };
 
@@ -208,8 +209,8 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
     const numCar = carPrice === '' ? 0 : carPrice;
     const newDpAmount = Math.max(0, numCar - amt);
     setDownPaymentAmount(newDpAmount);
-    const newPct = numCar > 0 ? (newDpAmount / numCar) * 100 : 0;
-    setDownPaymentPercent(parseFloat(newPct.toFixed(1)));
+    const newPct = numCar > 0 ? toNumber(D(newDpAmount).div(numCar).times(100).dp(1)) : 0;
+    setDownPaymentPercent(newPct);
   };
 
   // 主計算邏輯

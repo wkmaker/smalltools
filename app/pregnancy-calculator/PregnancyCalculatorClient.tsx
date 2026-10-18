@@ -300,8 +300,8 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
       await navigator.clipboard.writeText(shareUrl);
       setShareLinkToast(true);
       setTimeout(() => setShareLinkToast(false), 3000);
-    } catch {
-      // fallback
+    } catch (err) {
+      console.warn('[PregnancyCalculator] Clipboard write failed:', err);
     }
   };
 
@@ -449,8 +449,8 @@ Date: ${formatDate(new Date())}`;
       await navigator.clipboard.writeText(leaveApplicationTemplate);
       setCopiedToast(true);
       setTimeout(() => setCopiedToast(false), 3000);
-    } catch {
-      // fallback
+    } catch (err) {
+      console.warn('[PregnancyCalculator] Clipboard write failed:', err);
     }
   };
 

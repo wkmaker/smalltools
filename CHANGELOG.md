@@ -4,6 +4,36 @@
 
 ---
 
+## [1.25.0] - 2026-10-18
+
+### ♿ 無障礙與語意標籤 (Accessibility & A11y)
+- **修復非法 HTML5 巢狀互動結構**：首頁工具卡片移除 `<Link>` 內部嵌套釘選 `<button>`，改用 `.toolCardWrapper` 平級佈局，符合 W3C 標準。
+- **表單標籤對稱綁定**：修復行事曆切割器、PAC 規則產生器、PAC 測試器等 13 處缺少 `htmlFor` 與 `id` 的表單控制項，並為 CommandPalette 搜尋框、時間戳單位選單等補齊 `aria-label`。
+
+### 🔢 數值精度與金融防護 (Financial Precision)
+- **全面改用 BigNumber.js**：全面消除離職特休折現、健保眷屬加乘、房貸/車貸/信貸頭期款換算、股票質押維持率與期貨本金倍數計算等處的殘留原生浮點數乘除，防止浮點誤差。
+
+### 🛡️ 零靜默失敗與安全標頭 (Error Handling & Security)
+- **消除靜默失敗**：針對剪貼簿複製失敗、HAR 檔案解析異常、PAC Web Worker 降級、PDF 圖片替換等情境補齊明確的可追溯日誌 (`console.error`/`console.warn`) 與使用者反饋 Banner。
+- **CloudFront OWASP 安全回應標頭**：在 `template.yml` 新增 Production 與 Staging 通用的安全回應標頭 Policy（含 `HSTS`、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`）。
+
+### 🧪 核心引擎抽離與單元測試 (Unit Tests & Refactoring)
+- **核心演算法抽離獨立引擎 (`engine.ts`)**：
+  - `app/calendar-split/icsSplitter.ts` ➔ 新增 `tests/engine/calendar-split.test.mjs`。
+  - `app/dns-dig/dnsDecoder.ts` ➔ 新增 `tests/engine/dns-dig.test.mjs`。
+  - `app/image-processor/utils/zipBuilder.ts` ➔ 新增 `tests/engine/zip-builder.test.mjs`。
+  - `app/https-dns-generator/engine.ts` ➔ 新增 `tests/engine/https-dns-generator.test.mjs`。
+  - `app/liars-dice/engine.ts` ➔ 新增 `tests/engine/liars-dice.test.mjs`。
+  - `app/password/engine.ts` ➔ 新增 `tests/engine/password.test.mjs`。
+  - `app/qr-generator/engine.ts` ➔ 新增 `tests/engine/qr-generator.test.mjs`。
+- **全站 295 個單元測試 100% 通過**，納入 `npm run test` 與 `prebuild` 守門員。
+
+### 📦 依賴與文檔維護 (Dependencies & Documentation)
+- **清理 package.json**：移除未使用的 `reflect-metadata`，將 `@types/diff` 與 `@types/node-forge` 歸入 `devDependencies`。
+- **同步全站文檔與徽章**：全站頁面描述、Sitemap、README 統一同步為 `36+` 工具，徽章更新至 `Next.js-16.3.8` 與 `React-19.3.0`。
+
+---
+
 ## [1.24.3] - 2026-10-18
 
 ### 🌐 多語系與純淨繁中化 (i18n & Localization)

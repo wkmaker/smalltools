@@ -7,6 +7,7 @@ import FaqSection from '../components/FaqSection';
 import styles from './liars-dice.module.css';
 import { randomToken } from '../utils/randomToken';
 import { TRANSLATIONS } from './translations';
+import { calculateDiceCounts, formatElapsedTime } from './engine';
 
 interface HistoryItem {
   id: string;
@@ -389,25 +390,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
     }, 900);
   };
 
-  // 格式化 elapsed time 顯示 (例如 02 分 15 秒)
-  const formatElapsedTime = (sec: number) => {
-    const mins = Math.floor(sec / 60);
-    const remainderSecs = sec % 60;
-    const padMins = String(mins).padStart(2, '0');
-    const padSecs = String(remainderSecs).padStart(2, '0');
-    return `${padMins}m ${padSecs}s`;
-  };
-
-  // 當前點數統計
-  const getDiceCounts = () => {
-    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-    diceValues.forEach((val) => {
-      counts[val] = (counts[val] || 0) + 1;
-    });
-    return counts;
-  };
-
-  const counts = getDiceCounts();
+  const counts = calculateDiceCounts(diceValues);
 
   const renderContent = (inPortal = false) => (
     <div className={`${styles.mainCard} ${inPortal ? 'w-full max-w-[860px] mx-auto border-none shadow-none bg-transparent' : ''}`}>

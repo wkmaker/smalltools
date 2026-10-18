@@ -145,20 +145,6 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
   const maxDpiId = useId();
   const isMountedRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    document.documentElement.style.setProperty('--theme-color', '#eab308');
-    document.documentElement.style.setProperty('--accent-glow', 'rgba(234, 179, 8, 0.6)');
-
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const m = params.get('mode');
-      if (m === 'low' || m === 'medium' || m === 'high') {
-        applyModePreset(m);
-      }
-    }
-    isMountedRef.current = true;
-  }, []);
-
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
@@ -199,24 +185,41 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
     []
   );
 
-  const applyModePreset = (m: 'low' | 'medium' | 'high') => {
-    setModePreset(m);
-    let q = 0.65;
-    let dpi = 144;
-    if (m === 'low') {
-      q = 0.45;
-      dpi = 96;
-    } else if (m === 'medium') {
-      q = 0.65;
-      dpi = 144;
-    } else if (m === 'high') {
-      q = 0.85;
-      dpi = 200;
+  const applyModePreset = useCallback(
+    (m: 'low' | 'medium' | 'high') => {
+      setModePreset(m);
+      let q = 0.65;
+      let dpi = 144;
+      if (m === 'low') {
+        q = 0.45;
+        dpi = 96;
+      } else if (m === 'medium') {
+        q = 0.65;
+        dpi = 144;
+      } else if (m === 'high') {
+        q = 0.85;
+        dpi = 200;
+      }
+      setQuality(q);
+      setMaxDpi(dpi);
+      syncToURL(m, q, dpi);
+    },
+    [syncToURL]
+  );
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--theme-color', '#eab308');
+    document.documentElement.style.setProperty('--accent-glow', 'rgba(234, 179, 8, 0.6)');
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const m = params.get('mode');
+      if (m === 'low' || m === 'medium' || m === 'high') {
+        applyModePreset(m);
+      }
     }
-    setQuality(q);
-    setMaxDpi(dpi);
-    syncToURL(m, q, dpi);
-  };
+    isMountedRef.current = true;
+  }, [applyModePreset]);
 
   // 上傳 PDF 檔案並自動非同步預檢
   const handleFilesSelect = async (files: FileList | File[]) => {
@@ -329,6 +332,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
         )
       );
     } catch (err: any) {
+      console.error('[PdfCompressor] Unlock failed:', err);
       setFileQueue((prev) =>
         prev.map((it) =>
           it.id === id

@@ -38,6 +38,7 @@ interface EpochClientProps {
 
 export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
   const t = TRANSLATIONS[lang];
+  const isEn = lang === 'en';
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
   // 當前即時看板
@@ -383,6 +384,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
                   id={tsUnitId}
                   value={unitMode}
                   onChange={(e) => setUnitMode(e.target.value as 'auto' | 's' | 'ms')}
+                  aria-label={isEn ? 'Timestamp unit' : '時間戳單位'}
                   className={styles.selectInput}
                 >
                   <option value="auto">{t.unitAuto}</option>

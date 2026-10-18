@@ -6,6 +6,7 @@ import FaqSection from '../components/FaqSection';
 import TrendChart from '../components/TrendChart';
 import styles from './personal-loan.module.css';
 import { calculatePersonalLoan, type LoanScheduleRow, type RepayMethod } from './engine';
+import { D, toNumber } from '../utils/decimal';
 import { TRANSLATIONS } from './translations';
 
 interface Props {
@@ -108,7 +109,7 @@ export default function PersonalLoanClient({ lang = 'zh-TW' }: Props) {
 
   // 賸餘本金遞減趨勢圖資料（TrendChart 為主題感知 ECharts 元件）
   const trendChartData = useMemo(() => {
-    const numAmt = (loanAmount === '' ? 0 : loanAmount) * 10000;
+    const numAmt = toNumber(D(loanAmount === '' ? 0 : loanAmount).times(10000));
     return [{ month: 0, remaining: numAmt }, ...schedule];
   }, [schedule, loanAmount]);
   const trendXLabels = useMemo(

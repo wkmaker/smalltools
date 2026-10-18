@@ -82,8 +82,8 @@ async function run() {
     const fileUrl = pathToFileURL(filePath).href;
 
     try {
-      const module = await import(fileUrl);
-      const dict = module.TRANSLATIONS;
+      const importedModule = await import(fileUrl);
+      const dict = importedModule.TRANSLATIONS;
 
       if (!dict) {
         console.error(`❌ [FAIL] ${relativePath}: 未導出 TRANSLATIONS 常數`);

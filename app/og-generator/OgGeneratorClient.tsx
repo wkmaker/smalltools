@@ -665,7 +665,7 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
                     {bgImage && (
                       <div className="space-y-3 pt-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-text-sub">{t.bgOpacity}</span>
+                          <label htmlFor={bgOpacityId} className="text-xs text-text-sub">{t.bgOpacity}</label>
                           <button
                             type="button"
                             onClick={() => setBgImage(null)}
@@ -982,9 +982,9 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
               {/* 強調發光色 (Accent Glow Color) 專屬精緻區塊 */}
               <div className="space-y-2.5 pt-3 border-t border-border-glass">
                 <div className="flex items-center justify-between">
-                  <span className="block text-xs font-semibold text-text-main">
+                  <label htmlFor={accentPickerId} className="block text-xs font-semibold text-text-main cursor-pointer">
                     {t.accentColor}
-                  </span>
+                  </label>
                   <span className="text-[12px] text-text-sub font-mono uppercase">
                     {accentColor}
                   </span>
@@ -1242,7 +1242,6 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
               {/* Modal 圖片展示主體 */}
               <div className={styles.modalBody}>
                 {modalImageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={modalImageUrl}
                     alt={t.modalTitle}

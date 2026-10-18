@@ -6,6 +6,19 @@ import FaqSection from '../components/FaqSection';
 import styles from './qr-generator.module.css';
 import { downloadBlob } from '../utils/downloadBlob';
 import { TRANSLATIONS } from './translations';
+import {
+  parseHexColor,
+  escapeWifiString,
+  toUtf8ByteString,
+  formatICalDate,
+  encodeQuotedPrintable,
+  buildWifiPayload,
+  buildVCardPayload,
+  buildEventPayload,
+  buildEmailPayload,
+  buildSmsPayload,
+  buildTelPayload,
+} from './engine';
 
 interface QrGeneratorClientProps {
   lang?: 'zh-TW' | 'en';
@@ -192,221 +205,56 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
     isDraggingTrackRef.current = false;
   };
 
-  // --- 輔助函數 ---
-  const parseHexColor = (val: string, fallback: string): string => {
-    const clean = val.replace('#', '');
-    if (/^[0-9A-Fa-f]{3,6}$/.test(clean)) {
-      return '#' + clean;
-    }
-    return fallback;
-  };
-
-  const escapeWifiString = (val: string): string => {
-    if (!val) return '';
-    return val
-      .replace(/\\/g, '\\\\')
-      .replace(/;/g, '\\;')
-      .replace(/:/g, '\\:')
-      .replace(/,/g, '\\,');
-  };
-
-  const toUtf8ByteString = (str: string): string => {
-    try {
-      return unescape(encodeURIComponent(str));
-    } catch (e) {
-      return str;
-    }
-  };
-
-  const formatICalDate = (dtStr: string, tz: string): string => {
-    if (!dtStr) return '';
-    const clean = dtStr.replace(/[-:]/g, '');
-    if (clean.includes('T')) {
-      const [d, t] = clean.split('T');
-      const timePadded = (t + '0000').slice(0, 6);
-      const formatted = `${d}T${timePadded}`;
-      if (tz === 'UTC') {
-        return `${formatted}Z`;
-      }
-      return formatted;
-    }
-    return clean;
-  };
-
-  const encodeQuotedPrintable = (str: string): string => {
-    if (!str) return '';
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(str);
-    let encoded = '';
-    for (let i = 0; i < bytes.length; i++) {
-      const b = bytes[i];
-      if (
-        (b >= 48 && b <= 57) ||
-        (b >= 65 && b <= 90) ||
-        (b >= 97 && b <= 122) ||
-        b === 32 ||
-        b === 45 ||
-        b === 95
-      ) {
-        encoded += String.fromCharCode(b);
-      } else {
-        const hex = b.toString(16).toUpperCase();
-        encoded += '=' + (hex.length === 1 ? '0' + hex : hex);
-      }
-    }
-    return encoded;
-  };
-
   const getComputedData = (): string => {
     if (contentType === 'text') {
       return text.trim() || 'https://tools.cjkuo.net';
     } else if (contentType === 'wifi') {
-      const ssid = escapeWifiString(wifiSsid.trim());
-      const pass = escapeWifiString(wifiPass.trim());
-      const enc = wifiEncryption;
-      const isHidden = wifiHidden;
-
-      if (!ssid) {
-        return 'WIFI:S:WiFi_SSID;;';
-      } else {
-        let dataVal = `WIFI:S:${ssid};`;
-        if (enc !== 'nopass') {
-          dataVal += `T:${enc};P:${pass};`;
-        } else {
-          dataVal += `T:nopass;;`;
-        }
-        if (isHidden) {
-          dataVal += `H:true;`;
-        }
-        dataVal += ';';
-        return dataVal;
-      }
+      return buildWifiPayload({
+        ssid: wifiSsid,
+        pass: wifiPass,
+        encryption: wifiEncryption,
+        hidden: wifiHidden,
+      });
     } else if (contentType === 'vcard') {
-      const ln = vCardLastName.trim();
-      const fn = vCardFirstName.trim();
-      const nick = vCardNickname.trim();
-      const org = vCardOrg.trim();
-      const dept = vCardDept.trim();
-      const title = vCardTitle.trim();
-      const address = vCardAddress.trim();
-      const bday = vCardBday.trim();
-      const cellPhone = vCardPhone.trim();
-      const workPhone = vCardWorkPhone.trim();
-      const email = vCardEmail.trim();
-      const url = vCardUrl.trim();
-
-      const hasChinese = /[\u4e00-\u9fa5]/.test(ln + fn + nick + org + dept + title + address);
-
-      const fullName = hasChinese
-        ? `${ln}${fn}`.trim() || fn || ln || 'Contact'
-        : `${fn} ${ln}`.trim() || fn || ln || 'Contact';
-
-      const ver = vCardVersion;
-
-      const lines: string[] = [
-        'BEGIN:VCARD',
-        `VERSION:${ver}`,
-        `FN:${fullName}`,
-        `N:${ln};${fn};;;`,
-        `SORT-STRING:${fullName}`,
-      ];
-
-      if (hasChinese) {
-        if (ln) lines.push(`X-PHONETIC-LAST-NAME:${ln}`);
-        if (fn) lines.push(`X-PHONETIC-FIRST-NAME:${fn}`);
-      }
-
-      if (nick) {
-        lines.push(`NICKNAME:${nick}`);
-      }
-
-      if (org && dept) {
-        lines.push(`ORG:${org} / ${dept}`);
-      } else if (org) {
-        lines.push(`ORG:${org}`);
-      } else if (dept) {
-        lines.push(`ORG:${dept}`);
-      }
-
-      if (title) {
-        lines.push(`TITLE:${title}`);
-      }
-
-      if (cellPhone) {
-        lines.push(ver === '4.0' ? `TEL;TYPE=cell:${cellPhone}` : `TEL;TYPE=CELL:${cellPhone}`);
-      }
-      if (workPhone) {
-        lines.push(ver === '4.0' ? `TEL;TYPE="work,voice":${workPhone}` : `TEL;TYPE=WORK,VOICE:${workPhone}`);
-      }
-
-      if (email) {
-        lines.push(ver === '4.0' ? `EMAIL;TYPE=work:${email}` : `EMAIL;TYPE=INTERNET,WORK:${email}`);
-      }
-      if (url) lines.push(`URL:${url}`);
-      if (address) {
-        lines.push(ver === '4.0' ? `ADR;TYPE=work:;;${address};;;;` : `ADR;TYPE=WORK:;;${address};;;;`);
-      }
-      if (bday) {
-        lines.push(`BDAY:${bday}`);
-      }
-
-      lines.push('END:VCARD');
-
-      return lines.join('\r\n');
+      return buildVCardPayload({
+        version: vCardVersion,
+        lastName: vCardLastName,
+        firstName: vCardFirstName,
+        nickname: vCardNickname,
+        org: vCardOrg,
+        dept: vCardDept,
+        title: vCardTitle,
+        address: vCardAddress,
+        bday: vCardBday,
+        phone: vCardPhone,
+        workPhone: vCardWorkPhone,
+        email: vCardEmail,
+        url: vCardUrl,
+      });
     } else if (contentType === 'event') {
-      const lines: string[] = ['BEGIN:VCALENDAR', 'VERSION:2.0'];
-      if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
-        lines.push(`X-WR-TIMEZONE:${eventTimezone}`);
-      }
-      lines.push('BEGIN:VEVENT');
-      lines.push(`SUMMARY:${eventSummary.trim() || 'Event'}`);
-
-      if (eventStart) {
-        if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
-          lines.push(`DTSTART;TZID=${eventTimezone}:${formatICalDate(eventStart, eventTimezone)}`);
-        } else {
-          lines.push(`DTSTART:${formatICalDate(eventStart, eventTimezone)}`);
-        }
-      }
-
-      if (eventEnd) {
-        if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
-          lines.push(`DTEND;TZID=${eventTimezone}:${formatICalDate(eventEnd, eventTimezone)}`);
-        } else {
-          lines.push(`DTEND:${formatICalDate(eventEnd, eventTimezone)}`);
-        }
-      }
-
-      if (eventLocation.trim()) lines.push(`LOCATION:${eventLocation.trim()}`);
-      if (eventDescription.trim()) lines.push(`DESCRIPTION:${eventDescription.trim()}`);
-
-      lines.push('END:VEVENT');
-      lines.push('END:VCALENDAR');
-
-      return lines.join('\r\n');
+      return buildEventPayload({
+        summary: eventSummary,
+        start: eventStart,
+        end: eventEnd,
+        timezone: eventTimezone,
+        location: eventLocation,
+        description: eventDescription,
+      });
     } else if (contentType === 'email') {
-      const to = emailTo.trim();
-      const sub = emailSubject.trim();
-      const body = emailBody.trim();
-      let mailto = `mailto:${to}`;
-      const params: string[] = [];
-      if (sub) params.push(`subject=${encodeURIComponent(sub)}`);
-      if (body) params.push(`body=${encodeURIComponent(body)}`);
-      if (params.length > 0) {
-        mailto += `?${params.join('&')}`;
-      }
-      return mailto || 'mailto:service@example.com';
+      return buildEmailPayload({
+        to: emailTo,
+        subject: emailSubject,
+        body: emailBody,
+      });
     } else if (contentType === 'sms') {
-      const phone = smsPhone.trim();
-      const body = smsBody.trim();
-      let smsStr = `sms:${phone}`;
-      if (body) {
-        smsStr += `?body=${encodeURIComponent(body)}`;
-      }
-      return smsStr || 'sms:+886912345678';
+      return buildSmsPayload({
+        phone: smsPhone,
+        body: smsBody,
+      });
     } else if (contentType === 'tel') {
-      const phone = telPhone.trim();
-      return `tel:${phone}` || 'tel:+886212345678';
+      return buildTelPayload({
+        phone: telPhone,
+      });
     }
     return 'https://tools.cjkuo.net';
   };
@@ -1886,7 +1734,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
                 {/* 調整 Logo 大小 */}
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between text-sm text-text-sub font-medium">
-                    <span>{t.logoSize}</span>
+                    <label htmlFor={logoSizeId}>{t.logoSize}</label>
                     <span className={styles.greenText}>{logoSize}%</span>
                   </div>
                   <input

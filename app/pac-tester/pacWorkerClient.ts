@@ -106,6 +106,7 @@ export async function runSinglePacTestSafe(
     return res.result;
   } catch (err) {
     if (err instanceof Error && err.message === 'PAC_SCRIPT_TIMEOUT') throw new PacScriptTimeoutError();
+    console.warn('[PacTester] Single test worker error:', err);
     throw err;
   }
 }
@@ -125,6 +126,7 @@ export async function runBatchPacTestSafe(
     return res.results;
   } catch (err) {
     if (err instanceof Error && err.message === 'PAC_SCRIPT_TIMEOUT') throw new PacScriptTimeoutError();
+    console.warn('[PacTester] Batch test worker error:', err);
     throw err;
   }
 }

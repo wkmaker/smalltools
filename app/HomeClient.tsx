@@ -411,18 +411,28 @@ export default function HomeClient({ lang }: HomeClientProps) {
               const isPinned = pinnedHrefs.includes(tool.href);
 
               return (
-                <Link
-                  key={`pinned-${tool.href}`}
-                  href={targetHref}
-                  prefetch={false}
-                  className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
-                  onMouseMove={handleCardMouseMove}
-                  onClick={() => {
-                    if (typeof window !== 'undefined') {
-                      sessionStorage.setItem('lastVisitedTool', tool.href);
-                    }
-                  }}
-                >
+                <div key={`pinned-${tool.href}`} className={styles.toolCardWrapper}>
+                  <Link
+                    href={targetHref}
+                    prefetch={false}
+                    className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
+                    onMouseMove={handleCardMouseMove}
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.setItem('lastVisitedTool', tool.href);
+                      }
+                    }}
+                  >
+                    <div>
+                      <h3>{toolName}</h3>
+                      <span className={styles.subtitle}>{toolSubtitle}</span>
+                      <p>{toolDesc}</p>
+                    </div>
+                    <div className={styles.cardAction}>
+                      {t.openTool} {ARROW_SVG}
+                    </div>
+                  </Link>
+
                   <button
                     type="button"
                     onClick={(e) => togglePinTool(tool.href, e)}
@@ -432,16 +442,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                   >
                     {STAR_ICON(isPinned)}
                   </button>
-
-                  <div>
-                    <h3>{toolName}</h3>
-                    <span className={styles.subtitle}>{toolSubtitle}</span>
-                    <p>{toolDesc}</p>
-                  </div>
-                  <div className={styles.cardAction}>
-                    {t.openTool} {ARROW_SVG}
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -474,22 +475,31 @@ export default function HomeClient({ lang }: HomeClientProps) {
                 const isPinned = pinnedHrefs.includes(tool.href);
 
                 return (
-                  <Link
-                    key={tool.href}
-                    id={toolId}
-                    href={targetHref}
-                    prefetch={false}
-                    className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
-                    onMouseMove={handleCardMouseMove}
-                    onClick={() => {
-                      if (typeof window !== 'undefined') {
-                        sessionStorage.setItem('lastVisitedTool', tool.href);
-                        if (window.location.hash) {
-                          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                  <div key={tool.href} id={toolId} className={styles.toolCardWrapper}>
+                    <Link
+                      href={targetHref}
+                      prefetch={false}
+                      className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
+                      onMouseMove={handleCardMouseMove}
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          sessionStorage.setItem('lastVisitedTool', tool.href);
+                          if (window.location.hash) {
+                            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                          }
                         }
-                      }
-                    }}
-                  >
+                      }}
+                    >
+                      <div>
+                        <h3>{toolName}</h3>
+                        <span className={styles.subtitle}>{toolSubtitle}</span>
+                        <p>{toolDesc}</p>
+                      </div>
+                      <div className={styles.cardAction}>
+                        {t.openTool} {ARROW_SVG}
+                      </div>
+                    </Link>
+
                     <button
                       type="button"
                       onClick={(e) => togglePinTool(tool.href, e)}
@@ -499,16 +509,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                     >
                       {STAR_ICON(isPinned)}
                     </button>
-
-                    <div>
-                      <h3>{toolName}</h3>
-                      <span className={styles.subtitle}>{toolSubtitle}</span>
-                      <p>{toolDesc}</p>
-                    </div>
-                    <div className={styles.cardAction}>
-                      {t.openTool} {ARROW_SVG}
-                    </div>
-                  </Link>
+                  </div>
                 );
               })}
 

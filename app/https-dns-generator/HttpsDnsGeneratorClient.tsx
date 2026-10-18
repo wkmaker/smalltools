@@ -5,6 +5,7 @@ import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './https-dns-generator.module.css';
 import { TRANSLATIONS } from './translations';
+import { generateSvcParams, generateFullBindRecord } from './engine';
 
 interface Props {
   lang?: 'zh-TW' | 'en';
@@ -149,47 +150,33 @@ export default function HttpsDnsGeneratorClient({ lang = 'zh-TW' }: Props) {
     }
   };
 
-  const generateParams = useCallback(() => {
-    if (mode === 'alias') return '';
+  const svcParamsValue = generateSvcParams({
+    mode,
+    alpnH3,
+    alpnH2,
+    alpnH1,
+    noDefaultAlpn,
+    port,
+    ipv4hint,
+    ipv6hint,
+    ech,
+  });
 
-    const params: string[] = [];
-    const alpnList: string[] = [];
-
-    if (alpnH3) alpnList.push('h3');
-    if (alpnH2) alpnList.push('h2');
-    if (alpnH1) alpnList.push('http/1.1');
-    if (alpnList.length > 0) {
-      params.push(`alpn="${alpnList.join(',')}"`);
-    }
-
-    if (noDefaultAlpn) {
-      params.push('no-default-alpn');
-    }
-
-    if (port && !isNaN(parseInt(port))) {
-      params.push(`port=${port}`);
-    }
-
-    if (ipv4hint.trim()) {
-      params.push(`ipv4hint="${ipv4hint.trim()}"`);
-    }
-
-    if (ipv6hint.trim()) {
-      params.push(`ipv6hint="${ipv6hint.trim()}"`);
-    }
-
-    if (ech.trim()) {
-      params.push(`ech="${ech.trim()}"`);
-    }
-
-    return params.join(' ');
-  }, [mode, alpnH3, alpnH2, alpnH1, noDefaultAlpn, port, ipv4hint, ipv6hint, ech]);
-
-  const svcParamsValue = generateParams();
-
-  const fullBindRecord = `${host || '@'}. ${ttl || 300} IN HTTPS ${mode === 'alias' ? 0 : priority} ${
-    target.trim() || '.'
-  } ${svcParamsValue}`.trim();
+  const fullBindRecord = generateFullBindRecord({
+    mode,
+    host,
+    ttl,
+    priority,
+    target,
+    alpnH3,
+    alpnH2,
+    alpnH1,
+    noDefaultAlpn,
+    port,
+    ipv4hint,
+    ipv6hint,
+    ech,
+  });
 
   const copyText = (textVal: string, label: string) => {
     navigator.clipboard.writeText(textVal).then(() => showToast(`${t.copiedText} ${label}`));

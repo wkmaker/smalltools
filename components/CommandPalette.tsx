@@ -301,6 +301,7 @@ export default function CommandPalette() {
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
+            aria-label={isEn ? 'Search tools and commands' : '搜尋工具與指令'}
             placeholder={isEn ? 'Search tools, actions or commands... (e.g. loan, json, base64)' : '搜尋小工具、分類或快捷指令... (例: 房貸, json, base64)'}
             className={styles.searchInput}
             autoComplete="off"

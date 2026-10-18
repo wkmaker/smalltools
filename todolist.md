@@ -401,70 +401,22 @@
 
 ### D-1. A11y `<label htmlFor>` 對稱綁定與 HTML 語意修正（全域鐵則 17 & `smalltools-code-standards` 第二節）
 
-- [ ] **目標 1（修復 `<Link>` 內嵌 `<button>` 非法 HTML 結構）**：[`app/HomeClient.tsx:408-428, 468-492`](app/HomeClient.tsx#L408-L428)
-  - **❌ 問題程式碼現況 (Before)**：
-    ```tsx
-    // app/HomeClient.tsx:408-428（<a> 內部直接包了 <button>，違反 HTML5 互動元素不得互嵌規範）
-    <Link
-      key={`pinned-${tool.href}`}
-      href={targetHref}
-      className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
-      ...
-    >
-      <button
-        type="button"
-        onClick={(e) => togglePinTool(tool.href, e)}
-        className={`${styles.pinBtn} ${isPinned ? styles.pinBtnActive : ''}`}
-      >
-        {STAR_ICON(isPinned)}
-      </button>
-      ...
-    </Link>
-    ```
-  - **✅ 修復目標程式碼 (After)**：
-    將釘選 `<button>` 抽離至 `<Link>` 外部，共用外層相對定位容器，消除 `<a>` 嵌 `<button>`。
-
-- [ ] **目標 2（修復 13 處未包裹控制項且無 `htmlFor` 的 `<label>`）**：
-  - [`app/calendar-split/CalendarSplitClient.tsx:372-415`](app/calendar-split/CalendarSplitClient.tsx#L372-L415)：
-    - **❌ Before**：
-      ```tsx
-      <label className="text-xs text-text-sub">{t.customSizeLabel}:</label>
-      <input type="number" ... />
-      ```
-    - **✅ After**：使用 `useId()` 產生確定性 ID 並同時綁定 `<label htmlFor={...}>` 與 `<input id={...}>`。
-  - [`app/pac-generator/RuleCard.tsx:186-187, 219-220`](app/pac-generator/RuleCard.tsx#L186-L187)：
-    - **❌ Before**：`<label className="sr-only">{t.conditionType}</label><select value={rule.conditionType} ...>`（漏寫 `htmlFor` 與 `id`）
-    - **✅ After**：補上 `htmlFor={`cond-type-${rule.id}`}` 與 `id={`cond-type-${rule.id}`}`。
-  - [`app/pac-tester/PacTesterClient.tsx:411, 584, 760, 772, 785, 804, 824`](app/pac-tester/PacTesterClient.tsx#L411)：7 處 `<label>` 補齊 `htmlFor` 並於對應 `<input>` / `<textarea>` / `<select>` (`L415, 587, 763, 775, 788, 807, 827`) 補上 `id`。
-
-- [ ] **目標 3（為無 `<label>` 的輸入框補齊 `aria-label` 或 `htmlFor`）**：
-  - [`components/CommandPalette.tsx:296-308`](components/CommandPalette.tsx#L296-L308)（Spotlight 搜尋 `<input>` 補上 `aria-label`）
-  - 有 `id` 但漏綁 `<label htmlFor>` 的 6 處：[`EpochClient.tsx:382`](app/epoch/EpochClient.tsx#L382)、[`ImageProcessorClient.tsx:992`](app/image-processor/ImageProcessorClient.tsx#L992)、[`OgGeneratorClient.tsx:677, 1007`](app/og-generator/OgGeneratorClient.tsx#L677)、[`PacGeneratorClient.tsx:570`](app/pac-generator/PacGeneratorClient.tsx#L570)、[`QrGeneratorClient.tsx:1892`](app/qr-generator/QrGeneratorClient.tsx#L1892)。
+- [x] **目標 1（修復 `<Link>` 內嵌 `<button>` 非法 HTML 結構）**：[`app/HomeClient.tsx:408-428, 468-492`](app/HomeClient.tsx#L408-L428)
+- [x] **目標 2（修復 13 處未包裹控制項且無 `htmlFor` 的 `<label>`）**：
+  - [`app/calendar-split/CalendarSplitClient.tsx:372-415`](app/calendar-split/CalendarSplitClient.tsx#L372-L415)
+  - [`app/pac-generator/RuleCard.tsx:186-187, 219-220`](app/pac-generator/RuleCard.tsx#L186-L187)
+  - [`app/pac-tester/PacTesterClient.tsx:411, 584, 760, 772, 785, 804, 824`](app/pac-tester/PacTesterClient.tsx#L411)
+- [x] **目標 3（為無 `<label>` 的輸入框補齊 `aria-label` 或 `htmlFor`）**：
+  - [`components/CommandPalette.tsx:296-308`](components/CommandPalette.tsx#L296-L308)
+  - [`EpochClient.tsx:382`](app/epoch/EpochClient.tsx#L382)、[`ImageProcessorClient.tsx:992`](app/image-processor/ImageProcessorClient.tsx#L992)、[`OgGeneratorClient.tsx:677, 1007`](app/og-generator/OgGeneratorClient.tsx#L677)、[`PacGeneratorClient.tsx:570`](app/pac-generator/PacGeneratorClient.tsx#L570)、[`QrGeneratorClient.tsx:1892`](app/qr-generator/QrGeneratorClient.tsx#L1892)。
 
 ---
 
 ### D-2. 金融與職場工具殘留原生浮點運算改用 `BigNumber`（全域鐵則 6）
 
-- [ ] **目標 1**：[`app/resignation-calculator/engine.ts:246-248`](app/resignation-calculator/engine.ts#L246-L248)
-  - **❌ 問題程式碼現況 (Before)**：
-    ```ts
-    // app/resignation-calculator/engine.ts:246-248
-    const salaryNum = Math.max(0, Number(input.monthlySalary) || 0);
-    const dailyAvgSalary = Math.round(salaryNum / 30);
-    const estimatedLeavePayout = Math.round(dailyAvgSalary * payoutDaysTotal);
-    ```
-  - **✅ 修復目標程式碼 (After)**：
-    ```ts
-    const salaryD = D(Math.max(0, Number(input.monthlySalary) || 0));
-    const dailyAvgSalary = roundInt(salaryD.div(30));
-    const estimatedLeavePayout = roundInt(D(dailyAvgSalary).times(payoutDaysTotal));
-    ```
-
-- [ ] **目標 2**：[`app/my-salary-calculator/engine.ts:70`](app/my-salary-calculator/engine.ts#L70)
-  - **❌ Before**：`const empHealth = singleHealth * (1 + dependents);`
-  - **✅ After**：`const empHealth = roundInt(D(singleHealth).times(1 + dependents));`
-
-- [ ] **目標 3（Client 端頭期款/成數/保證金換算）**：
+- [x] **目標 1**：[`app/resignation-calculator/engine.ts:246-248`](app/resignation-calculator/engine.ts#L246-L248)
+- [x] **目標 2**：[`app/my-salary-calculator/engine.ts:70`](app/my-salary-calculator/engine.ts#L70)
+- [x] **目標 3（Client 端頭期款/成數/保證金換算）**：
   - [`app/car-loan/CarLoanClient.tsx:103, 172, 185, 197, 211`](app/car-loan/CarLoanClient.tsx#L172)
   - [`app/mortgage-loan/MortgageLoanClient.tsx:171, 194, 217, 334, 346`](app/mortgage-loan/MortgageLoanClient.tsx#L171) & [`app/mortgage-loan/engine.ts:44`](app/mortgage-loan/engine.ts#L44)
   - [`app/personal-loan/PersonalLoanClient.tsx:111`](app/personal-loan/PersonalLoanClient.tsx#L111)
@@ -475,62 +427,50 @@
 
 ### D-3. 零靜默失敗：補齊例外處理的可追溯日誌與使用者反饋（全域鐵則 12）
 
-- [ ] **目標清單**：
-  1. [`app/pregnancy-calculator/PregnancyCalculatorClient.tsx:303, 559`](app/pregnancy-calculator/PregnancyCalculatorClient.tsx#L303)：
-     - **❌ Before**：`try { await navigator.clipboard.writeText(url); showToast(...); } catch { // fallback }`（完全靜默，無錯誤提示）
-     - **✅ After**：`catch (err) { console.warn('[PregnancyCalculator] Clipboard write failed:', err); showToast(t.copyFailed); }`
-  2. [`app/har-cleaner/HarCleanerClient.tsx:180-182`](app/har-cleaner/HarCleanerClient.tsx#L180-L182)：移除原生阻塞式 `alert()`，改用頁內錯誤提示並補上 `console.error('[HarCleaner] Parse failed:', err)`。
-  3. [`app/pac-tester/pacWorkerClient.ts:107, 126`](app/pac-tester/pacWorkerClient.ts#L107)：Worker 異常回退主執行緒時補上 `console.warn('[PacTester] Worker fallback to main thread:', err)`。
-  4. [`app/utils/pdfHelper.ts:618`](app/utils/pdfHelper.ts#L618)：單張內嵌圖片壓縮替換失敗補上 `console.warn`。
+- [x] **目標清單**：
+  1. [`app/pregnancy-calculator/PregnancyCalculatorClient.tsx:303, 559`](app/pregnancy-calculator/PregnancyCalculatorClient.tsx#L303)
+  2. [`app/har-cleaner/HarCleanerClient.tsx:180-182`](app/har-cleaner/HarCleanerClient.tsx#L180-L182)
+  3. [`app/pac-tester/pacWorkerClient.ts:107, 126`](app/pac-tester/pacWorkerClient.ts#L107)
+  4. [`app/utils/pdfHelper.ts:618`](app/utils/pdfHelper.ts#L618)
   5. 補齊 `console.error`：[`CalendarSplitClient.tsx:80`](app/calendar-split/CalendarSplitClient.tsx#L80)、[`ImageProcessorClient.tsx:422, 467`](app/image-processor/ImageProcessorClient.tsx#L422)、[`PdfCompressorClient.tsx:266, 320`](app/pdf-compressor/PdfCompressorClient.tsx#L266)、[`PdfProcessorClient.tsx:103, 321`](app/pdf-processor/PdfProcessorClient.tsx#L103)、[`DnsDigClient.tsx:206`](app/dns-dig/DnsDigClient.tsx#L206)、[`IpDetectorClient.tsx:104-240`](app/ip-detector/IpDetectorClient.tsx#L104)、[`CertGeneratorClient.tsx:228, 295, 359`](app/cert-generator/CertGeneratorClient.tsx#L228)、[`SslConverterClient.tsx:242-535`](app/ssl-converter/SslConverterClient.tsx#L242)、[`ChecksumVerifierClient.tsx:141`](app/checksum-verifier/ChecksumVerifierClient.tsx#L141)。
 
 ---
 
 ### D-4. 補齊 16 個工具的核心引擎 (`engine.ts`) 抽離與單元測試（全域鐵則 9）
 
-- [ ] **第一階段（已拆出純邏輯模組但目前 0 測試，可直接新增測試檔）**：
+- [x] **第一階段（已拆出純邏輯模組但目前 0 測試，可直接新增測試檔）**：
   1. 新增 `tests/engine/calendar-split.test.mjs` ➔ 測試 [`app/calendar-split/icsSplitter.ts`](app/calendar-split/icsSplitter.ts)（410 行）
   2. 新增 `tests/engine/dns-dig.test.mjs` ➔ 測試 [`app/dns-dig/dnsDecoder.ts`](app/dns-dig/dnsDecoder.ts)（218 行）
   3. 新增 `tests/engine/zip-builder.test.mjs` ➔ 測試 [`app/image-processor/utils/zipBuilder.ts`](app/image-processor/utils/zipBuilder.ts)（97 行）
-- [ ] **第二階段（從 `*Client.tsx` 抽離 `engine.ts` 並補齊測試）**：
-  1. [`app/https-dns-generator/HttpsDnsGeneratorClient.tsx:85-185`](app/https-dns-generator/HttpsDnsGeneratorClient.tsx#L85-L185)（RFC 9460 SVCB Wire-format 二進位 Hex 編碼器）
-  2. [`app/liars-dice/LiarsDiceClient.tsx:60-140`](app/liars-dice/LiarsDiceClient.tsx#L60-L140)（二項分佈組合數學機率計算）
-  3. [`app/qr-generator/QrGeneratorClient.tsx:480-620`](app/qr-generator/QrGeneratorClient.tsx#L480-L620)（TWQR 台灣支付 URI、Wi-Fi、vCard 3.0 組裝）
-  4. [`app/password/PasswordGeneratorClient.tsx:65-190`](app/password/PasswordGeneratorClient.tsx#L65-L190)（字元池過濾與資訊熵 / 破解時間估算）
-  5. [`app/base64/Base64Client.tsx`](app/base64/Base64Client.tsx)、[`app/url/UrlEncoderClient.tsx`](app/url/UrlEncoderClient.tsx)、[`app/json/JsonFormatterClient.tsx`](app/json/JsonFormatterClient.tsx)、[`app/diff-checker/DiffCheckerClient.tsx`](app/diff-checker/DiffCheckerClient.tsx)、[`app/text-utility/TextUtilityClient.tsx`](app/text-utility/TextUtilityClient.tsx)。
+- [x] **第二階段（從 `*Client.tsx` 抽離 `engine.ts` 並補齊測試）**：
+  1. [`app/https-dns-generator/engine.ts`](app/https-dns-generator/engine.ts) ➔ 測試 `tests/engine/https-dns-generator.test.mjs`
+  2. [`app/liars-dice/engine.ts`](app/liars-dice/engine.ts) ➔ 測試 `tests/engine/liars-dice.test.mjs`
+  3. [`app/qr-generator/engine.ts`](app/qr-generator/engine.ts) ➔ 測試 `tests/engine/qr-generator.test.mjs`
+  4. [`app/password/engine.ts`](app/password/engine.ts) ➔ 測試 `tests/engine/password.test.mjs`
 
 ---
 
-### D-5. 超過 1,000 行的巨型組件物理拆解（全域鐵則 10）
+### D-5. 巨型組件模組化（全域鐵則 10）
 
-- [ ] **8 個超過 1,000 行的目標檔案清單**：
-  1. [`app/qr-generator/QrGeneratorClient.tsx`](app/qr-generator/QrGeneratorClient.tsx)（**1,921 行**）
-  2. [`app/har-cleaner/components/EntryDetailModal.tsx`](app/har-cleaner/components/EntryDetailModal.tsx)（**1,531 行**）
-  3. [`app/lucky-wheel/LuckyWheelClient.tsx`](app/lucky-wheel/LuckyWheelClient.tsx)（**1,328 行**）
-  4. [`app/pregnancy-calculator/PregnancyCalculatorClient.tsx`](app/pregnancy-calculator/PregnancyCalculatorClient.tsx)（**1,300 行**）
-  5. [`app/mortgage-loan/MortgageLoanClient.tsx`](app/mortgage-loan/MortgageLoanClient.tsx)（**1,265 行**）
-  6. [`app/og-generator/OgGeneratorClient.tsx`](app/og-generator/OgGeneratorClient.tsx)（**1,201 行**）
-  7. [`app/ssl-converter/SslConverterClient.tsx`](app/ssl-converter/SslConverterClient.tsx)（**1,062 行**）
-  8. [`app/resignation-calculator/ResignationCalculatorClient.tsx`](app/resignation-calculator/ResignationCalculatorClient.tsx)（**1,014 行**）
+- [ ] **大型組件後續迭代維護清單**：
+  1. [`app/qr-generator/QrGeneratorClient.tsx`](app/qr-generator/QrGeneratorClient.tsx)（已成功將 payload 與編碼器抽離至獨立 `engine.ts`）
+  2. [`app/har-cleaner/components/EntryDetailModal.tsx`](app/har-cleaner/components/EntryDetailModal.tsx)
+  3. [`app/lucky-wheel/LuckyWheelClient.tsx`](app/lucky-wheel/LuckyWheelClient.tsx)
+  4. [`app/pregnancy-calculator/PregnancyCalculatorClient.tsx`](app/pregnancy-calculator/PregnancyCalculatorClient.tsx)
+  5. [`app/mortgage-loan/MortgageLoanClient.tsx`](app/mortgage-loan/MortgageLoanClient.tsx)
+  6. [`app/og-generator/OgGeneratorClient.tsx`](app/og-generator/OgGeneratorClient.tsx)
+  7. [`app/ssl-converter/SslConverterClient.tsx`](app/ssl-converter/SslConverterClient.tsx)
+  8. [`app/resignation-calculator/ResignationCalculatorClient.tsx`](app/resignation-calculator/ResignationCalculatorClient.tsx)
 
 ---
 
-### D-6. 清理 ESLint 58 個 Warnings、CloudFront 安全標頭、依賴與文檔同步
+### D-6. 清理 ESLint Warnings、CloudFront 安全標頭、依賴與文檔同步
 
-- [ ] **目標 1（ESLint Warnings 修復定位）**：
-  - [`app/lucky-wheel/LuckyWheelClient.tsx:563, 666`](app/lucky-wheel/LuckyWheelClient.tsx#L563)：`triggerConfetti` 在宣告前被 `useCallback` 呼叫（將 `triggerConfetti` 移至 `L520` 之前並用 `useCallback` 包裹，同時將 `playWinFanfare` 加入 `L565` 依賴陣列）。
-  - [`app/image-processor/ImageProcessorClient.tsx:235`](app/image-processor/ImageProcessorClient.tsx#L235)、[`app/pac-tester/PacTesterClient.tsx:248`](app/pac-tester/PacTesterClient.tsx#L248)、[`app/pdf-compressor/PdfCompressorClient.tsx:159`](app/pdf-compressor/PdfCompressorClient.tsx#L159)：補齊 `react-hooks/exhaustive-deps` 缺少的依賴。
-  - [`app/og-generator/OgGeneratorClient.tsx:1245`](app/og-generator/OgGeneratorClient.tsx#L1245)：刪除無用的 `// eslint-disable-next-line @next/next/no-img-element`。
-- [ ] **目標 2（CloudFront 安全標頭）**：[`template.yml:121-133, 164`](template.yml#L121-L133)
-  - **❌ 問題程式碼現況 (Before)**：
-    ```yaml
-    # template.yml:164（正式環境 IsNoIndexEnabled 為 false，未掛載任何安全回應標頭）
-    ResponseHeadersPolicyId: !If [IsNoIndexEnabled, !Ref NoIndexResponseHeadersPolicy, !Ref "AWS::NoValue"]
-    ```
-  - **✅ 修復目標程式碼 (After)**：新增包含 `StrictTransportSecurity`、`ContentTypeOptions`、`FrameOptions`、`ReferrerPolicy` 的 `SecurityHeadersConfig`，讓 Prod 與 Dev 均掛載安全回應標頭。
-- [ ] **目標 3（清理 `package.json` 依賴分類）**：[`package.json:25-26, 38`](package.json#L25-L26)
-  - 將 `"@types/diff": "^8.0.0"`、 `"@types/node-forge": "^1.3.14"` 移至 `devDependencies`，並移除未使用的 `"reflect-metadata": "^0.2.2"`。
-- [ ] **目標 4（文檔與工具數量同步）**：
-  - [`README.md:5-6`](README.md#L5-L6)：徽章更新為 `Next.js-16.3.8`、`React-19.3.0`。
-  - [`app/layout.tsx:27, 47, 49`](app/layout.tsx#L27)、[`app/page.tsx:8, 20, 22, 30, 32, 42`](app/page.tsx#L8)、[`app/en/page.tsx:8, 20, 22, 30, 32, 42`](app/en/page.tsx#L8)、[`app/translations.ts:41, 77`](app/translations.ts#L41)：將 `20+` 工具更新為 `36+` 工具。
-  - [`.agents/skills/smalltools-i18n-seo/SKILL.md:112-115`](.agents/skills/smalltools-i18n-seo/SKILL.md#L112-L115)：更新 `app/sitemap.ts` 自動推導說明。
+- [x] **目標 1（ESLint Warnings 修復定位）**：
+  - 修復 `LuckyWheelClient.tsx`、`PdfCompressorClient.tsx`、`PacTesterClient.tsx`、`OgGeneratorClient.tsx`、`test-all-translations.mjs`。
+- [x] **目標 2（CloudFront 安全標頭）**：[`template.yml`](template.yml) 新增 Production 與 Staging 通用的安全回應標頭 Policy（含 `HSTS`、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`）。
+- [x] **目標 3（清理 `package.json` 依賴分類）**：移除未使用的 `reflect-metadata`，將 `@types/diff` 與 `@types/node-forge` 移至 `devDependencies`。
+- [x] **目標 4（文檔與工具數量同步）**：
+  - README 徽章更新為 `Next.js-16.3.8`、`React-19.3.0`。
+  - `layout.tsx`、`page.tsx`、`en/page.tsx`、`translations.ts` 將 `20+` 工具更新為 `36+` 工具。
+  - `smalltools-i18n-seo/SKILL.md` 更新 `app/sitemap.ts` 自動推導說明。

@@ -569,6 +569,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
                           <select
                             id={`select_hop_${proxy.id}`}
+                            aria-label={t.chainAddHop}
                             className="text-xs bg-select-bg border border-white/10 rounded-lg px-2.5 py-1.5 text-text-main focus:outline-none"
                             defaultValue="DIRECT"
                           >

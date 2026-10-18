@@ -241,6 +241,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       });
       showAlertMsg(t.alertParseSuccess, 'success');
     } catch (err: any) {
+      console.error('[SslConverter] Parse payload error:', err);
       showAlertMsg(`${t.alertParseError}${err.message || t.errCertOrPassword}`, 'error');
     }
   };
@@ -289,7 +290,10 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
           cnName: cn
         });
       }
-    } catch { setAiaError(t.aiaErrorInvalidCert); }
+    } catch (err) {
+      console.error('[SslConverter] AIA inspection error:', err);
+      setAiaError(t.aiaErrorInvalidCert);
+    }
   };
 
   const convertPfxToPem = async () => {
@@ -328,6 +332,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       });
       showAlertMsg(t.alertPfxSuccess, 'success');
     } catch (err: any) {
+      console.error('[SslConverter] Convert PFX error:', err);
       showAlertMsg(`${t.alertPfxError}${err.message || t.errCheckPassword}`, 'error');
     }
   };
@@ -414,6 +419,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
       showAlertMsg(t.alertPfxPackageSuccess, 'success');
     } catch (err: unknown) {
+      console.error('[SslConverter] Build PFX error:', err);
       const error = err as Error;
       showAlertMsg(`${t.alertPfxPackageError}${error.message || t.errPemOrKey}`, 'error');
     }
@@ -493,6 +499,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
       showAlertMsg(t.alertDerSuccess, 'success');
     } catch (err: unknown) {
+      console.error('[SslConverter] Convert DER error:', err);
       const error = err as Error;
       showAlertMsg(`${t.alertDerError}${error.message || t.errInvalidDer}`, 'error');
     }
@@ -539,6 +546,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
       showAlertMsg(t.alertPemToDerSuccess, 'success');
     } catch (err: unknown) {
+      console.error('[SslConverter] Convert PEM to DER error:', err);
       const error = err as Error;
       showAlertMsg(`${t.alertPemToDerError}${error.message || t.errInvalidPem}`, 'error');
     }

@@ -13,6 +13,7 @@ import {
   type RepayType,
   type RateType,
 } from './engine';
+import { D, toNumber } from '../utils/decimal';
 import { TRANSLATIONS } from './translations';
 
 interface Props {
@@ -168,7 +169,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
     setHousePrice(hp);
 
     const pct = downPaymentPercent === '' ? 0 : downPaymentPercent;
-    const newDownAmt = Math.round((hp * pct) / 100);
+    const newDownAmt = toNumber(D(hp).times(pct).div(100).dp(0));
     setDownPaymentAmount(newDownAmt);
 
     const newLoan = Math.max(0, hp - newDownAmt);
@@ -191,7 +192,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
     setDownPaymentPercent(pct);
 
     const hp = housePrice === '' ? 0 : housePrice;
-    const newDownAmt = Math.round((hp * pct) / 100);
+    const newDownAmt = toNumber(D(hp).times(pct).div(100).dp(0));
     setDownPaymentAmount(newDownAmt);
 
     const newLoan = Math.max(0, hp - newDownAmt);
@@ -214,7 +215,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
     setDownPaymentAmount(downAmt);
 
     const hp = housePrice === '' ? 0 : housePrice;
-    const newPct = hp > 0 ? parseFloat(((downAmt / hp) * 100).toFixed(2)) : 0;
+    const newPct = hp > 0 ? toNumber(D(downAmt).div(hp).times(100).dp(2)) : 0;
     setDownPaymentPercent(newPct);
 
     const newLoan = Math.max(0, hp - downAmt);
@@ -331,7 +332,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
         fee: singleFee === '' ? 0 : singleFee,
       },
       combinedA: {
-        loanAmount: (loanAmount1 === '' ? 0 : loanAmount1) * 10000,
+        loanAmount: toNumber(D(loanAmount1 === '' ? 0 : loanAmount1).times(10000)),
         periodVal: periodVal1 === '' ? 0 : periodVal1,
         periodUnit: periodUnit1,
         graceVal: graceVal1 === '' ? 0 : graceVal1,
@@ -343,7 +344,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
         fee: fee1 === '' ? 0 : fee1,
       },
       combinedB: {
-        loanAmount: (loanAmount2 === '' ? 0 : loanAmount2) * 10000,
+        loanAmount: toNumber(D(loanAmount2 === '' ? 0 : loanAmount2).times(10000)),
         periodVal: periodVal2 === '' ? 0 : periodVal2,
         periodUnit: periodUnit2,
         graceVal: graceVal2 === '' ? 0 : graceVal2,

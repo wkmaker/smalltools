@@ -65,6 +65,7 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
 
   // 個別不消除的標頭黑名單 (Key: normalized name, true = 保留不消除)
   const [excludedHeaders, setExcludedHeaders] = useState<Record<string, boolean>>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 脫敏運算結果狀態
   const [result, setResult] = useState<SanitizationResult>({
@@ -159,8 +160,9 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
   // 上傳檔案處理
   const handleFileLoaded = (file: File) => {
     if (!file) return;
+    setErrorMessage(null);
     if (file.size > 150 * 1024 * 1024) {
-      alert(t.fileTooLarge);
+      setErrorMessage(t.fileTooLarge);
       return;
     }
     setFileName(file.name);
@@ -174,7 +176,8 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
         const text = e.target?.result as string;
         const parsed = JSON.parse(text);
         if (!parsed || !parsed.log) {
-          alert(
+          console.error('[HarCleaner] Invalid HAR format: missing root log object');
+          setErrorMessage(
             lang === 'en'
               ? 'Invalid HAR file format (missing root "log" object).'
               : '無效的 HAR 格式（缺少根 "log" 物件）。'
@@ -183,7 +186,8 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
         }
         setRawHarData(parsed);
       } catch (err) {
-        alert(
+        console.error('[HarCleaner] Parse failed:', err);
+        setErrorMessage(
           lang === 'en'
             ? 'Failed to parse JSON. Please verify your HAR file.'
             : 'JSON 解析失敗，請確認檔案是否為合法的 HAR 格式。'
@@ -316,6 +320,25 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
       accentGlow="rgba(6, 182, 212, 0.6)"
     >
       <div className="w-full space-y-6">
+        {errorMessage && (
+          <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center justify-between" role="alert">
+            <div className="flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+              </svg>
+              <span>{errorMessage}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setErrorMessage(null)}
+              className="text-xs text-text-sub hover:text-text-main p-1 transition-colors"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* 上傳與已載入檔案狀態控制列 */}
         <DropzoneSection
           rawHarData={rawHarData}

@@ -183,8 +183,9 @@ function RuleCard({
         {/* 中排：條件型態、值、目標動作 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
-            <label className="sr-only">{t.conditionType}</label>
+            <label htmlFor={`cond-type-${rule.id}`} className="sr-only">{t.conditionType}</label>
             <select
+              id={`cond-type-${rule.id}`}
               value={rule.conditionType}
               onChange={(e) =>
                 onUpdateRule(rule.id, { conditionType: e.target.value as ConditionType })
@@ -216,8 +217,9 @@ function RuleCard({
           </div>
 
           <div>
-            <label className="sr-only">{t.targetAction}</label>
+            <label htmlFor={`target-proxy-${rule.id}`} className="sr-only">{t.targetAction}</label>
             <select
+              id={`target-proxy-${rule.id}`}
               value={rule.targetProxy}
               onChange={(e) => onUpdateRule(rule.id, { targetProxy: e.target.value })}
               className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"

@@ -101,7 +101,10 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
           if (url) setHighResUrl(url);
           else setHighResUrl(currentItem.thumbnailUrl);
         })
-        .catch(() => setHighResUrl(currentItem.thumbnailUrl))
+        .catch((err) => {
+          console.warn('[PdfProcessor] Failed to load high-res image, fallback to thumbnail:', err);
+          setHighResUrl(currentItem.thumbnailUrl);
+        })
         .finally(() => setIsLoadingHighRes(false));
     } else {
       setHighResUrl(currentItem.imageDataUrl || currentItem.thumbnailUrl);
@@ -324,6 +327,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       setPasswordInput('');
       showToast(t.toastParsedDone);
     } catch (err: any) {
+      console.error('[PdfProcessor] Failed to unlock PDF with password:', err);
       setPasswordError(t.invalidPasswordMsg);
     } finally {
       setIsUnlocking(false);

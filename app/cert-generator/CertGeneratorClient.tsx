@@ -226,6 +226,7 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
       setImportKeyPemInput('');
       showToast(t.importCaSuccessToast);
     } catch (e) {
+      console.error('[CertGenerator] Import CA failed:', e);
       setImportCaError(e instanceof Error ? e.message : String(e));
     } finally {
       setIsImportingCa(false);
@@ -293,6 +294,7 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
         ]);
       }
     } catch (e) {
+      console.error('[CertGenerator] Generate cert failed:', e);
       setErrorMsg(e instanceof Error ? e.message : String(e));
     } finally {
       setIsGenerating(false);
@@ -329,7 +331,10 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
     navigator.clipboard
       .writeText(text)
       .then(() => showToast(t.toastCopied))
-      .catch(() => showToast(t.toastCopyFailed));
+      .catch((err) => {
+        console.warn('[CertGenerator] Copy to clipboard failed:', err);
+        showToast(t.toastCopyFailed);
+      });
   };
 
   const downloadCert = (identity: IdentityOutput) => {
@@ -357,6 +362,7 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
       const bytes = buildPkcs12(identity.certPem, identity.privateKeyPem, pkcs12Password);
       downloadBlob(new Blob([bytes as BlobPart], { type: 'application/x-pkcs12' }), `${identity.fileBaseName}.p12`);
     } catch (e) {
+      console.error('[CertGenerator] Download PKCS12 failed:', e);
       setErrorMsg(e instanceof Error ? e.message : String(e));
     }
   };

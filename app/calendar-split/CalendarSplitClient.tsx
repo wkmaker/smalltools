@@ -82,7 +82,8 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
                 setParsedData(parsed);
               });
             }
-          } catch {
+          } catch (err) {
+            console.error('[CalendarSplit] Failed to parse ICS:', err);
             setErrorMessage(t.parseError);
             setParsedData(null);
           } finally {
@@ -374,8 +375,9 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
 
                   {sizePreset === 'custom' && (
                     <div className="flex items-center gap-3 mt-1">
-                      <label className="text-xs text-text-sub">{t.customSizeLabel}:</label>
+                      <label htmlFor="custom-size-kb" className="text-xs text-text-sub">{t.customSizeLabel}:</label>
                       <input
+                        id="custom-size-kb"
                         type="number"
                         min="100"
                         max="5000"
@@ -393,8 +395,9 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
               {/* 筆數模式選項 */}
               {splitMode === 'count' && (
                 <div className="flex items-center gap-3">
-                  <label className="text-xs text-text-sub font-medium">{t.customCountLabel}:</label>
+                  <label htmlFor="max-event-count" className="text-xs text-text-sub font-medium">{t.customCountLabel}:</label>
                   <input
+                    id="max-event-count"
                     type="number"
                     min="50"
                     max="10000"
@@ -409,8 +412,9 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
 
               {/* 檔名前綴設定 */}
               <div className="flex items-center gap-3 pt-2">
-                <label className="text-xs text-text-sub font-medium">{t.filenamePrefix}:</label>
+                <label htmlFor="filename-prefix" className="text-xs text-text-sub font-medium">{t.filenamePrefix}:</label>
                 <input
+                  id="filename-prefix"
                   type="text"
                   value={filenamePrefix}
                   onChange={(e) => setFilenamePrefix(e.target.value)}

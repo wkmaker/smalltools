@@ -101,7 +101,8 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       } else {
         throw new Error('No IP');
       }
-    } catch {
+    } catch (err) {
+      console.warn('[IpDetector] IPv4 detection failed:', err);
       setIpv4(t.unsupported);
       setIpv4Status('unsupported');
     }
@@ -122,7 +123,8 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       } else {
         throw new Error('No IP');
       }
-    } catch {
+    } catch (err) {
+      console.warn('[IpDetector] IPv6 detection failed:', err);
       setIpv6(t.unsupported);
       setIpv6Status('unsupported');
     }
@@ -155,7 +157,8 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
         uag: map.uag || (typeof navigator !== 'undefined' ? navigator.userAgent : t.unknown),
         latency,
       });
-    } catch {
+    } catch (err) {
+      console.warn('[IpDetector] Cloudflare trace fetch failed:', err);
       setCfTrace({ error: true });
     } finally {
       setCfLoading(false);
@@ -188,7 +191,8 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
         currency: currStr,
         source: 'ipapi.co',
       });
-    } catch {
+    } catch (err) {
+      console.warn('[IpDetector] Primary GeoIP lookup failed, trying fallback:', err);
       try {
         const resFallback = await fetch('https://ipwhois.app/json/', {
           signal: AbortSignal.timeout(4500),
@@ -214,7 +218,8 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
           currency: currStr,
           source: 'ipwhois.app',
         });
-      } catch {
+      } catch (fallbackErr) {
+        console.error('[IpDetector] Fallback GeoIP lookup failed:', fallbackErr);
         setGeoInfo({ error: true });
       }
     } finally {
@@ -237,7 +242,8 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
           });
           const latency = Math.round(performance.now() - start);
           return { ...ep, latency, status: 'connected' as const };
-        } catch {
+        } catch (err) {
+          console.warn('[IpDetector] Edge latency ping failed for endpoint:', ep.name, err);
           return { ...ep, latency: null, status: 'failed' as const };
         }
       })

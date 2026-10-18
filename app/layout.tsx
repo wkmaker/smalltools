@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: '%s | 工具庫 - tools.cjkuo.net',
   },
   description:
-    '免費線上工具庫，包含房貸計算機、信貸計算機、JSON格式化、Base64編碼解碼、SSL憑證轉換、密碼生成器、圖片壓縮裁切等 20+ 精緻實用工具，無廣告、免下載。',
+    '免費線上工具庫，包含房貸計算機、信貸計算機、JSON格式化、Base64編碼解碼、SSL憑證轉換、密碼生成器、圖片壓縮裁切等 36+ 精緻實用工具，無廣告、免下載。',
   keywords:
     '免費線上工具,房貸計算機,信貸計算機,JSON格式化,Base64編碼,SSL憑證轉換,密碼生成器,圖片壓縮,台股期貨,複利計算機,薪資計算機',
   authors: [{ name: 'CJKuo' }],
@@ -44,9 +44,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '工具庫 | 免費線上工具集 - 20+ 精緻實用工具',
+    title: '工具庫 | 免費線上工具集 - 36+ 精緻實用工具',
     description:
-      '免費線上工具庫，包含房貸計算機、信貸計算機、JSON格式化、Base64編碼解碼、SSL憑證轉換、密碼生成器、圖片壓縮裁切等 20+ 精緻實用工具，無廣告、免下載。',
+      '免費線上工具庫，包含房貸計算機、信貸計算機、JSON格式化、Base64編碼解碼、SSL憑證轉換、密碼生成器、圖片壓縮裁切等 36+ 精緻實用工具，無廣告、免下載。',
     images: ['/img/StockSnap_00F7DB5857.webp'],
   },
   icons: {
