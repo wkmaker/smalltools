@@ -4,6 +4,13 @@
 
 ---
 
+## [1.26.2] - 2026-10-18
+
+### 👶 胎動計數器衛教出處與臨床定義精確化 (Clinical Definition & Debounce Clarity)
+- **精準切分臨床指引與軟體門檻**：修訂 `app/kick-counter/translations.ts`（中英文）與 `engine.ts` 註解。釐清台灣國健署與美國婦產科醫學會（ACOG）臨床指引僅原則性規範「連續動作算一次、靜止停頓後才算下一次」而未明定秒數；明確標示「2 分鐘」為本工具防誤觸與分波時間窗（Debounce Window）之軟體設計，避免讀者查證時產生出處混淆。
+
+---
+
 ## [1.26.1] - 2026-10-18
 
 ### 👶 胎動計數器演算法優化 (Kick Counter & Clinical Episode Protection)
