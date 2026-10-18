@@ -11,6 +11,7 @@
 - **單元測試補齊**：`tests/engine/kick-counter.test.mjs` 新增 `getLastEpisodeStartTime` 與「連續 90 秒踢擊（19 拳 27 分鐘達標 10 波）」完整場景回歸測試。
 - **雙語 FAQ 擴充**：於 `app/kick-counter/translations.ts` 中英文常見問題增補「防卡死時窗保護 (Active Window Protection)」臨床原理解析。
 - **CI 依賴修復 (GitHub Actions Build Fix)**：恢復 `package.json` 中的 `reflect-metadata` 依賴，修復 `@peculiar/x509` 底層 `tsyringe` 依賴的 reflect polyfill，解決 GitHub Actions 在乾淨環境下執行憑證生成器單元測試時的 `ERR_MODULE_NOT_FOUND` 錯誤。
+- **AWS CloudFormation Free Plan 相容性修復**：移除 `template.yml` 中 production 環境附加的自訂 `SecurityResponseHeadersPolicy`。因 CloudFront 帳戶為 Free pricing plan，AWS API 限制不允許掛載自訂 Response Headers Policy（報錯 400 `InvalidRequest: Distributions with the Free pricing plan can't have custom response headers policy`），還原為由應用層與 CloudFront 預設行為防護。
 
 ---
 
