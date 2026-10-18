@@ -2,6 +2,17 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.0] - 2026-10-18
+
+### ☕ 樂捐贊助轉換與芳名錄系統 (Sponsorship & Sponsor Wall System)
+- **首頁贊助芳名錄 (Sponsor Wall Section)**：於首頁底部導入獨立芳名錄模組 `app/components/SponsorWallSection.tsx`，具備「創始人空狀態」激勵設計（目前累積 0 筆贊助時主動邀請成為第一位支持創作者的創始支持者），支援靜態名單擴充、雙語切換與 WCAG AA 亮暗色彩對稱。
+- **高光場景化贊助小卡 (Contextual Sponsor Card)**：
+  - 新增通用場景化贊助呼籲組件 `app/components/ContextualSponsorCard.tsx` 與專屬樣式模組 `app/components/sponsor.module.css`。
+  - **離職預告期計算機**：於最後離職工具與交接清單下方嵌入「順利交接，展開職涯新篇章」場景化贊助小卡。
+  - **股票質押計算機**：於壓力測試與保證金回補方案下方嵌入「掌握風險，安心投資」場景化贊助小卡。
+- **全站贊助常數與靜態配置**：新增 `app/config/sponsors.ts`，統一收納 Stripe 贊助連結、芳名錄資料介面與中英文辭典，維持 100% 純靜態無伺服器架構。
+- **UI 與雙語規範 100% 通過**：嚴格遵守零原生 Emoji（全數使用 SVG 向量圖示）、雙主題語意 Token、無障礙標籤對稱與雙語辭典對稱驗證。
+
 ---
 
 ## [1.26.2] - 2026-10-18

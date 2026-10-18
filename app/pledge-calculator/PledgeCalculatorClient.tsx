@@ -7,6 +7,7 @@ import styles from './pledge-calculator.module.css';
 import { calculatePledge } from './engine';
 import { D, toNumber } from '../utils/decimal';
 import { TRANSLATIONS } from './translations';
+import { ContextualSponsorCard } from '../components/ContextualSponsorCard';
 
 function formatNumber(val: number): string {
   if (isNaN(val) || !isFinite(val)) return '0';
@@ -866,6 +867,15 @@ ${stressDropPct > 0 ? `• Stress Test (-${stressDropPct}%): Simulated price $${
                 </div>
               )}
             </div>
+
+            {/* 場景化贊助呼籲小卡 */}
+            <ContextualSponsorCard
+              title={t.sponsorCardTitle}
+              description={t.sponsorCardDesc}
+              buttonText={t.sponsorCardBtn}
+              lang={lang}
+              accentColor="#eab308"
+            />
           </div>
         </div>
 

@@ -23,6 +23,7 @@ import ResignationParamsSidebar from './components/ResignationParamsSidebar';
 import ResignationMilestonesCards from './components/ResignationMilestonesCards';
 import ResignationTimelineCard from './components/ResignationTimelineCard';
 import ResignationFinancialSettlementCard from './components/ResignationFinancialSettlementCard';
+import { ContextualSponsorCard } from '../components/ContextualSponsorCard';
 
 interface Props {
   lang?: 'zh-TW' | 'en';
@@ -533,6 +534,15 @@ export default function ResignationCalculatorClient({ lang = 'zh-TW' }: Props) {
               onChangeHandoverPerson={setHandoverPerson}
               emailTemplateText={emailTemplateText}
               onCopyEmail={copyToClipboard}
+            />
+
+            {/* 場景化贊助呼籲小卡 */}
+            <ContextualSponsorCard
+              title={t.sponsorCardTitle}
+              description={t.sponsorCardDesc}
+              buttonText={t.sponsorCardBtn}
+              lang={lang}
+              accentColor="#10b981"
             />
           </div>
         </div>

@@ -1,0 +1,190 @@
+/* app/components/sponsor.module.css
+ * 贊助專區與芳名錄樣式模組
+ * 遵循 Smalltools 雙主題規範與 WCAG AA 亮暗對比度標準
+ */
+
+.sponsorCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: var(--surface-glass, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  padding: 1.25rem 1.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sponsorCard:hover {
+  border-color: rgba(244, 63, 94, 0.4);
+  box-shadow: 0 12px 30px -5px rgba(244, 63, 94, 0.15);
+}
+
+.sponsorIconWrap {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #fb7185;
+}
+
+:global([data-theme='light']) .sponsorIconWrap {
+  background: rgba(225, 29, 72, 0.08);
+  border-color: rgba(225, 29, 72, 0.2);
+  color: #e11d48;
+}
+
+.sponsorBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(168, 85, 247, 0.15));
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fb7185;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.15);
+}
+
+.sponsorBtn:hover {
+  border-color: rgba(244, 63, 94, 0.55);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(168, 85, 247, 0.25));
+  color: #fda4af;
+  box-shadow: 0 0 18px rgba(244, 63, 94, 0.3);
+}
+
+.sponsorBtn:active {
+  transform: scale(0.96);
+}
+
+:global([data-theme='light']) .sponsorBtn {
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.08), rgba(147, 51, 234, 0.08));
+  border-color: rgba(225, 29, 72, 0.3);
+  color: #be123c;
+}
+
+:global([data-theme='light']) .sponsorBtn:hover {
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.15), rgba(147, 51, 234, 0.15));
+  color: #9f1239;
+}
+
+/* 芳名錄空狀態卡片 */
+.sponsorWallCard {
+  width: 100%;
+  max-width: 48rem;
+  border-radius: 1rem;
+  background: var(--surface-glass, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  padding: 2rem 1.5rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.sponsorWallCard:hover {
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.sponsorHeroBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #f43f5e, #e11d48, #9333ea);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.35);
+  transition: all 0.3s ease;
+}
+
+.sponsorHeroBtn:hover {
+  box-shadow: 0 0 28px rgba(244, 63, 94, 0.55);
+  transform: scale(1.04);
+}
+
+.sponsorHeroBtn:active {
+  transform: scale(0.96);
+}
+
+.sponsorBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.875rem;
+  border-radius: 9999px;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #fb7185;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+:global([data-theme='light']) .sponsorBadge {
+  background: rgba(225, 29, 72, 0.08);
+  border-color: rgba(225, 29, 72, 0.2);
+  color: #be123c;
+}
+
+.sponsorItemCard {
+  border-radius: 0.75rem;
+  background: var(--surface-glass, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  padding: 1rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.sponsorItemCard:hover {
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 6px 16px rgba(244, 63, 94, 0.1);
+}
+
+.sponsorAmountTag {
+  font-size: 0.75rem;
+  font-family: monospace;
+  font-weight: 600;
+  color: #fb7185;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+:global([data-theme='light']) .sponsorAmountTag {
+  color: #be123c;
+  background: rgba(225, 29, 72, 0.08);
+  border-color: rgba(225, 29, 72, 0.2);
+}

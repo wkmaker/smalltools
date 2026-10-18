@@ -287,6 +287,12 @@ export const TRANSLATIONS = {
 ④ 發薪日規定：離職當月的薪資不一定要在離職當天拿現金結清，公司得於原約定的發薪日如期全額匯款給付，不得故意扣發或拖延。`,
       },
     ],
+
+    // 場景化贊助呼籲
+    sponsorCardTitle: '順利交接，展開職涯新篇章！',
+    sponsorCardDesc:
+      '若這份離職預告與特休折現試算替您省下了心力、釐清了個人權益，歡迎請作者喝杯交接慶祝咖啡，支持工具持續維護！',
+    sponsorCardBtn: '請作者喝杯咖啡',
   },
   en: {
     backToHome: 'Back to Home',
@@ -584,6 +590,12 @@ Options for handling annual leave:
 ④ Salary Payday Regulations: Final month salary does not have to be paid in cash on the last day. The employer may disburse it on the scheduled regular payday. Employers CANNOT withhold pay under the pretext of incomplete handovers.`,
       },
     ],
+
+    // Contextual Sponsor Card
+    sponsorCardTitle: 'Smooth Handover & New Beginnings!',
+    sponsorCardDesc:
+      'If this notice period and leave payout calculator clarified your rights and saved you time, consider buying the author a celebratory coffee!',
+    sponsorCardBtn: 'Buy Author a Coffee',
   },
 };
 

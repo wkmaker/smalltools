@@ -158,6 +158,12 @@ export const TRANSLATIONS = {
 常規質押期限為 6 個月，到期前若維持率維持良好且付清利息，得申請展延 6 個月，最長可連續展延至 1.5 年至 2 年，無須強制賣股還款。`,
       },
     ],
+
+    // 場景化贊助呼籲
+    sponsorCardTitle: '掌握風險，安心投資！',
+    sponsorCardDesc:
+      '若這份質押維持率試算與壓力測試有幫助您安心掌握斷頭風險與保證金回補規劃，歡迎請作者喝杯咖啡，支持系統獨立維護！',
+    sponsorCardBtn: '請作者喝杯咖啡',
   },
   en: {
     title: 'Stock Margin & Pledge Calculator',
@@ -315,5 +321,11 @@ Interest is calculated daily (Annual Rate ÷ 365 × Days) and settled semi-annua
 Standard terms are 6 months, expandable up to 1.5–2 years upon request provided maintenance ratios remain healthy.`,
       },
     ],
+
+    // Contextual Sponsor Card
+    sponsorCardTitle: 'Navigate Margin Risk with Peace of Mind!',
+    sponsorCardDesc:
+      'If this margin calculator helped safeguard your investments and plan buffers, consider supporting continuous maintenance with a coffee!',
+    sponsorCardBtn: 'Buy Author a Coffee',
   },
 };

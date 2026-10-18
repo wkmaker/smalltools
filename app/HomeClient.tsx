@@ -8,6 +8,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { CATEGORIES, Category, Tool, type CategorySection } from './config/tools';
 import { version as appVersion } from '@/package.json';
 import { TRANSLATIONS } from './translations';
+import { SponsorWallSection } from './components/SponsorWallSection';
 
 type Tab = 'all' | Category;
 
@@ -533,6 +534,9 @@ export default function HomeClient({ lang }: HomeClientProps) {
           <p className="text-lg">{t.noResults}</p>
         </div>
       )}
+
+      {/* 贊助者芳名錄 */}
+      <SponsorWallSection lang={lang} />
 
       {/* 頁尾資訊 */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-14 pt-6 border-t border-white/[.05] text-sm text-text-sub w-full">
