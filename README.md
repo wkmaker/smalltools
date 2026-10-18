@@ -153,10 +153,10 @@ Smalltools 具備完善的企業級 SEO 架構，確保全站所有工具與頁�
    - 雙語系頁面全面配置 `alternates.languages`（`zh-TW`、`en` 以及 `x-default` 預設國際語言指向英文版）。
 3. **📊 豐富結構化資料 (Schema.org JSON-LD Rich Snippets)**：
    - **`WebApplication` / `SoftwareApplication`**：定義應用程式類別、作業系統相容性與免費價格（Price 0 TWD）。
-   - **`FAQPage`**：全站 30 個工具均配備 7~9 則專業問答，於 Google 搜尋結果呈現問答手風琴展開卡片。
+   - **`FAQPage`**：全站 32 個工具均配備 7~9 則專業問答，於 Google 搜尋結果呈現問答手風琴展開卡片。
    - **`WebSite`**：首頁配置 SearchAction 搜尋框結構化資料。
 4. **🗺️ 靜態 Sitemap 與 Robots.txt (Automated Sitemap & Indexing)**：
-   - `app/sitemap.ts` 自動生成包含 30 項工具中文版、英文版、首頁以及全台時薪 PR 排名動態頁面之完整網站地圖。
+   - `app/sitemap.ts` 自動生成包含 32 項工具中文版、英文版、首頁以及全台時薪 PR 排名動態頁面之完整網站地圖。
    - `robots.txt` 明確規範允許檢索範圍並正確導向 `sitemap.xml`。
 5. **🛡️ 建置自動化卡關守門員 (Prebuild Gatekeeper)**：
    - 每次執行 `npm run build` 時自動觸發 `prebuild`，若有任何工具遺漏 SEO 標記、未配置 FAQ 或違反 UI 規範，將自動中斷建置以防瑕疵代碼上線。
@@ -196,3 +196,9 @@ Smalltools 具備完善的企業級 SEO 架構，確保全站所有工具與頁�
 本專案提供之各項工具（包含但不限於財務、薪資、房貸、網路與檔案處理工具）及其數據結果僅供技術交流與個人參考，不構成任何專業財務、法律或工程建議。
 
 使用者於實際決策前應自行核對權威機構數據，原作者與 Plume Intel LLC 不對任何因使用本服務所生之直接或間接損失承擔法律責任。
+
+---
+
+<p align="center">
+  <sub>Smalltools Current Version: <b>v1.24.0</b> (Updated: 2026-10-18)</sub>
+</p>
