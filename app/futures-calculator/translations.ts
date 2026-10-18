@@ -172,6 +172,12 @@ export const TRANSLATIONS = {
 ④ 微台避險：利用微台指 (TMF) 進行精細化的部位對沖。`,
       },
     ],
+
+    // 場景化贊助呼籲
+    sponsorCardTitle: '嚴控槓桿，安心交易！',
+    sponsorCardDesc:
+      '若這份期貨保證金試算、逆風點數與壓力測試有幫助您精準掌握維持保證金與斷頭風險，歡迎請作者喝杯咖啡，支持系統獨立維護！',
+    sponsorCardBtn: '請作者喝杯咖啡',
   },
   en: {
     title: 'Futures Risk & Margin Calculator',
@@ -339,5 +345,11 @@ Risk mitigation strategies:
 ④ Micro Hedging: Utilize Micro Taiwan Index Futures (TMF) for fine-tuned hedging.`,
       },
     ],
+
+    // Contextual Sponsor Card
+    sponsorCardTitle: 'Master Leverage, Trade with Discipline!',
+    sponsorCardDesc:
+      'If this futures margin calculator and stress testing helped safeguard your equity and manage risk, consider supporting continuous maintenance with a coffee!',
+    sponsorCardBtn: 'Buy Author a Coffee',
   },
 };

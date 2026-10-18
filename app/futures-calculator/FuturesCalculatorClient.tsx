@@ -7,6 +7,7 @@ import styles from './futures-calculator.module.css';
 import { calculateFutures } from './engine';
 import { D, toNumber } from '../utils/decimal';
 import { TRANSLATIONS } from './translations';
+import { ContextualSponsorCard } from '../components/ContextualSponsorCard';
 
 interface Preset {
   id: 'tx' | 'mtx' | 'tmf' | 'custom';
@@ -959,6 +960,15 @@ ${stressDropPct > 0 ? `• Adverse Stress Test (${stressDropPct.toFixed(1)}%): S
                 </div>
               </div>
             </div>
+
+            {/* 場景化贊助呼籲小卡 */}
+            <ContextualSponsorCard
+              title={t.sponsorCardTitle}
+              description={t.sponsorCardDesc}
+              buttonText={t.sponsorCardBtn}
+              lang={lang}
+              accentColor="#f97316"
+            />
           </div>
         </div>
 
