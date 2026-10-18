@@ -6,6 +6,9 @@ import FaqSection from '../components/FaqSection';
 import PrizeEditorPanel from './components/PrizeEditorPanel';
 import FullscreenStageModal from './components/FullscreenStageModal';
 import { WinnerModal, HistoryModal } from './components/Modals';
+import TopBannerControls from './components/TopBannerControls';
+import WheelControlsBar from './components/WheelControlsBar';
+import StageView from './components/StageView';
 import styles from './lucky-wheel.module.css';
 import type { PrizeItem, AwardTier, HistoryRecord, SpinSpeed, SaveSlot } from './types';
 import { PRESET_COLORS, PRIZE_TEMPLATES, DEFAULT_AWARD_TIERS, SPIN_SPEED_MS } from './constants';
@@ -20,10 +23,12 @@ import {
   formatHistoryCsv,
   secureRandomFloat,
   generateId,
-  getContrastYIQ,
   getAvailablePrizes,
 } from './engine';
+import { renderWheelOnCanvas, triggerConfettiAnimation } from './utils/canvasRenderer';
+import { useWheelAudio } from './hooks/useWheelAudio';
 import { downloadBlob } from '../utils/downloadBlob';
+import { getLocalDateString } from '../utils/dateUtils';
 import { TRANSLATIONS } from './translations';
 
 interface LuckyWheelClientProps {
@@ -84,95 +89,8 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const drawCountSelectId = useId();
   const activeAwardSelectId = useId();
 
-  // 音效 Engine (Web Audio API)
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  const playTickSound = useCallback(() => {
-    if (!soundEnabled) return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(480, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.045);
-
-      gain.gain.setValueAtTime(0.18, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.045);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.045);
-    } catch {
-      // 瀏覽器阻擋自動播放時安全略過
-    }
-  }, [soundEnabled]);
-
-  const playSubWinDing = useCallback(() => {
-    if (!soundEnabled) return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      [659.25, 880].forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        const startTime = ctx.currentTime + i * 0.09;
-        gain.gain.setValueAtTime(0.24, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + 0.25);
-      });
-    } catch {
-      // ignore
-    }
-  }, [soundEnabled]);
-
-  const playWinFanfare = useCallback(() => {
-    if (!soundEnabled) return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      const notes = [523.25, 659.25, 783.99, 1046.5];
-      notes.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        const startTime = ctx.currentTime + i * 0.11;
-
-        gain.gain.setValueAtTime(0.28, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.38);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + 0.38);
-      });
-    } catch {
-      // 忽略音效錯誤
-    }
-  }, [soundEnabled]);
+  // 音效 Engine Hook
+  const { playTickSound, playSubWinDing, playWinFanfare } = useWheelAudio(soundEnabled);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#f59e0b');
@@ -200,310 +118,93 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
               id: generateId(),
             }));
             setAwardTiers(defAwards);
-            setSelectedAwardId(defAwards[0]?.id || '');
+            setSelectedAwardId(defAwards[0].id);
           }
           return;
         }
       }
 
-      const savedMode = localStorage.getItem('lw_display_mode');
-      if (savedMode === 'wheel' || savedMode === 'slot') setDisplayMode(savedMode);
-
-      const savedLimit = localStorage.getItem('lw_qty_limit');
-      if (savedLimit !== null) setEnableQuantityLimit(savedLimit === 'true');
-
-      // 預設不自動強制開啟尾牙雙抽獎項池，避免切換模板或重整後卡住顯示
-      setEnableAwardMode(false);
-      localStorage.removeItem('lw_award_mode');
-
-      const savedPrizes = localStorage.getItem('lw_prizes');
-      if (savedPrizes) {
-        setPrizes(JSON.parse(savedPrizes));
+      const cachedPrizes = localStorage.getItem('lw_prizes');
+      if (cachedPrizes) {
+        setPrizes(JSON.parse(cachedPrizes));
       } else {
-        const tList = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
-        setPrizes(tList.map((p) => ({ ...p, id: generateId() })));
+        const defaultTemplate = PRIZE_TEMPLATES.decision[lang] || PRIZE_TEMPLATES.decision['zh-TW'];
+        setPrizes(defaultTemplate.map((p) => ({ ...p, id: generateId() })));
       }
 
-      const savedAwards = localStorage.getItem('lw_award_tiers');
-      if (savedAwards) {
-        const parsedAwards: AwardTier[] = JSON.parse(savedAwards);
-        setAwardTiers(parsedAwards);
-        if (parsedAwards.length > 0) setSelectedAwardId(parsedAwards[0].id);
+      const cachedHistory = localStorage.getItem('lw_history');
+      if (cachedHistory) setHistory(JSON.parse(cachedHistory));
+
+      const cachedAwards = localStorage.getItem('lw_awards');
+      if (cachedAwards) {
+        const parsed = JSON.parse(cachedAwards);
+        setAwardTiers(parsed);
+        if (parsed.length > 0) setSelectedAwardId(parsed[0].id);
       } else {
         const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
           ...a,
           id: generateId(),
         }));
         setAwardTiers(defAwards);
-        setSelectedAwardId(defAwards[0]?.id || '');
+        setSelectedAwardId(defAwards[0].id);
       }
 
-      const savedHistory = localStorage.getItem('lw_history');
-      if (savedHistory) setHistory(JSON.parse(savedHistory));
+      const cachedAwardMode = localStorage.getItem('lw_enable_award_mode');
+      if (cachedAwardMode !== null) setEnableAwardMode(cachedAwardMode === 'true');
 
-      const savedSlots = localStorage.getItem('lw_save_slots');
-      if (savedSlots) setSaveSlots(JSON.parse(savedSlots));
+      const cachedQtyLimit = localStorage.getItem('lw_enable_qty_limit');
+      if (cachedQtyLimit !== null) setEnableQuantityLimit(cachedQtyLimit === 'true');
+
+      const cachedSlots = localStorage.getItem('lw_save_slots');
+      if (cachedSlots) setSaveSlots(JSON.parse(cachedSlots));
     } catch {
-      const tList = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
-      setPrizes(tList.map((p) => ({ ...p, id: generateId() })));
+      // 容錯防禦
     }
   }, [lang]);
 
-  // 寫入 LocalStorage
+  // 同步保存最新狀態至 LocalStorage
   const saveState = useCallback(
     (
-      nextPrizes?: PrizeItem[],
-      nextHistory?: HistoryRecord[],
-      nextAwards?: AwardTier[],
-      nextAwardMode?: boolean,
-      nextQtyLimit?: boolean
+      newPrizes?: PrizeItem[],
+      newHistory?: HistoryRecord[],
+      newAwards?: AwardTier[],
+      newAwardMode?: boolean,
+      newQtyLimit?: boolean
     ) => {
       try {
-        localStorage.setItem('lw_display_mode', displayMode);
-        localStorage.setItem('lw_qty_limit', String(nextQtyLimit ?? enableQuantityLimit));
-        localStorage.setItem('lw_award_mode', String(nextAwardMode ?? enableAwardMode));
-        localStorage.setItem('lw_prizes', JSON.stringify(nextPrizes ?? prizes));
-        localStorage.setItem('lw_award_tiers', JSON.stringify(nextAwards ?? awardTiers));
-        localStorage.setItem('lw_history', JSON.stringify(nextHistory ?? history));
+        if (newPrizes) localStorage.setItem('lw_prizes', JSON.stringify(newPrizes));
+        if (newHistory) localStorage.setItem('lw_history', JSON.stringify(newHistory));
+        if (newAwards) localStorage.setItem('lw_awards', JSON.stringify(newAwards));
+        if (newAwardMode !== undefined) localStorage.setItem('lw_enable_award_mode', String(newAwardMode));
+        if (newQtyLimit !== undefined) localStorage.setItem('lw_enable_qty_limit', String(newQtyLimit));
       } catch {
-        // 忽略容量上限錯誤
+        // ignore
       }
     },
-    [displayMode, enableQuantityLimit, enableAwardMode, prizes, awardTiers, history]
+    []
   );
 
-  const getUnfinishedPrizes = useCallback(
-    () => getAvailablePrizes(prizes, enableQuantityLimit),
-    [prizes, enableQuantityLimit]
-  );
+  const getUnfinishedPrizes = useCallback(() => {
+    return getAvailablePrizes(prizes, enableQuantityLimit);
+  }, [prizes, enableQuantityLimit]);
 
   const calculateSectors = useCallback(
     () => calculateSectorsEngine(getUnfinishedPrizes()),
     [getUnfinishedPrizes]
   );
 
-  // 繪製 12 點鐘頂部指針（支援物理彈動偏角 deflectionDeg）
-  const drawPointer = (
-    ctx: CanvasRenderingContext2D,
-    centerX: number,
-    centerY: number,
-    radius: number,
-    deflectionDeg: number
-  ) => {
-    ctx.save();
-    const wheelTop = centerY - radius;
-    const ballR = 15;
-    const ballY = wheelTop - ballR - 6;
-    const tipY = wheelTop + 22;
-    const baseY = wheelTop - 4;
-    const halfW = 18;
-
-    // 以指針頂部圓球中心為軸進行物理彈動旋轉
-    ctx.translate(centerX, ballY);
-    ctx.rotate((deflectionDeg * Math.PI) / 180);
-    ctx.translate(-centerX, -ballY);
-
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetY = 4;
-
-    ctx.beginPath();
-    ctx.moveTo(centerX - halfW, baseY);
-    ctx.lineTo(centerX + halfW, baseY);
-    ctx.lineTo(centerX, tipY);
-    ctx.closePath();
-
-    const pGrad = ctx.createLinearGradient(centerX, baseY, centerX, tipY);
-    pGrad.addColorStop(0, '#ff4477');
-    pGrad.addColorStop(0.5, '#ff0055');
-    pGrad.addColorStop(1, '#cc0033');
-    ctx.fillStyle = pGrad;
-    ctx.fill();
-
-    ctx.shadowColor = 'transparent';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    const ballGrad = ctx.createRadialGradient(centerX - 5, ballY - 5, 1, centerX, ballY, ballR);
-    ballGrad.addColorStop(0, '#ffffff');
-    ballGrad.addColorStop(0.3, '#ff4477');
-    ballGrad.addColorStop(1, '#99002b');
-
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(centerX, ballY, ballR, 0, Math.PI * 2);
-    ctx.fillStyle = ballGrad;
-    ctx.fill();
-
-    ctx.shadowColor = 'transparent';
-    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-  };
-
   // 繪製轉盤 Canvas
   const drawWheelOnCanvas = useCallback(
     (canvas: HTMLCanvasElement | null) => {
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const size = canvas.width;
-      const centerX = size / 2;
-      const centerY = size / 2;
-      const radius = size * 0.42;
-
-      ctx.clearRect(0, 0, size, size);
-
       const { sectors, totalWeight } = calculateSectors();
-      const isLight = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
-
-      if (sectors.length === 0 || totalWeight === 0) {
-        ctx.save();
-        const emptyGrad = ctx.createRadialGradient(centerX, centerY - radius * 0.3, 0, centerX, centerY, radius);
-        if (isLight) {
-          emptyGrad.addColorStop(0, '#ffffff');
-          emptyGrad.addColorStop(1, '#e2e8f0');
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-          ctx.fillStyle = emptyGrad;
-          ctx.fill();
-          ctx.strokeStyle = '#cbd5e1';
-          ctx.lineWidth = 8;
-          ctx.stroke();
-          ctx.fillStyle = '#475569';
-        } else {
-          emptyGrad.addColorStop(0, '#2a2a3d');
-          emptyGrad.addColorStop(1, '#161623');
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-          ctx.fillStyle = emptyGrad;
-          ctx.fill();
-          ctx.strokeStyle = '#3a3a5c';
-          ctx.lineWidth = 8;
-          ctx.stroke();
-          ctx.fillStyle = '#94a3b8';
-        }
-
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(t.allDrawn, centerX, centerY);
-        ctx.restore();
-        drawPointer(ctx, centerX, centerY, radius, 0);
-        return;
-      }
-
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate((currentRotationAngle * Math.PI) / 180);
-
-      sectors.forEach((sec) => {
-        const startRad = (sec.startAngle * Math.PI) / 180;
-        const endRad = (sec.endAngle * Math.PI) / 180;
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, radius, startRad, endRad);
-        ctx.closePath();
-        ctx.fillStyle = sec.prize.color;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, radius, startRad, endRad);
-        ctx.closePath();
-        const midRad0 = (startRad + endRad) / 2;
-        const shimmerX = Math.cos(midRad0) * radius * 0.35;
-        const shimmerY = Math.sin(midRad0) * radius * 0.35;
-        const shimmer = ctx.createRadialGradient(shimmerX, shimmerY, 0, shimmerX, shimmerY, radius * 0.85);
-        shimmer.addColorStop(0, 'rgba(255,255,255,0.22)');
-        shimmer.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = shimmer;
-        ctx.fill();
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
-        ctx.lineWidth = 3;
-        ctx.stroke();
+      renderWheelOnCanvas({
+        canvas,
+        sectors,
+        totalWeight,
+        currentRotationAngle,
+        pointerDeflection: pointerDeflectionRef.current,
+        emptyLabel: t.allDrawn,
       });
-
-      // 中心圓
-      const hubRadius = radius * 0.115;
-      const hubGrad = ctx.createRadialGradient(-hubRadius * 0.3, -hubRadius * 0.3, 0, 0, 0, hubRadius);
-      hubGrad.addColorStop(0, '#ffffff');
-      hubGrad.addColorStop(0.5, '#e2e8f0');
-      hubGrad.addColorStop(1, '#94a3b8');
-      ctx.beginPath();
-      ctx.arc(0, 0, hubRadius, 0, Math.PI * 2);
-      ctx.fillStyle = hubGrad;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // 外圈金屬環
-      ctx.shadowColor = isLight ? 'rgba(15, 23, 42, 0.15)' : 'rgba(0, 0, 0, 0.55)';
-      ctx.shadowBlur = 28;
-      ctx.shadowOffsetY = 6;
-
-      ctx.beginPath();
-      ctx.arc(0, 0, radius + 6, 0, Math.PI * 2);
-      const outerRingGrad = ctx.createLinearGradient(-radius, -radius, radius, radius);
-      outerRingGrad.addColorStop(0, '#ffffff');
-      outerRingGrad.addColorStop(0.5, '#b0c0d8');
-      outerRingGrad.addColorStop(1, '#7088a8');
-      ctx.strokeStyle = outerRingGrad;
-      ctx.lineWidth = 14;
-      ctx.stroke();
-
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.beginPath();
-      ctx.arc(0, 0, radius + 1, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.restore();
-
-      // 繪製扇區文字
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate((currentRotationAngle * Math.PI) / 180);
-
-      sectors.forEach((sec) => {
-        const startRad = (sec.startAngle * Math.PI) / 180;
-        const endRad = (sec.endAngle * Math.PI) / 180;
-        const midRad = (startRad + endRad) / 2;
-        const angleSpan = endRad - startRad;
-
-        ctx.save();
-        ctx.rotate(midRad);
-
-        const contrastColor = getContrastYIQ(sec.prize.color);
-        const n = sectors.length;
-        const fontSize = n > 18 ? 13 : n > 12 ? 15 : n > 6 ? 19 : 22;
-
-        ctx.shadowColor = contrastColor === '#ffffff' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.35)';
-        ctx.shadowBlur = 4;
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = contrastColor;
-        ctx.font = `700 ${fontSize}px sans-serif`;
-
-        let text = sec.prize.title;
-        const maxLen = angleSpan < 0.25 ? 5 : angleSpan < 0.5 ? 7 : 10;
-        if (text.length > maxLen) text = text.substring(0, maxLen - 1) + '…';
-
-        const textR = radius * 0.78;
-        ctx.fillText(text, textR, 0);
-        ctx.restore();
-      });
-
-      ctx.restore();
-      drawPointer(ctx, centerX, centerY, radius, pointerDeflectionRef.current);
     },
     [calculateSectors, currentRotationAngle, t.allDrawn]
   );
@@ -531,77 +232,15 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     }
   }, [drawWheelOnCanvas, isFullscreen, displayMode]);
 
-  // 彩帶禮花 Confetti 動畫
   const triggerConfetti = useCallback(() => {
-    const canvas = confettiCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles: {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      color: string;
-      size: number;
-      rotation: number;
-      vr: number;
-    }[] = [];
-
-    const colors = ['#ff0055', '#ff7700', '#ffb800', '#00f0ff', '#00f5a0', '#7000ff', '#ffffff'];
-
-    for (let i = 0; i < 160; i++) {
-      particles.push({
-        x: canvas.width / 2,
-        y: canvas.height * 0.4,
-        vx: (secureRandomFloat() - 0.5) * 22,
-        vy: (secureRandomFloat() - 0.7) * 20,
-        color: colors[Math.floor(secureRandomFloat() * colors.length)],
-        size: secureRandomFloat() * 10 + 6,
-        rotation: secureRandomFloat() * 360,
-        vr: (secureRandomFloat() - 0.5) * 12,
-      });
-    }
-
-    let frames = 0;
-    const renderConfetti = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.45;
-        p.rotation += p.vr;
-
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rotation * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-        ctx.restore();
-      });
-
-      frames++;
-      if (frames < 140) {
-        requestAnimationFrame(renderConfetti);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    };
-
-    requestAnimationFrame(renderConfetti);
+    triggerConfettiAnimation(confettiCanvasRef.current);
   }, []);
 
-  // 計算本次有效連抽人數（不再被單一獎項剩餘 1 名靜默截斷為 1）
   const getEffectiveDrawCount = useCallback(() => {
     return Math.max(1, drawCount);
   }, [drawCount]);
 
-  // 抽獎結束統一結算（支援單抽、連抽與尾牙獎項綁定）
+  // 抽獎結束統一結算
   const finalizeSpinBatch = useCallback(
     (winners: PrizeItem[], updatedPrizes: PrizeItem[]) => {
       pointerDeflectionRef.current = 0;
@@ -633,7 +272,6 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
             drawnCount: nextDrawn,
           };
         });
-        // 若當前獎項已抽完，自動切換至下一個尚有名額的獎項
         const currentAfter = nextAwards.find((a) => a.id === activeAward.id);
         if (currentAfter && currentAfter.drawnCount >= currentAfter.quantity) {
           const nextAvailableAward = nextAwards.find((a) => a.drawnCount < a.quantity);
@@ -656,10 +294,18 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
 
       triggerConfetti();
     },
-    [enableAwardMode, awardTiers, selectedAwardId, history, playWinFanfare, saveState, triggerConfetti]
+    [
+      enableAwardMode,
+      awardTiers,
+      selectedAwardId,
+      history,
+      playWinFanfare,
+      saveState,
+      triggerConfetti,
+    ]
   );
 
-  // 啟動轉盤旋轉（單抽轉 1 次；多人連抽則自動逐輪連續轉動 N 次，每次指針真實停靠於該位得主）
+  // 啟動轉盤抽獎
   const startWheelSpin = useCallback(() => {
     const initialAvailable = getAvailablePrizes(prizes, enableQuantityLimit);
     if (initialAvailable.length === 0 || isSpinning) return;
@@ -681,10 +327,10 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     const isMulti = winners.length > 1;
     const subDuration = isMulti
       ? spinSpeed === 'fast'
-        ? 1150
+        ? 1200
         : spinSpeed === 'normal'
-        ? 2100
-        : 3100
+        ? 2200
+        : 3400
       : SPIN_SPEED_MS[spinSpeed].wheel;
 
     const runStep = (
@@ -752,7 +398,6 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
               revealed: nextRevealed,
             });
 
-            // 扣減該位得主庫存，若抽完則下一抽前自動從轉盤剔除該扇區
             const nextStepPrizes = stepWorkingPrizes.map((p) => {
               if (p.id !== currentWinner.id) return p;
               const nextDrawn = p.drawnCount + 1;
@@ -805,7 +450,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     finalizeSpinBatch,
   ]);
 
-  // 啟動拉霸機抽獎（多人連抽時亦逐輪自動捲動並停靠於每位得主）
+  // 啟動拉霸機抽獎
   const startSlotSpin = useCallback(() => {
     const initialAvailable = getAvailablePrizes(prizes, enableQuantityLimit);
     if (initialAvailable.length === 0 || isSpinning) return;
@@ -982,7 +627,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       : 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-amber-500/20 border border-amber-500/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md';
     toastEl.insertAdjacentHTML(
       'afterbegin',
-      '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+      '<svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
     );
     const msgEl = document.createElement('span');
     msgEl.textContent = msg;
@@ -1010,7 +655,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     showToast(t.toastRevertedWinner);
   };
 
-  // 載入快速模板（切換模板時自動關閉雙抽獎項池，除非使用者手動勾選）
+  // 載入快速模板
   const loadTemplate = (templateKey: string) => {
     if (PRIZE_TEMPLATES[templateKey]) {
       const templateData = PRIZE_TEMPLATES[templateKey][lang] || PRIZE_TEMPLATES[templateKey]['zh-TW'];
@@ -1099,13 +744,13 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const exportTxt = () => {
     const textContent = prizes.map((p) => `${p.title}\t${p.weight}\t${p.quantity}\t${p.color}`).join('\n');
     const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(blob, `LuckyWheel_Prizes_${new Date().toISOString().slice(0, 10)}.txt`);
+    downloadBlob(blob, `LuckyWheel_Prizes_${getLocalDateString()}.txt`);
   };
 
   const exportHistoryCsv = () => {
     const csv = formatHistoryCsv(history, lang);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, `LuckyWheel_Winners_${new Date().toISOString().slice(0, 10)}.csv`);
+    downloadBlob(blob, `LuckyWheel_Winners_${getLocalDateString()}.csv`);
   };
 
   const copyWinnersText = async () => {
@@ -1182,7 +827,6 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const latestBatchRecords = latestBatchId
     ? history.filter((r) => r.batchId === latestBatchId)
     : history.slice(0, 1);
-  const latestBatchTitles = latestBatchRecords.map((r) => r.prizeTitle).join('、');
 
   if (!isMounted) return null;
 
@@ -1196,334 +840,67 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     >
       <div className="flex flex-col gap-6 text-left w-full px-4 max-sm:px-0">
         {/* 頂部最新中獎動態與快捷列 */}
-        <div
-          className={`rounded-2xl p-3.5 sm:px-6 sm:py-3.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 shadow-lg min-w-0 ${styles.bannerGradient}`}
-        >
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-full overflow-hidden">
-            <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide shrink-0">
-              {t.latestWinnerTag}
-            </span>
-            <span className="text-xs sm:text-sm font-medium flex items-center gap-1.5 min-w-0 truncate">
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className={`shrink-0 ${styles.bannerTrophyIcon}`}>
-                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1c2.2-.4 3.9-2.18 4.39-4.5A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-              </svg>
-              <span className="truncate">
-                {history.length > 0
-                  ? `${t.justWon}${latestBatchTitles}${history[0].awardName ? ` (${history[0].awardName})` : ''}`
-                  : t.welcomeMsg}
-              </span>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto min-w-0">
-            <button
-              type="button"
-              onClick={() => setShowHistoryModal(true)}
-              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
-            >
-              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-              </svg>
-              <span className="truncate">
-                {t.historyBtn} ({history.length})
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={handleShareUrl}
-              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
-            >
-              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
-              </svg>
-              <span className="truncate">{t.shareLinkBtn}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white/20 border border-white/40 rounded-xl hover:bg-white/30 transition-all cursor-pointer text-white flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
-            >
-              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
-              </svg>
-              <span className="truncate">{soundEnabled ? t.soundOn : t.soundOff}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(true)}
-              className="px-3.5 py-1.5 text-xs sm:text-sm font-bold bg-white text-slate-950 rounded-xl hover:bg-slate-100 shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0"
-            >
-              <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" className="shrink-0">
-                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
-              </svg>
-              <span className="truncate">{t.fullscreenBtn}</span>
-            </button>
-          </div>
-        </div>
+        <TopBannerControls
+          t={t}
+          history={history}
+          soundEnabled={soundEnabled}
+          onToggleSound={() => setSoundEnabled(!soundEnabled)}
+          onOpenHistory={() => setShowHistoryModal(true)}
+          onShareUrl={handleShareUrl}
+          onOpenFullscreen={() => setIsFullscreen(true)}
+        />
 
         {/* 模式切換、連抽人數、轉速與尾牙雙抽開關列 */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3.5 bg-surface-glass border border-border-glass rounded-2xl p-3.5 sm:p-4 shadow-sm">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex bg-select-bg p-1 rounded-xl border border-border-glass">
-              <button
-                type="button"
-                onClick={() => setDisplayMode('wheel')}
-                className={`px-3.5 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
-                  displayMode === 'wheel' ? styles.activeSegmentBtn : 'text-text-sub hover:text-text-main'
-                }`}
-              >
-                {t.wheelMode}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisplayMode('slot')}
-                className={`px-3.5 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer transition-all font-semibold flex items-center justify-center gap-1.5 ${
-                  displayMode === 'slot' ? styles.activeSegmentBtn : 'text-text-sub hover:text-text-main'
-                }`}
-              >
-                {t.slotMode}
-              </button>
-            </div>
-
-            {/* 連抽人數與轉速選擇 */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <label htmlFor={drawCountSelectId} className="text-xs sm:text-sm font-medium text-text-sub">
-                {t.drawCountLabel}
-              </label>
-              <select
-                id={drawCountSelectId}
-                value={drawCount}
-                onChange={(e) => setDrawCount(Number(e.target.value))}
-                className={`rounded-xl px-2.5 py-1.5 text-sm font-semibold outline-none cursor-pointer ${styles.selectInput}`}
-              >
-                <option value={1}>{t.drawSingle}</option>
-                <option value={3}>{t.drawThree}</option>
-                <option value={5}>{t.drawFive}</option>
-                <option value={10}>{t.drawTen}</option>
-              </select>
-
-              <label htmlFor={speedSelectId} className="text-xs sm:text-sm font-medium text-text-sub ml-1">
-                {t.spinSpeedLabel}
-              </label>
-              <select
-                id={speedSelectId}
-                value={spinSpeed}
-                onChange={(e) => setSpinSpeed(e.target.value as SpinSpeed)}
-                className={`rounded-xl px-2.5 py-1.5 text-sm font-semibold outline-none cursor-pointer ${styles.selectInput}`}
-              >
-                <option value="fast">{t.speedFast}</option>
-                <option value="normal">{t.speedNormal}</option>
-                <option value="suspense">{t.speedSuspense}</option>
-              </select>
-            </div>
-          </div>
-
-          {/* 數量限制與尾牙雙抽開關 */}
-          <div className="flex flex-wrap items-center gap-4">
-            <label htmlFor={awardModeToggleId} className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-text-main cursor-pointer">
-              <input
-                id={awardModeToggleId}
-                type="checkbox"
-                checked={enableAwardMode}
-                onChange={(e) => {
-                  setEnableAwardMode(e.target.checked);
-                  saveState(undefined, undefined, undefined, e.target.checked);
-                }}
-                className="w-4 h-4 rounded cursor-pointer accent-amber-500 shrink-0"
-              />
-              {t.enableAwardMode}
-            </label>
-
-            <label htmlFor={qtyLimitToggleId} className="flex items-center gap-2 text-xs sm:text-sm font-medium text-text-sub cursor-pointer">
-              <input
-                id={qtyLimitToggleId}
-                type="checkbox"
-                checked={enableQuantityLimit}
-                onChange={(e) => {
-                  setEnableQuantityLimit(e.target.checked);
-                  saveState(undefined, undefined, undefined, undefined, e.target.checked);
-                }}
-                className="w-4 h-4 rounded cursor-pointer accent-amber-500 shrink-0"
-              />
-              {t.enableQtyLimit}
-            </label>
-          </div>
-        </div>
+        <WheelControlsBar
+          t={t}
+          displayMode={displayMode}
+          setDisplayMode={setDisplayMode}
+          drawCount={drawCount}
+          setDrawCount={setDrawCount}
+          spinSpeed={spinSpeed}
+          setSpinSpeed={setSpinSpeed}
+          enableAwardMode={enableAwardMode}
+          onToggleAwardMode={(enabled) => {
+            setEnableAwardMode(enabled);
+            saveState(undefined, undefined, undefined, enabled);
+          }}
+          enableQuantityLimit={enableQuantityLimit}
+          onToggleQuantityLimit={(enabled) => {
+            setEnableQuantityLimit(enabled);
+            saveState(undefined, undefined, undefined, undefined, enabled);
+          }}
+          drawCountSelectId={drawCountSelectId}
+          speedSelectId={speedSelectId}
+          awardModeToggleId={awardModeToggleId}
+          qtyLimitToggleId={qtyLimitToggleId}
+        />
 
         {/* 主 Layout (兩欄式) */}
         <div className="grid grid-cols-2 gap-8 max-lg:grid-cols-1 items-start">
           {/* 左欄：轉盤 / 拉霸機 舞台區 */}
-          <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-5 shadow-lg backdrop-blur-md min-w-0">
-            {/* 若開啟尾牙雙抽模式，於轉盤正上方顯示「目前抽取獎項」切換列 */}
-            {enableAwardMode && awardTiers.length > 0 && (
-              <div className="w-full bg-select-bg border border-border-glass rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
-                <label htmlFor={activeAwardSelectId} className={`text-xs sm:text-sm font-bold ${styles.accentText}`}>
-                  {t.currentAwardLabel}
-                </label>
-                <div className="flex items-center gap-2 flex-1 min-w-[180px] justify-end">
-                  <select
-                    id={activeAwardSelectId}
-                    value={selectedAwardId}
-                    onChange={(e) => setSelectedAwardId(e.target.value)}
-                    className={`rounded-xl px-3 py-1.5 text-sm font-bold outline-none cursor-pointer flex-1 max-w-[240px] ${styles.selectInput}`}
-                  >
-                    {awardTiers.map((tier) => (
-                      <option key={tier.id} value={tier.id}>
-                        {tier.name}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedAward && (
-                    <span
-                      className={`text-xs font-mono font-bold px-2.5 py-1 rounded-lg shrink-0 ${
-                        selectedAwardRemain === 0 ? styles.redTag : styles.emeraldTag
-                      }`}
-                    >
-                      {t.awardRemainFmt
-                        .replace('{remain}', String(selectedAwardRemain))
-                        .replace('{total}', String(selectedAward.quantity))}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    aria-label={t.closeAwardModeBtn}
-                    onClick={() => {
-                      setEnableAwardMode(false);
-                      saveState(undefined, undefined, undefined, false);
-                    }}
-                    className={`px-2 py-1 text-xs font-bold rounded-lg cursor-pointer shrink-0 ${styles.redTag}`}
-                    title={t.closeAwardModeBtn}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {displayMode === 'wheel' ? (
-              <div className={styles.wheelContainer}>
-                <canvas ref={previewCanvasRef} width={800} height={800} className={styles.wheelCanvas} />
-              </div>
-            ) : (
-              <div className={styles.slotWrapper}>
-                <div className={styles.slotFrame}>
-                  <div className={styles.slotLights}>
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className={styles.slotWindow}>
-                    <div className={styles.slotPayline} />
-                    <div className={styles.slotStrip} style={{ transform: `translateY(${slotTranslateY}px)` }}>
-                      {slotStripItems.length === 0 ? (
-                        <div className={styles.slotCard}>
-                          <span>{t.spinReadySlot}</span>
-                        </div>
-                      ) : (
-                        slotStripItems.map((item, idx) => (
-                          <div key={idx} className={styles.slotCard}>
-                            <div className={styles.slotCardDot} style={{ background: item.color }} />
-                            <span className="truncate">{item.title}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 抽獎啟動按鈕 */}
-            <button
-              type="button"
-              onClick={handleStartSpin}
-              disabled={isSpinning || unfinishedPrizes.length === 0 || Boolean(isAwardExhausted)}
-              className={`w-full max-w-[380px] h-[54px] font-bold text-base sm:text-lg rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${styles.spinBtn}`}
-            >
-              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
-                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
-              </svg>
-              {isSpinning
-                ? multiSpinProgress
-                  ? t.multiSpinningFmt
-                      .replace('{current}', String(multiSpinProgress.current))
-                      .replace('{total}', String(multiSpinProgress.total))
-                  : t.spinning
-                : unfinishedPrizes.length === 0
-                ? t.allDrawn
-                : isAwardExhausted
-                ? t.awardExhausted
-                : `${displayMode === 'wheel' ? t.spinWheelBtn : t.spinSlotBtn}${
-                    drawCount > 1 ? t.spinCountSuffix.replace('{n}', String(drawCount)) : ''
-                  }`}
-            </button>
-
-            {/* 連抽進行中：逐輪即時揭曉卡 */}
-            {multiSpinProgress && (
-              <div
-                className="w-full bg-select-bg border border-border-glass rounded-xl p-3 flex flex-col gap-2"
-                aria-live="polite"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className={`text-xs font-bold ${styles.accentText}`}>
-                    {t.multiRevealTitle
-                      .replace('{current}', String(multiSpinProgress.revealed.length))
-                      .replace('{total}', String(multiSpinProgress.total))}
-                  </span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-surface-glass border border-border-glass overflow-hidden">
-                  <div
-                    className="h-full transition-all duration-300"
-                    style={{
-                      background: 'var(--theme-color)',
-                      width: `${(multiSpinProgress.revealed.length / multiSpinProgress.total) * 100}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-1.5 min-h-[30px]">
-                  {multiSpinProgress.revealed.map((w, idx) => (
-                    <span
-                      key={`${w.id}_${idx}`}
-                      className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-xs sm:text-sm font-bold text-text-main flex items-center gap-1.5"
-                    >
-                      <span className="text-xs font-mono text-text-sub">#{idx + 1}</span>
-                      {w.title}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 最新一批連抽得獎名單即時展示卡 */}
-            {!multiSpinProgress && latestBatchRecords.length > 0 && (
-              <div className="w-full bg-select-bg border border-border-glass rounded-xl p-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-bold ${styles.accentText}`}>
-                    {t.latestBatchLabel} ({latestBatchRecords.length})
-                  </span>
-                  {latestBatchRecords[0]?.awardName && (
-                    <span className={`text-xs px-2 py-0.5 rounded font-semibold ${styles.emeraldTag}`}>
-                      {latestBatchRecords[0].awardName}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {latestBatchRecords.map((rec, idx) => (
-                    <span
-                      key={rec.id}
-                      className="px-2.5 py-1 rounded-lg bg-surface-glass border border-border-glass text-xs sm:text-sm font-bold text-text-main flex items-center gap-1.5"
-                    >
-                      <span className="text-xs font-mono text-text-sub">#{idx + 1}</span>
-                      {rec.prizeTitle}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <span className="text-xs text-text-sub text-center">{t.spacebarHint}</span>
-          </div>
+          <StageView
+            t={t}
+            displayMode={displayMode}
+            enableAwardMode={enableAwardMode}
+            awardTiers={awardTiers}
+            selectedAwardId={selectedAwardId}
+            onSelectAwardId={setSelectedAwardId}
+            onCloseAwardMode={() => {
+              setEnableAwardMode(false);
+              saveState(undefined, undefined, undefined, false);
+            }}
+            activeAwardSelectId={activeAwardSelectId}
+            previewCanvasRef={previewCanvasRef}
+            slotStripItems={slotStripItems}
+            slotTranslateY={slotTranslateY}
+            isSpinning={isSpinning}
+            unfinishedPrizes={unfinishedPrizes}
+            isAwardExhausted={isAwardExhausted}
+            drawCount={drawCount}
+            multiSpinProgress={multiSpinProgress}
+            latestBatchRecords={latestBatchRecords}
+            onStartSpin={handleStartSpin}
+          />
 
           {/* 右欄：獎項與人員名單編輯面板 */}
           <PrizeEditorPanel

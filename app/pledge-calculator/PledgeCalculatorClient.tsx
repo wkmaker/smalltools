@@ -5,6 +5,7 @@ import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './pledge-calculator.module.css';
 import { calculatePledge } from './engine';
+import { D, toNumber } from '../utils/decimal';
 import { TRANSLATIONS } from './translations';
 
 function formatNumber(val: number): string {
@@ -146,8 +147,8 @@ export default function PledgeCalculatorClient({ lang = 'zh-TW' }: Props) {
   // 儀表板滿刻度上限：以用戶設定之目標緩衝維持率的 1.3 倍作為指標右端底線
   const gaugeMin = 100;
   const gaugeMax = Math.max(
-    Math.round(numSafeRate * 1.3),
-    Math.round(numWarnRate * 1.3) + 10,
+    toNumber(D(numSafeRate).times('1.3').dp(0)),
+    toNumber(D(numWarnRate).times('1.3').dp(0)) + 10,
     130
   );
   const gaugeSpan = gaugeMax - gaugeMin;

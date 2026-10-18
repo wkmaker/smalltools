@@ -71,7 +71,7 @@ export const TRANSLATIONS = {
     defaultLoanName2: '一般商業房貸',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '全方位掌握房貸本息均攤、寬限期衝擊、新青安雙貸款組合與 APR 實質利率',
     faqItems: [
       {

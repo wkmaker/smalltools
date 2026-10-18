@@ -41,7 +41,7 @@ export interface SingleLoanDetailResult {
 }
 
 function months(value: number, unit: 'year' | 'month' | null): number {
-  return unit === 'year' ? Math.round(value * 12) : Math.round(value);
+  return unit === 'year' ? toNumber(D(value).times(12).dp(0)) : toNumber(D(value).dp(0));
 }
 
 /** 依單一利率或多段階梯利率，展開每個月適用的年利率（%） */

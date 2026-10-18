@@ -52,9 +52,11 @@ export const TRANSLATIONS = {
     compBefore: '原圖',
     compAfter: '處理後 (壓縮)',
     noValidImg: '未偵測到有效的圖片檔案',
+    fileTooLarge: (name: string) => `圖片 [${name}] 大小超過 50MB 上限，已自動略過。`,
     singleDownloaded: '已開始下載處理後的圖片！',
     origDownloaded: '已開始下載原始解析度圖片！',
     zipCompleted: '批次打包 ZIP 下載完成！',
+    noValidImgForZip: '無有效圖片可供打包',
     zipFailed: (msg: string) => `批次處理失敗：${msg}`,
     langBtn: 'English',
     srQuality: '壓縮品質滑塊',
@@ -62,7 +64,7 @@ export const TRANSLATIONS = {
     srComp: '左右比對位置滑塊',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 WebP 現代圖片格式、純前端隱私安全、壓縮品質權衡與等比例縮放技巧',
     faqItems: [
       {
@@ -145,9 +147,11 @@ export const TRANSLATIONS = {
     compBefore: 'Original',
     compAfter: 'Processed',
     noValidImg: 'No valid image files detected',
+    fileTooLarge: (name: string) => `Image [${name}] exceeds 50MB limit and was skipped.`,
     singleDownloaded: 'Processed image download started!',
     origDownloaded: 'Original image download started!',
     zipCompleted: 'Batch ZIP download completed!',
+    noValidImgForZip: 'No valid images to package',
     zipFailed: (msg: string) => `Batch processing failed: ${msg}`,
     langBtn: '繁體中文',
     srQuality: 'Compression Quality Slider',

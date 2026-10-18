@@ -107,7 +107,7 @@ function renderQuestionWithIcon(q: string) {
 
 export default function FaqSection({
   items,
-  title = '常問問題與專業指南 (FAQ)',
+  title = '常見問題與專業指南',
   subtitle,
   accentColor = '#00ff66',
   defaultExpanded = false,

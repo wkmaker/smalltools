@@ -16,71 +16,22 @@ import {
 } from './engine';
 import { downloadBlob } from '../utils/downloadBlob';
 import { TRANSLATIONS } from './translations';
+import {
+  TabType,
+  OutputItem,
+  ResultData,
+  buildStandardMetaGrid,
+} from './types';
 
-type TabType = 'cer-chain-fix' | 'pfx-to-pem' | 'pem-to-pfx' | 'der-to-pem' | 'pem-to-der';
-
-interface OutputItem {
-  filename: string;
-  content: string;
-  label: string;
-  isPrivateKey?: boolean;
-  contentPkcs1?: string;
-  contentPkcs8?: string;
-}
-
-interface MetaItem {
-  label: string;
-  value: string;
-  className?: string;
-}
-
-interface ResultData {
-  meta: MetaItem[];
-  outputs: OutputItem[];
-  cnName?: string;
-}
+import CerChainFixTab from './components/CerChainFixTab';
+import PfxToPemTab from './components/PfxToPemTab';
+import PemToPfxTab from './components/PemToPfxTab';
+import DerToPemTab from './components/DerToPemTab';
+import PemToDerTab from './components/PemToDerTab';
+import SslResultSection from './components/SslResultSection';
 
 interface Props {
   lang?: 'zh-TW' | 'en';
-}
-
-
-function buildStandardMetaGrid(
-  analysis: ReturnType<typeof buildUnifiedCertAnalysis>,
-  extra?: { privateKeyStatus?: string }
-): MetaItem[] {
-  const meta: MetaItem[] = [
-    { label: '域名主機 (CN)', value: analysis.cn },
-    { label: '金鑰與簽章演算法', value: analysis.certAlgo, className: styles.statusSuccess },
-    { label: '發行機構 (Issuer)', value: analysis.issuer },
-    { label: '生效時間 (Not Before)', value: analysis.notBeforeStr },
-    {
-      label: '到期時間 (Not After)',
-      value: analysis.notAfterStr,
-      className: analysis.isExpired ? styles.statusDanger : analysis.isNotYetValid ? styles.statusWarning : styles.statusSuccess,
-    },
-    {
-      label: '憑證鏈完整度 (Chain Status)',
-      value: analysis.isComplete
-        ? '完整 (包含 Trust Root / Intermediate CA)'
-        : analysis.nextAiaUrl
-        ? '缺中繼憑證 (可點擊下載 AIA 自動修復)'
-        : analysis.chainPems.length > 1
-        ? '已包含部分中繼憑證'
-        : '未完全補齊 (未偵測到 AIA URL)',
-      className: analysis.isComplete ? styles.statusSuccess : styles.statusWarning,
-    },
-  ];
-
-  if (extra?.privateKeyStatus) {
-    meta.push({
-      label: '私鑰狀態',
-      value: extra.privateKeyStatus,
-      className: styles.statusSuccess,
-    });
-  }
-
-  return meta;
 }
 
 export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
@@ -204,17 +155,17 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
   const parseAndFixCerChain = async () => {
     hideAlertMsg();
     if (!cerFile && !cerTextInput.trim()) {
-      showAlertMsg('請上傳憑證檔案或粘貼 PEM 憑證內容。', 'warning');
+      showAlertMsg(t.alertUploadCert, 'warning');
       return;
     }
     try {
       const parsed = await parseSslPayload({ file: cerFile, text: cerTextInput }, cerPassword);
       if (parsed.isPfx && !parsed.pfxDecrypted) {
-        showAlertMsg('PFX / P12 檔案解密失敗！若憑證設有保護密碼，請在下方「密碼」欄位輸入正確密碼後重試。', 'error');
+        showAlertMsg(t.alertPfxDecryptFailed, 'error');
         return;
       }
       if (parsed.certs.length === 0) {
-        showAlertMsg('無法從輸入內容中剖析出有效的 X.509 憑證。請確認內容是否包含標準憑證區塊，或確認 PFX 密碼是否正確。', 'error');
+        showAlertMsg(t.alertNoValidCert, 'error');
         return;
       }
       const analysis = buildUnifiedCertAnalysis(parsed.certs);
@@ -222,25 +173,26 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       setAiaFixUrl(analysis.nextAiaUrl);
       const cn = analysis.cn;
       const outputsList: OutputItem[] = [
-        { label: '合成後完全憑證鏈 Full Chain PEM (.crt)', filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') },
-        { label: '僅伺服器用戶端憑證 Server Cert (.crt)', filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() }
+        { label: t.outputFullChain, filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') },
+        { label: t.outputServerCert, filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() }
       ];
       if (analysis.chainPems.length > 1) {
-        outputsList.push({ label: '中繼憑證鏈 CA Bundle (.ca-bundle)', filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
+        outputsList.push({ label: t.outputCaBundle, filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
       }
       const hasPrivateKey = !!parsed.privateKeyPemPkcs8;
       setResultData({
-        meta: buildStandardMetaGrid(analysis, {
+        meta: buildStandardMetaGrid(analysis, t, {
           privateKeyStatus: hasPrivateKey
-            ? '檔案內包含私鑰 (本頁僅處理憑證補鏈，不匯出私鑰)'
-            : '檔案內未包含私鑰 (僅 X.509 憑證)',
+            ? t.privKeyInFileNoExport
+            : t.privKeyNotInFile,
         }),
         outputs: outputsList,
         cnName: cn,
       });
-      showAlertMsg('憑證剖析與憑證鏈自動檢測完成！', 'success');
+      showAlertMsg(t.alertParseSuccess, 'success');
     } catch (err: any) {
-      showAlertMsg(`解析失敗：${err.message || '請確認憑證格式或密碼是否正確。'}`, 'error');
+      console.error('[SslConverter] Parse payload error:', err);
+      showAlertMsg(`${t.alertParseError}${err.message || t.errCertOrPassword}`, 'error');
     }
   };
 
@@ -248,16 +200,21 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     setAiaError(null);
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setAiaError(t.fileTooLarge);
+      e.target.value = '';
+      return;
+    }
     try {
       const parsedAia = await parseSslPayload({ file });
       if (parsedAia.certs.length === 0) {
-        setAiaError('上傳的檔案無效或非合法的 X.509 憑證格式。');
+        setAiaError(t.aiaErrorInvalidCert);
         return;
       }
       const parsedNewCert = parsedAia.certs[0];
       const lastChainCert = forge.pki.certificateFromPem(currentChainPems[currentChainPems.length - 1]);
       if (!verifyCertIssuerMatch(lastChainCert, parsedNewCert)) {
-        setAiaError('上傳的 CA 中繼憑證之 Subject 與現有憑證鏈的 Issuer 不符合，無法串接！');
+        setAiaError(t.aiaErrorSubjectMismatch);
         return;
       }
       const updatedChainPems = [...currentChainPems, forge.pki.certificateToPem(parsedNewCert).trim()];
@@ -270,32 +227,35 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         const existingPrivateKey = resultData.outputs.find(o => o.isPrivateKey);
         if (existingPrivateKey) outputsList.push(existingPrivateKey);
         outputsList.push(
-          { label: '合成後完全憑證鏈 Full Chain PEM (.crt)', filename: generateCertFilename(cn, 'fullchain', 'crt'), content: updatedChainPems.map(p => p.trim()).join('\n') },
-          { label: '僅伺服器用戶端憑證 Server Cert (.crt)', filename: generateCertFilename(cn, 'cert', 'crt'), content: updatedChainPems[0].trim() }
+          { label: t.outputFullChain, filename: generateCertFilename(cn, 'fullchain', 'crt'), content: updatedChainPems.map(p => p.trim()).join('\n') },
+          { label: t.outputServerCert, filename: generateCertFilename(cn, 'cert', 'crt'), content: updatedChainPems[0].trim() }
         );
         if (updatedChainPems.length > 1) {
-          outputsList.push({ label: '中繼憑證鏈 CA Bundle (.ca-bundle)', filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: updatedChainPems.slice(1).map(p => p.trim()).join('\n') });
+          outputsList.push({ label: t.outputCaBundle, filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: updatedChainPems.slice(1).map(p => p.trim()).join('\n') });
         }
-        const previousKeyStatus = resultData.meta.find(m => m.label === '私鑰狀態')?.value;
+        const previousKeyStatus = resultData.meta.find(m => m.label === t.metaPrivateKeyStatus)?.value;
         setResultData({
-          meta: buildStandardMetaGrid(analysis, previousKeyStatus ? { privateKeyStatus: previousKeyStatus } : undefined),
+          meta: buildStandardMetaGrid(analysis, t, previousKeyStatus ? { privateKeyStatus: previousKeyStatus } : undefined),
           outputs: outputsList,
           cnName: cn
         });
       }
-    } catch { setAiaError('上傳的檔案無效或非合法的 X.509 憑證格式。'); }
+    } catch (err) {
+      console.error('[SslConverter] AIA inspection error:', err);
+      setAiaError(t.aiaErrorInvalidCert);
+    }
   };
 
   const convertPfxToPem = async () => {
     hideAlertMsg();
     if (!pfxFile) {
-      showAlertMsg('請選擇 PFX 或 P12 憑證檔案。', 'warning');
+      showAlertMsg(t.alertSelectPfx, 'warning');
       return;
     }
     try {
       const parsed = await parseSslPayload({ file: pfxFile }, pfxPassword);
       if (parsed.isPfx && !parsed.pfxDecrypted) {
-        showAlertMsg('PFX / P12 解密失敗，請確認密碼是否正確。', 'error');
+        showAlertMsg(t.alertPfxWrongPass, 'error');
         return;
       }
       const analysis = buildUnifiedCertAnalysis(parsed.certs);
@@ -304,32 +264,33 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const cn = analysis.cn || 'ssl-cert';
       const outputsList: OutputItem[] = [];
       if (parsed.privateKeyPemPkcs8) {
-        outputsList.push({ label: '私鑰 Private Key (.key)', filename: generateCertFilename(cn, 'key', 'key'), content: parsed.privateKeyPemPkcs8, isPrivateKey: true, contentPkcs8: parsed.privateKeyPemPkcs8, contentPkcs1: parsed.privateKeyPemPkcs1 || parsed.privateKeyPemPkcs8 });
+        outputsList.push({ label: t.outputPrivateKey, filename: generateCertFilename(cn, 'key', 'key'), content: parsed.privateKeyPemPkcs8, isPrivateKey: true, contentPkcs8: parsed.privateKeyPemPkcs8, contentPkcs1: parsed.privateKeyPemPkcs1 || parsed.privateKeyPemPkcs8 });
       }
       if (analysis.chainPems.length > 0) {
         if (analysis.chainPems.length > 1) {
-          outputsList.push({ label: '合成後完全憑證鏈 Full Chain PEM (.crt)', filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') });
+          outputsList.push({ label: t.outputFullChain, filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') });
         }
-        outputsList.push({ label: '伺服器憑證 Certificate (.crt)', filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() });
+        outputsList.push({ label: t.outputServerCert, filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() });
         if (analysis.chainPems.length > 1) {
-          outputsList.push({ label: '中繼憑證鏈 CA Bundle (.ca-bundle)', filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
+          outputsList.push({ label: t.outputCaBundle, filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
         }
       }
       setResultData({
-        meta: buildStandardMetaGrid(analysis, { privateKeyStatus: parsed.privateKeyPemPkcs8 ? '已隨 PFX 解密提煉私鑰 (已產出 .key 檔案)' : '無私鑰' }),
+        meta: buildStandardMetaGrid(analysis, t, { privateKeyStatus: parsed.privateKeyPemPkcs8 ? t.privKeyExtractedFromPfx : t.privKeyNone }),
         outputs: outputsList,
         cnName: cn
       });
-      showAlertMsg('PFX / P12 解密成功！已自動分析憑證鏈狀態。', 'success');
+      showAlertMsg(t.alertPfxSuccess, 'success');
     } catch (err: any) {
-      showAlertMsg(`PFX 解密失敗：${err.message || '請確認密碼是否輸入正確。'}`, 'error');
+      console.error('[SslConverter] Convert PFX error:', err);
+      showAlertMsg(`${t.alertPfxError}${err.message || t.errCheckPassword}`, 'error');
     }
   };
 
   const convertPemToPfx = async () => {
     hideAlertMsg();
     if (!pemKey.trim() || !pemCert.trim()) {
-      showAlertMsg('請貼上私鑰 (Private Key) 與 伺服器憑證 (Certificate)。', 'warning');
+      showAlertMsg(t.alertPasteKeyAndCert, 'warning');
       return;
     }
 
@@ -341,7 +302,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const certRSA = certObj.publicKey as forge.pki.rsa.PublicKey;
 
       if (!keyRSA.n || !certRSA.n) {
-        showAlertMsg('目前僅支援具有 Modulus 雜湊之 RSA 金鑰與憑證組合。', 'warning');
+        showAlertMsg(t.alertRsaOnly, 'warning');
         return;
       }
 
@@ -357,7 +318,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const keyHash = mdKey.digest().toHex();
 
       if (certHash !== keyHash) {
-        showAlertMsg('私鑰與伺服器憑證的 Modulus 雜湊值不符合！這兩組密鑰並非配對。', 'error');
+        showAlertMsg(t.alertModulusMismatch, 'error');
         return;
       }
 
@@ -389,12 +350,12 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       downloadBlob(blob, pfxDownloadFilename);
 
       const analysis = buildUnifiedCertAnalysis([certObj, ...caCertObjs]);
-      const standardMeta = buildStandardMetaGrid(analysis, {
-        privateKeyStatus: 'Modulus 100% 吻合並已封裝私鑰',
+      const standardMeta = buildStandardMetaGrid(analysis, t, {
+        privateKeyStatus: t.privKeyModulusMatched,
       });
       if (friendlyNameClean) {
         standardMeta.push({
-          label: '憑證別名 (Friendly Name)',
+          label: t.metaFriendlyName,
           value: friendlyNameClean,
           className: styles.statusSuccess,
         });
@@ -406,24 +367,25 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         cnName: cn,
       });
 
-      showAlertMsg('Modulus 配對成功！PFX 打包完成並已觸發下載。', 'success');
+      showAlertMsg(t.alertPfxPackageSuccess, 'success');
     } catch (err: unknown) {
+      console.error('[SslConverter] Build PFX error:', err);
       const error = err as Error;
-      showAlertMsg(`打包 PFX 失敗：${error.message || '請確認 PEM 格式與密鑰正確性。'}`, 'error');
+      showAlertMsg(`${t.alertPfxPackageError}${error.message || t.errPemOrKey}`, 'error');
     }
   };
 
   const convertDerToPem = async () => {
     hideAlertMsg();
     if (!derFile) {
-      showAlertMsg('請上傳二進位 DER / CER / CRT 檔案。', 'warning');
+      showAlertMsg(t.alertSelectDer, 'warning');
       return;
     }
 
     try {
       const parsed = await parseSslPayload({ file: derFile });
       if (parsed.certs.length === 0 && !parsed.privateKeyPemPkcs8) {
-        showAlertMsg('無法解構二進位 DER 內容，請確認是否為合法的 DER 編碼檔。', 'error');
+        showAlertMsg(t.alertDerParseError, 'error');
         return;
       }
 
@@ -437,27 +399,27 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
         if (analysis.chainPems.length > 1) {
           outputsList.push({
-            label: '合成後完全憑證鏈 Full Chain PEM (.crt)',
+            label: t.outputFullChain,
             filename: generateCertFilename(cn, 'fullchain', 'crt'),
             content: fullChainPem,
           });
         }
 
         outputsList.push({
-          label: '伺服器憑證 Certificate (.crt)',
+          label: t.outputServerCert,
           filename: generateCertFilename(cn, 'cert', 'crt'),
           content: analysis.chainPems[0].trim(),
         });
 
         if (analysis.chainPems.length > 1) {
           outputsList.push({
-            label: '中繼憑證鏈 CA Bundle (.ca-bundle)',
+            label: t.outputCaBundle,
             filename: generateCertFilename(cn, 'chain', 'ca-bundle'),
             content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n'),
           });
         }
 
-        const standardMeta = buildStandardMetaGrid(analysis);
+        const standardMeta = buildStandardMetaGrid(analysis, t);
 
         setResultData({
           meta: standardMeta,
@@ -466,7 +428,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         });
       } else if (parsed.privateKeyPemPkcs8) {
         outputsList.push({
-          label: '私鑰 Private Key (.key)',
+          label: t.outputPrivateKey,
           filename: generateCertFilename('ssl-key', 'key', 'key'),
           content: parsed.privateKeyPemPkcs8,
           isPrivateKey: true,
@@ -476,30 +438,27 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
         setResultData({
           meta: [
-            { label: '檔案識別類型', value: 'DER RSA 私鑰 (Private Key)' },
-            { label: '原始檔名', value: derFile.name },
-            { label: '私鑰匯出狀態', value: '已提煉私鑰', className: 'text-[var(--theme-color,#00ffaa)] font-bold' },
+            { label: t.metaFileType, value: t.privKeyDerRsa },
+            { label: t.metaOriginalFilename, value: derFile.name },
+            { label: t.metaKeyExportStatus, value: t.privKeyExtracted, className: 'text-[var(--theme-color,#00ffaa)] font-bold' },
           ],
           outputs: outputsList,
           cnName: 'ssl-key',
         });
       }
 
-      showAlertMsg('二進位 DER 成功轉換為 PEM 格式！', 'success');
+      showAlertMsg(t.alertDerSuccess, 'success');
     } catch (err: unknown) {
+      console.error('[SslConverter] Convert DER error:', err);
       const error = err as Error;
-      showAlertMsg(`轉換失敗：${error.message || '請確認是否為合法的 DER 編碼檔。'}`, 'error');
+      showAlertMsg(`${t.alertDerError}${error.message || t.errInvalidDer}`, 'error');
     }
   };
 
-
-  // ─────────────────────────────────────────────────────────────
-  // 5. 頁籤 4: PEM 轉 DER
-  // ─────────────────────────────────────────────────────────────
   const convertPemToDer = () => {
     hideAlertMsg();
     if (!pemDerInput.trim()) {
-      showAlertMsg('請貼上 PEM 格式憑證或私鑰文字。', 'warning');
+      showAlertMsg(t.alertPastePem, 'warning');
       return;
     }
 
@@ -519,7 +478,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         const cn = parseDistinguishedName(cert.subject);
         filename = generateCertFilename(cn, 'cert', 'der');
       } else {
-        showAlertMsg('未識別到 -----BEGIN 的 PEM 標頭區塊。', 'error');
+        showAlertMsg(t.alertNoPemHeader, 'error');
         return;
       }
 
@@ -531,10 +490,11 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const blob = new Blob([derArray], { type: 'application/x-x509-ca-cert' });
       downloadBlob(blob, filename);
 
-      showAlertMsg('PEM 轉 DER 打包成功並已觸發下載！', 'success');
+      showAlertMsg(t.alertPemToDerSuccess, 'success');
     } catch (err: unknown) {
+      console.error('[SslConverter] Convert PEM to DER error:', err);
       const error = err as Error;
-      showAlertMsg(`轉換失敗：${error.message || '請確認輸入的是否為合法的 PEM 格式內容。'}`, 'error');
+      showAlertMsg(`${t.alertPemToDerError}${error.message || t.errInvalidPem}`, 'error');
     }
   };
 
@@ -548,7 +508,6 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         accentGlow="rgba(0, 255, 170, 0.6)"
       >
         <div className={styles.mainLayout}>
-
           {/* 警告/訊息提示方塊 */}
           {alert.show && (
             <div
@@ -594,547 +553,117 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
           {/* 頁籤 0: 憑證剖析與自動補鏈 */}
           {activeTab === 'cer-chain-fix' && (
-            <div className={styles.panelCard}>
-              <div className="flex flex-col gap-2">
-                <label htmlFor={cerFileId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.cerUploadLabel}
-                </label>
-                {!cerFile ? (
-                  <div className={styles.uploadZone}>
-                    <input
-                      id={cerFileId}
-                      type="file"
-                      accept=".cer,.crt,.pem,.der,.pfx,.p12"
-                      className={styles.fileInput}
-                      onChange={e => {
-                        if (e.target.files && e.target.files[0]) {
-                          setCerFile(e.target.files[0]);
-                          hideAlertMsg();
-                        }
-                      }}
-                    />
-                    <svg viewBox="0 0 24 24" className="w-12 h-12 fill-text-sub">
-                      <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                    </svg>
-                    <p className="text-sm text-text-sub font-medium">{t.cerUploadPrompt}</p>
-                    <span className="text-xs text-text-sub opacity-80">{t.cerUploadSub}</span>
-                  </div>
-                ) : (
-                  <div className={styles.fileBadgeSuccess}>
-                    <span className="font-medium">{cerFile.name} ({(cerFile.size / 1024).toFixed(1)} KB)</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCerFile(null);
-                        resetAllResults();
-                      }}
-                      className="text-red-400 hover:underline cursor-pointer"
-                    >
-                      {t.removeFile}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2 border-t border-border-glass pt-4">
-                <label htmlFor={cerTextId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.cerTextLabel}
-                </label>
-                <textarea
-                  id={cerTextId}
-                  rows={5}
-                  placeholder="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
-                  value={cerTextInput}
-                  onChange={e => setCerTextInput(e.target.value)}
-                  className={styles.customTextarea}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2 border-t border-border-glass pt-4">
-                <label htmlFor={cerPassId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.cerPassLabel}
-                </label>
-                <div className="relative">
-                  <input
-                    id={cerPassId}
-                    type={showPassword['cerPass'] ? 'text' : 'password'}
-                    placeholder={t.cerPassPlaceholder}
-                    value={cerPassword}
-                    onChange={e => setCerPassword(e.target.value)}
-                    className={styles.customInput}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => toggleShowPassword('cerPass')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main cursor-pointer text-xs"
-                  >
-                    {showPassword['cerPass'] ? t.hidePass : t.showPass}
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.btnGroup}>
-                <button type="button" onClick={parseAndFixCerChain} className={styles.btnSubmit}>
-                  {t.cerSubmitBtn}
-                </button>
-                <button type="button" onClick={handleClearCurrentTab} className={styles.btnClear} title={t.clearBtn}>
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                  </svg>
-                  <span>{t.clearBtn}</span>
-                </button>
-              </div>
-            </div>
+            <CerChainFixTab
+              t={t}
+              cerFile={cerFile}
+              setCerFile={setCerFile}
+              cerTextInput={cerTextInput}
+              setCerTextInput={setCerTextInput}
+              cerPassword={cerPassword}
+              setCerPassword={setCerPassword}
+              showPassword={showPassword}
+              toggleShowPassword={toggleShowPassword}
+              cerFileId={cerFileId}
+              cerTextId={cerTextId}
+              cerPassId={cerPassId}
+              onSubmit={parseAndFixCerChain}
+              onClear={handleClearCurrentTab}
+              showAlertMsg={showAlertMsg}
+              hideAlertMsg={hideAlertMsg}
+              resetAllResults={resetAllResults}
+            />
           )}
 
           {/* 頁籤 1: PFX 轉 PEM */}
           {activeTab === 'pfx-to-pem' && (
-            <div className={styles.panelCard}>
-              <div className="flex flex-col gap-2">
-                <label htmlFor={pfxFileId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.pfxUploadLabel}
-                </label>
-                {!pfxFile ? (
-                  <div className={styles.uploadZone}>
-                    <input
-                      id={pfxFileId}
-                      type="file"
-                      accept=".pfx,.p12"
-                      className={styles.fileInput}
-                      onChange={e => {
-                        if (e.target.files && e.target.files[0]) {
-                          setPfxFile(e.target.files[0]);
-                          hideAlertMsg();
-                        }
-                      }}
-                    />
-                    <svg viewBox="0 0 24 24" className="w-12 h-12 fill-text-sub">
-                      <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                    </svg>
-                    <p className="text-sm text-text-sub font-medium">{t.pfxUploadPrompt}</p>
-                    <span className="text-xs text-text-sub opacity-80">{t.pfxUploadSub}</span>
-                  </div>
-                ) : (
-                  <div className={styles.fileBadgeSuccess}>
-                    <span className="font-medium">{pfxFile.name} ({(pfxFile.size / 1024).toFixed(1)} KB)</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPfxFile(null);
-                        resetAllResults();
-                      }}
-                      className="text-red-400 hover:underline cursor-pointer"
-                    >
-                      {t.removeFile}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2 border-t border-border-glass pt-4">
-                <label htmlFor={pfxPassId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.pfxPassLabel}
-                </label>
-                <div className="relative">
-                  <input
-                    id={pfxPassId}
-                    type={showPassword['pfx'] ? 'text' : 'password'}
-                    placeholder={t.pfxPassPlaceholder}
-                    value={pfxPassword}
-                    onChange={e => setPfxPassword(e.target.value)}
-                    className={styles.customInput}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => toggleShowPassword('pfx')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main cursor-pointer text-xs"
-                  >
-                    {showPassword['pfx'] ? t.hidePass : t.showPass}
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.btnGroup}>
-                <button type="button" onClick={convertPfxToPem} className={styles.btnSubmit}>
-                  {t.pfxSubmitBtn}
-                </button>
-                <button type="button" onClick={handleClearCurrentTab} className={styles.btnClear} title={t.clearBtn}>
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                  </svg>
-                  <span>{t.clearBtn}</span>
-                </button>
-              </div>
-            </div>
+            <PfxToPemTab
+              t={t}
+              pfxFile={pfxFile}
+              setPfxFile={setPfxFile}
+              pfxPassword={pfxPassword}
+              setPfxPassword={setPfxPassword}
+              showPassword={showPassword}
+              toggleShowPassword={toggleShowPassword}
+              pfxFileId={pfxFileId}
+              pfxPassId={pfxPassId}
+              onSubmit={convertPfxToPem}
+              onClear={handleClearCurrentTab}
+              showAlertMsg={showAlertMsg}
+              hideAlertMsg={hideAlertMsg}
+              resetAllResults={resetAllResults}
+            />
           )}
 
           {/* 頁籤 2: PEM 轉 PFX */}
           {activeTab === 'pem-to-pfx' && (
-            <div className={styles.panelCard}>
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={pemKeyId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                    {t.pemKeyLabel} <span className="text-red-400">*</span>
-                  </label>
-                  <textarea
-                    id={pemKeyId}
-                    rows={6}
-                    placeholder="-----BEGIN PRIVATE KEY-----\n..."
-                    value={pemKey}
-                    onChange={e => setPemKey(e.target.value)}
-                    className={styles.customTextarea}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={pemCertId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                    {t.pemCertLabel} <span className="text-red-400">*</span>
-                  </label>
-                  <textarea
-                    id={pemCertId}
-                    rows={6}
-                    placeholder="-----BEGIN CERTIFICATE-----\n..."
-                    value={pemCert}
-                    onChange={e => setPemCert(e.target.value)}
-                    className={styles.customTextarea}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 border-t border-border-glass pt-4">
-                <label htmlFor={pemCaId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.pemCaLabel}
-                </label>
-                <textarea
-                  id={pemCaId}
-                  rows={4}
-                  placeholder="-----BEGIN CERTIFICATE-----\n..."
-                  value={pemCaBundle}
-                  onChange={e => setPemCaBundle(e.target.value)}
-                  className={styles.customTextarea}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 border-t border-border-glass pt-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={pemPassId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                    {t.pemPassLabel} <span className="text-red-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id={pemPassId}
-                      type={showPassword['pemToPfx'] ? 'text' : 'password'}
-                      placeholder={t.pemPassPlaceholder}
-                      value={pemPassword}
-                      onChange={e => setPemPassword(e.target.value)}
-                      className={styles.customInput}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => toggleShowPassword('pemToPfx')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main cursor-pointer text-xs"
-                    >
-                      {showPassword['pemToPfx'] ? t.hidePass : t.showPass}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={pemFriendlyId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                    {t.pemFriendlyNameLabel}
-                  </label>
-                  <input
-                    id={pemFriendlyId}
-                    type="text"
-                    placeholder={t.pemFriendlyNamePlaceholder}
-                    value={pemFriendlyName}
-                    onChange={e => setPemFriendlyName(e.target.value)}
-                    className={styles.customInput}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.btnGroup}>
-                <button type="button" onClick={convertPemToPfx} className={styles.btnSubmit}>
-                  {t.pemSubmitBtn}
-                </button>
-                <button type="button" onClick={handleClearCurrentTab} className={styles.btnClear} title={t.clearBtn}>
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                  </svg>
-                  <span>{t.clearBtn}</span>
-                </button>
-              </div>
-            </div>
+            <PemToPfxTab
+              t={t}
+              pemKey={pemKey}
+              setPemKey={setPemKey}
+              pemCert={pemCert}
+              setPemCert={setPemCert}
+              pemCaBundle={pemCaBundle}
+              setPemCaBundle={setPemCaBundle}
+              pemPassword={pemPassword}
+              setPemPassword={setPemPassword}
+              pemFriendlyName={pemFriendlyName}
+              setPemFriendlyName={setPemFriendlyName}
+              showPassword={showPassword}
+              toggleShowPassword={toggleShowPassword}
+              pemKeyId={pemKeyId}
+              pemCertId={pemCertId}
+              pemCaId={pemCaId}
+              pemPassId={pemPassId}
+              pemFriendlyId={pemFriendlyId}
+              onSubmit={convertPemToPfx}
+              onClear={handleClearCurrentTab}
+            />
           )}
 
           {/* 頁籤 3: DER 轉 PEM */}
           {activeTab === 'der-to-pem' && (
-            <div className={styles.panelCard}>
-              <div className="flex flex-col gap-2">
-                <label htmlFor={derFileId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.derUploadLabel}
-                </label>
-                {!derFile ? (
-                  <div className={styles.uploadZone}>
-                    <input
-                      id={derFileId}
-                      type="file"
-                      accept=".der,.cer,.crt"
-                      className={styles.fileInput}
-                      onChange={e => {
-                        if (e.target.files && e.target.files[0]) {
-                          setDerFile(e.target.files[0]);
-                          hideAlertMsg();
-                        }
-                      }}
-                    />
-                    <svg viewBox="0 0 24 24" className="w-12 h-12 fill-text-sub">
-                      <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                    </svg>
-                    <p className="text-sm text-text-sub font-medium">{t.derUploadPrompt}</p>
-                    <span className="text-xs text-text-sub opacity-80">{t.derUploadSub}</span>
-                  </div>
-                ) : (
-                  <div className={styles.fileBadgeSuccess}>
-                    <span className="font-medium">{derFile.name} ({(derFile.size / 1024).toFixed(1)} KB)</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDerFile(null);
-                        resetAllResults();
-                      }}
-                      className="text-red-400 hover:underline cursor-pointer"
-                    >
-                      {t.removeFile}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.btnGroup}>
-                <button type="button" onClick={convertDerToPem} className={styles.btnSubmit}>
-                  {t.derSubmitBtn}
-                </button>
-                <button type="button" onClick={handleClearCurrentTab} className={styles.btnClear} title={t.clearBtn}>
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                  </svg>
-                  <span>{t.clearBtn}</span>
-                </button>
-              </div>
-            </div>
+            <DerToPemTab
+              t={t}
+              derFile={derFile}
+              setDerFile={setDerFile}
+              derFileId={derFileId}
+              onSubmit={convertDerToPem}
+              onClear={handleClearCurrentTab}
+              showAlertMsg={showAlertMsg}
+              hideAlertMsg={hideAlertMsg}
+              resetAllResults={resetAllResults}
+            />
           )}
 
           {/* 頁籤 4: PEM 轉 DER */}
           {activeTab === 'pem-to-der' && (
-            <div className={styles.panelCard}>
-              <div className="flex flex-col gap-2">
-                <label htmlFor={pemDerInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">
-                  {t.pemDerInputLabel}
-                </label>
-                <textarea
-                  id={pemDerInputId}
-                  rows={8}
-                  placeholder="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
-                  value={pemDerInput}
-                  onChange={e => setPemDerInput(e.target.value)}
-                  className={styles.customTextarea}
-                />
-              </div>
-
-              <div className={styles.btnGroup}>
-                <button type="button" onClick={convertPemToDer} className={styles.btnSubmit}>
-                  {t.pemDerSubmitBtn}
-                </button>
-                <button type="button" onClick={handleClearCurrentTab} className={styles.btnClear} title={t.clearBtn}>
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                  </svg>
-                  <span>{t.clearBtn}</span>
-                </button>
-              </div>
-            </div>
+            <PemToDerTab
+              t={t}
+              pemDerInput={pemDerInput}
+              setPemDerInput={setPemDerInput}
+              pemDerInputId={pemDerInputId}
+              onSubmit={convertPemToDer}
+              onClear={handleClearCurrentTab}
+            />
           )}
 
           {/* 轉換結果區塊 */}
           {resultData && (
-            <div className={styles.resultSection}>
-              <div className="flex justify-between items-center border-b border-border-glass pb-3">
-                <h3 className={`text-sm uppercase tracking-[1px] font-semibold ${styles.accentText}`}>
-                  {t.resultTitle}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setResultData(null);
-                    setAiaFixUrl(null);
-                  }}
-                  className={styles.btnSecondary}
-                >
-                  {t.hideResult}
-                </button>
-              </div>
-
-              {/* AIA 憑證鏈候補修復卡片 */}
-              {aiaFixUrl && (
-                <div className={styles.aiaNoticeCard}>
-                  <div className={styles.aiaNoticeHeader}>
-                    {currentChainPems.length === 1 ? (
-                      <svg viewBox="0 0 24 24" className={styles.aiaNoticeHeaderIcon}>
-                        <path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" className={`w-5 h-5 ${styles.accentText} shrink-0`}>
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                      </svg>
-                    )}
-                    <span>
-                      {currentChainPems.length === 1
-                        ? t.aiaIncompleteWarning
-                        : t.aiaNextFound(currentChainPems.length - 1)}
-                    </span>
-                  </div>
-
-                  <div className="text-sm text-text-sub flex flex-col gap-2 leading-relaxed">
-                    <p>{t.aiaHelpText}</p>
-                    <div className="flex flex-col gap-1 bg-surface-glass p-3 rounded-xl border border-border-glass">
-                      <a
-                        href={aiaFixUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`${styles.accentText} underline font-mono text-xs break-all hover:text-text-main transition-colors`}
-                      >
-                        {aiaFixUrl}
-                      </a>
-                      <div className="flex items-center gap-1.5 text-xs text-text-sub opacity-80 mt-1">
-                        <svg viewBox="0 0 24 24" className={`w-4 h-4 ${styles.accentText} shrink-0`}>
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-                        </svg>
-                        <span>{t.aiaSaveAsTip}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {aiaError && (
-                    <div className={styles.aiaErrorBox}>
-                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0 mt-0.5">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                      </svg>
-                      <span>{aiaError}</span>
-                    </div>
-                  )}
-
-                  <div className={styles.aiaUploadZone}>
-                    <input
-                      id={aiaFileInputId}
-                      type="file"
-                      accept=".cer,.crt,.der,.pem"
-                      className={styles.fileInput}
-                      onChange={handleAiaFileUpload}
-                    />
-                    <svg viewBox="0 0 24 24" className={styles.aiaUploadIcon}>
-                      <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                    </svg>
-                    <div className="flex flex-col gap-1">
-                      <span className={styles.aiaUploadPrompt}>
-                        {t.aiaUploadPrompt}
-                      </span>
-                      <span className={styles.aiaUploadSub}>
-                        {t.aiaUploadSub}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 憑證元資料列表 */}
-              {resultData.meta && resultData.meta.length > 0 && (
-                <div className={styles.metaGrid}>
-                  {resultData.meta.map((m, idx) => (
-                    <div key={idx} className={styles.metaCard}>
-                      <span className="text-xs text-text-sub uppercase tracking-[0.5px] font-semibold">{m.label}</span>
-                      <span className={`text-sm font-mono ${m.className || 'text-text-main font-semibold'}`}>{m.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* 輸出憑證檔案列表 */}
-              {resultData.outputs && resultData.outputs.length > 0 && (
-                <div className="flex flex-col gap-4">
-                  {resultData.outputs.map((out, idx) => {
-                    const displayContent =
-                      out.isPrivateKey && keyFormat === 'pkcs1' && out.contentPkcs1
-                        ? out.contentPkcs1
-                        : out.content;
-
-                    const downloadFilename =
-                      out.isPrivateKey && keyFormat === 'pkcs1'
-                        ? out.filename.replace(/\.key$/, '_pkcs1.key')
-                        : out.filename;
-
-                    return (
-                      <div key={idx} className={styles.outputCard}>
-                        <div className="flex justify-between items-center border-b border-border-glass pb-2 max-sm:flex-col max-sm:items-start max-sm:gap-2">
-                          <span className={`text-sm font-bold font-mono ${styles.accentText}`}>{out.label}</span>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {out.isPrivateKey && (
-                              <div className={styles.formatToggleContainer}>
-                                <button
-                                  type="button"
-                                  onClick={() => setKeyFormat('pkcs8')}
-                                  className={`${styles.formatBtn} ${keyFormat === 'pkcs8' ? styles.formatBtnActive : ''}`}
-                                >
-                                  PKCS#8
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setKeyFormat('pkcs1')}
-                                  className={`${styles.formatBtn} ${keyFormat === 'pkcs1' ? styles.formatBtnActive : ''}`}
-                                >
-                                  PKCS#1
-                                </button>
-                              </div>
-                            )}
-                            {!out.isPrivateKey && activeTab !== 'cer-chain-fix' && (
-                              <button
-                                type="button"
-                                onClick={() => sendCertToChainFix(displayContent)}
-                                className={styles.btnSecondary}
-                              >
-                                {t.openInChainFix}
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(displayContent).then(() => showToast(`已複製 ${downloadFilename}`));
-                              }}
-                              className={styles.btnSecondary}
-                            >
-                              {t.copyText}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const blob = new Blob([displayContent], { type: 'text/plain' });
-                                downloadBlob(blob, downloadFilename);
-                              }}
-                              className={styles.btnPrimarySmall}
-                            >
-                              {t.downloadFile} {downloadFilename}
-                            </button>
-                          </div>
-                        </div>
-
-                        <pre className={styles.certOutput}>{displayContent}</pre>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <SslResultSection
+              t={t}
+              resultData={resultData}
+              activeTab={activeTab}
+              keyFormat={keyFormat}
+              setKeyFormat={setKeyFormat}
+              currentChainPems={currentChainPems}
+              aiaFixUrl={aiaFixUrl}
+              aiaError={aiaError}
+              aiaFileInputId={aiaFileInputId}
+              handleAiaFileUpload={handleAiaFileUpload}
+              sendCertToChainFix={sendCertToChainFix}
+              showToast={showToast}
+              onCloseResult={resetAllResults}
+            />
           )}
         </div>
 

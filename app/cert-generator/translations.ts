@@ -80,7 +80,7 @@ export const TRANSLATIONS = {
     toastCopied: '已複製到剪貼簿',
     toastCopyFailed: '複製失敗，請手動選取複製',
 
-    faqTitle: '常見問題與使用指南 (FAQ)',
+    faqTitle: '常見問題與使用指南',
     faqSubtitle: '深入了解自簽憑證的適用情境、演算法選擇與安全注意事項',
     faqItems: [
       {

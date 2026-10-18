@@ -109,9 +109,9 @@ alternates: {
 * 全站統一採用 App Router 原生 `app/sitemap.ts` 定義 `MetadataRoute.Sitemap`。`next build` 靜態導出 (`output: 'export'`) 時 Next.js 會自動於 `out/sitemap.xml` 產出。
 * **強制宣告靜態導出**：`app/sitemap.ts` 頂層**必須顯式加入 `export const dynamic = 'force-static';`**，防止靜態導出模式下中斷編譯。
 
-### 2. 多語言獨立路由與 `lastModified` 即時同步
-* **英文路由註冊**：新增工具的多語言獨立路由（如 `/my-salary-calculator/en/`）時，**必須同步將英文路由網址更新至 `app/sitemap.ts` 的清單陣列**。
-* **變更即時同步時間戳記**：凡對任何工具進行程式碼重構、功能新增、UI 修正、文案調整或 SEO 擴充，**必須同步將 `app/sitemap.ts` 中該工具對應的所有路由（含繁中與英文）之 `lastModified` 更新為最新修改日期**。
+### 2. 多語言獨立路由與 `lastModified` 自動推導
+* **路由自動推導**：全站工具頁由中央註冊表 `app/config/tools.tsx` 自動推導雙語路由（`${tool.href}` 與 `${tool.hrefEn}`），並結合百分位里程碑自動生成，新增工具無需手動編輯 sitemap 清單。
+* **建置自動刷新時間戳記**：`app/sitemap.ts` 在靜態匯出 (`force-static`) 時以建置當下的 `new Date()` 作為 `lastModified`，每次部署自動更新，無需人工手動維護日期。
 
 ### 3. Sitemap 網址規範化 (Canonical URL)
 * 搭配 `trailingSlash: true`，Sitemap 內所有 `<loc>` 網址必須採用目錄結尾斜線（如 `https://tools.cjkuo.net/time/`），嚴禁帶 `/index.html`。

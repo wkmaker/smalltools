@@ -258,7 +258,7 @@
 
 /* 雙膠囊標籤：規則命中數 (Cyan) */
 .ruleHitBadge {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   padding: 0.15rem 0.45rem;
   border-radius: 9999px;
   background: rgba(6, 182, 212, 0.15);
@@ -279,7 +279,7 @@
 
 /* 雙膠囊標籤：脫敏項目數 (Amber/Gold) */
 .redactionCountBadge {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   padding: 0.15rem 0.45rem;
   border-radius: 9999px;
   background: rgba(245, 158, 11, 0.15);

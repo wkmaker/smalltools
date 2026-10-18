@@ -43,6 +43,7 @@ export const TRANSLATIONS = {
     tableHeaderDecision: '預檢決策與保護理由',
     addMoreBottom: '拖曳或點擊此處新增更多 PDF 檔案進行壓縮',
     toastValidPdfOnly: '請選擇正確的 PDF 格式檔案 (.pdf)',
+    toastFileTooLarge: (name: string) => `檔案 [${name}] 大小超過 150MB 上限，已自動略過。`,
     toastAddedFiles: (n: number) => `成功新增 ${n} 個 PDF 檔案，正在執行結構預檢...`,
     toastFileRemoved: '已移除指定檔案',
     toastCompressing: '正在執行 PDF 圖片深度壓縮與結構瘦身...',
@@ -60,7 +61,7 @@ export const TRANSLATIONS = {
     hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-compressor/en/',
-    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 PDF 圖片降採樣原理、文字無損機制、DPI 解析度與隱私安全保障',
     faqItems: [
       {
@@ -146,6 +147,7 @@ export const TRANSLATIONS = {
     tableHeaderDecision: 'Inspection & Decision',
     addMoreBottom: 'Drag or click here to add more PDF files',
     toastValidPdfOnly: 'Please select valid PDF files (.pdf)',
+    toastFileTooLarge: (name: string) => `File [${name}] exceeds 150MB limit and was skipped.`,
     toastAddedFiles: (n: number) => `Added ${n} PDF file(s). Running structure inspection...`,
     toastFileRemoved: 'File removed from queue',
     toastCompressing: 'Compressing PDF images and optimizing structure...',

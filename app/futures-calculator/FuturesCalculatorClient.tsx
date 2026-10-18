@@ -5,6 +5,7 @@ import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './futures-calculator.module.css';
 import { calculateFutures } from './engine';
+import { D, toNumber } from '../utils/decimal';
 import { TRANSLATIONS } from './translations';
 
 interface Preset {
@@ -264,7 +265,7 @@ export default function FuturesCalculatorClient({ lang = 'zh-TW' }: FuturesCalcu
     const safeInit = numInit > 0 ? numInit : presetItem.initialMargin;
     if (numQty <= 0) setQuantity(1);
     if (numInit <= 0) setInitialMargin(safeInit);
-    const targetCap = Math.round(safeInit * safeQty * multiplierRatio);
+    const targetCap = toNumber(D(safeInit).times(safeQty).times(multiplierRatio).dp(0));
     setCapital(targetCap);
   };
 
@@ -519,7 +520,7 @@ ${stressDropPct > 0 ? `• Adverse Stress Test (${stressDropPct.toFixed(1)}%): S
                     { ratio: 3.0, label: t.capPreset30 },
                   ] as const
                 ).map(item => {
-                  const targetCap = Math.round(totalInitMargin * item.ratio);
+                  const targetCap = toNumber(D(totalInitMargin).times(item.ratio).dp(0));
                   const isPresetActive = totalInitMargin > 0 && numCapital === targetCap;
                   return (
                     <button

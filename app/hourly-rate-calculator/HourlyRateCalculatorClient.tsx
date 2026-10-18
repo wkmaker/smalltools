@@ -286,10 +286,10 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
     const targetPath = `/hourly-rate-calculator/${t.urlLangPrefix}rank/${prCode}/`;
     const shareUrl = `${window.location.origin}${targetPath}?${queryParamsString}`;
 
-    const defaultText = `【全台打工人 PR 評定卡片 💳】\n評定等級：PR ${taiwanPR.toFixed(1)}【${matchedMilestone.label}】\n💬 特質語錄：「${matchedMilestone.desc}」\n⚡ 實質生命時薪：$${Math.round(realHourlyRate)}/hr (每分鐘價值 $${(realHourlyRate / 60).toFixed(2)} 元)\n🥤 珍奶自由度：工作 1 小時可換 ${(realHourlyRate / 65).toFixed(1)} 杯珍奶\n🏆 全台名次：840 萬打工人中約第 ${Math.round((1 - taiwanPR / 100) * 8400000).toLocaleString('zh-TW')} 名！\n🌍 最適移居生活圈：${matchedCountry ? matchedCountry.flag + ' ' + matchedCountry.name : ''}\n\n測測你是在賺薪水，還是在幫老闆付法拉利車貸 ➔ ${shareUrl}`;
+    const defaultText = `【全台打工人 PR 評定卡片】\n評定等級：PR ${taiwanPR.toFixed(1)}【${matchedMilestone.label}】\n特質語錄：「${matchedMilestone.desc}」\n實質生命時薪：$${Math.round(realHourlyRate)}/hr (每分鐘價值 $${(realHourlyRate / 60).toFixed(2)} 元)\n珍奶自由度：工作 1 小時可換 ${(realHourlyRate / 65).toFixed(1)} 杯珍奶\n全台名次：840 萬打工人中約第 ${Math.round((1 - taiwanPR / 100) * 8400000).toLocaleString('zh-TW')} 名！\n最適移居生活圈：${matchedCountry ? matchedCountry.name : ''}\n\n測測你是在賺薪水，還是在幫老闆付法拉利車貸 ➔ ${shareUrl}`;
 
     const textToShare = overrideText || defaultText;
-    const funnyShareTitle = `【打工人靈魂審判 ⚖️】我的真實時薪 $${Math.round(realHourlyRate)}/hr (全台 PR ${taiwanPR.toFixed(1)})`;
+    const funnyShareTitle = `【打工人靈魂審判】我的真實時薪 $${Math.round(realHourlyRate)}/hr (全台 PR ${taiwanPR.toFixed(1)})`;
 
     // 行動裝置使用原生 Share Sheet，桌機直接複製剪貼簿
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -756,7 +756,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                         {t.bestMigrationMatchLabel}
                       </span>
                       <span className="text-sm font-bold text-text-main">
-                        {matchedCountry.flag} {isEn && matchedCountry.name_en ? matchedCountry.name_en : matchedCountry.name}
+                        {isEn && matchedCountry.name_en ? matchedCountry.name_en : matchedCountry.name}
                       </span>
                     </div>
                     <div className={`text-sm font-extrabold ${styles.themeAccentText}`}>

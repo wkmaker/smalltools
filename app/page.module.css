@@ -239,6 +239,26 @@
     width: 100%;
 }
 
+.toolCardWrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.toolCardWrapper:hover {
+    transform: translateY(-8px);
+}
+
+.toolCardWrapper .toolCard {
+    flex: 1;
+    width: 100%;
+}
+
+.toolCardWrapper .toolCard:hover {
+    transform: none;
+}
+
 .toolCard {
     background: rgba(255, 255, 255, 0.01);
     backdrop-filter: blur(10px);

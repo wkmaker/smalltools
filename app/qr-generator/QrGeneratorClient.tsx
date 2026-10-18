@@ -6,15 +6,32 @@ import FaqSection from '../components/FaqSection';
 import styles from './qr-generator.module.css';
 import { downloadBlob } from '../utils/downloadBlob';
 import { TRANSLATIONS } from './translations';
+import {
+  parseHexColor,
+  toUtf8ByteString,
+  buildWifiPayload,
+  buildVCardPayload,
+  buildEventPayload,
+  buildEmailPayload,
+  buildSmsPayload,
+  buildTelPayload,
+} from './engine';
+import type {
+  ContentType,
+  WifiEncryption,
+  GradientType,
+  ErrorCorrectionLevel,
+  DownloadFormat,
+} from './types';
+import ContentTypeTabs from './components/ContentTypeTabs';
+import ContentForms from './components/ContentForms';
+import StyleAndColorSettings from './components/StyleAndColorSettings';
+import LogoUploader from './components/LogoUploader';
+import QrPreviewCard from './components/QrPreviewCard';
 
 interface QrGeneratorClientProps {
   lang?: 'zh-TW' | 'en';
 }
-
-type ContentType = 'text' | 'wifi' | 'vcard' | 'event' | 'email' | 'sms' | 'tel';
-type WifiEncryption = 'WPA' | 'WPA3' | 'WPA-EAP' | 'WEP' | 'nopass';
-type GradientType = 'linear' | 'radial';
-type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
 export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientProps) {
   const t = TRANSLATIONS[lang];
@@ -40,8 +57,8 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const [vCardOrg, setVCardOrg] = useState<string>('');
   const [vCardDept, setVCardDept] = useState<string>('');
   const [vCardTitle, setVCardTitle] = useState<string>('');
-  const [vCardPhone, setVCardPhone] = useState<string>(''); // 手機號碼 (CELL)
-  const [vCardWorkPhone, setVCardWorkPhone] = useState<string>(''); // 公司電話 (WORK)
+  const [vCardPhone, setVCardPhone] = useState<string>('');
+  const [vCardWorkPhone, setVCardWorkPhone] = useState<string>('');
   const [vCardEmail, setVCardEmail] = useState<string>('');
   const [vCardUrl, setVCardUrl] = useState<string>('');
   const [vCardAddress, setVCardAddress] = useState<string>('');
@@ -89,10 +106,9 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const [logoSize, setLogoSize] = useState<number>(20);
 
   // 下載設定與回饋
-  const [downloadFormat, setDownloadFormat] = useState<'png' | 'svg' | 'jpeg' | 'webp'>('png');
+  const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('png');
   const [downloadSize, setDownloadSize] = useState<number>(600);
   const [toast, setToast] = useState<string>('');
-  const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
   // --- 唯一 HTML ID 宣告 ---
   const textInputId = useId();
@@ -100,7 +116,6 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const wifiPassId = useId();
   const wifiEncryptionId = useId();
 
-  const vCardVersionId = useId();
   const vCardLastNameId = useId();
   const vCardFirstNameId = useId();
   const vCardNicknameId = useId();
@@ -134,279 +149,61 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const errorCorrectionId = useId();
   const gradientTypeId = useId();
   const logoSizeId = useId();
-  const downloadFormatId = useId();
-  const downloadSizeId = useId();
 
   // --- Refs ---
   const qrCodeRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 內容類型選單軌道 Ref 與滑鼠拖拽滑動
-  const contentTypeTrackRef = useRef<HTMLDivElement>(null);
-  const contentTypeBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const isDraggingTrackRef = useRef<boolean>(false);
-  const dragStartXRef = useRef<number>(0);
-  const dragStartScrollLeftRef = useRef<number>(0);
-  const hasDraggedRef = useRef<boolean>(false);
-
-  // 當選取的內容類型變更時，自動將對應按鈕置中滾動
-  useEffect(() => {
-    const track = contentTypeTrackRef.current;
-    const activeBtn = contentTypeBtnRefs.current[contentType];
-    if (track && activeBtn) {
-      const trackWidth = track.clientWidth;
-      const btnLeft = activeBtn.offsetLeft;
-      const btnWidth = activeBtn.clientWidth;
-      const targetScrollLeft = btnLeft - trackWidth / 2 + btnWidth / 2;
-      track.scrollTo({
-        left: targetScrollLeft,
-        behavior: 'smooth',
-      });
-    }
-  }, [contentType]);
-
-  const handleMouseDownTrack = (e: React.MouseEvent<HTMLDivElement>) => {
-    const track = contentTypeTrackRef.current;
-    if (!track) return;
-    isDraggingTrackRef.current = true;
-    dragStartXRef.current = e.pageX - track.offsetLeft;
-    dragStartScrollLeftRef.current = track.scrollLeft;
-    hasDraggedRef.current = false;
-  };
-
-  const handleMouseMoveTrack = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDraggingTrackRef.current) return;
-    const track = contentTypeTrackRef.current;
-    if (!track) return;
-    e.preventDefault();
-    const x = e.pageX - track.offsetLeft;
-    const walk = (x - dragStartXRef.current) * 1.5;
-    if (Math.abs(walk) > 5) {
-      hasDraggedRef.current = true;
-    }
-    track.scrollLeft = dragStartScrollLeftRef.current - walk;
-  };
-
-  const handleMouseUpOrLeaveTrack = () => {
-    isDraggingTrackRef.current = false;
-  };
-
-  // --- 輔助函數 ---
-  const parseHexColor = (val: string, fallback: string): string => {
-    const clean = val.replace('#', '');
-    if (/^[0-9A-Fa-f]{3,6}$/.test(clean)) {
-      return '#' + clean;
-    }
-    return fallback;
-  };
-
-  const escapeWifiString = (val: string): string => {
-    if (!val) return '';
-    return val
-      .replace(/\\/g, '\\\\')
-      .replace(/;/g, '\\;')
-      .replace(/:/g, '\\:')
-      .replace(/,/g, '\\,');
-  };
-
-  const toUtf8ByteString = (str: string): string => {
-    try {
-      return unescape(encodeURIComponent(str));
-    } catch (e) {
-      return str;
-    }
-  };
-
-  const formatICalDate = (dtStr: string, tz: string): string => {
-    if (!dtStr) return '';
-    const clean = dtStr.replace(/[-:]/g, '');
-    if (clean.includes('T')) {
-      const [d, t] = clean.split('T');
-      const timePadded = (t + '0000').slice(0, 6);
-      const formatted = `${d}T${timePadded}`;
-      if (tz === 'UTC') {
-        return `${formatted}Z`;
-      }
-      return formatted;
-    }
-    return clean;
-  };
-
-  const encodeQuotedPrintable = (str: string): string => {
-    if (!str) return '';
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(str);
-    let encoded = '';
-    for (let i = 0; i < bytes.length; i++) {
-      const b = bytes[i];
-      if (
-        (b >= 48 && b <= 57) ||
-        (b >= 65 && b <= 90) ||
-        (b >= 97 && b <= 122) ||
-        b === 32 ||
-        b === 45 ||
-        b === 95
-      ) {
-        encoded += String.fromCharCode(b);
-      } else {
-        const hex = b.toString(16).toUpperCase();
-        encoded += '=' + (hex.length === 1 ? '0' + hex : hex);
-      }
-    }
-    return encoded;
-  };
 
   const getComputedData = (): string => {
     if (contentType === 'text') {
       return text.trim() || 'https://tools.cjkuo.net';
     } else if (contentType === 'wifi') {
-      const ssid = escapeWifiString(wifiSsid.trim());
-      const pass = escapeWifiString(wifiPass.trim());
-      const enc = wifiEncryption;
-      const isHidden = wifiHidden;
-
-      if (!ssid) {
-        return 'WIFI:S:WiFi_SSID;;';
-      } else {
-        let dataVal = `WIFI:S:${ssid};`;
-        if (enc !== 'nopass') {
-          dataVal += `T:${enc};P:${pass};`;
-        } else {
-          dataVal += `T:nopass;;`;
-        }
-        if (isHidden) {
-          dataVal += `H:true;`;
-        }
-        dataVal += ';';
-        return dataVal;
-      }
+      return buildWifiPayload({
+        ssid: wifiSsid,
+        pass: wifiPass,
+        encryption: wifiEncryption,
+        hidden: wifiHidden,
+      });
     } else if (contentType === 'vcard') {
-      const ln = vCardLastName.trim();
-      const fn = vCardFirstName.trim();
-      const nick = vCardNickname.trim();
-      const org = vCardOrg.trim();
-      const dept = vCardDept.trim();
-      const title = vCardTitle.trim();
-      const address = vCardAddress.trim();
-      const bday = vCardBday.trim();
-      const cellPhone = vCardPhone.trim();
-      const workPhone = vCardWorkPhone.trim();
-      const email = vCardEmail.trim();
-      const url = vCardUrl.trim();
-
-      const hasChinese = /[\u4e00-\u9fa5]/.test(ln + fn + nick + org + dept + title + address);
-
-      const fullName = hasChinese
-        ? `${ln}${fn}`.trim() || fn || ln || 'Contact'
-        : `${fn} ${ln}`.trim() || fn || ln || 'Contact';
-
-      const ver = vCardVersion;
-
-      const lines: string[] = [
-        'BEGIN:VCARD',
-        `VERSION:${ver}`,
-        `FN:${fullName}`,
-        `N:${ln};${fn};;;`,
-        `SORT-STRING:${fullName}`,
-      ];
-
-      if (hasChinese) {
-        if (ln) lines.push(`X-PHONETIC-LAST-NAME:${ln}`);
-        if (fn) lines.push(`X-PHONETIC-FIRST-NAME:${fn}`);
-      }
-
-      if (nick) {
-        lines.push(`NICKNAME:${nick}`);
-      }
-
-      if (org && dept) {
-        lines.push(`ORG:${org} / ${dept}`);
-      } else if (org) {
-        lines.push(`ORG:${org}`);
-      } else if (dept) {
-        lines.push(`ORG:${dept}`);
-      }
-
-      if (title) {
-        lines.push(`TITLE:${title}`);
-      }
-
-      if (cellPhone) {
-        lines.push(ver === '4.0' ? `TEL;TYPE=cell:${cellPhone}` : `TEL;TYPE=CELL:${cellPhone}`);
-      }
-      if (workPhone) {
-        lines.push(ver === '4.0' ? `TEL;TYPE="work,voice":${workPhone}` : `TEL;TYPE=WORK,VOICE:${workPhone}`);
-      }
-
-      if (email) {
-        lines.push(ver === '4.0' ? `EMAIL;TYPE=work:${email}` : `EMAIL;TYPE=INTERNET,WORK:${email}`);
-      }
-      if (url) lines.push(`URL:${url}`);
-      if (address) {
-        lines.push(ver === '4.0' ? `ADR;TYPE=work:;;${address};;;;` : `ADR;TYPE=WORK:;;${address};;;;`);
-      }
-      if (bday) {
-        lines.push(`BDAY:${bday}`);
-      }
-
-      lines.push('END:VCARD');
-
-      return lines.join('\r\n');
+      return buildVCardPayload({
+        version: vCardVersion,
+        lastName: vCardLastName,
+        firstName: vCardFirstName,
+        nickname: vCardNickname,
+        org: vCardOrg,
+        dept: vCardDept,
+        title: vCardTitle,
+        address: vCardAddress,
+        bday: vCardBday,
+        phone: vCardPhone,
+        workPhone: vCardWorkPhone,
+        email: vCardEmail,
+        url: vCardUrl,
+      });
     } else if (contentType === 'event') {
-      const lines: string[] = ['BEGIN:VCALENDAR', 'VERSION:2.0'];
-      if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
-        lines.push(`X-WR-TIMEZONE:${eventTimezone}`);
-      }
-      lines.push('BEGIN:VEVENT');
-      lines.push(`SUMMARY:${eventSummary.trim() || 'Event'}`);
-
-      if (eventStart) {
-        if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
-          lines.push(`DTSTART;TZID=${eventTimezone}:${formatICalDate(eventStart, eventTimezone)}`);
-        } else {
-          lines.push(`DTSTART:${formatICalDate(eventStart, eventTimezone)}`);
-        }
-      }
-
-      if (eventEnd) {
-        if (eventTimezone && eventTimezone !== 'LOCAL' && eventTimezone !== 'UTC') {
-          lines.push(`DTEND;TZID=${eventTimezone}:${formatICalDate(eventEnd, eventTimezone)}`);
-        } else {
-          lines.push(`DTEND:${formatICalDate(eventEnd, eventTimezone)}`);
-        }
-      }
-
-      if (eventLocation.trim()) lines.push(`LOCATION:${eventLocation.trim()}`);
-      if (eventDescription.trim()) lines.push(`DESCRIPTION:${eventDescription.trim()}`);
-
-      lines.push('END:VEVENT');
-      lines.push('END:VCALENDAR');
-
-      return lines.join('\r\n');
+      return buildEventPayload({
+        summary: eventSummary,
+        start: eventStart,
+        end: eventEnd,
+        timezone: eventTimezone,
+        location: eventLocation,
+        description: eventDescription,
+      });
     } else if (contentType === 'email') {
-      const to = emailTo.trim();
-      const sub = emailSubject.trim();
-      const body = emailBody.trim();
-      let mailto = `mailto:${to}`;
-      const params: string[] = [];
-      if (sub) params.push(`subject=${encodeURIComponent(sub)}`);
-      if (body) params.push(`body=${encodeURIComponent(body)}`);
-      if (params.length > 0) {
-        mailto += `?${params.join('&')}`;
-      }
-      return mailto || 'mailto:service@example.com';
+      return buildEmailPayload({
+        to: emailTo,
+        subject: emailSubject,
+        body: emailBody,
+      });
     } else if (contentType === 'sms') {
-      const phone = smsPhone.trim();
-      const body = smsBody.trim();
-      let smsStr = `sms:${phone}`;
-      if (body) {
-        smsStr += `?body=${encodeURIComponent(body)}`;
-      }
-      return smsStr || 'sms:+886912345678';
+      return buildSmsPayload({
+        phone: smsPhone,
+        body: smsBody,
+      });
     } else if (contentType === 'tel') {
-      const phone = telPhone.trim();
-      return `tel:${phone}` || 'tel:+886212345678';
+      return buildTelPayload({
+        phone: telPhone,
+      });
     }
     return 'https://tools.cjkuo.net';
   };
@@ -742,7 +539,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   // --- 處理 Logo 上傳 ---
   const handleLogoFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      showToast('請上傳有效的圖片檔案 (PNG, JPG, SVG, etc.)');
+      showToast(t.invalidImageFile);
       return;
     }
 
@@ -760,75 +557,73 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const removeLogo = () => {
     setLogoBase64('');
     setLogoName('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
-  // --- 下載處理 ---
-  const downloadQr = async () => {
-    if (!QRCodeStyling || !qrCodeRef.current) return;
+  // --- 下載 QR Code ---
+  const downloadQr = () => {
+    if (!qrCodeRef.current) return;
 
-    const timestamp = (() => {
-      const now = new Date();
-      return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(
-        now.getDate()
-      ).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(
-        now.getMinutes()
-      ).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-    })();
-    const filename = `designer-qrcode_${timestamp}`;
+    const originalWidth = qrCodeRef.current._options.width;
+    const originalHeight = qrCodeRef.current._options.height;
 
-    const downloadInstance = new QRCodeStyling({
-      ...qrCodeRef.current._options,
+    qrCodeRef.current.update({
       width: downloadSize,
       height: downloadSize,
     });
 
-    await downloadInstance.download({
-      name: filename,
-      extension: downloadFormat,
-    });
+    setTimeout(() => {
+      qrCodeRef.current.download({
+        name: `qrcode_${Date.now()}`,
+        extension: downloadFormat,
+      });
 
-    showToast(t.downloadToast);
+      showToast(t.downloadToast);
+
+      setTimeout(() => {
+        qrCodeRef.current.update({
+          width: originalWidth,
+          height: originalHeight,
+        });
+      }, 500);
+    }, 100);
   };
 
-  // --- 下載 .vcf 名片檔 ---
+  // --- 下載原始 .vcf 檔案 ---
   const downloadVcfFile = () => {
-    const data = getComputedData();
-    const blob = new Blob([data], { type: 'text/vcard;charset=utf-8' });
+    const rawData = getComputedData();
+    const blob = new Blob([rawData], { type: 'text/vcard;charset=utf-8' });
     const nameStr = `${vCardLastName}${vCardFirstName}`.trim() || 'contact';
     downloadBlob(blob, `contact_${nameStr}.vcf`);
     showToast(t.vcfDownloadedToast);
   };
 
-  // --- 下載 .ics 行事曆檔 ---
+  // --- 下載原始 .ics 檔案 ---
   const downloadIcsFile = () => {
-    const data = getComputedData();
-    const blob = new Blob([data], { type: 'text/calendar;charset=utf-8' });
+    const rawData = getComputedData();
+    const blob = new Blob([rawData], { type: 'text/calendar;charset=utf-8' });
     const summaryStr = eventSummary.trim() || 'event';
     downloadBlob(blob, `event_${summaryStr}.ics`);
     showToast(t.icsDownloadedToast);
   };
 
-  // --- 複製 Raw 文字 ---
+  // --- 複製文字到剪貼簿 ---
   const copyRawContent = async () => {
-    const data = getComputedData();
+    const rawData = getComputedData();
     try {
-      await navigator.clipboard.writeText(data);
+      await navigator.clipboard.writeText(rawData);
       showToast(t.rawCopiedToast);
-    } catch (err) {
-      window.prompt(t.shareLinkPrompt, data);
+    } catch {
+      window.prompt(t.shareLinkPrompt, rawData);
     }
   };
 
-  // --- 複製分享連結 ---
+  // --- 複製完整分享設計網址 ---
   const copyShareLink = async () => {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
       showToast(t.shareLinkCopied);
-    } catch (err) {
+    } catch {
       window.prompt(t.shareLinkPrompt, url);
     }
   };
@@ -854,1212 +649,175 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
       <div className="grid grid-cols-[1.2fr_0.8fr] gap-8 items-start text-left max-[1024px]:grid-cols-1 w-full max-w-full overflow-hidden box-border px-4 max-sm:px-0">
         {/* 左欄：設定面板 */}
         <div className={styles.panelCard}>
-          {/* 內容類型切換 */}
-          <div className="flex flex-col gap-3">
-            <span className="text-sm font-medium text-text-sub">{t.contentType}</span>
-            <div
-              ref={contentTypeTrackRef}
-              className={styles.contentTypeTrack}
-              onMouseDown={handleMouseDownTrack}
-              onMouseMove={handleMouseMoveTrack}
-              onMouseUp={handleMouseUpOrLeaveTrack}
-              onMouseLeave={handleMouseUpOrLeaveTrack}
-            >
-              {[
-                {
-                  id: 'text',
-                  label: t.textOrUrl,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'vcard',
-                  label: t.vcardContact,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 012-2h2a2 2 0 012 2v2m-4 0h4m-6 7a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 3h2" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'event',
-                  label: t.calendarEvent,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'wifi',
-                  label: t.wifiNetwork,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'email',
-                  label: t.emailMsg,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'sms',
-                  label: t.smsMsg,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'tel',
-                  label: t.telCall,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  ),
-                },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  ref={(el) => {
-                    contentTypeBtnRefs.current[tab.id] = el;
-                  }}
-                  type="button"
-                  onClick={(e) => {
-                    if (hasDraggedRef.current) {
-                      e.preventDefault();
-                      return;
-                    }
-                    setContentType(tab.id as ContentType);
-                  }}
-                  className={contentType === tab.id ? styles.tabBtnActive : styles.tabBtnInactive}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <ContentTypeTabs
+            contentType={contentType}
+            setContentType={setContentType}
+            labels={{
+              contentType: t.contentType,
+              textOrUrl: t.textOrUrl,
+              vcardContact: t.vcardContact,
+              calendarEvent: t.calendarEvent,
+              wifiNetwork: t.wifiNetwork,
+              emailMsg: t.emailMsg,
+              smsMsg: t.smsMsg,
+              telCall: t.telCall,
+            }}
+          />
 
-          {/* 內容輸入：文字/網址 */}
-          {contentType === 'text' && (
-            <div className="flex flex-col gap-3">
-              <label htmlFor={textInputId} className="text-sm font-medium text-text-sub">
-                {t.qrContentLabel}
-              </label>
-              <div className={styles.inputContainer}>
-                <input
-                  id={textInputId}
-                  type="text"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder={t.textPlaceholder}
-                  autoComplete="off"
-                  className={styles.inputField}
-                />
-              </div>
-            </div>
-          )}
+          <ContentForms
+            contentType={contentType}
+            t={t}
+            text={text}
+            setText={setText}
+            textInputId={textInputId}
+            wifiSsid={wifiSsid}
+            setWifiSsid={setWifiSsid}
+            wifiPass={wifiPass}
+            setWifiPass={setWifiPass}
+            wifiEncryption={wifiEncryption}
+            setWifiEncryption={setWifiEncryption}
+            wifiHidden={wifiHidden}
+            setWifiHidden={setWifiHidden}
+            wifiSsidId={wifiSsidId}
+            wifiPassId={wifiPassId}
+            wifiEncryptionId={wifiEncryptionId}
+            vCardVersion={vCardVersion}
+            setVCardVersion={setVCardVersion}
+            vCardLastName={vCardLastName}
+            setVCardLastName={setVCardLastName}
+            vCardFirstName={vCardFirstName}
+            setVCardFirstName={setVCardFirstName}
+            vCardNickname={vCardNickname}
+            setVCardNickname={setVCardNickname}
+            vCardOrg={vCardOrg}
+            setVCardOrg={setVCardOrg}
+            vCardDept={vCardDept}
+            setVCardDept={setVCardDept}
+            vCardTitle={vCardTitle}
+            setVCardTitle={setVCardTitle}
+            vCardPhone={vCardPhone}
+            setVCardPhone={setVCardPhone}
+            vCardWorkPhone={vCardWorkPhone}
+            setVCardWorkPhone={setVCardWorkPhone}
+            vCardEmail={vCardEmail}
+            setVCardEmail={setVCardEmail}
+            vCardUrl={vCardUrl}
+            setVCardUrl={setVCardUrl}
+            vCardAddress={vCardAddress}
+            setVCardAddress={setVCardAddress}
+            vCardBday={vCardBday}
+            setVCardBday={setVCardBday}
+            vCardLastNameId={vCardLastNameId}
+            vCardFirstNameId={vCardFirstNameId}
+            vCardNicknameId={vCardNicknameId}
+            vCardOrgId={vCardOrgId}
+            vCardDeptId={vCardDeptId}
+            vCardTitleId={vCardTitleId}
+            vCardPhoneId={vCardPhoneId}
+            vCardWorkPhoneId={vCardWorkPhoneId}
+            vCardEmailId={vCardEmailId}
+            vCardUrlId={vCardUrlId}
+            vCardAddressId={vCardAddressId}
+            vCardBdayId={vCardBdayId}
+            eventSummary={eventSummary}
+            setEventSummary={setEventSummary}
+            eventStart={eventStart}
+            setEventStart={setEventStart}
+            eventEnd={eventEnd}
+            setEventEnd={setEventEnd}
+            eventTimezone={eventTimezone}
+            setEventTimezone={setEventTimezone}
+            eventLocation={eventLocation}
+            setEventLocation={setEventLocation}
+            eventDescription={eventDescription}
+            setEventDescription={setEventDescription}
+            eventSummaryId={eventSummaryId}
+            eventStartId={eventStartId}
+            eventEndId={eventEndId}
+            eventTimezoneId={eventTimezoneId}
+            eventLocationId={eventLocationId}
+            eventDescriptionId={eventDescriptionId}
+            emailTo={emailTo}
+            setEmailTo={setEmailTo}
+            emailSubject={emailSubject}
+            setEmailSubject={setEmailSubject}
+            emailBody={emailBody}
+            setEmailBody={setEmailBody}
+            emailToId={emailToId}
+            emailSubjectId={emailSubjectId}
+            emailBodyId={emailBodyId}
+            smsPhone={smsPhone}
+            setSmsPhone={setSmsPhone}
+            smsBody={smsBody}
+            setSmsBody={setSmsBody}
+            smsPhoneId={smsPhoneId}
+            smsBodyId={smsBodyId}
+            telPhone={telPhone}
+            setTelPhone={setTelPhone}
+            telPhoneId={telPhoneId}
+          />
 
-          {/* 內容輸入：vCard 數位名片 */}
-          {contentType === 'vcard' && (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-text-sub">{t.vCardVersion}</span>
-                <div className="grid grid-cols-2 gap-1.5 p-1 bg-select-bg border border-border-glass rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => setVCardVersion('3.0')}
-                    className={`${styles.segmentedBtn} ${vCardVersion === '3.0' ? styles.segmentedBtnActive : ''}`}
-                  >
-                    {t.vCardVer3}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setVCardVersion('4.0')}
-                    className={`${styles.segmentedBtn} ${vCardVersion === '4.0' ? styles.segmentedBtnActive : ''}`}
-                  >
-                    {t.vCardVer4}
-                  </button>
-                </div>
-              </div>
+          <StyleAndColorSettings
+            t={t}
+            dotsType={dotsType}
+            setDotsType={setDotsType}
+            cornersSquare={cornersSquare}
+            setCornersSquare={setCornersSquare}
+            cornersDot={cornersDot}
+            setCornersDot={setCornersDot}
+            bgColor={bgColor}
+            setBgColor={setBgColor}
+            bgTransparent={bgTransparent}
+            setBgTransparent={setBgTransparent}
+            bgColorId={bgColorId}
+            errorCorrection={errorCorrection}
+            setErrorCorrection={setErrorCorrection}
+            errorCorrectionId={errorCorrectionId}
+            logoBase64={logoBase64}
+            useGradient={useGradient}
+            setUseGradient={setUseGradient}
+            gradientType={gradientType}
+            setGradientType={setGradientType}
+            gradientTypeId={gradientTypeId}
+            color1={color1}
+            setColor1={setColor1}
+            color2={color2}
+            setColor2={setColor2}
+            gradientRotation={gradientRotation}
+            setGradientRotation={setGradientRotation}
+            singleColor={singleColor}
+            setSingleColor={setSingleColor}
+          />
 
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardLastNameId} className="text-sm font-medium text-text-sub">
-                    {t.vCardLastName}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardLastNameId}
-                      type="text"
-                      value={vCardLastName}
-                      onChange={(e) => setVCardLastName(e.target.value)}
-                      placeholder={t.vCardLastNamePlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardFirstNameId} className="text-sm font-medium text-text-sub">
-                    {t.vCardFirstName}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardFirstNameId}
-                      type="text"
-                      value={vCardFirstName}
-                      onChange={(e) => setVCardFirstName(e.target.value)}
-                      placeholder={t.vCardFirstNamePlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardNicknameId} className="text-sm font-medium text-text-sub">
-                    {t.vCardNickname}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardNicknameId}
-                      type="text"
-                      value={vCardNickname}
-                      onChange={(e) => setVCardNickname(e.target.value)}
-                      placeholder={t.vCardNicknamePlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardBdayId} className="text-sm font-medium text-text-sub">
-                    {t.vCardBday}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardBdayId}
-                      type="date"
-                      value={vCardBday}
-                      onChange={(e) => setVCardBday(e.target.value)}
-                      placeholder={t.vCardBdayPlaceholder}
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardOrgId} className="text-sm font-medium text-text-sub">
-                    {t.vCardOrg}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardOrgId}
-                      type="text"
-                      value={vCardOrg}
-                      onChange={(e) => setVCardOrg(e.target.value)}
-                      placeholder={t.vCardOrgPlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardDeptId} className="text-sm font-medium text-text-sub">
-                    {t.vCardDept}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardDeptId}
-                      type="text"
-                      value={vCardDept}
-                      onChange={(e) => setVCardDept(e.target.value)}
-                      placeholder={t.vCardDeptPlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={vCardTitleId} className="text-sm font-medium text-text-sub">
-                  {t.vCardTitle}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={vCardTitleId}
-                    type="text"
-                    value={vCardTitle}
-                    onChange={(e) => setVCardTitle(e.target.value)}
-                    placeholder={t.vCardTitlePlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardPhoneId} className="text-sm font-medium text-text-sub">
-                    {t.vCardPhone}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardPhoneId}
-                      type="tel"
-                      value={vCardPhone}
-                      onChange={(e) => setVCardPhone(e.target.value)}
-                      placeholder={t.vCardPhonePlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardWorkPhoneId} className="text-sm font-medium text-text-sub">
-                    {t.vCardWorkPhone}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardWorkPhoneId}
-                      type="tel"
-                      value={vCardWorkPhone}
-                      onChange={(e) => setVCardWorkPhone(e.target.value)}
-                      placeholder={t.vCardWorkPhonePlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardEmailId} className="text-sm font-medium text-text-sub">
-                    {t.vCardEmail}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardEmailId}
-                      type="email"
-                      value={vCardEmail}
-                      onChange={(e) => setVCardEmail(e.target.value)}
-                      placeholder={t.vCardEmailPlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={vCardUrlId} className="text-sm font-medium text-text-sub">
-                    {t.vCardUrl}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={vCardUrlId}
-                      type="url"
-                      value={vCardUrl}
-                      onChange={(e) => setVCardUrl(e.target.value)}
-                      placeholder={t.vCardUrlPlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={vCardAddressId} className="text-sm font-medium text-text-sub">
-                  {t.vCardAddress}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={vCardAddressId}
-                    type="text"
-                    value={vCardAddress}
-                    onChange={(e) => setVCardAddress(e.target.value)}
-                    placeholder={t.vCardAddressPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 內容輸入：iCalendar 行事曆行程 */}
-          {contentType === 'event' && (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <label htmlFor={eventSummaryId} className="text-sm font-medium text-text-sub">
-                  {t.eventSummary}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={eventSummaryId}
-                    type="text"
-                    value={eventSummary}
-                    onChange={(e) => setEventSummary(e.target.value)}
-                    placeholder={t.eventSummaryPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={eventStartId} className="text-sm font-medium text-text-sub">
-                    {t.eventStart}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={eventStartId}
-                      type="datetime-local"
-                      value={eventStart}
-                      onChange={(e) => setEventStart(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-text-main font-medium cursor-pointer [color-scheme:dark]"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={eventEndId} className="text-sm font-medium text-text-sub">
-                    {t.eventEnd}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={eventEndId}
-                      type="datetime-local"
-                      value={eventEnd}
-                      onChange={(e) => setEventEnd(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-text-main font-medium cursor-pointer [color-scheme:dark]"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor={eventTimezoneId} className="text-sm font-medium text-text-sub">
-                    {t.eventTimezone}
-                  </label>
-                  <select
-                    id={eventTimezoneId}
-                    value={eventTimezone}
-                    onChange={(e) => setEventTimezone(e.target.value)}
-                    className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-3 py-3 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
-                  >
-                    <option value="Asia/Taipei">Asia/Taipei (UTC+8)</option>
-                    <option value="Asia/Tokyo">Asia/Tokyo (UTC+9)</option>
-                    <option value="Asia/Shanghai">Asia/Shanghai (UTC+8)</option>
-                    <option value="Asia/Hong_Kong">Asia/Hong_Kong (UTC+8)</option>
-                    <option value="Asia/Singapore">Asia/Singapore (UTC+8)</option>
-                    <option value="Europe/London">Europe/London (UTC+0)</option>
-                    <option value="America/New_York">America/New_York (UTC-5)</option>
-                    <option value="America/Los_Angeles">America/Los_Angeles (UTC-8)</option>
-                    <option value="UTC">UTC (Universal Time)</option>
-                    <option value="LOCAL">{t.timezoneLocal}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={eventLocationId} className="text-sm font-medium text-text-sub">
-                  {t.eventLocation}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={eventLocationId}
-                    type="text"
-                    value={eventLocation}
-                    onChange={(e) => setEventLocation(e.target.value)}
-                    placeholder={t.eventLocationPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={eventDescriptionId} className="text-sm font-medium text-text-sub">
-                  {t.eventDescription}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={eventDescriptionId}
-                    type="text"
-                    value={eventDescription}
-                    onChange={(e) => setEventDescription(e.target.value)}
-                    placeholder={t.eventDescriptionPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 內容輸入：WiFi 網路 */}
-          {contentType === 'wifi' && (
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-3">
-                  <label htmlFor={wifiSsidId} className="text-sm font-medium text-text-sub">
-                    {t.wifiSsid}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={wifiSsidId}
-                      type="text"
-                      value={wifiSsid}
-                      onChange={(e) => setWifiSsid(e.target.value)}
-                      placeholder={t.wifiSsidPlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <label htmlFor={wifiPassId} className="text-sm font-medium text-text-sub">
-                    {t.wifiPass}
-                  </label>
-                  <div className={styles.inputContainer}>
-                    <input
-                      id={wifiPassId}
-                      type="text"
-                      value={wifiPass}
-                      onChange={(e) => setWifiPass(e.target.value)}
-                      placeholder={t.wifiPassPlaceholder}
-                      autoComplete="off"
-                      className={styles.inputField}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                <div className="flex flex-col gap-3">
-                  <label htmlFor={wifiEncryptionId} className="text-sm font-medium text-text-sub">
-                    {t.securityType}
-                  </label>
-                  <select
-                    id={wifiEncryptionId}
-                    value={wifiEncryption}
-                    onChange={(e) => setWifiEncryption(e.target.value as WifiEncryption)}
-                    className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-sm font-medium cursor-pointer"
-                  >
-                    <option value="WPA">{t.wpaOption}</option>
-                    <option value="WPA3">{t.wpa3Option}</option>
-                    <option value="WPA-EAP">{t.wpaEapOption}</option>
-                    <option value="WEP">{t.wepOption}</option>
-                    <option value="nopass">{t.nopassOption}</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center h-full pt-6 max-sm:pt-2">
-                  <label className="flex items-center gap-3 cursor-pointer select-none text-text-sub text-sm font-medium">
-                    <input
-                      type="checkbox"
-                      checked={wifiHidden}
-                      onChange={(e) => setWifiHidden(e.target.checked)}
-                      className="accent-[#00ff66] w-4.5 h-4.5 rounded"
-                    />
-                    {t.hiddenSsid}
-                  </label>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 內容輸入：E-mail 郵件 */}
-          {contentType === 'email' && (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <label htmlFor={emailToId} className="text-sm font-medium text-text-sub">
-                  {t.emailTo}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={emailToId}
-                    type="email"
-                    value={emailTo}
-                    onChange={(e) => setEmailTo(e.target.value)}
-                    placeholder={t.emailToPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={emailSubjectId} className="text-sm font-medium text-text-sub">
-                  {t.emailSubject}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={emailSubjectId}
-                    type="text"
-                    value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
-                    placeholder={t.emailSubjectPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={emailBodyId} className="text-sm font-medium text-text-sub">
-                  {t.emailBody}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={emailBodyId}
-                    type="text"
-                    value={emailBody}
-                    onChange={(e) => setEmailBody(e.target.value)}
-                    placeholder={t.emailBodyPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 內容輸入：SMS 簡訊 */}
-          {contentType === 'sms' && (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <label htmlFor={smsPhoneId} className="text-sm font-medium text-text-sub">
-                  {t.smsPhone}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={smsPhoneId}
-                    type="tel"
-                    value={smsPhone}
-                    onChange={(e) => setSmsPhone(e.target.value)}
-                    placeholder={t.smsPhonePlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor={smsBodyId} className="text-sm font-medium text-text-sub">
-                  {t.smsBody}
-                </label>
-                <div className={styles.inputContainer}>
-                  <input
-                    id={smsBodyId}
-                    type="text"
-                    value={smsBody}
-                    onChange={(e) => setSmsBody(e.target.value)}
-                    placeholder={t.smsBodyPlaceholder}
-                    autoComplete="off"
-                    className={styles.inputField}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 內容輸入：電話撥號 */}
-          {contentType === 'tel' && (
-            <div className="flex flex-col gap-3">
-              <label htmlFor={telPhoneId} className="text-sm font-medium text-text-sub">
-                {t.telPhone}
-              </label>
-              <div className={styles.inputContainer}>
-                <input
-                  id={telPhoneId}
-                  type="tel"
-                  value={telPhone}
-                  onChange={(e) => setTelPhone(e.target.value)}
-                  placeholder={t.telPhonePlaceholder}
-                  autoComplete="off"
-                  className={styles.inputField}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* 碼體樣式 (網格) */}
-          <div className="flex flex-col gap-3">
-            <span className="text-sm font-medium text-text-sub">{t.dotsStyle}</span>
-            <div className="grid grid-cols-6 gap-2.5 max-md:grid-cols-3 max-sm:grid-cols-2">
-              {[
-                {
-                  id: 'square',
-                  name: t.square,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <rect x="4" y="4" width="16" height="16" fill="currentColor" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'dots',
-                  name: t.dots,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <circle cx="12" cy="12" r="8" fill="currentColor" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'rounded',
-                  name: t.rounded,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <rect x="4" y="4" width="16" height="16" rx="5" fill="currentColor" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'classy',
-                  name: t.classy,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <path d="M4 12C4 7.58 7.58 4 12 4H20V12C20 16.42 16.42 20 12 20H4V12Z" fill="currentColor" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'classy-rounded',
-                  name: t.classyRounded,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <path d="M4 12C4 7.58 7.58 4 12 4H20L20 12C20 16.42 16.42 20 12 20L4 12Z" fill="currentColor" />
-                    </svg>
-                  ),
-                },
-                {
-                  id: 'extra-rounded',
-                  name: t.extraRounded,
-                  icon: (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5">
-                      <rect x="4" y="4" width="16" height="16" rx="8" fill="currentColor" />
-                    </svg>
-                  ),
-                },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setDotsType(opt.id)}
-                  className={`${styles.styleOptionBtn} ${dotsType === opt.id ? styles.styleOptionBtnActive : ''}`}
-                >
-                  {opt.icon}
-                  <span className="text-xs font-medium">{opt.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
-            {/* 定位點外框 */}
-            <div className="flex flex-col gap-3">
-              <span className="text-sm font-medium text-text-sub">{t.cornersSquareStyle}</span>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  {
-                    id: 'extra-rounded',
-                    name: t.shieldRounded,
-                    icon: (
-                      <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="3" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    id: 'square',
-                    name: t.square,
-                    icon: (
-                      <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    id: 'dot',
-                    name: t.ring,
-                    icon: (
-                      <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="3" />
-                      </svg>
-                    ),
-                  },
-                ].map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setCornersSquare(opt.id)}
-                    className={`${styles.styleOptionBtn} ${
-                      cornersSquare === opt.id ? styles.styleOptionBtnActive : ''
-                    }`}
-                  >
-                    {opt.icon}
-                    <span className="text-xs font-medium">{opt.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 定位點內核 */}
-            <div className="flex flex-col gap-3">
-              <span className="text-sm font-medium text-text-sub">{t.cornersDotStyle}</span>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  {
-                    id: 'dot',
-                    name: t.dots,
-                    icon: (
-                      <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <circle cx="12" cy="12" r="6" fill="currentColor" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    id: 'square',
-                    name: t.square,
-                    icon: (
-                      <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <rect x="6" y="6" width="12" height="12" fill="currentColor" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    id: 'rounded',
-                    name: t.rounded,
-                    icon: (
-                      <svg viewBox="0 0 24 24" className="w-5 h-5">
-                        <rect x="6" y="6" width="12" height="12" rx="3" fill="currentColor" />
-                      </svg>
-                    ),
-                  },
-                ].map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setCornersDot(opt.id)}
-                    className={`${styles.styleOptionBtn} ${cornersDot === opt.id ? styles.styleOptionBtnActive : ''}`}
-                  >
-                    {opt.icon}
-                    <span className="text-xs font-medium">{opt.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6 max-sm:grid-cols-1">
-            {/* 背景色與透明設定 */}
-            <div className="flex flex-col gap-3">
-              <label htmlFor={bgColorId} className="text-sm font-medium text-text-sub">
-                {t.bgSettings}
-              </label>
-              <div className="flex gap-4 items-center">
-                <div className="flex items-center gap-2.5 bg-select-bg border border-border-glass px-3 py-2 rounded-xl">
-                  <input
-                    id={bgColorId}
-                    type="color"
-                    value={bgColor}
-                    onChange={(e) => setBgColor(e.target.value)}
-                    disabled={bgTransparent}
-                    className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer disabled:opacity-30"
-                  />
-                  <span className="font-mono text-sm text-text-main font-medium">
-                    {bgTransparent ? 'TRANSPARENT' : bgColor.toUpperCase()}
-                  </span>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer select-none text-text-sub text-sm font-medium">
-                  <input
-                    type="checkbox"
-                    checked={bgTransparent}
-                    onChange={(e) => setBgTransparent(e.target.checked)}
-                    className="accent-[#00ff66] w-4.5 h-4.5 rounded"
-                  />
-                  {t.transparentBg}
-                </label>
-              </div>
-            </div>
-
-            {/* 容錯率設定 */}
-            <div className="flex flex-col gap-3">
-              <label htmlFor={errorCorrectionId} className="text-sm font-medium text-text-sub">
-                {t.errorCorrection}
-              </label>
-              <select
-                id={errorCorrectionId}
-                value={logoBase64 ? 'H' : errorCorrection}
-                onChange={(e) => setErrorCorrection(e.target.value as ErrorCorrectionLevel)}
-                disabled={!!logoBase64}
-                className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-base font-medium cursor-pointer disabled:opacity-50"
-              >
-                <option value="L">{t.errorCorrectionL}</option>
-                <option value="M">{t.errorCorrectionM}</option>
-                <option value="Q">{t.errorCorrectionQ}</option>
-                <option value="H">{t.errorCorrectionH}</option>
-              </select>
-            </div>
-          </div>
-
-          {/* 啟用漸層與配色 */}
-          <div className="flex flex-col gap-4 border-t border-border-glass pt-6">
-            <div className="flex items-center">
-              <label className="flex items-center gap-3 cursor-pointer select-none text-text-sub text-base font-medium">
-                <input
-                  type="checkbox"
-                  checked={useGradient}
-                  onChange={(e) => setUseGradient(e.target.checked)}
-                  className="accent-[#00ff66] w-5 h-5 rounded"
-                />
-                {t.enableGradient}
-              </label>
-            </div>
-
-            {useGradient ? (
-              <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                  <div className="flex flex-col gap-3">
-                    <label htmlFor={gradientTypeId} className="text-sm font-medium text-text-sub">
-                      {t.gradientType}
-                    </label>
-                    <select
-                      id={gradientTypeId}
-                      value={gradientType}
-                      onChange={(e) => setGradientType(e.target.value as GradientType)}
-                      className="w-full bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-3 outline-none focus:border-[#00ff66]/40 text-base font-medium cursor-pointer"
-                    >
-                      <option value="linear">{t.linearGradient}</option>
-                      <option value="radial">{t.radialGradient}</option>
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-3">
-                    <span className="text-sm font-medium text-text-sub">{t.colorPair}</span>
-                    <div className="flex gap-3">
-                      <div className="flex items-center gap-2 bg-select-bg border border-border-glass px-3 py-2 rounded-xl flex-1">
-                        <input
-                          type="color"
-                          value={color1}
-                          onChange={(e) => setColor1(e.target.value)}
-                          className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer"
-                        />
-                        <span className="font-mono text-xs text-text-main font-medium">{color1.toUpperCase()}</span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-select-bg border border-border-glass px-3 py-2 rounded-xl flex-1">
-                        <input
-                          type="color"
-                          value={color2}
-                          onChange={(e) => setColor2(e.target.value)}
-                          className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer"
-                        />
-                        <span className="font-mono text-xs text-text-main font-medium">{color2.toUpperCase()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {gradientType === 'linear' && (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex justify-between text-sm text-text-sub font-medium">
-                      <span>{t.gradientAngle}</span>
-                      <span className={styles.greenText}>{gradientRotation}°</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="360"
-                      value={gradientRotation}
-                      onChange={(e) => setGradientRotation(parseInt(e.target.value))}
-                      className="w-full accent-[#00ff66] h-1.5 rounded-lg bg-white/10 cursor-pointer"
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <span className="text-sm font-medium text-text-sub">{t.singleColor}</span>
-                <div className="flex items-center gap-2.5 bg-select-bg border border-border-glass px-3 py-2 rounded-xl w-fit">
-                  <input
-                    type="color"
-                    value={singleColor}
-                    onChange={(e) => setSingleColor(e.target.value)}
-                    className="w-8 h-8 bg-transparent border-none outline-none cursor-pointer"
-                  />
-                  <span className="font-mono text-sm text-text-main font-medium">{singleColor.toUpperCase()}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 置中 Logo */}
-          <div className="flex flex-col gap-3 border-t border-border-glass pt-6">
-            <span className="text-sm font-medium text-text-sub">{t.centerLogo}</span>
-
-            {!logoBase64 ? (
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragOver(true);
-                }}
-                onDragLeave={() => setIsDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragOver(false);
-                  if (e.dataTransfer.files.length > 0) {
-                    handleLogoFile(e.dataTransfer.files[0]);
-                  }
-                }}
-                onClick={() => fileInputRef.current?.click()}
-                className={`${styles.dropzoneContainer} ${isDragOver ? styles.dropzoneContainerDragover : ''}`}
-              >
-                <svg viewBox="0 0 24 24" className="w-8 h-8 fill-text-sub transition-colors">
-                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                </svg>
-                <div className="text-xs text-text-sub font-medium leading-normal">{t.dropzoneText}</div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      handleLogoFile(e.target.files[0]);
-                    }
-                  }}
-                  className="hidden"
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between bg-select-bg border border-border-glass rounded-xl px-4 py-3 w-full">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={logoBase64}
-                      alt="Logo Preview"
-                      className="w-8 h-8 object-contain bg-white rounded border border-black/10"
-                    />
-                    <span className="text-sm font-medium text-text-main max-w-[200px] truncate">{logoName}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={removeLogo}
-                    title={t.removeLogo}
-                    className="bg-transparent border-none text-text-sub hover:text-red-500 hover:scale-115 transition-all cursor-pointer p-1"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* 調整 Logo 大小 */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between text-sm text-text-sub font-medium">
-                    <span>{t.logoSize}</span>
-                    <span className={styles.greenText}>{logoSize}%</span>
-                  </div>
-                  <input
-                    id={logoSizeId}
-                    type="range"
-                    min="10"
-                    max="35"
-                    value={logoSize}
-                    onChange={(e) => setLogoSize(parseInt(e.target.value))}
-                    className="w-full accent-[#00ff66] h-1.5 rounded-lg bg-white/10 cursor-pointer"
-                  />
-                </div>
-
-                {/* 安全防禦提示 */}
-                <div className={styles.alertBox}>
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current shrink-0 mt-0.5">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-                  </svg>
-                  <div>
-                    <strong>{t.autoSafetyTitle}</strong>
-                    {t.autoSafetyDesc}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <LogoUploader
+            t={t}
+            logoBase64={logoBase64}
+            logoName={logoName}
+            logoSize={logoSize}
+            setLogoSize={setLogoSize}
+            logoSizeId={logoSizeId}
+            onLogoSelected={handleLogoFile}
+            onRemoveLogo={removeLogo}
+          />
         </div>
 
-        {/* 右欄：雙獨立卡片佈局 (QR Code 卡片 + 資訊與檔案下載卡片) */}
-        <div className="flex flex-col gap-6 max-[1024px]:static max-[1024px]:top-auto sticky top-6 w-full max-w-full">
-          {/* 上卡片：QR Code 畫布與圖片下載 */}
-          <div className={`${styles.panelCard} items-center`}>
-            <div
-              className={`${styles.qrPreview} ${bgTransparent ? styles.checkerboardBg : ''}`}
-              style={{ backgroundColor: bgTransparent ? undefined : bgColor }}
-            >
-              {/* 動態渲染掛載容器 */}
-              <div ref={containerRef} className="w-[280px] h-[280px] max-w-full max-h-full flex items-center justify-center" />
-            </div>
-
-            {/* 下載設定 */}
-            <div className="flex flex-col gap-4 w-full max-w-full">
-              {/* 下載格式膠囊按鈕 */}
-              <div className="flex flex-col gap-2 w-full">
-                <span className="text-sm font-medium text-text-sub">{t.downloadFormat}</span>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-select-bg border border-border-glass rounded-xl">
-                  {(['png', 'svg', 'jpeg', 'webp'] as const).map((fmt) => (
-                    <button
-                      key={fmt}
-                      type="button"
-                      onClick={() => setDownloadFormat(fmt)}
-                      className={`${styles.segmentedBtn} ${downloadFormat === fmt ? styles.segmentedBtnActive : ''} uppercase`}
-                    >
-                      {fmt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 下載尺寸膠囊按鈕 */}
-              <div className="flex flex-col gap-2 w-full">
-                <span className="text-sm font-medium text-text-sub">{t.downloadSize}</span>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-select-bg border border-border-glass rounded-xl">
-                  {[
-                    { val: 300, label: '300' },
-                    { val: 600, label: '600' },
-                    { val: 1200, label: '1200' },
-                    { val: 2000, label: '2000' },
-                  ].map((sz) => (
-                    <button
-                      key={sz.val}
-                      type="button"
-                      onClick={() => setDownloadSize(sz.val)}
-                      className={`${styles.segmentedBtn} ${downloadSize === sz.val ? styles.segmentedBtnActive : ''}`}
-                    >
-                      {sz.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button type="button" onClick={downloadQr} className={styles.downloadBtn}>
-                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
-                </svg>
-                {t.downloadBtn}
-              </button>
-            </div>
-          </div>
-
-          {/* 下卡片：特殊格式 (.vcf / .ics) 獨立資訊與檔案卡片 */}
-          {contentType === 'vcard' && (
-            <div className={styles.panelCard}>
-              <div className="flex flex-col gap-3.5 w-full">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-text-sub uppercase tracking-wider">
-                    {t.vcfPreviewTitle}
-                  </span>
-                </div>
-
-                <div className="flex gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={downloadVcfFile}
-                    className={styles.vcfDownloadBtn}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
-                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                    </svg>
-                    <span>{t.downloadVcfBtn}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={copyRawContent}
-                    title={t.copyVcfBtn}
-                    className={styles.vcfCopyBtn}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* 即時 .vcf 文字預覽 */}
-                <div className={styles.vcfCodeBox}>
-                  {getComputedData()}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {contentType === 'event' && (
-            <div className={styles.panelCard}>
-              <div className="flex flex-col gap-3.5 w-full">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-text-sub uppercase tracking-wider">
-                    {t.icsPreviewTitle}
-                  </span>
-                </div>
-
-                <div className="flex gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={downloadIcsFile}
-                    className={styles.vcfDownloadBtn}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
-                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                    </svg>
-                    <span>{t.downloadIcsBtn}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={copyRawContent}
-                    title={t.copyIcsBtn}
-                    className={styles.vcfCopyBtn}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* 即時 .ics 文字預覽 */}
-                <div className={styles.vcfCodeBox}>
-                  {getComputedData()}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* 右欄：雙獨立卡片佈局 */}
+        <QrPreviewCard
+          t={t}
+          containerRef={containerRef}
+          bgTransparent={bgTransparent}
+          bgColor={bgColor}
+          downloadFormat={downloadFormat}
+          setDownloadFormat={setDownloadFormat}
+          downloadSize={downloadSize}
+          setDownloadSize={setDownloadSize}
+          onDownloadQr={downloadQr}
+          contentType={contentType}
+          computedData={getComputedData()}
+          onDownloadVcf={downloadVcfFile}
+          onDownloadIcs={downloadIcsFile}
+          onCopyRawContent={copyRawContent}
+        />
       </div>
 
       {/* 通用 FAQ 常見問題區塊 */}

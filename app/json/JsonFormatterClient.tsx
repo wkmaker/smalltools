@@ -234,6 +234,10 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
     setIsDragOver(false);
     const file = e.dataTransfer.files[0];
     if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        showToast(t.toastFileTooLarge);
+        return;
+      }
       const reader = new FileReader();
       reader.onload = evt => {
         if (evt.target?.result) handleInputChange(evt.target.result as string);
@@ -299,6 +303,11 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
                   onChange={e => {
                     const f = e.target.files?.[0];
                     if (f) {
+                      if (f.size > 50 * 1024 * 1024) {
+                        showToast(t.toastFileTooLarge);
+                        e.target.value = '';
+                        return;
+                      }
                       const r = new FileReader();
                       r.onload = ev => {
                         if (ev.target?.result) handleInputChange(ev.target.result as string);

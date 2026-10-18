@@ -1,11 +1,10 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import HomeClient from '../HomeClient';
 
 export const metadata: Metadata = {
   title: 'Online Toolbox | Free Developer & Daily Utilities - Calculators, JSON, Image, Password, SSL',
   description:
-    'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 20+ utilities with 100% local privacy.',
+    'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 36+ utilities with 100% local privacy.',
   keywords:
     'free online tools, mortgage calculator, personal loan, JSON formatter, Base64 encoder, SSL converter, password generator, image compressor, futures margin, compound interest',
   alternates: {
@@ -17,9 +16,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Online Toolbox | Free Developer & Daily Utilities - 20+ Utilities',
+    title: 'Online Toolbox | Free Developer & Daily Utilities - 36+ Utilities',
     description:
-      'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 20+ utilities with 100% local privacy.',
+      'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 36+ utilities with 100% local privacy.',
     url: 'https://tools.cjkuo.net/en/',
     siteName: 'Online Toolbox',
     locale: 'en_US',
@@ -27,9 +26,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Online Toolbox | Free Developer & Daily Utilities - 20+ Utilities',
+    title: 'Online Toolbox | Free Developer & Daily Utilities - 36+ Utilities',
     description:
-      'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 20+ utilities with 100% local privacy.',
+      'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 36+ utilities with 100% local privacy.',
   },
 };
 
@@ -39,7 +38,7 @@ const schemaJsonLd = {
   name: 'Online Toolbox',
   url: 'https://tools.cjkuo.net/en/',
   description:
-    'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 20+ utilities with 100% local privacy.',
+    'Free, ad-free online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 36+ utilities with 100% local privacy.',
   potentialAction: {
     '@type': 'SearchAction',
     target: {
@@ -57,15 +56,7 @@ export default function EnglishHomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJsonLd) }}
       />
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center min-h-screen text-text-sub">
-            Loading...
-          </div>
-        }
-      >
-        <HomeClient lang="en" />
-      </Suspense>
+      <HomeClient lang="en" />
     </>
   );
 }

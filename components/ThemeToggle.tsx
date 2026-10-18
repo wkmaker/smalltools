@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useTheme } from './ThemeProvider';
 
 interface ThemeToggleProps {
@@ -10,6 +11,8 @@ interface ThemeToggleProps {
 export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
+  const isEn = pathname?.includes('/en') ?? false;
 
   useEffect(() => {
     setMounted(true);
@@ -17,12 +20,16 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
 
   const isLight = mounted && theme === 'light';
 
+  const titleText = isLight
+    ? (isEn ? 'Switch to Dark Mode' : '切換為暗色模式')
+    : (isEn ? 'Switch to Light Mode' : '切換為亮色模式');
+
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      title={isLight ? '切換為暗色模式' : '切換為亮色模式'}
-      aria-label={isLight ? '切換為暗色模式' : '切換為亮色模式'}
+      title={titleText}
+      aria-label={titleText}
       className={`
         theme-toggle-btn
         relative inline-flex items-center justify-center gap-2
@@ -72,7 +79,7 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
           strokeLinecap="round"
           strokeLinejoin="round"
           className={`
-            w-5 h-5 text-cyan-400 absolute transition-all duration-500 ease-in-out
+            w-5 h-5 text-[#00f0ff] absolute transition-all duration-500 ease-in-out
             ${!isLight ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}
           `}
         >
@@ -81,7 +88,7 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
       </div>
 
       <span className="text-xs font-semibold tracking-wider uppercase hidden sm:inline-block">
-        {mounted ? (isLight ? '亮色' : '暗色') : '主題'}
+        {mounted ? (isLight ? (isEn ? 'Light' : '亮色') : (isEn ? 'Dark' : '暗色')) : (isEn ? 'Theme' : '主題')}
       </span>
     </button>
   );

@@ -67,7 +67,7 @@ export function calculateSalary(input: SalaryInput, config: YearConfigJSON): Sal
   // 2. 員工自負額
   const empLabor = roundMoney(D(insuredLabor).times(labor.rate).times(labor.employee_ratio));
   const singleHealth = roundMoney(D(insuredHealth).times(health.rate).times(health.employee_ratio));
-  const empHealth = singleHealth * (1 + dependents);
+  const empHealth = roundMoney(D(singleHealth).times(1 + dependents));
   const empPension = roundMoney(D(insuredPension).times(D(selfPensionRatio).div(100)));
 
   let empTax = 0;

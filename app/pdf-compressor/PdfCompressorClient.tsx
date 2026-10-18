@@ -10,6 +10,7 @@ import {
 } from '../utils/pdfHelper';
 import { formatBytes } from '../utils/formatBytes';
 import { downloadBlob } from '../utils/downloadBlob';
+import { getLocalDateString } from '../utils/dateUtils';
 import { randomToken } from '../utils/randomToken';
 import styles from './pdf-compressor.module.css';
 import { TRANSLATIONS } from './translations';
@@ -144,20 +145,6 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
   const maxDpiId = useId();
   const isMountedRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    document.documentElement.style.setProperty('--theme-color', '#eab308');
-    document.documentElement.style.setProperty('--accent-glow', 'rgba(234, 179, 8, 0.6)');
-
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const m = params.get('mode');
-      if (m === 'low' || m === 'medium' || m === 'high') {
-        applyModePreset(m);
-      }
-    }
-    isMountedRef.current = true;
-  }, []);
-
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
@@ -198,24 +185,41 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
     []
   );
 
-  const applyModePreset = (m: 'low' | 'medium' | 'high') => {
-    setModePreset(m);
-    let q = 0.65;
-    let dpi = 144;
-    if (m === 'low') {
-      q = 0.45;
-      dpi = 96;
-    } else if (m === 'medium') {
-      q = 0.65;
-      dpi = 144;
-    } else if (m === 'high') {
-      q = 0.85;
-      dpi = 200;
+  const applyModePreset = useCallback(
+    (m: 'low' | 'medium' | 'high') => {
+      setModePreset(m);
+      let q = 0.65;
+      let dpi = 144;
+      if (m === 'low') {
+        q = 0.45;
+        dpi = 96;
+      } else if (m === 'medium') {
+        q = 0.65;
+        dpi = 144;
+      } else if (m === 'high') {
+        q = 0.85;
+        dpi = 200;
+      }
+      setQuality(q);
+      setMaxDpi(dpi);
+      syncToURL(m, q, dpi);
+    },
+    [syncToURL]
+  );
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--theme-color', '#eab308');
+    document.documentElement.style.setProperty('--accent-glow', 'rgba(234, 179, 8, 0.6)');
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const m = params.get('mode');
+      if (m === 'low' || m === 'medium' || m === 'high') {
+        applyModePreset(m);
+      }
     }
-    setQuality(q);
-    setMaxDpi(dpi);
-    syncToURL(m, q, dpi);
-  };
+    isMountedRef.current = true;
+  }, [applyModePreset]);
 
   // 上傳 PDF 檔案並自動非同步預檢
   const handleFilesSelect = async (files: FileList | File[]) => {
@@ -228,7 +232,17 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
       return;
     }
 
-    const newItems: QueueItem[] = pdfFiles.map((file, idx) => ({
+    const acceptedFiles: File[] = [];
+    for (const f of pdfFiles) {
+      if (f.size > 150 * 1024 * 1024) {
+        showToast(t.toastFileTooLarge(f.name));
+      } else {
+        acceptedFiles.push(f);
+      }
+    }
+    if (acceptedFiles.length === 0) return;
+
+    const newItems: QueueItem[] = acceptedFiles.map((file, idx) => ({
       id: `q_${Date.now()}_${idx}_${randomToken(4)}`,
       file,
       name: file.name,
@@ -318,6 +332,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
         )
       );
     } catch (err: any) {
+      console.error('[PdfCompressor] Unlock failed:', err);
       setFileQueue((prev) =>
         prev.map((it) =>
           it.id === id
@@ -429,7 +444,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
     }
 
     const zipBlob = createSimpleZip(zipFiles);
-    downloadBlob(zipBlob, `PDF_Compressed_Batch_${new Date().toISOString().slice(0, 10)}.zip`, 5000);
+    downloadBlob(zipBlob, `PDF_Compressed_Batch_${getLocalDateString()}.zip`, 5000);
     showToast(t.toastZipDone);
   };
 
@@ -845,16 +860,23 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                         </span>
                       </div>
 
-                      <a
-                        href={URL.createObjectURL(item.compressedBlob)}
-                        download={`${item.name.replace(/\.pdf$/i, '')}_compressed.pdf`}
-                        className={`${styles.actionBtn} text-xs flex items-center gap-1.5`}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          item.compressedBlob &&
+                          downloadBlob(
+                            item.compressedBlob,
+                            `${item.name.replace(/\.pdf$/i, '')}_compressed.pdf`,
+                            5000
+                          )
+                        }
+                        className={`${styles.actionBtn} text-xs flex items-center gap-1.5 cursor-pointer`}
                       >
                         <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
                           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
                         </svg>
                         {t.downloadPdf}
-                      </a>
+                      </button>
                     </div>
                   )}
 

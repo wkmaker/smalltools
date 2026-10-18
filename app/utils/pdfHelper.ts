@@ -615,8 +615,8 @@ export async function compressPdfInPlace(
         item.dict.set(PDFLib.PDFName.of('Height'), PDFLib.PDFNumber.of(targetH));
         item.dict.set(PDFLib.PDFName.of('Filter'), PDFLib.PDFName.of('DCTDecode'));
       }
-    } catch {
-      // 忽略單張替換失敗
+    } catch (err) {
+      console.warn('[pdfHelper] Failed to compress/replace single embedded image, skipping:', err);
     }
   }
 

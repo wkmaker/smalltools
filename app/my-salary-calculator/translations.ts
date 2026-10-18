@@ -53,7 +53,7 @@ export const TRANSLATIONS = {
     toastCopied: '已複製薪資勞健保試算分享連結',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '全方位掌握台灣勞健保分攤公式、眷屬計費上限、勞退自提節稅與雇主總營運勞務成本',
     faqItems: [
       {

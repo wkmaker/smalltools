@@ -55,6 +55,11 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
 
       setRawFilename(file.name);
       setRawFileSize(file.size);
+      if (file.size > 100 * 1024 * 1024) {
+        setErrorMessage(t.fileTooLarge);
+        return;
+      }
+
       setIsParsing(true);
 
       const defaultPrefix = file.name.replace(/\.ics$/i, '') || 'calendar';
@@ -77,8 +82,9 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
                 setParsedData(parsed);
               });
             }
-          } catch {
-            setErrorMessage('解析檔案時發生錯誤，請確認檔案格式是否正確。');
+          } catch (err) {
+            console.error('[CalendarSplit] Failed to parse ICS:', err);
+            setErrorMessage(t.parseError);
             setParsedData(null);
           } finally {
             setIsParsing(false);
@@ -86,7 +92,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
         }, 16);
       };
       reader.onerror = () => {
-        setErrorMessage('讀取檔案失敗');
+        setErrorMessage(t.readError);
         setIsParsing(false);
       };
       reader.readAsText(file, 'utf-8');
@@ -277,19 +283,19 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
                 <div className={styles.statItem}>
                   <span className={styles.statLabel}>{t.calendarName}</span>
                   <span className={styles.statValue}>
-                    {parsedData.calName || '預設行事曆 (Default)'}
+                    {parsedData.calName || t.defaultCalendarName}
                   </span>
                 </div>
                 <div className={styles.statItem}>
                   <span className={styles.statLabel}>{t.calendarTimezone}</span>
                   <span className={styles.statValue}>
-                    {parsedData.calTimezone || '未指定 (UTC/Local)'}
+                    {parsedData.calTimezone || t.unspecifiedTimezone}
                   </span>
                 </div>
                 <div className={styles.statItem}>
                   <span className={styles.statLabel}>{t.totalEvents}</span>
                   <span className={styles.statValue}>
-                    {parsedData.events.length.toLocaleString()} 筆
+                    {parsedData.events.length.toLocaleString()} {t.eventsUnit}
                   </span>
                 </div>
                 <div className={styles.statItem}>
@@ -369,8 +375,9 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
 
                   {sizePreset === 'custom' && (
                     <div className="flex items-center gap-3 mt-1">
-                      <label className="text-xs text-text-sub">{t.customSizeLabel}:</label>
+                      <label htmlFor="custom-size-kb" className="text-xs text-text-sub">{t.customSizeLabel}:</label>
                       <input
+                        id="custom-size-kb"
                         type="number"
                         min="100"
                         max="5000"
@@ -388,8 +395,9 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
               {/* 筆數模式選項 */}
               {splitMode === 'count' && (
                 <div className="flex items-center gap-3">
-                  <label className="text-xs text-text-sub font-medium">{t.customCountLabel}:</label>
+                  <label htmlFor="max-event-count" className="text-xs text-text-sub font-medium">{t.customCountLabel}:</label>
                   <input
+                    id="max-event-count"
                     type="number"
                     min="50"
                     max="10000"
@@ -404,8 +412,9 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
 
               {/* 檔名前綴設定 */}
               <div className="flex items-center gap-3 pt-2">
-                <label className="text-xs text-text-sub font-medium">{t.filenamePrefix}:</label>
+                <label htmlFor="filename-prefix" className="text-xs text-text-sub font-medium">{t.filenamePrefix}:</label>
                 <input
+                  id="filename-prefix"
                   type="text"
                   value={filenamePrefix}
                   onChange={(e) => setFilenamePrefix(e.target.value)}
@@ -476,7 +485,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
                             {formatBytes(chunk.sizeBytes)}
                           </span>
                           <span>•</span>
-                          <span>{chunk.eventCount} 筆活動</span>
+                          <span>{t.eventsCountLabel(chunk.eventCount)}</span>
                           {chunk.startDate && chunk.endDate && (
                             <>
                               <span>•</span>
@@ -561,7 +570,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
               <div className={styles.modalHeader}>
                 <div className={styles.modalTitle}>
-                  {previewModalChunk.filename} ({previewModalChunk.eventCount} 筆活動)
+                  {previewModalChunk.filename} ({t.eventsCountLabel(previewModalChunk.eventCount)})
                 </div>
                 <button
                   type="button"
@@ -577,15 +586,15 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
               </div>
               <div className={styles.modalBody}>
                 <div className="text-xs text-text-sub">
-                  以下顯示此切割檔案包含的前 5 筆活動預覽：
+                  {t.previewModalDesc}
                 </div>
                 <div className={styles.previewEventList}>
                   {previewModalChunk.previewEvents.map((ev, i) => (
                     <div key={i} className={styles.previewEventCard}>
                       <div className={styles.previewEventTitle}>{ev.summary}</div>
                       <div className={styles.previewEventDate}>
-                        <span className="font-semibold text-text-sub">開始時間: </span>
-                        {ev.dtStart || '無指定時間'}
+                        <span className="font-semibold text-text-sub">{t.startTimeLabel}</span>
+                        {ev.dtStart || t.noTimeSpecified}
                       </div>
                     </div>
                   ))}

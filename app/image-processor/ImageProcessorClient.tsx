@@ -57,6 +57,8 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
   const [files, setFiles] = useState<File[]>([]);
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+  const batchItemsRef = useRef<BatchItem[]>([]);
+  batchItemsRef.current = batchItems;
 
   // 單圖狀態
   const [singleImgElement, setSingleImgElement] = useState<HTMLImageElement | null>(null);
@@ -139,25 +141,41 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       return;
     }
 
+    const acceptedFiles: File[] = [];
+    for (const f of validFiles) {
+      if (f.size > 50 * 1024 * 1024) {
+        showToast(t.fileTooLarge(f.name));
+      } else {
+        acceptedFiles.push(f);
+      }
+    }
+    if (acceptedFiles.length === 0) return;
+
     if (append && files.length > 0) {
-      const combined = [...files, ...validFiles];
+      const combined = [...files, ...acceptedFiles];
       setFiles(combined);
       setIsBatchMode(true);
 
-      const newItems: BatchItem[] = combined.map((file, idx) => ({
+      const appendItems: BatchItem[] = acceptedFiles.map((file, idx) => ({
         file,
-        id: `b_${idx}_${file.name}_${Date.now()}`,
+        id: `b_${files.length + idx}_${file.name}_${Date.now()}`,
         thumbUrl: URL.createObjectURL(file),
         estimatedSize: null,
         status: 'pending',
       }));
-      setBatchItems(newItems);
+      setBatchItems((prev) => [...prev, ...appendItems]);
       showToast(lang === 'en' ? `Appended ${validFiles.length} new images` : `已追加 ${validFiles.length} 張新圖片`);
     } else {
-      setFiles(validFiles);
-      if (validFiles.length > 1) {
+      // 替換前先釋放既有的 thumbUrl，避免記憶體洩漏
+      batchItemsRef.current.forEach((item) => {
+        if (item.thumbUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(item.thumbUrl);
+        }
+      });
+      setFiles(acceptedFiles);
+      if (acceptedFiles.length > 1) {
         setIsBatchMode(true);
-        const items: BatchItem[] = validFiles.map((file, idx) => ({
+        const items: BatchItem[] = acceptedFiles.map((file, idx) => ({
           file,
           id: `b_${idx}_${Date.now()}`,
           thumbUrl: URL.createObjectURL(file),
@@ -167,7 +185,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         setBatchItems(items);
       } else {
         setIsBatchMode(false);
-        const file = validFiles[0];
+        const file = acceptedFiles[0];
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
@@ -292,16 +310,16 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     setTargetHeight(newH);
   };
 
-  // 釋放 Blob Object URLs
+  // 組件 Unmount 時釋放所有殘留的 Blob Object URLs
   useEffect(() => {
     return () => {
-      batchItems.forEach((item) => {
+      batchItemsRef.current.forEach((item) => {
         if (item.thumbUrl.startsWith('blob:')) {
           URL.revokeObjectURL(item.thumbUrl);
         }
       });
     };
-  }, [batchItems]);
+  }, []);
 
   // 核心圖片 Canvas 繪製處理 (含旋轉、翻轉與最大像素安全限制)
   const renderProcessedCanvas = useCallback(
@@ -419,7 +437,8 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         let img: HTMLImageElement;
         try {
           img = await safeLoadImage(item.thumbUrl);
-        } catch {
+        } catch (err) {
+          console.error('[ImageProcessor] Failed to load image item:', item.file.name, err);
           setBatchItems((prev) =>
             prev.map((it, idx) => (idx === i ? { ...it, status: 'error' } : it))
           );
@@ -456,7 +475,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       }
 
       if (processedFiles.length === 0) {
-        showToast(t.zipFailed('無有效圖片可供打包'));
+        showToast(t.zipFailed(t.noValidImgForZip));
         return;
       }
 
@@ -465,6 +484,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
 
       showToast(t.zipCompleted);
     } catch (err) {
+      console.error('[ImageProcessor] Failed to create batch ZIP:', err);
       showToast(t.zipFailed((err as Error).message));
     } finally {
       setIsProcessing(false);
@@ -529,6 +549,11 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
               <button
                 type="button"
                 onClick={() => {
+                  batchItemsRef.current.forEach((item) => {
+                    if (item.thumbUrl.startsWith('blob:')) {
+                      URL.revokeObjectURL(item.thumbUrl);
+                    }
+                  });
                   setFiles([]);
                   setSingleImgElement(null);
                   setBatchItems([]);
@@ -912,7 +937,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
                           />
                           <div className="flex flex-col min-w-0">
                             <span className="text-xs font-semibold text-text-main truncate">{item.file.name}</span>
-                            <span className="text-[0.7rem] font-mono text-text-sub">
+                            <span className="text-xs font-mono text-text-sub">
                               {formatBytes(item.file.size)}
                             </span>
                           </div>
@@ -989,6 +1014,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
                     <div className={`${styles.compLabel} ${styles.compLabelAfter}`}>{t.compAfter}</div>
 
                     {/* 拖曳輸入條 */}
+                    <label htmlFor={compRangeId} className="sr-only">{t.srComp}</label>
                     <input
                       id={compRangeId}
                       type="range"

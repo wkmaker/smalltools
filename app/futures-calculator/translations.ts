@@ -91,7 +91,7 @@ export const TRANSLATIONS = {
     langToggleLabel: 'English',
     langToggleUrl: '/futures-calculator/en/',
 
-    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解台指期保證金制度、實質槓桿計算、逆風耐受點數與盤中追繳斷頭機制',
     faqItems: [
       {

@@ -11,6 +11,7 @@ import {
   PdfComposerItem,
 } from '../utils/pdfHelper';
 import { downloadBlob } from '../utils/downloadBlob';
+import { getLocalDateString } from '../utils/dateUtils';
 import { randomToken } from '../utils/randomToken';
 import styles from './pdf-processor.module.css';
 import { TRANSLATIONS } from './translations';
@@ -100,7 +101,10 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
           if (url) setHighResUrl(url);
           else setHighResUrl(currentItem.thumbnailUrl);
         })
-        .catch(() => setHighResUrl(currentItem.thumbnailUrl))
+        .catch((err) => {
+          console.warn('[PdfProcessor] Failed to load high-res image, fallback to thumbnail:', err);
+          setHighResUrl(currentItem.thumbnailUrl);
+        })
         .finally(() => setIsLoadingHighRes(false));
     } else {
       setHighResUrl(currentItem.imageDataUrl || currentItem.thumbnailUrl);
@@ -206,6 +210,10 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
 
     for (let fIdx = 0; fIdx < validFiles.length; fIdx++) {
       const file = validFiles[fIdx];
+      if (file.size > 100 * 1024 * 1024) {
+        showToast(t.toastFileTooLarge(file.name));
+        continue;
+      }
       setProcessingMsg(`Parsing (${fIdx + 1}/${validFiles.length}): ${file.name}`);
 
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
@@ -319,6 +327,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       setPasswordInput('');
       showToast(t.toastParsedDone);
     } catch (err: any) {
+      console.error('[PdfProcessor] Failed to unlock PDF with password:', err);
       setPasswordError(t.invalidPasswordMsg);
     } finally {
       setIsUnlocking(false);
@@ -385,7 +394,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         },
         exportEngine
       );
-      downloadBlob(pdfBlob, `Combined_PDF_${new Date().toISOString().slice(0, 10)}.pdf`, 5000);
+      downloadBlob(pdfBlob, `Combined_PDF_${getLocalDateString()}.pdf`, 5000);
       showToast(t.toastExportSuccess);
     } catch (err) {
       console.error('PDF 匯出失敗:', err);

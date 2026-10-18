@@ -41,7 +41,7 @@ export const TRANSLATIONS = {
     recheckAllBtn: '重新檢測所有網路診斷數據',
     copiedToast: '已複製到剪貼簿',
     unknown: '未知',
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 IPv4/IPv6 協定架構、Cloudflare 節點路由、公有雲延遲判定與隱私安全性',
     faqItems: [
       {

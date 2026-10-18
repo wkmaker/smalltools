@@ -1,5 +1,5 @@
-// 規範：次要備註與對應級距小字說明至少保持 12px (text-xs / text-text-sub)，嚴禁使用 < 12px (如 text-[10px], text-[11px]) 之過小微縮字體
-const undersizedFontRegex = /\btext-\[\s*(?:[1-9]|10|11)px\s*\]/i;
+// 規範：次要備註與對應級距小字說明至少保持 12px (text-xs / text-text-sub)，嚴禁使用 < 12px (如 text-[10px], text-[11px], text-[0.65rem], text-[0.7rem]) 之過小微縮字體
+const undersizedFontRegex = /\btext-\[\s*(?:(?:[1-9]|10|11)px|0\.(?:[0-6]\d*|7[0-4]\d*)rem)\s*\]/i;
 
 const rule = {
   id: 'no-undersized-font',

@@ -41,6 +41,7 @@ export const TRANSLATIONS = {
     nextPage: '下一頁',
     shortcutsHint: 'ESC 關閉 | ◄ ► 方向鍵切換頁面',
     toastValidOnly: '請選擇正確的 PDF 格式或 PNG/JPG/WebP 圖片檔案',
+    toastFileTooLarge: (name: string) => `檔案 [${name}] 大小超過 100MB 上限，已自動略過。`,
     toastParsedDone: '檔案解析載入完成！',
     toastMovedPage: (src: number, tgt: number) => `已將第 #${src} 頁移動至第 #${tgt} 頁`,
     toastPageRemoved: '已移除指定頁面',
@@ -62,7 +63,7 @@ export const TRANSLATIONS = {
     hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-processor/en/',
-    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解多檔 PDF 合併、圖片轉檔、頁面旋轉排序與無損導出機制',
     faqItems: [
       {
@@ -145,6 +146,7 @@ export const TRANSLATIONS = {
     nextPage: 'Next',
     shortcutsHint: 'ESC to close | ◄ ► Arrow keys to navigate',
     toastValidOnly: 'Please select valid PDF or PNG/JPG/WebP files',
+    toastFileTooLarge: (name: string) => `File [${name}] exceeds 100MB limit and was skipped.`,
     toastParsedDone: 'Files parsed and loaded successfully!',
     toastMovedPage: (src: number, tgt: number) => `Moved page #${src} to #${tgt}`,
     toastPageRemoved: 'Page removed',

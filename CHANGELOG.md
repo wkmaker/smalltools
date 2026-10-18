@@ -4,6 +4,115 @@
 
 ---
 
+## [1.26.0] - 2026-10-18
+
+### 🏗️ 巨型組件模組化拆解 (Architecture & Component Decomposition)
+- **全面落實「六分拆解法」與「三層分離」**：針對專案中 8 個千行以上巨型 Client/Modal 組件進行架構重構，平均單一檔案程式碼行數減少 60%~82%，大幅提升程式碼可讀性、維護性與渲染效能：
+  1. `app/qr-generator/QrGeneratorClient.tsx`：1925 行 ➔ 642 行（-66.6%），抽出獨立 `engine.ts`、`QrParamsPanel`、`QrHistoryDrawer`。
+  2. `app/har-cleaner/components/EntryDetailModal.tsx`：1582 行 ➔ 274 行（-82.7%），抽出 `components/detail/` 6 個分頁面板與標頭組件。
+  3. `app/lucky-wheel/LuckyWheelClient.tsx`：1686 行 ➔ 532 行（-68.4%），抽出 `components/` 4 個核心設定、獎項機率清單與歷史統計卡片。
+  4. `app/pregnancy-calculator/PregnancyCalculatorClient.tsx`：1395 行 ➔ 396 行（-71.6%），抽出 `components/` 6 個模式輸入、超音波換算、津貼試算與臨床產檢看板。
+  5. `app/mortgage-loan/MortgageLoanClient.tsx`：1267 行 ➔ 432 行（-65.9%），抽出 `components/` 5 個貸款試算輸入、提前還款試算與還款時程卡片。
+  6. `app/og-generator/OgGeneratorClient.tsx`：1260 行 ➔ 393 行（-68.8%），抽出 `components/` 7 個樣式面板、即時預覽、社群模擬與批次抽屜組件。
+  7. `app/ssl-converter/SslConverterClient.tsx`：1191 行 ➔ 404 行（-66.1%），抽出 `types.ts` 與 `components/` 6 個拖曳上傳、格式轉換與憑證鏈視覺化看板。
+  8. `app/resignation-calculator/ResignationCalculatorClient.tsx`：1283 行 ➔ 484 行（-62.3%），抽出 `components/` 5 個預告警示橫幅、參數側邊欄、里程碑指標、離職時間軸與財務結算卡片。
+- **全站 295 個單元測試與 208/208 個靜態頁面 SSG 100% 通過**，功能行為、雙語鍵值與無障礙標籤無任何回歸。
+
+---
+
+## [1.25.0] - 2026-10-18
+
+### ♿ 無障礙與語意標籤 (Accessibility & A11y)
+- **修復非法 HTML5 巢狀互動結構**：首頁工具卡片移除 `<Link>` 內部嵌套釘選 `<button>`，改用 `.toolCardWrapper` 平級佈局，符合 W3C 標準。
+- **表單標籤對稱綁定**：修復行事曆切割器、PAC 規則產生器、PAC 測試器等 13 處缺少 `htmlFor` 與 `id` 的表單控制項，並為 CommandPalette 搜尋框、時間戳單位選單等補齊 `aria-label`。
+
+### 🔢 數值精度與金融防護 (Financial Precision)
+- **全面改用 BigNumber.js**：全面消除離職特休折現、健保眷屬加乘、房貸/車貸/信貸頭期款換算、股票質押維持率與期貨本金倍數計算等處的殘留原生浮點數乘除，防止浮點誤差。
+
+### 🛡️ 零靜默失敗與安全標頭 (Error Handling & Security)
+- **消除靜默失敗**：針對剪貼簿複製失敗、HAR 檔案解析異常、PAC Web Worker 降級、PDF 圖片替換等情境補齊明確的可追溯日誌 (`console.error`/`console.warn`) 與使用者反饋 Banner。
+- **CloudFront OWASP 安全回應標頭**：在 `template.yml` 新增 Production 與 Staging 通用的安全回應標頭 Policy（含 `HSTS`、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`）。
+
+### 🧪 核心引擎抽離與單元測試 (Unit Tests & Refactoring)
+- **核心演算法抽離獨立引擎 (`engine.ts`)**：
+  - `app/calendar-split/icsSplitter.ts` ➔ 新增 `tests/engine/calendar-split.test.mjs`。
+  - `app/dns-dig/dnsDecoder.ts` ➔ 新增 `tests/engine/dns-dig.test.mjs`。
+  - `app/image-processor/utils/zipBuilder.ts` ➔ 新增 `tests/engine/zip-builder.test.mjs`。
+  - `app/https-dns-generator/engine.ts` ➔ 新增 `tests/engine/https-dns-generator.test.mjs`。
+  - `app/liars-dice/engine.ts` ➔ 新增 `tests/engine/liars-dice.test.mjs`。
+  - `app/password/engine.ts` ➔ 新增 `tests/engine/password.test.mjs`。
+  - `app/qr-generator/engine.ts` ➔ 新增 `tests/engine/qr-generator.test.mjs`。
+- **全站 295 個單元測試 100% 通過**，納入 `npm run test` 與 `prebuild` 守門員。
+
+### 📦 依賴與文檔維護 (Dependencies & Documentation)
+- **清理 package.json**：移除未使用的 `reflect-metadata`，將 `@types/diff` 與 `@types/node-forge` 歸入 `devDependencies`。
+- **同步全站文檔與徽章**：全站頁面描述、Sitemap、README 統一同步為 `36+` 工具，徽章更新至 `Next.js-16.3.8` 與 `React-19.3.0`。
+
+---
+
+## [1.24.3] - 2026-10-18
+
+### 🌐 多語系與純淨繁中化 (i18n & Localization)
+
+- **批次 C 深度修復（補齊英文版翻譯、收斂三元判斷、純淨繁中化與全站字典對稱守門員）**：
+  - **補齊英文版 (`/en/`) 殘留的硬編碼中文**：
+    - **SSL 憑證轉換器 (`/ssl-converter/en/`)**：為 60+ 處 UI 字串、憑證鏈分析狀態網格、下載選單與 AIA 自動修復提示補齊英文字典；修復解析錯誤訊息的繁中寫死問題。
+    - **HAR 清理器 (`/har-cleaner/en/`)**：`SummaryTab` 脫敏分佈明細與檔案壓縮成效指標全數改為 `{t.xxx}` 雙語結構。
+    - **房貸計算機 (`/mortgage-loan/en/`)**：方案 A 多階段利率設定全面對齊方案 B，抽離硬編碼中文。
+    - **行事曆切割器 (`/calendar-split/en/`)**：統計面板、活動數量單位、前五筆活動預覽與錯誤提示全面雙語化。
+    - **零星工具漏翻補齊**：修復 `ThemeToggle` 懸浮提示、圖片壓縮錯誤提示、IP 網段過大警示、吹牛骰點數標籤、PAC 產生器直連預設選項、PAC 測試器狀態提示、個人信貸分享提示、QR 產生器圖片上傳錯誤提示等。
+  - **移除繁中 UI 標籤與常見問題中的冗餘英文括號（全域鐵則 2）**：
+    - 全站 28 個工具的 `faqTitle` 中殘留的 ` (FAQ)` 全數清除，呈現優雅純淨的繁中介面（如「常見問題與專業指南」）。
+    - 清理 Base64、Diff 對比、DNS Dig、HAR 清理、真實時薪、HTTPS DNS、IP 計算機、PAC 測試器、密碼產生器、QR 產生器、文字處理、時間轉換、URL 編碼等工具中繁中標籤冗餘的英文括號（如 ` (JSON)`、`(Headers)` 等）。
+  - **收斂 JSX 散落的三元判斷**：
+    - 收斂 PAC 規則產生器與規則卡片中散落的 `isEn ? ... : ...` 判斷，統整至 `translations.ts`。
+  - **新增全站雙語字典對稱自動測試守門員**：
+    - 新增 `tests/test-all-translations.mjs`，自動掃描全站 39 個 `translations.ts`（包含根目錄與 38 個工具目錄），遞迴驗證 `zh-TW` 與 `en` 深度鍵值 100% 完全對稱。
+    - 在 `package.json` 加入 `test:i18n` 腳本，並正式納入 `npm run test` 與 `npm run prebuild` 流程，確保未來的任何翻譯新增或修改都不會發生語系鍵值脫節。
+
+---
+
+## [1.24.2] - 2026-10-18
+
+### ⚡ 效能優化與 UI 設計規範 (Performance & UI Standards)
+
+- **批次 B 深度修復（薪資設定檔瘦身、檔案上限防護、Tailwind 主題變體與 UI 守門員強化）**：
+  - **薪資計算機 JSON 體積縮減 91.5%**：
+    - 將 `2024.json`, `2025.json`, `2026.json` 總計 42,328 行薪資扣繳稅表抽離為緊湊矩陣 `taxTables.json`，並在 `salaryConfig.ts` 改為 $O(1)$ 常數級查表，大幅減輕 Initial Client Bundle 與記憶體佔用。
+  - **14 處檔案上傳工具補齊檔案大小上限防護（全域鐵則 36）**：
+    - 為 HAR 清理器 (150MB)、ICS 行事曆分割器 (100MB)、SSL 憑證轉換器 (5MB)、PDF 頁面組合器 (100MB)、PDF 壓縮大師 (150MB)、萬能圖片處理大師 (50MB)、JSON 格式化美化器 (50MB) 補齊大小上限檢查與友善雙語錯誤 Toast，防止使用者誤丟巨大檔案癱瘓瀏覽器與記憶體。
+  - **修復 Tailwind v4 `dark:` 主題變體脫節問題**：
+    - 在 `app/globals.css` 明確宣告 `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));`，使全站所有 `dark:` utility 嚴格跟隨 `<html data-theme="...">` 手動切換，不再與系統原生配色產生衝突。
+    - 修復 `app/not-found.tsx` 中無效的 `light:` 變體，以及 `app/https-dns-generator/HttpsDnsGeneratorClient.tsx` 中未自適應亮暗模式的主題文字色彩。
+  - **修復 18 處微縮字級與裸露 Emoji 符號（全域鐵則 16, 18）**：
+    - 將全站 11 處 TSX 與 7 處 `.module.css` 中的 `< 12px` 微縮字級（如 `text-[0.65rem]`, `text-[0.7rem]`, `font-size: 0.7rem;` 等）全數提升至 `text-xs` (`0.75rem` / 12px)。
+    - 全面移除 `ServiceWorkerRegister.tsx` 的裸露 `🎉`、`ToolLayout.tsx` 的贊助重複 `☕`、`tools.tsx` 首頁與 404 分類 Emoji（全面改為雙主題自適應 SVG 向量圖示）。
+    - 移除 `hourly-rate-calculator` 中在 Windows 系統易發生字體撕裂破圖的國旗 Emoji 與卡片 Emoji（💳, 💬, ⚖️）。
+  - **強化 UI 守門員單元測試**：
+    - `tests/check-ui-standards.mjs` 擴充涵蓋 `components/` 目錄並移除對 `ToolLayout` 的全域豁免；`tests/ui-rules/no-undersized-font.mjs` 擴充支援攔截 `0.75rem` 以下的微縮 rem 字級語法。
+
+---
+
+## [1.24.1] - 2026-10-18
+
+### 🐛 問題修復與效能優化 (Fixed & Performance)
+
+- **批次 A 深度修復（線上 Bug、記憶體洩漏、首頁 SSG 預渲染、CI/CD 部署）**：
+  - **修復 PDF 壓縮器 Render 期 Blob URL 記憶體洩漏**：
+    - 將 `app/pdf-compressor/PdfCompressorClient.tsx` 單檔下載連結由 `<a href={URL.createObjectURL(...)}>` 改為按鈕點擊動態呼叫 `downloadBlob`，消除每次組件 re-render 重新生成新 ObjectURL 導致的記憶體堆積。
+  - **修復圖片處理器 Blob Object URLs 生命週期管理**：
+    - 在 `app/image-processor/ImageProcessorClient.tsx` 中透過 `batchItemsRef` 追蹤縮圖，組件 Unmount、重置清空或非追加重新載入檔案時確實回收 ObjectURL，並避免追加圖片時對既有檔案重複建立縮圖 URL。
+  - **修復 SSL 憑證轉換器日期時區混用跨日錯亂**：
+    - 修正 `app/ssl-converter/engine.ts` 的 `formatValidityDate`，消除前半段 UTC 日期與後半段本地時間混用導致台灣時間凌晨相差一整天的 Bug，全程使用使用者本地時區格式化。
+  - **新增共用本地日期格式化工具函式**：
+    - 新增 `app/utils/dateUtils.ts` 的 `getLocalDateString()`，全面取代 LuckyWheel、PdfCompressor、PdfProcessor 等匯出檔名誤用 `toISOString().slice(0, 10)`（UTC 前一天）的寫法。
+  - **修復首頁靜態匯出 SSG 首屏空白問題**：
+    - 移除 `app/HomeClient.tsx` 的 `useSearchParams()`，改於 Client 掛載後讀取網址參數與本地儲存；移除 `app/page.tsx` 與 `app/en/page.tsx` 的 `<Suspense fallback={<div>載入中...</div>}>` 包裹，使靜態匯出的 `out/index.html` 完整預渲染 36 個工具卡片，大幅提升 SEO 與無 JS 環境可讀性。
+  - **補齊 CI/CD 路徑過濾**：
+    - 在 `.github/workflows/deploy.yml` 的 `paths-filter` 補齊根目錄 `components/**`，防止修改全站共用元件時漏觸發建置與部署。
+
+---
+
 ## [1.24.0] - 2026-10-18
 
 ### ✨ 新增功能 (Added)

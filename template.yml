@@ -118,6 +118,27 @@ Resources:
             return request;
         }
 
+  SecurityResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-security-headers"
+        Comment: Security response headers for Smalltools production
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Preload: true
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: SAMEORIGIN
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+
   NoIndexResponseHeadersPolicy:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Condition: IsNoIndexEnabled
@@ -125,6 +146,20 @@ Resources:
       ResponseHeadersPolicyConfig:
         Name: !Sub "${AWS::StackName}-noindex-policy"
         Comment: Response headers policy for blocking search engine indexing
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Preload: true
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: SAMEORIGIN
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
         CustomHeadersConfig:
           Items:
             - Header: X-Robots-Tag
@@ -161,7 +196,7 @@ Resources:
             - GET
           Compress: true
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
-          ResponseHeadersPolicyId: !If [IsNoIndexEnabled, !Ref NoIndexResponseHeadersPolicy, !Ref "AWS::NoValue"]
+          ResponseHeadersPolicyId: !If [IsNoIndexEnabled, !Ref NoIndexResponseHeadersPolicy, !Ref SecurityResponseHeadersPolicy]
           FunctionAssociations: !If
             - IsBasicAuthEnabled
             - - EventType: viewer-request

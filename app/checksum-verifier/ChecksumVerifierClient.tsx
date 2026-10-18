@@ -138,7 +138,10 @@ export default function ChecksumVerifierClient({ lang = 'zh-TW' }: Props) {
           setChecksumText(prev => (prev.trim() ? prev.trim() + '\n\n' : '') + chunks.join('\n\n'));
           showToast(t.toastManifestLoaded(manifestFiles.length));
         })
-        .catch(() => showToast(t.toastReadError));
+        .catch((err) => {
+          console.error('[ChecksumVerifier] Failed to read manifest files:', err);
+          showToast(t.toastReadError);
+        });
     },
     [showToast, t]
   );

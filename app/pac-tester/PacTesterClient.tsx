@@ -245,6 +245,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
   // 初次掛載自動執行一次單次測試
   useEffect(() => {
     handleRunSingleTest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -326,7 +327,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
               <textarea
                 value={pacScript}
                 onChange={(e) => setPacScript(e.target.value)}
-                placeholder="// 輸入 FindProxyForURL(url, host) 腳本..."
+                placeholder={t.editorPlaceholder}
                 className={styles.editorTextarea}
                 spellCheck={false}
               />
@@ -408,11 +409,12 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
               {activeTab === 'single' && (
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-text-sub mb-1.5">
+                    <label htmlFor="single-test-url" className="block text-sm font-medium text-text-sub mb-1.5">
                       {t.singleTest.urlLabel}
                     </label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
+                        id="single-test-url"
                         type="text"
                         value={singleUrl}
                         onChange={(e) => setSingleUrl(e.target.value)}
@@ -581,10 +583,11 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
               {activeTab === 'batch' && (
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-text-sub mb-1.5">
+                    <label htmlFor="batch-test-urls" className="block text-sm font-medium text-text-sub mb-1.5">
                       {t.batchTest.urlsLabel}
                     </label>
                     <textarea
+                      id="batch-test-urls"
                       value={batchUrlsText}
                       onChange={(e) => setBatchUrlsText(e.target.value)}
                       rows={5}
@@ -757,10 +760,11 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-text-sub mb-1">
+                      <label htmlFor="mock-client-ipv4" className="block text-sm font-medium text-text-sub mb-1">
                         {t.mockContext.clientIpv4}
                       </label>
                       <input
+                        id="mock-client-ipv4"
                         type="text"
                         value={mockClientIpv4}
                         onChange={(e) => setMockClientIpv4(e.target.value)}
@@ -769,10 +773,11 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-text-sub mb-1">
+                      <label htmlFor="mock-client-ipv6" className="block text-sm font-medium text-text-sub mb-1">
                         {t.mockContext.clientIpv6}
                       </label>
                       <input
+                        id="mock-client-ipv6"
                         type="text"
                         value={mockClientIpv6}
                         onChange={(e) => setMockClientIpv6(e.target.value)}
@@ -782,10 +787,11 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-text-sub mb-1">
+                    <label htmlFor="mock-dns-text" className="block text-sm font-medium text-text-sub mb-1">
                       {t.mockContext.dnsMapTitle}
                     </label>
                     <textarea
+                      id="mock-dns-text"
                       value={mockDnsText}
                       onChange={(e) => setMockDnsText(e.target.value)}
                       placeholder={t.mockContext.dnsMapPlaceholder}
@@ -801,30 +807,32 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-text-sub mb-1">
+                        <label htmlFor="simulated-day" className="block text-xs font-medium text-text-sub mb-1">
                           {t.mockContext.simulatedDay}
                         </label>
                         <select
+                          id="simulated-day"
                           value={simulatedDay}
                           onChange={(e) => setSimulatedDay(e.target.value)}
                           className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
                         >
                           <option value="AUTO">{t.mockContext.autoOption}</option>
-                          <option value="MON">MON (星期一)</option>
-                          <option value="TUE">TUE (星期二)</option>
-                          <option value="WED">WED (星期三)</option>
-                          <option value="THU">THU (星期四)</option>
-                          <option value="FRI">FRI (星期五)</option>
-                          <option value="SAT">SAT (星期六)</option>
-                          <option value="SUN">SUN (星期日)</option>
+                          <option value="MON">{t.mockContext.weekdays.MON}</option>
+                          <option value="TUE">{t.mockContext.weekdays.TUE}</option>
+                          <option value="WED">{t.mockContext.weekdays.WED}</option>
+                          <option value="THU">{t.mockContext.weekdays.THU}</option>
+                          <option value="FRI">{t.mockContext.weekdays.FRI}</option>
+                          <option value="SAT">{t.mockContext.weekdays.SAT}</option>
+                          <option value="SUN">{t.mockContext.weekdays.SUN}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-text-sub mb-1">
+                        <label htmlFor="simulated-hour" className="block text-xs font-medium text-text-sub mb-1">
                           {t.mockContext.simulatedHour}
                         </label>
                         <input
+                          id="simulated-hour"
                           type="number"
                           min="0"
                           max="23"
@@ -832,7 +840,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                           onChange={(e) =>
                             setSimulatedHour(e.target.value === '' ? '' : parseInt(e.target.value, 10))
                           }
-                          placeholder="例如: 14 (留空則隨系統時間)"
+                          placeholder={t.mockContext.simulatedHourPlaceholder}
                           className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                         />
                       </div>

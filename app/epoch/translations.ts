@@ -69,7 +69,7 @@ export const TRANSLATIONS = {
     ],
     switchLangText: 'English',
     switchLangHref: '/epoch/en/',
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 Unix Epoch 起點定義、秒與毫秒判定、2038年問題與多語系時間戳記處理',
     faqItems: [
       {

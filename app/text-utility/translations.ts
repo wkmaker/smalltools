@@ -17,9 +17,9 @@ export const TRANSLATIONS = {
     clear: '清空',
     copy: '複製內文',
     copiedToast: '已複製處理後的文字',
-    upper: '大寫 (UPPER)',
-    lower: '小寫 (lower)',
-    titleCase: '首字大寫 (Title)',
+    upper: '轉為大寫',
+    lower: '轉為小寫',
+    titleCase: '首字大寫',
     removeEmpty: '移除空行',
     removeDups: '去除重複行',
     trimSpaces: '修剪首尾空白',
@@ -27,7 +27,7 @@ export const TRANSLATIONS = {
     langSwitchHref: '/text-utility/en/',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解多語系字數計算機制、字元與單詞統計標準、文本清洗排版與隱私安全性',
     faqItems: [
       {

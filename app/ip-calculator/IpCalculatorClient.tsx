@@ -231,7 +231,7 @@ export default function IpCalculatorClient({ lang = 'zh-TW' }: IpCalculatorClien
   const copyAllUsableIps = () => {
     if (!calcResult) return;
     if (calcResult.usableCount > 50000) {
-      showToast(`網段 IP 數量較大 (${calcResult.usableCount.toLocaleString()} 筆)，請點擊「匯出 TXT/CSV」`);
+      showToast(t.largeNetCopyNotice(calcResult.usableCount));
       return;
     }
 

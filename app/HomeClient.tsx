@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -59,20 +58,8 @@ export default function HomeClient({ lang }: HomeClientProps) {
   const isEn = lang === 'en';
   const basePath = isEn ? '/en/' : '/';
 
-  const searchParams = useSearchParams();
-
-  // 只在第一次 render 讀取一次網址參數：命中的話當作初始值來源，並在掛載後 flush 進
-  // localStorage（見下方 effect）。之後瀏覽器上一頁/下一頁改變 searchParams 不會反映到
-  // state，這是預期行為（平常操作不同步網址，只有主動分享才產生帶參數連結），
-  // 不要因此加回 effect 監聽 searchParams。
-  const urlCat = searchParams.get('category');
-  const hasValidUrlCat = !!urlCat && (ALL_TABS as string[]).includes(urlCat);
-
-  const [activeTab, setActiveTab] = useState<Tab>(() => {
-    if (hasValidUrlCat) return urlCat as Tab;
-    return readLocalTab() ?? 'all';
-  });
-  const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('search')?.trim() || '');
+  const [activeTab, setActiveTab] = useState<Tab>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [pinnedHrefs, setPinnedHrefs] = useState<string[]>([]);
   const [recentHrefs, setRecentHrefs] = useState<string[]>([]);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
@@ -86,10 +73,29 @@ export default function HomeClient({ lang }: HomeClientProps) {
     toastTimer.current = setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2500);
   }, []);
 
-  // 網址參數命中時，視為一次「變更」寫回本地，讓之後不帶參數重新造訪也停在這次狀態
+  // 掛載後讀取網址參數或本地儲存中的分頁與搜尋狀態
   useEffect(() => {
-    if (hasValidUrlCat) writeLocalTab(urlCat as Tab);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const urlCat = params.get('category');
+    const hasValidUrlCat = !!urlCat && (ALL_TABS as string[]).includes(urlCat);
+    if (hasValidUrlCat) {
+      setActiveTab(urlCat as Tab);
+      writeLocalTab(urlCat as Tab);
+    } else {
+      const localTab = readLocalTab();
+      if (localTab) {
+        setActiveTab(localTab);
+      }
+    }
+
+    const urlQ = params.get('search')?.trim();
+    if (urlQ) {
+      setSearchQuery(urlQ);
+      if (searchInputRef.current) {
+        searchInputRef.current.value = urlQ;
+      }
+    }
   }, []);
 
   // 1. 初始化讀取 LocalStorage 中的常用釘選與最近使用工具
@@ -405,18 +411,28 @@ export default function HomeClient({ lang }: HomeClientProps) {
               const isPinned = pinnedHrefs.includes(tool.href);
 
               return (
-                <Link
-                  key={`pinned-${tool.href}`}
-                  href={targetHref}
-                  prefetch={false}
-                  className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
-                  onMouseMove={handleCardMouseMove}
-                  onClick={() => {
-                    if (typeof window !== 'undefined') {
-                      sessionStorage.setItem('lastVisitedTool', tool.href);
-                    }
-                  }}
-                >
+                <div key={`pinned-${tool.href}`} className={styles.toolCardWrapper}>
+                  <Link
+                    href={targetHref}
+                    prefetch={false}
+                    className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
+                    onMouseMove={handleCardMouseMove}
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.setItem('lastVisitedTool', tool.href);
+                      }
+                    }}
+                  >
+                    <div>
+                      <h3>{toolName}</h3>
+                      <span className={styles.subtitle}>{toolSubtitle}</span>
+                      <p>{toolDesc}</p>
+                    </div>
+                    <div className={styles.cardAction}>
+                      {t.openTool} {ARROW_SVG}
+                    </div>
+                  </Link>
+
                   <button
                     type="button"
                     onClick={(e) => togglePinTool(tool.href, e)}
@@ -426,16 +442,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                   >
                     {STAR_ICON(isPinned)}
                   </button>
-
-                  <div>
-                    <h3>{toolName}</h3>
-                    <span className={styles.subtitle}>{toolSubtitle}</span>
-                    <p>{toolDesc}</p>
-                  </div>
-                  <div className={styles.cardAction}>
-                    {t.openTool} {ARROW_SVG}
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -452,7 +459,10 @@ export default function HomeClient({ lang }: HomeClientProps) {
         return (
           <div key={section.id} className={styles.categorySection} data-section={section.id}>
             <h2 className={styles.sectionTitle}>
-              {section.emoji} {sectionLabel}
+              <span className="inline-flex items-center gap-2">
+                {section.icon}
+                <span>{sectionLabel}</span>
+              </span>
             </h2>
 
             <div className={styles.toolsGrid}>
@@ -465,22 +475,31 @@ export default function HomeClient({ lang }: HomeClientProps) {
                 const isPinned = pinnedHrefs.includes(tool.href);
 
                 return (
-                  <Link
-                    key={tool.href}
-                    id={toolId}
-                    href={targetHref}
-                    prefetch={false}
-                    className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
-                    onMouseMove={handleCardMouseMove}
-                    onClick={() => {
-                      if (typeof window !== 'undefined') {
-                        sessionStorage.setItem('lastVisitedTool', tool.href);
-                        if (window.location.hash) {
-                          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                  <div key={tool.href} id={toolId} className={styles.toolCardWrapper}>
+                    <Link
+                      href={targetHref}
+                      prefetch={false}
+                      className={`${styles.toolCard} ${styles[tool.cardClass] || ''}`}
+                      onMouseMove={handleCardMouseMove}
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          sessionStorage.setItem('lastVisitedTool', tool.href);
+                          if (window.location.hash) {
+                            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                          }
                         }
-                      }
-                    }}
-                  >
+                      }}
+                    >
+                      <div>
+                        <h3>{toolName}</h3>
+                        <span className={styles.subtitle}>{toolSubtitle}</span>
+                        <p>{toolDesc}</p>
+                      </div>
+                      <div className={styles.cardAction}>
+                        {t.openTool} {ARROW_SVG}
+                      </div>
+                    </Link>
+
                     <button
                       type="button"
                       onClick={(e) => togglePinTool(tool.href, e)}
@@ -490,16 +509,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                     >
                       {STAR_ICON(isPinned)}
                     </button>
-
-                    <div>
-                      <h3>{toolName}</h3>
-                      <span className={styles.subtitle}>{toolSubtitle}</span>
-                      <p>{toolDesc}</p>
-                    </div>
-                    <div className={styles.cardAction}>
-                      {t.openTool} {ARROW_SVG}
-                    </div>
-                  </Link>
+                  </div>
                 );
               })}
 

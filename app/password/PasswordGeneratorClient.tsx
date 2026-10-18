@@ -6,73 +6,17 @@ import FaqSection from '../components/FaqSection';
 import styles from './password.module.css';
 import { TRANSLATIONS } from './translations';
 
-const CHAR_SETS = {
-  upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-  lower: 'abcdefghijklmnopqrstuvwxyz',
-  number: '0123456789',
-  commonSymbol: '!@#$%^&*_-+=',
-  otherSymbol: '()[]{}.,:;?',
-} as const;
-
-const CONFUSABLE = {
-  upper: ['I', 'O', 'Z', 'S', 'B'],
-  lower: ['l', 'o'],
-  number: ['0', '1', '2', '5', '8'],
-  commonSymbol: ['-', '_'],
-  otherSymbol: [',', '.'],
-} as const;
-
-type CharSetKey = keyof typeof CHAR_SETS;
+import {
+  CHAR_SETS,
+  CONFUSABLE,
+  CharSetKey,
+  StrengthResult,
+  evaluateStrength,
+  buildPassword,
+} from './engine';
 
 interface Props {
   lang?: 'zh-TW' | 'en';
-}
-
-
-function secureRandomInt(max: number): number {
-  if (max <= 0) return 0;
-  const array = new Uint32Array(1);
-  const maxUint32 = 4294967295;
-  const limit = maxUint32 - (maxUint32 % max);
-  do {
-    crypto.getRandomValues(array);
-  } while (array[0] >= limit);
-  return array[0] % max;
-}
-
-function secureShuffle<T>(array: T[]): void {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = secureRandomInt(i + 1);
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-
-interface StrengthResult {
-  label: string;
-  percent: number;
-  color: string;
-}
-
-function evaluateStrength(
-  password: string,
-  selectedSetsCount: number,
-  length: number,
-  labels: { weak: string; medium: string; strong: string; secure: string }
-): StrengthResult {
-  if (!password) return { label: '-', percent: 0, color: 'transparent' };
-  let score = length * 4 + selectedSetsCount * 12;
-  const hasUpper = /[A-Z]/.test(password);
-  const hasLower = /[a-z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSymbol = /[^A-Za-z0-9]/.test(password);
-  const mixCount = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
-  score += mixCount * 8;
-  if (mixCount === 1) score = Math.min(score, 35);
-
-  if (score < 40) return { label: labels.weak, percent: 25, color: '#ef4444' };
-  if (score < 65) return { label: labels.medium, percent: 50, color: '#f59e0b' };
-  if (score < 85) return { label: labels.strong, percent: 75, color: '#eab308' };
-  return { label: labels.secure, percent: 100, color: '#10b981' };
 }
 
 export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
@@ -111,51 +55,31 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
 
   const generatePassword = useCallback(
     (pushHistory = false): string | null => {
-      const selected: { key: CharSetKey; chars: string }[] = [];
-      if (useUpper) selected.push({ key: 'upper', chars: CHAR_SETS.upper });
-      if (useLower) selected.push({ key: 'lower', chars: CHAR_SETS.lower });
-      if (useNumber) selected.push({ key: 'number', chars: CHAR_SETS.number });
-      if (useCommonSymbol) selected.push({ key: 'commonSymbol', chars: CHAR_SETS.commonSymbol });
-      if (useOtherSymbol) selected.push({ key: 'otherSymbol', chars: CHAR_SETS.otherSymbol });
+      const pwd = buildPassword({
+        length,
+        useUpper,
+        useLower,
+        useNumber,
+        useCommonSymbol,
+        useOtherSymbol,
+        excludeConfusable,
+        strictMode,
+      });
 
-      if (selected.length === 0) {
-        setPassword(t.placeholderSelectCharset);
+      if (!pwd) {
+        const hasAny = useUpper || useLower || useNumber || useCommonSymbol || useOtherSymbol;
+        setPassword(hasAny ? t.placeholderNoChars : t.placeholderSelectCharset);
         setPasswordColor('#ef4444');
         setStrength({ label: '-', percent: 0, color: 'transparent' });
         return null;
       }
+
       setPasswordColor('var(--text-primary)');
-
-      const processed = selected
-        .map(({ key, chars }) => ({
-          key,
-          chars: excludeConfusable
-            ? chars.split('').filter(c => !(CONFUSABLE[key] as readonly string[]).includes(c)).join('')
-            : chars,
-        }))
-        .filter(p => p.chars.length > 0);
-
-      if (processed.length === 0) {
-        setPassword(t.placeholderNoChars);
-        setPasswordColor('#ef4444');
-        return null;
-      }
-
-      const chars: string[] = [];
-      if (strictMode && length >= processed.length) {
-        processed.forEach(p => chars.push(p.chars[secureRandomInt(p.chars.length)]));
-      }
-
-      const pool = processed.map(p => p.chars).join('');
-      while (chars.length < length) {
-        chars.push(pool[secureRandomInt(pool.length)]);
-      }
-      secureShuffle(chars);
-
-      const pwd = chars.join('');
       setPassword(pwd);
+
+      const selectedCount = [useUpper, useLower, useNumber, useCommonSymbol, useOtherSymbol].filter(Boolean).length;
       setStrength(
-        evaluateStrength(pwd, processed.length, length, {
+        evaluateStrength(pwd, selectedCount, length, {
           weak: t.strengthWeak,
           medium: t.strengthMedium,
           strong: t.strengthStrong,
@@ -164,7 +88,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
       );
 
       if (pushHistory) {
-        setHistory(prev => {
+        setHistory((prev) => {
           if (prev[0] === pwd) return prev;
           return [pwd, ...prev].slice(0, 5);
         });

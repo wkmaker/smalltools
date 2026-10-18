@@ -38,7 +38,7 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', HomeTranslations> = {
     title: '工具庫',
     subtitleTop: 'MY TOOLBOX',
     pageDescription:
-      '免費、無廣告、精緻的線上工具庫。涵蓋房貸/信貸/車貸計算機、JSON格式化、Base64/URL編碼解碼、密碼生成器、SSL憑證轉換、DNS診斷等 20+ 開發與理財工具，免下載即用。',
+      '免費、無廣告、精緻的線上工具庫。涵蓋房貸/信貸/車貸計算機、JSON格式化、Base64/URL編碼解碼、密碼生成器、SSL憑證轉換、DNS診斷等 36+ 開發與理財工具，免下載即用。',
     searchPlaceholder: '搜尋工具... (e.g. loan, json, base64)',
     searchClearTitle: '清除搜尋',
     openTool: '開啟工具',
@@ -74,7 +74,7 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', HomeTranslations> = {
     title: 'Online Toolbox',
     subtitleTop: 'FREE WEB UTILITIES',
     pageDescription:
-      'Free, ad-free, and crafted online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 20+ utilities with 100% local privacy.',
+      'Free, ad-free, and crafted online developer & utility toolbox. Featuring mortgage/loan calculators, JSON formatter, Base64/URL tools, CSPRNG password generator, SSL converter, DNS dig and 36+ utilities with 100% local privacy.',
     searchPlaceholder: 'Search tools... (e.g. loan, json, base64)',
     searchClearTitle: 'Clear search',
     openTool: 'Open Tool',
