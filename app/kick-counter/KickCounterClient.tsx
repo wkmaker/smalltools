@@ -8,6 +8,7 @@ import styles from './kick-counter.module.css';
 import { FAQ_ITEMS, TRANSLATIONS, type Lang } from './translations';
 import {
   markKick,
+  getLastEpisodeStartTime,
   countEpisodes,
   calculateSevenDayAverage,
   sanitizeKickSessions,
@@ -202,7 +203,8 @@ export default function KickCounterClient({ lang = 'zh-TW' }: { lang?: Lang }) {
     const current = Date.now();
     const lastRecord = activeSession.records[activeSession.records.length - 1];
     const lastTime = lastRecord ? lastRecord.timestamp : null;
-    const newRecord = markKick(current, lastTime, newId('kick'));
+    const lastEpisodeStartTime = getLastEpisodeStartTime(activeSession.records);
+    const newRecord = markKick(current, lastTime, newId('kick'), lastEpisodeStartTime);
 
     const updatedRecords = [...activeSession.records, newRecord];
     const { validEpisodes, comboCount } = countEpisodes(updatedRecords);

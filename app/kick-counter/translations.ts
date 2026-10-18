@@ -18,7 +18,7 @@ export const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
     },
     {
       q: '什麼是「兩分鐘內標記為小寶的連環踢」？連續踢擊為什麼不算多次有效胎動？',
-      a: '依據台灣國健署與美國婦產科醫學會 (ACOG) 臨床衛教標準：\n\n① 連續動作在醫學上屬於「同一波胎動事件」：當寶寶伸展手腳、連續踢好幾下或大翻身連動 5~10 秒，這一整組連貫動作在生理上只能計為 1 次有效胎動。\n\n② 靜止停頓後才算下一波：必須等寶寶完全停頓休息（臨床通常以間隔 1~2 分鐘為標準），再次感受到的動作才能算作第 2 波。\n\n【貼心雙軌紀錄】媽媽感覺有動就放心點！在 2 分鐘之內的連續點擊，系統會跳出「兩分鐘內標記為小寶的連環踢」溫馨提示，既如實記錄寶寶踢了多少下，醫學統計上又能精準計算獨立波數，避免把一陣 5 秒的翻身誤算成多次達標。',
+      a: '依據台灣國健署與美國婦產科醫學會 (ACOG) 臨床衛教標準：\n\n① 連續動作在醫學上屬於「同一波胎動事件」：當寶寶伸展手腳、連續踢好幾下或大翻身連動 5~10 秒，這一整組連貫動作在生理上只能計為 1 次有效胎動。\n\n② 靜止停頓後才算下一波：必須等寶寶完全停頓休息（臨床通常以間隔 1~2 分鐘為標準），再次感受到的動作才能算作第 2 波。\n\n【貼心雙軌紀錄】媽媽感覺有動就放心點！在 2 分鐘之內的連續點擊，系統會跳出「兩分鐘內標記為小寶的連環踢」溫馨提示，既如實記錄寶寶踢了多少下，醫學統計上又能精準計算獨立波數，避免把一陣 5 秒的翻身誤算成多次達標。\n\n【防卡死時窗保護】若寶寶特別活潑、每隔 1~2 分鐘就揮拳一次，系統會以「本波起始點」為基準（單波上限 2 分鐘），一旦距離本波起點滿 2 分鐘，下一拳便會自動認列為「新的一波有效胎動」，絕不會因為小寶過於活躍而無限卡在連環踢。',
     },
     {
       q: '為什麼紀錄保留「8 天」？如果我剛開始記錄未滿 7 天，還能看平均嗎？',
@@ -56,7 +56,7 @@ export const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
     },
     {
       q: 'What is "Marked as baby\'s combo kick within 2 minutes"? Why don\'t rapid kicks count separately?',
-      a: 'According to ACOG and clinical obstetric standards:\n\n① Continuous activity counts as ONE episode: A series of continuous kicks, jabs, or a roll is physiologically considered a single movement event.\n\n② Wait for a pause: Only when the baby completely pauses (typically at least 1-2 minutes) does the next movement count as a separate episode.\n\n[Dual-Track Design]: Feel free to tap whenever baby moves! Taps within 2 minutes show a friendly combo tag. This honors every flutter while medically recording distinct episodes, preventing a 5-second roll from falsely counting as 5 separate movements.',
+      a: 'According to ACOG and clinical obstetric standards:\n\n① Continuous activity counts as ONE episode: A series of continuous kicks, jabs, or a roll is physiologically considered a single movement event.\n\n② Wait for a pause: Only when the baby completely pauses (typically at least 1-2 minutes) does the next movement count as a separate episode.\n\n[Dual-Track Design]: Feel free to tap whenever baby moves! Taps within 2 minutes show a friendly combo tag. This honors every flutter while medically recording distinct episodes, preventing a 5-second roll from falsely counting as 5 separate movements.\n\n[Active Window Protection]: If baby is exceptionally active and kicks every 1 to 2 minutes, episodes are anchored to the start of the current burst (capped at 2 minutes). Once 2 minutes pass from the episode\'s onset, the next kick automatically qualifies as a new valid episode, preventing rolling combos from locking up the counter.',
     },
     {
       q: 'Why are records kept for 8 days? Can I see an average if I have fewer than 7 days of data?',
