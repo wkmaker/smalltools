@@ -831,7 +831,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                                   onClick={() => removeStage1(sIdx)}
                                   className="text-xs text-[#ef4444] hover:underline cursor-pointer"
                                 >
-                                  移除
+                                  {t.remove}
                                 </button>
                               )}
                             </div>
@@ -840,7 +840,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                                 <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                                   <input
                                     type="number"
-                                    placeholder="期間"
+                                    placeholder={t.placeholderPeriod}
                                     value={stg.durationValue ?? ''}
                                     onChange={e => {
                                       const next = [...stages1];
@@ -849,16 +849,16 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                                     }}
                                     className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
                                   />
-                                  <span className="text-xs text-text-sub ml-1">年</span>
+                                  <span className="text-xs text-text-sub ml-1">{t.unitYear}</span>
                                 </div>
                               ) : (
-                                <div className="flex items-center text-xs text-text-sub px-2">直至期滿</div>
+                                <div className="flex items-center text-xs text-text-sub px-2">{t.untilExpiry}</div>
                               )}
                               <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                                 <input
                                   type="number"
                                   step="0.01"
-                                  placeholder="利率"
+                                  placeholder={t.placeholderRate}
                                   value={stg.rate}
                                   onChange={e => {
                                     const next = [...stages1];
@@ -879,7 +879,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                           onClick={addStage1}
                           className={`text-xs ${styles.accentText} ${styles.activeScheme} py-1.5 rounded-lg transition-all cursor-pointer`}
                         >
-                          ＋ 新增利率段落
+                          {t.addRateStage}
                         </button>
                       )}
                     </div>
@@ -887,7 +887,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
 
                   {/* 還款方式 */}
                   <div className="flex flex-col gap-1.5">
-                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">還款方式</span>
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">{t.repayTypeLabel}</span>
                     <div className={`grid grid-cols-2 gap-1.5 ${styles.segmentGroup} p-1 rounded-xl`}>
                       <button
                         type="button"
@@ -898,7 +898,7 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                             : 'border-transparent text-text-sub hover:text-text-main'
                         }`}
                       >
-                        本息平均攤還
+                        {t.equalTotal}
                       </button>
                       <button
                         type="button"
@@ -909,14 +909,14 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
                             : 'border-transparent text-text-sub hover:text-text-main'
                         }`}
                       >
-                        本金平均攤還
+                        {t.equalPrincipal}
                       </button>
                     </div>
                   </div>
 
                   {/* 開辦手續費 */}
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">開辦手續費 (元)</span>
+                    <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">{t.originationFeeLabel}</span>
                     <input
                       type="text"
                       inputMode="numeric"

@@ -8,10 +8,10 @@ export const TRANSLATIONS = {
     description: '唯美精緻的線上目標計時器與倒數工具！支援自訂事件標題、年/月/日/時/分/秒自由組合顯示、全螢幕播放與一鍵複製分享連結。適用於考試倒數、結婚紀念日與時間管理。',
     defaultEventTitle: '2027 新年倒數',
     setupHeader: '設定目標事件與時間',
-    eventTitleLabel: '事件名稱 (Event Title)',
+    eventTitleLabel: '事件名稱',
     eventTitlePlaceholder: '例如：曼谷自由行倒數、考研倒數、結婚紀念日...',
-    targetDateLabel: '目標日期與時間 (Target Date & Time)',
-    displayUnitsLabel: '顯示時間單位 (Display Units)',
+    targetDateLabel: '目標日期與時間',
+    displayUnitsLabel: '顯示時間單位',
     launchButton: '啟動目標計時器',
     targetTime: '目標時間',
     timeElapsedLabel: 'TIME ELAPSED',
@@ -41,7 +41,7 @@ export const TRANSLATIONS = {
     browserTzLabel: '瀏覽器當前時區',
     switchLangText: 'English',
     switchLangHref: '/time/en/',
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解倒數計時與累計運作原理、多維度時間單位換算、跨時區同步與全螢幕展示技巧',
     faqItems: [
       {

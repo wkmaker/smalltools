@@ -93,7 +93,7 @@ function RuleCard({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
             </svg>
-            <span>{isEn ? `Drop to insert at #${idx + 1}` : `放開以移至第 ${idx + 1} 位`}</span>
+            <span>{t.dropInsertAt(idx + 1)}</span>
           </div>
         </div>
       )}
@@ -138,8 +138,8 @@ function RuleCard({
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <div
               className={styles.dragHandle}
-              title={isEn ? 'Drag to reorder' : '按住拖曳以調整順序'}
-              aria-label={isEn ? 'Drag to reorder' : '按住拖曳以調整順序'}
+              title={t.dragToReorder}
+              aria-label={t.dragToReorder}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 3H7v2h2V3zm4 0h-2v2h2V3zm4 0h-2v2h2V3zM9 7H7v2h2V7zm4 0h-2v2h2V7zm4 0h-2v2h2V7zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" />
@@ -337,7 +337,7 @@ function RuleCard({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
             </svg>
-            <span>{isEn ? `Drop to insert at #${rulesLength}` : `放開以移至第 ${rulesLength} 位`}</span>
+            <span>{t.dropInsertAt(rulesLength)}</span>
           </div>
         </div>
       )}

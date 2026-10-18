@@ -586,7 +586,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
           <div className="flex flex-wrap gap-2">
             {[1, 2, 3, 4, 5, 6].map((num) => (
               <div key={num} className={styles.summaryBadge}>
-                <span>{num} 點:</span>
+                <span>{t.pointLabel(num)}</span>
                 <span className="font-bold text-text-main">{counts[num] || 0}</span>
               </div>
             ))}

@@ -297,7 +297,7 @@
 
 ### C-1. 補齊英文版 (`/en/`) 殘留的硬編碼中文
 
-- [ ] **目標 1**：[`app/ssl-converter/SslConverterClient.tsx:48-84, 207-537, 570-1112`](app/ssl-converter/SslConverterClient.tsx#L48-L84) & [`app/ssl-converter/engine.ts:12, 36, 42, 46, 161, 374-377`](app/ssl-converter/engine.ts#L374-L377)
+- [x] **目標 1**：[`app/ssl-converter/SslConverterClient.tsx:48-84, 207-537, 570-1112`](app/ssl-converter/SslConverterClient.tsx#L48-L84) & [`app/ssl-converter/engine.ts:12, 36, 42, 46, 161, 374-377`](app/ssl-converter/engine.ts#L374-L377)
   - **❌ 問題程式碼現況 (Before)**：
     ```tsx
     // app/ssl-converter/SslConverterClient.tsx:52-73（未傳入 t，英文版 /ssl-converter/en/ 全顯示中文）
@@ -317,7 +317,7 @@
     ```
   - **✅ 修復目標 (After)**：將 `SslConverterClient.tsx` 共 60+ 處 UI 字串與 `engine.ts` 的狀態文字完整抽入 `app/ssl-converter/translations.ts` 的 `zh-TW` 與 `en`。
 
-- [ ] **目標 2**：[`app/har-cleaner/components/SummaryTab.tsx:25-98`](app/har-cleaner/components/SummaryTab.tsx#L25-L98)
+- [x] **目標 2**：[`app/har-cleaner/components/SummaryTab.tsx:25-98`](app/har-cleaner/components/SummaryTab.tsx#L25-L98)
   - **❌ 問題程式碼現況 (Before)**：
     ```tsx
     // app/har-cleaner/components/SummaryTab.tsx:25-42（雖然已接收 t prop，但除了 L44/L48 外全部寫死中文！）
@@ -335,7 +335,7 @@
     ```
   - **✅ 修復目標 (After)**：在 `app/har-cleaner/translations.ts` 補齊 `SummaryTab` 所需的 12 個雙語鍵值，將 `SummaryTab.tsx:25-98` 全部改為 `{t.xxx}`。
 
-- [ ] **目標 3**：[`app/mortgage-loan/MortgageLoanClient.tsx:834-919`](app/mortgage-loan/MortgageLoanClient.tsx#L834-L919)
+- [x] **目標 3**：[`app/mortgage-loan/MortgageLoanClient.tsx:834-919`](app/mortgage-loan/MortgageLoanClient.tsx#L834-L919)
   - **❌ 問題程式碼現況 (Before)**：
     ```tsx
     // app/mortgage-loan/MortgageLoanClient.tsx:834-919（方案 B L1038-1120 已用 {t.xxx}，但方案 A 漏改！）
@@ -352,7 +352,7 @@
     ```
   - **✅ 修復目標 (After)**：比照方案 B (`L1038-1120`) 改為 `{t.removeStage}`、`{t.stageDuration}`、`{t.unitYear}`、`{t.untilMaturity}`、`{t.stageRate}`、`{t.addRateStage}`、`{t.repayMethod}`、`{t.equalTotal}`、`{t.equalPrincipal}`、`{t.setupFee}`。
 
-- [ ] **目標 4**：[`app/calendar-split/CalendarSplitClient.tsx:81, 89, 280, 286, 292, 479, 564, 580-588`](app/calendar-split/CalendarSplitClient.tsx#L280-L292)
+- [x] **目標 4**：[`app/calendar-split/CalendarSplitClient.tsx:81, 89, 280, 286, 292, 479, 564, 580-588`](app/calendar-split/CalendarSplitClient.tsx#L280-L292)
   - **❌ 問題程式碼現況 (Before)**：
     ```tsx
     L81:  setErrorMessage('解析檔案時發生錯誤，請確認檔案格式是否正確。');
@@ -366,7 +366,7 @@
     ```
   - **✅ 修復目標 (After)**：全數移入 `app/calendar-split/translations.ts` 並改用 `{t.xxx}`。
 
-- [ ] **目標 5（其餘零星硬編碼中文定位）**：
+- [x] **目標 5（其餘零星硬編碼中文定位）**：
   - [`components/ThemeToggle.tsx:24, 25, 84`](components/ThemeToggle.tsx#L24-L25)：`title={isLight ? '切換為暗色模式' : '切換為亮色模式'}`、`{mounted ? (isLight ? '亮色' : '暗色') : '主題'}`
   - [`app/image-processor/ImageProcessorClient.tsx:459`](app/image-processor/ImageProcessorClient.tsx#L459)：`showToast(t.zipFailed('無有效圖片可供打包'))`
   - [`app/ip-calculator/IpCalculatorClient.tsx:234`](app/ip-calculator/IpCalculatorClient.tsx#L234)：`showToast('網段 IP 數量較大 ... 請點擊「匯出 TXT/CSV」')`
@@ -380,7 +380,7 @@
 
 ### C-2. 收斂 JSX 內散落的 `isEn ? ... : ...` 三元判斷、消除繁中冗餘英文括號，並建立全站 36 工具雙語對稱測試
 
-- [ ] **目標 1（收斂散落三元判斷至 `translations.ts`）**：
+- [x] **目標 1（收斂散落三元判斷至 `translations.ts`）**：
   - [`app/hourly-rate-calculator/RankHeroBanner.tsx`](app/hourly-rate-calculator/RankHeroBanner.tsx)（68 處 `isEn ?`）
   - [`app/resignation-calculator/ResignationCalculatorClient.tsx`](app/resignation-calculator/ResignationCalculatorClient.tsx)（52 處 `lang === 'en' ?`）
   - [`app/har-cleaner/engine/sanitizer.ts`](app/har-cleaner/engine/sanitizer.ts)（47 處）& [`EntryDetailModal.tsx`](app/har-cleaner/components/EntryDetailModal.tsx)（42 處）
@@ -388,12 +388,12 @@
   - [`app/pregnancy-calculator/PregnancyCalculatorClient.tsx`](app/pregnancy-calculator/PregnancyCalculatorClient.tsx)（13 處）
   - [`app/pac-generator/PacGeneratorClient.tsx`](app/pac-generator/PacGeneratorClient.tsx)（10 處）& [`RuleCard.tsx`](app/pac-generator/RuleCard.tsx)（6 處）
 
-- [ ] **目標 2（移除繁中 UI 標籤冗餘英文括號，全域鐵則 2）**：
+- [x] **目標 2（移除繁中 UI 標籤冗餘英文括號，全域鐵則 2）**：
   - [`app/components/FaqSection.tsx:110`](app/components/FaqSection.tsx#L110)：`'常問問題與專業指南 (FAQ)'` ➔ `'常見問題與專業指南'`
   - 以及 [`app/base64/translations.ts:14-33`](app/base64/translations.ts#L14)、[`app/diff-checker/translations.ts:14-26`](app/diff-checker/translations.ts#L14)、[`app/dns-dig/translations.ts:20-30`](app/dns-dig/translations.ts#L20)、[`app/har-cleaner/translations.ts:33-83`](app/har-cleaner/translations.ts#L33)、[`app/hourly-rate-calculator/translations.ts:44-65`](app/hourly-rate-calculator/translations.ts#L44)、[`app/https-dns-generator/translations.ts:16-22`](app/https-dns-generator/translations.ts#L16)、[`app/ip-calculator/translations.ts:19-25`](app/ip-calculator/translations.ts#L19)、[`app/pac-tester/translations.ts:18-70`](app/pac-tester/translations.ts#L18)、[`app/password/translations.ts:12-30`](app/password/translations.ts#L12)、[`app/qr-generator/translations.ts:62-113`](app/qr-generator/translations.ts#L62)、[`app/text-utility/translations.ts:20-22`](app/text-utility/translations.ts#L20)、[`app/time/translations.ts:11-14`](app/time/translations.ts#L11)、[`app/url/translations.ts:12-30`](app/url/translations.ts#L12)。
 
-- [ ] **目標 3（擴充雙語對稱測試至全站 36 個工具）**：
-  - 將 [`app/hourly-rate-calculator/translations.ts:154`](app/hourly-rate-calculator/translations.ts#L154) 的 `FAQ_DATA` 併入 `TRANSLATIONS[lang].faqItems`，並擴充 [`tests/test-og-translations.mjs`](tests/test-og-translations.mjs)（或新增 `tests/test-all-translations.mjs`）自動測試全站 36 個工具的 `translations.ts`。
+- [x] **目標 3（擴充雙語對稱測試至全站 36 個工具）**：
+  - 將 [`app/hourly-rate-calculator/translations.ts:154`](app/hourly-rate-calculator/translations.ts#L154) 的 `FAQ_DATA` 併入 `TRANSLATIONS[lang].faqItems`，並新增 `tests/test-all-translations.mjs` 自動測試全站 39 個 `translations.ts`（包含根目錄與 38 個工具目錄）雙語鍵值 100% 完全對稱，並納入 `npm run test` 與 `prebuild` 守門員。
 
 ---
 

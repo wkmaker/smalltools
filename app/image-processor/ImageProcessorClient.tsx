@@ -474,7 +474,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       }
 
       if (processedFiles.length === 0) {
-        showToast(t.zipFailed('無有效圖片可供打包'));
+        showToast(t.zipFailed(t.noValidImgForZip));
         return;
       }
 

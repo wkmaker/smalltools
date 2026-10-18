@@ -282,19 +282,19 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
                 <div className={styles.statItem}>
                   <span className={styles.statLabel}>{t.calendarName}</span>
                   <span className={styles.statValue}>
-                    {parsedData.calName || '預設行事曆 (Default)'}
+                    {parsedData.calName || t.defaultCalendarName}
                   </span>
                 </div>
                 <div className={styles.statItem}>
                   <span className={styles.statLabel}>{t.calendarTimezone}</span>
                   <span className={styles.statValue}>
-                    {parsedData.calTimezone || '未指定 (UTC/Local)'}
+                    {parsedData.calTimezone || t.unspecifiedTimezone}
                   </span>
                 </div>
                 <div className={styles.statItem}>
                   <span className={styles.statLabel}>{t.totalEvents}</span>
                   <span className={styles.statValue}>
-                    {parsedData.events.length.toLocaleString()} 筆
+                    {parsedData.events.length.toLocaleString()} {t.eventsUnit}
                   </span>
                 </div>
                 <div className={styles.statItem}>
@@ -481,7 +481,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
                             {formatBytes(chunk.sizeBytes)}
                           </span>
                           <span>•</span>
-                          <span>{chunk.eventCount} 筆活動</span>
+                          <span>{t.eventsCountLabel(chunk.eventCount)}</span>
                           {chunk.startDate && chunk.endDate && (
                             <>
                               <span>•</span>
@@ -566,7 +566,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
               <div className={styles.modalHeader}>
                 <div className={styles.modalTitle}>
-                  {previewModalChunk.filename} ({previewModalChunk.eventCount} 筆活動)
+                  {previewModalChunk.filename} ({t.eventsCountLabel(previewModalChunk.eventCount)})
                 </div>
                 <button
                   type="button"
@@ -582,15 +582,15 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
               </div>
               <div className={styles.modalBody}>
                 <div className="text-xs text-text-sub">
-                  以下顯示此切割檔案包含的前 5 筆活動預覽：
+                  {t.previewModalDesc}
                 </div>
                 <div className={styles.previewEventList}>
                   {previewModalChunk.previewEvents.map((ev, i) => (
                     <div key={i} className={styles.previewEventCard}>
                       <div className={styles.previewEventTitle}>{ev.summary}</div>
                       <div className={styles.previewEventDate}>
-                        <span className="font-semibold text-text-sub">開始時間: </span>
-                        {ev.dtStart || '無指定時間'}
+                        <span className="font-semibold text-text-sub">{t.startTimeLabel}</span>
+                        {ev.dtStart || t.noTimeSpecified}
                       </div>
                     </div>
                   ))}

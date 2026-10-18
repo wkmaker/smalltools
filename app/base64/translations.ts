@@ -11,7 +11,7 @@ export const TRANSLATIONS = {
     langToggleUrl: '/base64/en/',
     tabText: '文字編解碼',
     tabFile: '檔案轉 Base64',
-    plainTextLabel: '純文字 (Plain Text)',
+    plainTextLabel: '純文字',
     base64TextLabel: 'Base64 編碼文字',
     charCount: (count: number) => `${count} 字元`,
     placeholderPlain: '在此輸入要編碼的文字... (支援中文/外語/表情符號)',
@@ -27,10 +27,10 @@ export const TRANSLATIONS = {
     dropzoneText: '將檔案拖曳至此處，或點擊選擇檔案',
     dropzoneSub: '支援圖片、音訊、影片、文件等，大小建議小於 30MB',
     removeFile: '移除檔案',
-    dataPreview: '資料預覽 (Data Preview)',
+    dataPreview: '資料預覽',
     binaryNoPreview: '二進制檔案，不支援即時預覽',
     dataUrlLabel: '完整 Data URL 格式 (可用於 HTML/CSS)',
-    rawBase64Label: '純 Base64 編碼數據 (Raw Base64)',
+    rawBase64Label: '純 Base64 編碼數據',
     copyDataUrl: '複製 Data URL',
     copyRawData: '複製純數據',
     toastCopied: '已複製到剪貼簿',
@@ -44,7 +44,7 @@ export const TRANSLATIONS = {
     truncatedSuffix: '\n\n... (檔案內容較長，此處僅顯示前 3,000 字元預覽 / 完整 Base64 數據已於下方生成)',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 Base64 編碼原理、UTF-8 中文防亂碼技術、URL-Safe 規範與 Data URL 應用',
     faqItems: [
       {

@@ -9,8 +9,8 @@ export const TRANSLATIONS = {
       '專業免費的線上 URL 編碼與解碼工具，支援 Percent-encoding 與 Unicode 即時雙向轉換，提供網址結構拆解與 Query 參數表格雙向連動編輯。',
     langToggleLabel: 'English',
     langToggleUrl: '/url/en/',
-    plainLabel: '原始網址 / 文字 (Plain Text)',
-    encodedLabel: 'URL 編碼文字 (Percent-Encoded)',
+    plainLabel: '原始網址 / 文字',
+    encodedLabel: 'URL 編碼文字',
     placeholderPlain: '在此輸入要編碼的網址或文字...',
     placeholderEncoded: '在此貼上已編碼的文字進行解碼...',
     modeLabel: '編碼模式：',
@@ -22,12 +22,12 @@ export const TRANSLATIONS = {
     copyBtn: '複製',
     invalidFormat: '無效的 URL 編碼格式',
     parserTitle: '網址結構與 Query 參數解析 (連動編輯)',
-    protocolLabel: '傳輸協定 (Protocol)',
-    hostLabel: '域名主機 (Host Domain)',
-    pathLabel: '路徑 (Pathname)',
-    hashLabel: '錨點 (Hash / Fragment)',
-    tableKeyHeader: '參數名稱 (Query Key)',
-    tableValueHeader: '參數內容 (Value)',
+    protocolLabel: '傳輸協定',
+    hostLabel: '域名主機',
+    pathLabel: '路徑',
+    hashLabel: '錨點',
+    tableKeyHeader: '參數名稱',
+    tableValueHeader: '參數內容',
     tableActionsHeader: '操作',
     paramCount: (count: number) => `共 ${count} 個參數`,
     addParamBtn: '新增參數行',
@@ -36,7 +36,7 @@ export const TRANSLATIONS = {
     toastNoContent: '沒有可複製的內容',
 
     // FAQ 常見問題
-    faqTitle: 'URL 編碼與解碼常見問題 (FAQ)',
+    faqTitle: 'URL 編碼與解碼常見問題',
     faqSubtitle: '全方位掌握 URL 百分比編碼原理、encodeURIComponent 與 encodeURI 差異、雙重編碼防範與常見錯誤排查',
     faqItems: [
       {

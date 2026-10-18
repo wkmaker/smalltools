@@ -24,6 +24,7 @@ interface Translations {
   oneIsWild: string;
   wildDesc: string;
   diceUnit: string;
+  pointLabel: (n: number) => string;
   fullscreen: string;
   exitFullscreen: string;
   onlineVersionText: string;
@@ -57,13 +58,14 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', Translations> = {
     oneIsWild: '1 點為萬能點數 (Wild)',
     wildDesc: '吹牛常見規則：尚未喊過 1 點時，1 點可當作任何點數。',
     diceUnit: '顆',
+    pointLabel: (n: number) => `${n} 點:`,
     fullscreen: '全螢幕舞台',
     exitFullscreen: '退出全螢幕',
     onlineVersionText: '另外提供連線版本',
     onlineVersionLinkText: 'Drink Games',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解防作弊計時原理、吹牛規則與萬能1點、遮杯窺視防偷看與全螢幕派對玩法',
     faqItems: [
       {
@@ -123,6 +125,7 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', Translations> = {
     oneIsWild: '1 is Wild',
     wildDesc: 'Common Liar\'s Dice rule: 1s count as any number unless 1s have been called.',
     diceUnit: 'dice',
+    pointLabel: (n: number) => `Pip ${n}:`,
     fullscreen: 'Fullscreen Stage',
     exitFullscreen: 'Exit Fullscreen',
     onlineVersionText: 'Online multiplayer version available:',

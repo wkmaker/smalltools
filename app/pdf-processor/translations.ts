@@ -63,7 +63,7 @@ export const TRANSLATIONS = {
     hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-processor/en/',
-    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解多檔 PDF 合併、圖片轉檔、頁面旋轉排序與無損導出機制',
     faqItems: [
       {

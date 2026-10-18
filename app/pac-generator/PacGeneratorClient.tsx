@@ -115,9 +115,9 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
       defaultAction,
       enableIpv6,
       resolveIpFirst,
-      title: isEn ? 'Custom Proxy Auto-Config' : '自訂代理自動配置腳本',
+      title: t.customPacTitle,
     });
-  }, [proxies, rules, defaultAction, enableIpv6, resolveIpFirst, isEn]);
+  }, [proxies, rules, defaultAction, enableIpv6, resolveIpFirst, t.customPacTitle]);
 
   // 複製回饋 Toast
   const showToast = (msg: string) => {
@@ -154,7 +154,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
     const jsonStr = JSON.stringify(projectConfig, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
     downloadBlob(blob, 'pac-config.json');
-    showToast(isEn ? 'Config exported!' : '設定已成功匯出！');
+    showToast(t.toastConfigExported);
   };
 
   // 執行智能匯入
@@ -218,7 +218,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
     const newId = `p_${Date.now()}`;
     setProxies((prev) => [
       ...prev,
-      { id: newId, name: isEn ? 'New Proxy' : '新代理節點', type: 'PROXY', host: '127.0.0.1', port: 8080 },
+      { id: newId, name: t.newProxyName, type: 'PROXY', host: '127.0.0.1', port: 8080 },
     ]);
   };
 
@@ -230,7 +230,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
       ...prev,
       {
         id: newId,
-        name: isEn ? `Failover Chain ${prev.length + 1}` : `備援代理鏈 ${prev.length + 1}`,
+        name: t.failoverChainName(prev.length + 1),
         type: 'CHAIN',
         host: 'cluster',
         port: 8080,
@@ -258,7 +258,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
       ...prev,
       {
         id: newId,
-        name: isEn ? 'New Rule' : '新分流規則',
+        name: t.newRuleName,
         enabled: true,
         conditionType: 'domainSuffix',
         value: '.example.com',
@@ -579,7 +579,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                                   {p.name} ({formatProxyString(p, proxies)})
                                 </option>
                               ))}
-                            <option value="DIRECT">DIRECT (直連保底)</option>
+                            <option value="DIRECT">{t.chainDirectOption}</option>
                           </select>
                           <button
                             type="button"

@@ -61,7 +61,7 @@ export const TRANSLATIONS = {
     hidePassword: '隱藏密碼',
     switchLangText: 'English',
     switchLangHref: '/pdf-compressor/en/',
-    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 PDF 圖片降採樣原理、文字無損機制、DPI 解析度與隱私安全保障',
     faqItems: [
       {

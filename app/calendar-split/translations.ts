@@ -52,11 +52,18 @@ export const TRANSLATIONS = {
     importStep2: '點擊右上角齒輪圖示 ➔ 選擇「設定」',
     importStep3: '在左側選單點選「匯入與匯出」',
     importStep4: '依序選取切割後的 .ics 檔案並點擊「匯入」即可完整還原！',
+    defaultCalendarName: '預設行事曆',
+    unspecifiedTimezone: '未指定 (UTC/Local)',
+    eventsUnit: '筆',
+    eventsCountLabel: (n: number) => `${n.toLocaleString()} 筆活動`,
+    previewModalDesc: '以下顯示此切割檔案包含的前 5 筆活動預覽：',
+    startTimeLabel: '開始時間: ',
+    noTimeSpecified: '無指定時間',
     langSwitchLabel: 'English',
     langSwitchHref: '/calendar-split/en/',
 
     // FAQ
-    faqTitle: '常見問題與使用指南 (FAQ)',
+    faqTitle: '常見問題與使用指南',
     faqSubtitle: '深入了解 Google 日曆匯入限制、.ics 檔案結構、切割演算法與隱私安全機制',
     faqItems: [
       {
@@ -131,6 +138,13 @@ export const TRANSLATIONS = {
     importStep2: 'Click the Settings gear icon ➔ Select "Settings"',
     importStep3: 'Click "Import & export" in the left sidebar',
     importStep4: 'Select the split .ics files one by one and click "Import" to restore all events!',
+    defaultCalendarName: 'Default Calendar',
+    unspecifiedTimezone: 'Unspecified (UTC/Local)',
+    eventsUnit: 'events',
+    eventsCountLabel: (n: number) => `${n.toLocaleString()} events`,
+    previewModalDesc: 'Preview of the first 5 events in this split chunk:',
+    startTimeLabel: 'Start Time: ',
+    noTimeSpecified: 'No time specified',
     langSwitchLabel: '繁體中文',
     langSwitchHref: '/calendar-split/',
 

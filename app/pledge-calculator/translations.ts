@@ -65,7 +65,7 @@ export const TRANSLATIONS = {
     toastSummaryCopied: '已複製質押分析摘要報告至剪貼簿',
     currencyUnit: '元',
 
-    faqTitle: '常問問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解股票質押借款、維持率 130% 斷頭臨界價算式與追繳補救策略',
     faqItems: [
       {

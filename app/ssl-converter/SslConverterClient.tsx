@@ -47,34 +47,35 @@ interface Props {
 
 function buildStandardMetaGrid(
   analysis: ReturnType<typeof buildUnifiedCertAnalysis>,
+  t: typeof TRANSLATIONS['zh-TW'],
   extra?: { privateKeyStatus?: string }
 ): MetaItem[] {
   const meta: MetaItem[] = [
-    { label: '域名主機 (CN)', value: analysis.cn },
-    { label: '金鑰與簽章演算法', value: analysis.certAlgo, className: styles.statusSuccess },
-    { label: '發行機構 (Issuer)', value: analysis.issuer },
-    { label: '生效時間 (Not Before)', value: analysis.notBeforeStr },
+    { label: t.metaDomainCN, value: analysis.cn },
+    { label: t.metaKeyAlgo, value: analysis.certAlgo, className: styles.statusSuccess },
+    { label: t.metaIssuer, value: analysis.issuer },
+    { label: t.metaNotBefore, value: analysis.notBeforeStr },
     {
-      label: '到期時間 (Not After)',
+      label: t.metaNotAfter,
       value: analysis.notAfterStr,
       className: analysis.isExpired ? styles.statusDanger : analysis.isNotYetValid ? styles.statusWarning : styles.statusSuccess,
     },
     {
-      label: '憑證鏈完整度 (Chain Status)',
+      label: t.metaChainStatus,
       value: analysis.isComplete
-        ? '完整 (包含 Trust Root / Intermediate CA)'
+        ? t.chainStatusComplete
         : analysis.nextAiaUrl
-        ? '缺中繼憑證 (可點擊下載 AIA 自動修復)'
+        ? t.chainStatusAiaUrl
         : analysis.chainPems.length > 1
-        ? '已包含部分中繼憑證'
-        : '未完全補齊 (未偵測到 AIA URL)',
+        ? t.chainStatusPartial
+        : t.chainStatusIncomplete,
       className: analysis.isComplete ? styles.statusSuccess : styles.statusWarning,
     },
   ];
 
   if (extra?.privateKeyStatus) {
     meta.push({
-      label: '私鑰狀態',
+      label: t.metaPrivateKeyStatus,
       value: extra.privateKeyStatus,
       className: styles.statusSuccess,
     });
@@ -204,17 +205,17 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
   const parseAndFixCerChain = async () => {
     hideAlertMsg();
     if (!cerFile && !cerTextInput.trim()) {
-      showAlertMsg('請上傳憑證檔案或粘貼 PEM 憑證內容。', 'warning');
+      showAlertMsg(t.alertUploadCert, 'warning');
       return;
     }
     try {
       const parsed = await parseSslPayload({ file: cerFile, text: cerTextInput }, cerPassword);
       if (parsed.isPfx && !parsed.pfxDecrypted) {
-        showAlertMsg('PFX / P12 檔案解密失敗！若憑證設有保護密碼，請在下方「密碼」欄位輸入正確密碼後重試。', 'error');
+        showAlertMsg(t.alertPfxDecryptFailed, 'error');
         return;
       }
       if (parsed.certs.length === 0) {
-        showAlertMsg('無法從輸入內容中剖析出有效的 X.509 憑證。請確認內容是否包含標準憑證區塊，或確認 PFX 密碼是否正確。', 'error');
+        showAlertMsg(t.alertNoValidCert, 'error');
         return;
       }
       const analysis = buildUnifiedCertAnalysis(parsed.certs);
@@ -222,25 +223,25 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       setAiaFixUrl(analysis.nextAiaUrl);
       const cn = analysis.cn;
       const outputsList: OutputItem[] = [
-        { label: '合成後完全憑證鏈 Full Chain PEM (.crt)', filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') },
-        { label: '僅伺服器用戶端憑證 Server Cert (.crt)', filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() }
+        { label: t.outputFullChain, filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') },
+        { label: t.outputServerCert, filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() }
       ];
       if (analysis.chainPems.length > 1) {
-        outputsList.push({ label: '中繼憑證鏈 CA Bundle (.ca-bundle)', filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
+        outputsList.push({ label: t.outputCaBundle, filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
       }
       const hasPrivateKey = !!parsed.privateKeyPemPkcs8;
       setResultData({
-        meta: buildStandardMetaGrid(analysis, {
+        meta: buildStandardMetaGrid(analysis, t, {
           privateKeyStatus: hasPrivateKey
-            ? '檔案內包含私鑰 (本頁僅處理憑證補鏈，不匯出私鑰)'
-            : '檔案內未包含私鑰 (僅 X.509 憑證)',
+            ? t.privKeyInFileNoExport
+            : t.privKeyNotInFile,
         }),
         outputs: outputsList,
         cnName: cn,
       });
-      showAlertMsg('憑證剖析與憑證鏈自動檢測完成！', 'success');
+      showAlertMsg(t.alertParseSuccess, 'success');
     } catch (err: any) {
-      showAlertMsg(`解析失敗：${err.message || '請確認憑證格式或密碼是否正確。'}`, 'error');
+      showAlertMsg(`${t.alertParseError}${err.message || t.errCertOrPassword}`, 'error');
     }
   };
 
@@ -256,13 +257,13 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     try {
       const parsedAia = await parseSslPayload({ file });
       if (parsedAia.certs.length === 0) {
-        setAiaError('上傳的檔案無效或非合法的 X.509 憑證格式。');
+        setAiaError(t.aiaErrorInvalidCert);
         return;
       }
       const parsedNewCert = parsedAia.certs[0];
       const lastChainCert = forge.pki.certificateFromPem(currentChainPems[currentChainPems.length - 1]);
       if (!verifyCertIssuerMatch(lastChainCert, parsedNewCert)) {
-        setAiaError('上傳的 CA 中繼憑證之 Subject 與現有憑證鏈的 Issuer 不符合，無法串接！');
+        setAiaError(t.aiaErrorSubjectMismatch);
         return;
       }
       const updatedChainPems = [...currentChainPems, forge.pki.certificateToPem(parsedNewCert).trim()];
@@ -275,32 +276,32 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         const existingPrivateKey = resultData.outputs.find(o => o.isPrivateKey);
         if (existingPrivateKey) outputsList.push(existingPrivateKey);
         outputsList.push(
-          { label: '合成後完全憑證鏈 Full Chain PEM (.crt)', filename: generateCertFilename(cn, 'fullchain', 'crt'), content: updatedChainPems.map(p => p.trim()).join('\n') },
-          { label: '僅伺服器用戶端憑證 Server Cert (.crt)', filename: generateCertFilename(cn, 'cert', 'crt'), content: updatedChainPems[0].trim() }
+          { label: t.outputFullChain, filename: generateCertFilename(cn, 'fullchain', 'crt'), content: updatedChainPems.map(p => p.trim()).join('\n') },
+          { label: t.outputServerCert, filename: generateCertFilename(cn, 'cert', 'crt'), content: updatedChainPems[0].trim() }
         );
         if (updatedChainPems.length > 1) {
-          outputsList.push({ label: '中繼憑證鏈 CA Bundle (.ca-bundle)', filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: updatedChainPems.slice(1).map(p => p.trim()).join('\n') });
+          outputsList.push({ label: t.outputCaBundle, filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: updatedChainPems.slice(1).map(p => p.trim()).join('\n') });
         }
-        const previousKeyStatus = resultData.meta.find(m => m.label === '私鑰狀態')?.value;
+        const previousKeyStatus = resultData.meta.find(m => m.label === t.metaPrivateKeyStatus)?.value;
         setResultData({
-          meta: buildStandardMetaGrid(analysis, previousKeyStatus ? { privateKeyStatus: previousKeyStatus } : undefined),
+          meta: buildStandardMetaGrid(analysis, t, previousKeyStatus ? { privateKeyStatus: previousKeyStatus } : undefined),
           outputs: outputsList,
           cnName: cn
         });
       }
-    } catch { setAiaError('上傳的檔案無效或非合法的 X.509 憑證格式。'); }
+    } catch { setAiaError(t.aiaErrorInvalidCert); }
   };
 
   const convertPfxToPem = async () => {
     hideAlertMsg();
     if (!pfxFile) {
-      showAlertMsg('請選擇 PFX 或 P12 憑證檔案。', 'warning');
+      showAlertMsg(t.alertSelectPfx, 'warning');
       return;
     }
     try {
       const parsed = await parseSslPayload({ file: pfxFile }, pfxPassword);
       if (parsed.isPfx && !parsed.pfxDecrypted) {
-        showAlertMsg('PFX / P12 解密失敗，請確認密碼是否正確。', 'error');
+        showAlertMsg(t.alertPfxWrongPass, 'error');
         return;
       }
       const analysis = buildUnifiedCertAnalysis(parsed.certs);
@@ -309,32 +310,32 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const cn = analysis.cn || 'ssl-cert';
       const outputsList: OutputItem[] = [];
       if (parsed.privateKeyPemPkcs8) {
-        outputsList.push({ label: '私鑰 Private Key (.key)', filename: generateCertFilename(cn, 'key', 'key'), content: parsed.privateKeyPemPkcs8, isPrivateKey: true, contentPkcs8: parsed.privateKeyPemPkcs8, contentPkcs1: parsed.privateKeyPemPkcs1 || parsed.privateKeyPemPkcs8 });
+        outputsList.push({ label: t.outputPrivateKey, filename: generateCertFilename(cn, 'key', 'key'), content: parsed.privateKeyPemPkcs8, isPrivateKey: true, contentPkcs8: parsed.privateKeyPemPkcs8, contentPkcs1: parsed.privateKeyPemPkcs1 || parsed.privateKeyPemPkcs8 });
       }
       if (analysis.chainPems.length > 0) {
         if (analysis.chainPems.length > 1) {
-          outputsList.push({ label: '合成後完全憑證鏈 Full Chain PEM (.crt)', filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') });
+          outputsList.push({ label: t.outputFullChain, filename: generateCertFilename(cn, 'fullchain', 'crt'), content: analysis.chainPems.map(p => p.trim()).join('\n') });
         }
-        outputsList.push({ label: '伺服器憑證 Certificate (.crt)', filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() });
+        outputsList.push({ label: t.outputServerCert, filename: generateCertFilename(cn, 'cert', 'crt'), content: analysis.chainPems[0].trim() });
         if (analysis.chainPems.length > 1) {
-          outputsList.push({ label: '中繼憑證鏈 CA Bundle (.ca-bundle)', filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
+          outputsList.push({ label: t.outputCaBundle, filename: generateCertFilename(cn, 'chain', 'ca-bundle'), content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n') });
         }
       }
       setResultData({
-        meta: buildStandardMetaGrid(analysis, { privateKeyStatus: parsed.privateKeyPemPkcs8 ? '已隨 PFX 解密提煉私鑰 (已產出 .key 檔案)' : '無私鑰' }),
+        meta: buildStandardMetaGrid(analysis, t, { privateKeyStatus: parsed.privateKeyPemPkcs8 ? t.privKeyExtractedFromPfx : t.privKeyNone }),
         outputs: outputsList,
         cnName: cn
       });
-      showAlertMsg('PFX / P12 解密成功！已自動分析憑證鏈狀態。', 'success');
+      showAlertMsg(t.alertPfxSuccess, 'success');
     } catch (err: any) {
-      showAlertMsg(`PFX 解密失敗：${err.message || '請確認密碼是否輸入正確。'}`, 'error');
+      showAlertMsg(`${t.alertPfxError}${err.message || t.errCheckPassword}`, 'error');
     }
   };
 
   const convertPemToPfx = async () => {
     hideAlertMsg();
     if (!pemKey.trim() || !pemCert.trim()) {
-      showAlertMsg('請貼上私鑰 (Private Key) 與 伺服器憑證 (Certificate)。', 'warning');
+      showAlertMsg(t.alertPasteKeyAndCert, 'warning');
       return;
     }
 
@@ -346,7 +347,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const certRSA = certObj.publicKey as forge.pki.rsa.PublicKey;
 
       if (!keyRSA.n || !certRSA.n) {
-        showAlertMsg('目前僅支援具有 Modulus 雜湊之 RSA 金鑰與憑證組合。', 'warning');
+        showAlertMsg(t.alertRsaOnly, 'warning');
         return;
       }
 
@@ -362,7 +363,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const keyHash = mdKey.digest().toHex();
 
       if (certHash !== keyHash) {
-        showAlertMsg('私鑰與伺服器憑證的 Modulus 雜湊值不符合！這兩組密鑰並非配對。', 'error');
+        showAlertMsg(t.alertModulusMismatch, 'error');
         return;
       }
 
@@ -394,12 +395,12 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       downloadBlob(blob, pfxDownloadFilename);
 
       const analysis = buildUnifiedCertAnalysis([certObj, ...caCertObjs]);
-      const standardMeta = buildStandardMetaGrid(analysis, {
-        privateKeyStatus: 'Modulus 100% 吻合並已封裝私鑰',
+      const standardMeta = buildStandardMetaGrid(analysis, t, {
+        privateKeyStatus: t.privKeyModulusMatched,
       });
       if (friendlyNameClean) {
         standardMeta.push({
-          label: '憑證別名 (Friendly Name)',
+          label: t.metaFriendlyName,
           value: friendlyNameClean,
           className: styles.statusSuccess,
         });
@@ -411,24 +412,24 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         cnName: cn,
       });
 
-      showAlertMsg('Modulus 配對成功！PFX 打包完成並已觸發下載。', 'success');
+      showAlertMsg(t.alertPfxPackageSuccess, 'success');
     } catch (err: unknown) {
       const error = err as Error;
-      showAlertMsg(`打包 PFX 失敗：${error.message || '請確認 PEM 格式與密鑰正確性。'}`, 'error');
+      showAlertMsg(`${t.alertPfxPackageError}${error.message || t.errPemOrKey}`, 'error');
     }
   };
 
   const convertDerToPem = async () => {
     hideAlertMsg();
     if (!derFile) {
-      showAlertMsg('請上傳二進位 DER / CER / CRT 檔案。', 'warning');
+      showAlertMsg(t.alertSelectDer, 'warning');
       return;
     }
 
     try {
       const parsed = await parseSslPayload({ file: derFile });
       if (parsed.certs.length === 0 && !parsed.privateKeyPemPkcs8) {
-        showAlertMsg('無法解構二進位 DER 內容，請確認是否為合法的 DER 編碼檔。', 'error');
+        showAlertMsg(t.alertDerParseError, 'error');
         return;
       }
 
@@ -442,27 +443,27 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
         if (analysis.chainPems.length > 1) {
           outputsList.push({
-            label: '合成後完全憑證鏈 Full Chain PEM (.crt)',
+            label: t.outputFullChain,
             filename: generateCertFilename(cn, 'fullchain', 'crt'),
             content: fullChainPem,
           });
         }
 
         outputsList.push({
-          label: '伺服器憑證 Certificate (.crt)',
+          label: t.outputServerCert,
           filename: generateCertFilename(cn, 'cert', 'crt'),
           content: analysis.chainPems[0].trim(),
         });
 
         if (analysis.chainPems.length > 1) {
           outputsList.push({
-            label: '中繼憑證鏈 CA Bundle (.ca-bundle)',
+            label: t.outputCaBundle,
             filename: generateCertFilename(cn, 'chain', 'ca-bundle'),
             content: analysis.chainPems.slice(1).map(p => p.trim()).join('\n'),
           });
         }
 
-        const standardMeta = buildStandardMetaGrid(analysis);
+        const standardMeta = buildStandardMetaGrid(analysis, t);
 
         setResultData({
           meta: standardMeta,
@@ -471,7 +472,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         });
       } else if (parsed.privateKeyPemPkcs8) {
         outputsList.push({
-          label: '私鑰 Private Key (.key)',
+          label: t.outputPrivateKey,
           filename: generateCertFilename('ssl-key', 'key', 'key'),
           content: parsed.privateKeyPemPkcs8,
           isPrivateKey: true,
@@ -481,19 +482,19 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
         setResultData({
           meta: [
-            { label: '檔案識別類型', value: 'DER RSA 私鑰 (Private Key)' },
-            { label: '原始檔名', value: derFile.name },
-            { label: '私鑰匯出狀態', value: '已提煉私鑰', className: 'text-[var(--theme-color,#00ffaa)] font-bold' },
+            { label: t.metaFileType, value: t.privKeyDerRsa },
+            { label: t.metaOriginalFilename, value: derFile.name },
+            { label: t.metaKeyExportStatus, value: t.privKeyExtracted, className: 'text-[var(--theme-color,#00ffaa)] font-bold' },
           ],
           outputs: outputsList,
           cnName: 'ssl-key',
         });
       }
 
-      showAlertMsg('二進位 DER 成功轉換為 PEM 格式！', 'success');
+      showAlertMsg(t.alertDerSuccess, 'success');
     } catch (err: unknown) {
       const error = err as Error;
-      showAlertMsg(`轉換失敗：${error.message || '請確認是否為合法的 DER 編碼檔。'}`, 'error');
+      showAlertMsg(`${t.alertDerError}${error.message || t.errInvalidDer}`, 'error');
     }
   };
 
@@ -504,7 +505,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
   const convertPemToDer = () => {
     hideAlertMsg();
     if (!pemDerInput.trim()) {
-      showAlertMsg('請貼上 PEM 格式憑證或私鑰文字。', 'warning');
+      showAlertMsg(t.alertPastePem, 'warning');
       return;
     }
 
@@ -524,7 +525,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         const cn = parseDistinguishedName(cert.subject);
         filename = generateCertFilename(cn, 'cert', 'der');
       } else {
-        showAlertMsg('未識別到 -----BEGIN 的 PEM 標頭區塊。', 'error');
+        showAlertMsg(t.alertNoPemHeader, 'error');
         return;
       }
 
@@ -536,10 +537,10 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       const blob = new Blob([derArray], { type: 'application/x-x509-ca-cert' });
       downloadBlob(blob, filename);
 
-      showAlertMsg('PEM 轉 DER 打包成功並已觸發下載！', 'success');
+      showAlertMsg(t.alertPemToDerSuccess, 'success');
     } catch (err: unknown) {
       const error = err as Error;
-      showAlertMsg(`轉換失敗：${error.message || '請確認輸入的是否為合法的 PEM 格式內容。'}`, 'error');
+      showAlertMsg(`${t.alertPemToDerError}${error.message || t.errInvalidPem}`, 'error');
     }
   };
 
@@ -1132,7 +1133,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
                             <button
                               type="button"
                               onClick={() => {
-                                navigator.clipboard.writeText(displayContent).then(() => showToast(`已複製 ${downloadFilename}`));
+                                navigator.clipboard.writeText(displayContent).then(() => showToast(t.toastCopiedFilename(downloadFilename)));
                               }}
                               className={styles.btnSecondary}
                             >

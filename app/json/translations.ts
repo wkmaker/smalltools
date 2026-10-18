@@ -31,7 +31,7 @@ export const TRANSLATIONS = {
     toastExported: '已匯出 JSON 檔案',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 JSON 規範、語法除錯技巧、純前端隱私安全性與大型資料集效能優化',
     faqItems: [
       {

@@ -1,4 +1,4 @@
-import { OgTranslation } from './types';
+import type { OgTranslation } from './types';
 
 export const TRANSLATIONS: Record<'zh-TW' | 'en', OgTranslation> = {
   'zh-TW': {

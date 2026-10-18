@@ -50,7 +50,7 @@ export const TRANSLATIONS = {
     dropAnyFileHint: '拖曳任意雜湊清單文字檔至此',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '關於檔案雜湊、完整性校驗與常見校驗清單格式的深入說明',
     faqItems: [
       {

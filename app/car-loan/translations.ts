@@ -64,7 +64,7 @@ export const TRANSLATIONS = {
     unitCurrency: '元',
 
     // FAQ 常見問題
-    faqTitle: '汽車貸款常見問題與還款指南 (FAQ)',
+    faqTitle: '汽車貸款常見問題與還款指南',
     faqSubtitle: '全方位掌握車貸利率試算、攤還方式差異、氣球貸尾款與提前結清等關鍵問題',
     faqItems: [
       {

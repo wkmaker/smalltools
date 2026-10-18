@@ -36,7 +36,7 @@ export const TRANSLATIONS = {
     toastCopied: '已複製試算分享連結到剪貼簿',
 
     // FAQ
-    faqTitle: '常見問題與專業指南 (FAQ)',
+    faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入解析個人信用貸款年利率、本息/本金均攤選擇、APR 手續費影響與 DBR 22 倍限制',
     faqItems: [
       {

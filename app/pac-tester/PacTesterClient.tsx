@@ -326,7 +326,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
               <textarea
                 value={pacScript}
                 onChange={(e) => setPacScript(e.target.value)}
-                placeholder="// 輸入 FindProxyForURL(url, host) 腳本..."
+                placeholder={t.editorPlaceholder}
                 className={styles.editorTextarea}
                 spellCheck={false}
               />
@@ -810,13 +810,13 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                           className="w-full text-sm bg-select-bg border border-white/10 rounded-lg px-3 py-2 text-text-main focus:outline-none focus:border-[var(--theme-color)]"
                         >
                           <option value="AUTO">{t.mockContext.autoOption}</option>
-                          <option value="MON">MON (星期一)</option>
-                          <option value="TUE">TUE (星期二)</option>
-                          <option value="WED">WED (星期三)</option>
-                          <option value="THU">THU (星期四)</option>
-                          <option value="FRI">FRI (星期五)</option>
-                          <option value="SAT">SAT (星期六)</option>
-                          <option value="SUN">SUN (星期日)</option>
+                          <option value="MON">{t.mockContext.weekdays.MON}</option>
+                          <option value="TUE">{t.mockContext.weekdays.TUE}</option>
+                          <option value="WED">{t.mockContext.weekdays.WED}</option>
+                          <option value="THU">{t.mockContext.weekdays.THU}</option>
+                          <option value="FRI">{t.mockContext.weekdays.FRI}</option>
+                          <option value="SAT">{t.mockContext.weekdays.SAT}</option>
+                          <option value="SUN">{t.mockContext.weekdays.SUN}</option>
                         </select>
                       </div>
 
@@ -832,7 +832,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                           onChange={(e) =>
                             setSimulatedHour(e.target.value === '' ? '' : parseInt(e.target.value, 10))
                           }
-                          placeholder="例如: 14 (留空則隨系統時間)"
+                          placeholder={t.mockContext.simulatedHourPlaceholder}
                           className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                         />
                       </div>

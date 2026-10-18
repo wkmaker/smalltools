@@ -742,7 +742,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   // --- 處理 Logo 上傳 ---
   const handleLogoFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      showToast('請上傳有效的圖片檔案 (PNG, JPG, SVG, etc.)');
+      showToast(t.invalidImageFile);
       return;
     }
 
