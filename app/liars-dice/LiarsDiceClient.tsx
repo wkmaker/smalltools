@@ -145,6 +145,15 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
   const audioCtxRef = React.useRef<AudioContext | null>(null);
   const masterGainRef = React.useRef<GainNode | null>(null);
 
+  // 卸載時關閉 AudioContext，釋放硬體音訊通道
+  useEffect(() => {
+    return () => {
+      audioCtxRef.current?.close().catch(() => {});
+      audioCtxRef.current = null;
+      masterGainRef.current = null;
+    };
+  }, []);
+
   const getAudioContext = () => {
     if (typeof window === 'undefined') return null;
     if (!audioCtxRef.current) {
