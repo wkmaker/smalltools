@@ -58,7 +58,10 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const batchItemsRef = useRef<BatchItem[]>([]);
-  batchItemsRef.current = batchItems;
+  // Commit 後再同步 Ref，避免 Render 期間變異 Ref（違反 React 純函式渲染）
+  useEffect(() => {
+    batchItemsRef.current = batchItems;
+  }, [batchItems]);
 
   // 單圖狀態
   const [singleImgElement, setSingleImgElement] = useState<HTMLImageElement | null>(null);
