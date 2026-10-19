@@ -2,6 +2,17 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.2] - 2026-10-20
+
+### Fixed
+- **幸運轉盤動畫卸載洩漏（#61）**：拉霸機 `requestAnimationFrame` ID 納入 `animFrameIdRef` 追蹤，逐輪排程改由 `scheduleSpinTimeout` 管理，元件卸載時取消動畫與所有待執行排程。
+- **QR 產生器活動時區未重繪（#62）**：QR 繪製與網址同步 effect 補上 `eventTimezone` 依賴。
+- **PDF 處理器圖片讀取永久卡住（#63）**：`FileReader` 補上 `onerror` / `onabort`，失敗時顯示提示並繼續處理，處理中狀態可正常復原。
+- **SSL 轉換器 AIA 補完崩潰（#64）**：憑證鏈為空時直接提示錯誤，並於處理結束後重置檔案選擇以便重新選取同一檔案。
+- **檔案下載偶發失敗（#65）**：`downloadBlob` 預設延後 1 秒回收 Object URL。
+
+---
+
 ## [1.27.1] - 2026-10-20
 
 ### Fixed
