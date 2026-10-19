@@ -255,6 +255,50 @@ export function parseStructuredRedactions(
 }
 
 // 核心脫敏運算函式 (支援非同步時間片 Yielding)
+const NAME_VALUE_LIST_KEYS = ['headers', 'cookies', 'queryString'] as const;
+
+const cloneNameValueLists = (target: any) => {
+  for (const key of NAME_VALUE_LIST_KEYS) {
+    if (Array.isArray(target[key])) {
+      target[key] = target[key].map((item: any) => (item && typeof item === 'object' ? { ...item } : item));
+    }
+  }
+};
+
+/**
+ * 針對脫敏流程的「寫入路徑」做最小拷貝：
+ * 只複製 request / response 內會被改寫的 url、headers、cookies、queryString、postData、content，
+ * 其餘子樹（timings、cache 等）沿用原參考，字串本身不可變故無需複製。
+ * 原始 entry 保證不被變異（Inspector 需比對原始值與清理後值）。
+ */
+export function cloneEntryForSanitize(entry: any): any {
+  if (!entry || typeof entry !== 'object') return entry;
+  const cloned: any = { ...entry };
+
+  if (entry.request && typeof entry.request === 'object') {
+    const req: any = { ...entry.request };
+    cloneNameValueLists(req);
+    if (req.postData && typeof req.postData === 'object') {
+      req.postData = { ...req.postData };
+      if (Array.isArray(req.postData.params)) {
+        req.postData.params = req.postData.params.map((p: any) => (p && typeof p === 'object' ? { ...p } : p));
+      }
+    }
+    cloned.request = req;
+  }
+
+  if (entry.response && typeof entry.response === 'object') {
+    const res: any = { ...entry.response };
+    cloneNameValueLists(res);
+    if (res.content && typeof res.content === 'object') {
+      res.content = { ...res.content };
+    }
+    cloned.response = res;
+  }
+
+  return cloned;
+}
+
 export async function sanitizeHarAsync(
   rawHarData: any,
   originalFileSize: number,
@@ -553,8 +597,8 @@ export async function sanitizeHarAsync(
       continue;
     }
 
-    // 3. 建立深拷貝進行脫敏
-    const clonedEntry = JSON.parse(JSON.stringify(entry));
+    // 3. 僅拷貝會被脫敏改寫的欄位（避免對大型 entry 全量深拷貝造成 GC 壓力）
+    const clonedEntry = cloneEntryForSanitize(entry);
 
     // A. 脫敏 Headers
     const sanitizeHeaders = (headers: any[], isResponse = false) => {
