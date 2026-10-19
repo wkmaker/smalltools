@@ -72,6 +72,8 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const [currentRotationAngle, setCurrentRotationAngle] = useState<number>(0);
   const pointerDeflectionRef = useRef<number>(0);
   const animFrameIdRef = useRef<number | null>(null);
+  // 抽獎流程中的逐輪排程，卸載時一併清除，避免背景持續 setState 與播放音效
+  const spinTimeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   // 拉霸機動畫控制
   const [slotStripItems, setSlotStripItems] = useState<PrizeItem[]>([]);
@@ -95,6 +97,24 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#f59e0b');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(245, 158, 11, 0.6)');
+  }, []);
+
+  const scheduleSpinTimeout = (fn: () => void, ms: number) => {
+    const id = setTimeout(() => {
+      spinTimeoutsRef.current.delete(id);
+      fn();
+    }, ms);
+    spinTimeoutsRef.current.add(id);
+  };
+
+  // 卸載時取消進行中的動畫與逐輪排程
+  useEffect(() => {
+    const timeouts = spinTimeoutsRef.current;
+    return () => {
+      if (animFrameIdRef.current !== null) cancelAnimationFrame(animFrameIdRef.current);
+      timeouts.forEach(clearTimeout);
+      timeouts.clear();
+    };
   }, []);
 
   // 讀取 LocalStorage 與 URL 分享參數
@@ -408,7 +428,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
               };
             });
 
-            setTimeout(() => {
+            scheduleSpinTimeout(() => {
               setPrizes(nextStepPrizes);
               runStep(stepIdx + 1, finalAngle, nextStepPrizes, nextRevealed);
             }, 680);
@@ -419,7 +439,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
                 total: winners.length,
                 revealed: nextRevealed,
               });
-              setTimeout(() => {
+              scheduleSpinTimeout(() => {
                 setMultiSpinProgress(null);
                 finalizeSpinBatch(winners, updatedPrizes);
               }, 450);
@@ -526,7 +546,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         }
 
         if (progress < 1) {
-          requestAnimationFrame(animate);
+          animFrameIdRef.current = requestAnimationFrame(animate);
         } else {
           const nextRevealed = [...revealedSoFar, currentWinner];
 
@@ -548,7 +568,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
               };
             });
 
-            setTimeout(() => {
+            scheduleSpinTimeout(() => {
               setPrizes(nextStepPrizes);
               runSlotStep(stepIdx + 1, nextStepPrizes, nextRevealed);
             }, 680);
@@ -559,7 +579,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
                 total: winners.length,
                 revealed: nextRevealed,
               });
-              setTimeout(() => {
+              scheduleSpinTimeout(() => {
                 setMultiSpinProgress(null);
                 finalizeSpinBatch(winners, updatedPrizes);
               }, 450);
@@ -571,7 +591,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         }
       };
 
-      requestAnimationFrame(animate);
+      animFrameIdRef.current = requestAnimationFrame(animate);
     };
 
     runSlotStep(0, prizes, []);
