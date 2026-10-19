@@ -258,27 +258,34 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         }
       } else {
         // PNG / JPG / WebP 圖片檔案處理
-        await new Promise<void>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const dataUrl = e.target?.result as string;
-            setPages((prev) => [
-              ...prev,
-              {
-                id: `img_${Date.now()}_${fIdx}_${randomToken(4)}`,
-                sourceType: 'IMAGE',
-                fileName: file.name,
-                pageIndex: 0,
-                rotation: 0,
-                thumbnailUrl: dataUrl,
-                imageDataUrl: dataUrl,
-                fileSize: file.size,
-              },
-            ]);
-            resolve();
-          };
-          reader.readAsDataURL(file);
-        });
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(reader.error ?? new Error('FileReader error'));
+            reader.onabort = () => reject(new Error('FileReader aborted'));
+            reader.onload = (e) => {
+              const dataUrl = e.target?.result as string;
+              setPages((prev) => [
+                ...prev,
+                {
+                  id: `img_${Date.now()}_${fIdx}_${randomToken(4)}`,
+                  sourceType: 'IMAGE',
+                  fileName: file.name,
+                  pageIndex: 0,
+                  rotation: 0,
+                  thumbnailUrl: dataUrl,
+                  imageDataUrl: dataUrl,
+                  fileSize: file.size,
+                },
+              ]);
+              resolve();
+            };
+            reader.readAsDataURL(file);
+          });
+        } catch (err) {
+          console.error(`圖片讀取失敗 [${file.name}]:`, err);
+          showToast(t.toastImageError(file.name));
+        }
 
         await new Promise((r) => setTimeout(r, 10));
       }
