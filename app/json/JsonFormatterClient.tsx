@@ -7,8 +7,39 @@ import styles from './json.module.css';
 import { downloadBlob } from '../utils/downloadBlob';
 import { TRANSLATIONS } from './translations';
 
-function TreeNode({ data, isLast, name }: { data: any; isLast: boolean; name?: string }) {
-  const [collapsed, setCollapsed] = useState(false);
+// 大型 JSON 防護：深層或子節點過多時預設收合，展開後分頁渲染，避免一次掛載數萬個節點
+const TREE_AUTO_COLLAPSE_DEPTH = 2;
+const TREE_AUTO_COLLAPSE_CHILDREN = 50;
+const TREE_CHILD_PAGE_SIZE = 100;
+
+interface TreeNodeProps {
+  data: any;
+  isLast: boolean;
+  name?: string;
+  depth?: number;
+  showMoreLabel: string;
+}
+
+function TreeNode({ data, isLast, name, depth = 0, showMoreLabel }: TreeNodeProps) {
+  const [collapsed, setCollapsed] = useState(() => {
+    if (data === null || typeof data !== 'object') return false;
+    const childCount = Array.isArray(data) ? data.length : Object.keys(data).length;
+    // 根節點恆展開（子節點已有分頁保護），其餘依深度或子節點數自動收合
+    if (depth === 0) return false;
+    return depth >= TREE_AUTO_COLLAPSE_DEPTH || childCount > TREE_AUTO_COLLAPSE_CHILDREN;
+  });
+  const [visibleCount, setVisibleCount] = useState(TREE_CHILD_PAGE_SIZE);
+
+  const renderShowMore = (total: number) =>
+    total > visibleCount && (
+      <button
+        type="button"
+        onClick={() => setVisibleCount((c) => c + TREE_CHILD_PAGE_SIZE)}
+        className="text-xs text-text-sub hover:text-[var(--theme-color,#ff00aa)] underline my-0.5"
+      >
+        {showMoreLabel.replace('{count}', String(total - visibleCount))}
+      </button>
+    );
 
   if (data === null) {
     return (
@@ -69,9 +100,16 @@ function TreeNode({ data, isLast, name }: { data: any; isLast: boolean; name?: s
           <span className="text-xs text-text-sub mx-1">... Array({data.length}) ...</span>
         ) : (
           <div className="pl-4 border-l border-border-glass my-0.5">
-            {data.map((item, idx) => (
-              <TreeNode key={idx} data={item} isLast={idx === data.length - 1} />
+            {data.slice(0, visibleCount).map((item, idx) => (
+              <TreeNode
+                key={idx}
+                data={item}
+                isLast={idx === data.length - 1}
+                depth={depth + 1}
+                showMoreLabel={showMoreLabel}
+              />
             ))}
+            {renderShowMore(data.length)}
           </div>
         )}
         <span className={styles.treeBracket}>]</span>
@@ -98,9 +136,17 @@ function TreeNode({ data, isLast, name }: { data: any; isLast: boolean; name?: s
           <span className="text-xs text-text-sub mx-1">... Object({keys.length}) ...</span>
         ) : (
           <div className="pl-4 border-l border-border-glass my-0.5">
-            {keys.map((key, idx) => (
-              <TreeNode key={key} name={`"${key}"`} data={data[key]} isLast={idx === keys.length - 1} />
+            {keys.slice(0, visibleCount).map((key, idx) => (
+              <TreeNode
+                key={key}
+                name={`"${key}"`}
+                data={data[key]}
+                isLast={idx === keys.length - 1}
+                depth={depth + 1}
+                showMoreLabel={showMoreLabel}
+              />
             ))}
+            {renderShowMore(keys.length)}
           </div>
         )}
         <span className={styles.treeBracket}>&#125;</span>
@@ -397,7 +443,7 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
 
                 {inputText.trim() && !lintError && activeTab === 'tree' && parsedObject && (
                   <div className="p-2">
-                    <TreeNode data={parsedObject} isLast={true} />
+                    <TreeNode data={parsedObject} isLast={true} showMoreLabel={t.treeShowMore} />
                   </div>
                 )}
               </div>

@@ -2,6 +2,15 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.1] - 2026-10-20
+
+### Fixed
+- **HAR 清理工具 Raw JSON 凍結（#58）**：`RawJsonTab` 以 `useMemo` 快取字串化結果，超過 1,000,000 字元僅預覽前段並提示改用複製 / 下載；脫敏引擎以 `cloneEntryForSanitize` 最小拷貝取代每筆 entry 的 `JSON.parse(JSON.stringify())` 全量深拷貝，降低 GC 壓力。
+- **JSON 格式化樹狀檢視卡死（#59）**：深度 ≥ 2 或子節點 > 50 的節點預設收合，展開後每次僅渲染 100 筆並提供「顯示更多」。
+- **差異比對輸入卡頓（#60）**：合計超過 20,000 字元時比對改為 400ms 防抖執行。
+
+---
+
 ## [1.27.0] - 2026-10-18
 
 ### ☕ 樂捐贊助轉換與芳名錄系統 (Sponsorship & Sponsor Wall System)

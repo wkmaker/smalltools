@@ -96,3 +96,38 @@ test('sanitizeHarAsync：深度正則掃描應涵蓋 GitHub / Slack / Google / O
   assert.equal(bodyText.includes('sk_test_'), false);
   assert.equal(result.stats.redactedRegexItems >= 5, true);
 });
+
+test('cloneEntryForSanitize：脫敏不變異原始 entry，未改寫子樹沿用原參考', async () => {
+  const timings = { send: 1, wait: 2, receive: 3 };
+  const entry = {
+    startedDateTime: '2026-01-01T00:00:00.000Z',
+    time: 1,
+    timings,
+    request: {
+      method: 'POST',
+      url: 'https://api.example.com/login?token=abc123',
+      headers: [{ name: 'Authorization', value: 'Bearer secret-token' }],
+      cookies: [{ name: 'sid', value: 'session-1' }],
+      queryString: [{ name: 'token', value: 'abc123' }],
+      postData: { mimeType: 'application/x-www-form-urlencoded', params: [{ name: 'password', value: 'p@ss' }] },
+    },
+    response: {
+      status: 200,
+      headers: [{ name: 'Set-Cookie', value: 'sid=session-2' }],
+      cookies: [{ name: 'sid', value: 'session-2' }],
+      content: { mimeType: 'application/json', text: '{"access_token":"xyz"}' },
+    },
+  };
+  const snapshot = JSON.stringify(entry);
+  const result = await sanitizeHarAsync({ log: { version: '1.2', entries: [entry] } }, 0, ALL_RULES, {}, 'zh-TW');
+
+  assert.equal(JSON.stringify(entry), snapshot, '原始 entry 不得被變異');
+  const cleaned = result.cleanedHar.log.entries[0];
+  assert.equal(cleaned.request.headers[0].value, '[REDACTED]');
+  assert.equal(cleaned.request.cookies[0].value, '[REDACTED]');
+  assert.equal(cleaned.request.queryString[0].value, '[REDACTED]');
+  assert.equal(cleaned.request.postData.params[0].value, '[REDACTED]');
+  assert.equal(cleaned.response.cookies[0].value, '[REDACTED]');
+  assert.ok(!cleaned.response.content.text.includes('xyz'));
+  assert.equal(cleaned.timings, timings, '未改寫子樹應沿用原參考');
+});

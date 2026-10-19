@@ -7,6 +7,10 @@ import FaqSection from '../components/FaqSection';
 import styles from './diff-checker.module.css';
 import { TRANSLATIONS } from './translations';
 
+// 合計字元數在此門檻內即時比對，超過則防抖延遲
+const DIFF_INSTANT_MAX_CHARS = 20_000;
+const DIFF_DEBOUNCE_MS = 400;
+
 // Split 視窗單列型態
 interface SplitRow {
   leftLineNum?: number;
@@ -236,9 +240,16 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
     setMergeResultText(initialMergedText);
   }, [originalText, modifiedText, ignoreCase]);
 
+  // 防抖：小文字即時比對；大文字（合計超過門檻）延遲執行，避免每次按鍵都在主執行緒跑 O(N*D) 比對
   useEffect(() => {
-    runDiff();
-  }, [runDiff]);
+    const totalLength = originalText.length + modifiedText.length;
+    if (totalLength <= DIFF_INSTANT_MAX_CHARS) {
+      runDiff();
+      return;
+    }
+    const timer = setTimeout(runDiff, DIFF_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [runDiff, originalText.length, modifiedText.length]);
 
   const handleLeftScroll = () => {
     if (!isSyncingLeft.current && leftPaneRef.current && rightPaneRef.current) {
