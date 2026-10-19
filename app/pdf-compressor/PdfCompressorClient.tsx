@@ -10,6 +10,7 @@ import {
 } from '../utils/pdfHelper';
 import { formatBytes } from '../utils/formatBytes';
 import { downloadBlob } from '../utils/downloadBlob';
+import { createSimpleZip } from '../image-processor/utils/zipBuilder';
 import { getLocalDateString } from '../utils/dateUtils';
 import { randomToken } from '../utils/randomToken';
 import styles from './pdf-compressor.module.css';
@@ -33,94 +34,6 @@ interface QueueItem {
   compressedSize: number;
   errorMsg?: string;
   showDetails?: boolean;
-}
-
-
-
-// 輕量化純前端 PKZip Builder
-function createSimpleZip(files: { name: string; data: Uint8Array }[]): Blob {
-  const parts: Uint8Array[] = [];
-  const cdEntries: Uint8Array[] = [];
-  let offset = 0;
-
-  files.forEach((f) => {
-    const nameBytes = new TextEncoder().encode(f.name);
-    const date = new Date();
-    const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1);
-    const dosDate = ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
-
-    let crc = 0xffffffff;
-    for (let i = 0; i < f.data.length; i++) {
-      crc ^= f.data[i];
-      for (let j = 0; j < 8; j++) {
-        crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
-      }
-    }
-    crc = (crc ^ 0xffffffff) >>> 0;
-
-    const localHeader = new Uint8Array(30 + nameBytes.length);
-    const view = new DataView(localHeader.buffer);
-    view.setUint32(0, 0x04034b50, true);
-    view.setUint16(4, 20, true);
-    view.setUint16(6, 0, true);
-    view.setUint16(8, 0, true);
-    view.setUint16(10, dosTime, true);
-    view.setUint16(12, dosDate, true);
-    view.setUint32(14, crc, true);
-    view.setUint32(18, f.data.length, true);
-    view.setUint32(22, f.data.length, true);
-    view.setUint16(26, nameBytes.length, true);
-    view.setUint16(28, 0, true);
-    localHeader.set(nameBytes, 30);
-
-    parts.push(localHeader);
-    parts.push(f.data);
-
-    const cdEntry = new Uint8Array(46 + nameBytes.length);
-    const cdView = new DataView(cdEntry.buffer);
-    cdView.setUint32(0, 0x02014b50, true);
-    cdView.setUint16(4, 20, true);
-    cdView.setUint16(6, 20, true);
-    cdView.setUint16(8, 0, true);
-    cdView.setUint16(10, 0, true);
-    cdView.setUint16(12, dosTime, true);
-    cdView.setUint16(14, dosDate, true);
-    cdView.setUint32(16, crc, true);
-    cdView.setUint32(20, f.data.length, true);
-    cdView.setUint32(24, f.data.length, true);
-    cdView.setUint16(28, nameBytes.length, true);
-    cdView.setUint16(30, 0, true);
-    cdView.setUint16(34, 0, true);
-    cdView.setUint16(36, 0, true);
-    cdView.setUint32(38, 0, true);
-    cdView.setUint32(42, offset, true);
-    cdEntry.set(nameBytes, 46);
-
-    cdEntries.push(cdEntry);
-    offset += localHeader.length + f.data.length;
-  });
-
-  const cdOffset = offset;
-  let cdSize = 0;
-  cdEntries.forEach((e) => {
-    parts.push(e);
-    cdSize += e.length;
-  });
-
-  const eocd = new Uint8Array(22);
-  const eocdView = new DataView(eocd.buffer);
-  eocdView.setUint32(0, 0x06054b50, true);
-  eocdView.setUint16(4, 0, true);
-  eocdView.setUint16(6, 0, true);
-  eocdView.setUint16(8, files.length, true);
-  eocdView.setUint16(10, files.length, true);
-  eocdView.setUint32(12, cdSize, true);
-  eocdView.setUint32(16, cdOffset, true);
-  eocdView.setUint16(20, 0, true);
-
-  parts.push(eocd);
-
-  return new Blob(parts as BlobPart[], { type: 'application/zip' });
 }
 
 interface PdfCompressorClientProps {

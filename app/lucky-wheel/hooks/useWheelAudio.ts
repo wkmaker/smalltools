@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 
 export function useWheelAudio(soundEnabled: boolean) {
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -12,6 +12,14 @@ export function useWheelAudio(soundEnabled: boolean) {
       audioCtxRef.current.resume();
     }
     return audioCtxRef.current;
+  }, []);
+
+  // 卸載時關閉 AudioContext，釋放硬體音訊通道
+  useEffect(() => {
+    return () => {
+      audioCtxRef.current?.close().catch(() => {});
+      audioCtxRef.current = null;
+    };
   }, []);
 
   const playTickSound = useCallback(() => {

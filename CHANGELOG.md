@@ -2,6 +2,18 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.3] - 2026-10-20
+
+### Changed
+- **PDF 壓縮器 ZIP 打包（#66）**：移除內建逐位元 CRC32 的重複 ZIP 實作，改用共用 `image-processor/utils/zipBuilder`（查找表 CRC32、Zip Slip 防護、UTF-8 檔名旗標）。
+
+### Fixed
+- **OG 圖片產生器 Emoji 亂碼（#67）**：`wrapText` 改以 `Array.from` 依 code point 切分，避免拆裂 UTF-16 代理對。
+- **圖片處理器 Render 期間變異 Ref（#68）**：`batchItemsRef` 改於 `useEffect` 同步。
+- **AudioContext 未釋放（#69）**：吹牛骰子與幸運轉盤卸載時關閉 `AudioContext`。
+
+---
+
 ## [1.27.2] - 2026-10-20
 
 ### Fixed

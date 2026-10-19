@@ -13,7 +13,8 @@ export function wrapText(
   lineHeight: number,
   maxLines: number = 3
 ): number {
-  const words = text.split('');
+  // 以 code point 切分，避免 split('') 拆開 UTF-16 代理對（Emoji / 延伸漢字）造成亂碼
+  const words = Array.from(text);
   let line = '';
   let currentY = y;
   let lineCount = 0;
@@ -26,7 +27,7 @@ export function wrapText(
     if (testWidth > maxWidth && n > 0) {
       lineCount++;
       if (lineCount >= maxLines) {
-        ctx.fillText(line.slice(0, -1) + '...', x, currentY);
+        ctx.fillText(Array.from(line).slice(0, -1).join('') + '...', x, currentY);
         return currentY + lineHeight;
       }
       ctx.fillText(line, x, currentY);
