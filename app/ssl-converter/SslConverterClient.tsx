@@ -198,11 +198,18 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
 
   const handleAiaFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setAiaError(null);
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       setAiaError(t.fileTooLarge);
-      e.target.value = '';
+      input.value = '';
+      return;
+    }
+    // 尚無既有憑證鏈可接續時無從比對簽發者，直接擋下避免存取負索引
+    if (currentChainPems.length === 0) {
+      setAiaError(t.aiaErrorInvalidCert);
+      input.value = '';
       return;
     }
     try {
@@ -243,6 +250,9 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     } catch (err) {
       console.error('[SslConverter] AIA inspection error:', err);
       setAiaError(t.aiaErrorInvalidCert);
+    } finally {
+      // 清空選擇，讓使用者修正後可再次選取同一檔案觸發 onChange
+      input.value = '';
     }
   };
 
