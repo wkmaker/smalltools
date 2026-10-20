@@ -182,13 +182,14 @@ jobs:
             # 1. 清理 S3 Bucket
             aws s3 rb "s3://$S3_BUCKET" --force 2>/dev/null || true
 
-            # 2. 清理 CloudFront Function
-            FUNC_NAME="${STACK_NAME}-basic-auth"
-            ETAG=$(aws cloudfront describe-function --name "$FUNC_NAME" --query "ETag" --output text 2>/dev/null || echo "")
-            if [ -n "$ETAG" ] && [ "$ETAG" != "None" ]; then
-              echo "Deleting orphan CloudFront Function: $FUNC_NAME"
-              aws cloudfront delete-function --name "$FUNC_NAME" --if-match "$ETAG" 2>/dev/null || true
-            fi
+            # 2. 清理 CloudFront Function（含舊版 basic-auth 命名）
+            for FUNC_NAME in "${STACK_NAME}-viewer-request" "${STACK_NAME}-basic-auth"; do
+              ETAG=$(aws cloudfront describe-function --name "$FUNC_NAME" --query "ETag" --output text 2>/dev/null || echo "")
+              if [ -n "$ETAG" ] && [ "$ETAG" != "None" ]; then
+                echo "Deleting orphan CloudFront Function: $FUNC_NAME"
+                aws cloudfront delete-function --name "$FUNC_NAME" --if-match "$ETAG" 2>/dev/null || true
+              fi
+            done
 
             # 3. 清理 CloudFront Response Headers Policy
             POLICY_NAME="${STACK_NAME}-noindex-policy"
