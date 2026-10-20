@@ -115,6 +115,8 @@ alternates: {
 
 ### 3. Sitemap 網址規範化 (Canonical URL)
 * 搭配 `trailingSlash: true`，Sitemap 內所有 `<loc>` 網址必須採用目錄結尾斜線（如 `https://tools.cjkuo.net/time/`），嚴禁帶 `/index.html`。
-* 部署至 AWS S3（搭配 CloudFront Rewrite）時，無檔名目錄路徑即可自動對應至 `[tool-name]/index.html`。
+* 部署至 AWS S3（REST 端點 + OAC）時，目錄索引由 `template.yml` 的 `ViewerRequestFunction` 負責：`/` 結尾補 `index.html`、無副檔名路徑 301 補斜線。S3 REST 端點**不會**自動解析目錄索引，改 Origin 或 Function 時務必保留這段改寫，並跑 `tests/engine/cloudfront-viewer-request.test.mjs`。
+* **`opengraph-image` 是 `out/` 裡唯一無副檔名的實體檔案**：任何「無副檔名就當目錄」的改寫規則都必須排除它，否則全站 OG 圖會被轉址而失效。
+* **同一個 CloudFront Cache Behavior 的 viewer-request 只能掛一支 Function**：測試環境 Basic Auth 與路徑改寫必須寫在同一支，以 `EnableBasicAuth` 參數切換，不可各掛一支。
 * 啟用 `app/sitemap.ts` 後，需確認 `public/sitemap.xml` 已刪除，避免靜態資源覆蓋 Next.js 自動生成之 Sitemap。
 * **`public/` 根目錄放非雜湊 JS（如 Worker 腳本）時，必須確認 `deploy.yml` 有上傳**：S3 主同步步驟以 `--exclude "*.js"` 排除所有 JS，再個別上傳 `sw.js`、`_next/static`；當初 `pac-tester-worker.js` 就因此漏傳、線上 404，而前端又靜默吞錯，表現為「按鈕完全沒反應」。本機 `out/` 有檔案不代表線上有，上線後要實際請求一次確認 200。

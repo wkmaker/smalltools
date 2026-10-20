@@ -2,6 +2,20 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.5] - 2026-10-20
+
+### Security
+- **S3 源站改走 OAC（#78 階段 A）**：CloudFront Origin 由 S3 靜態網站端點改為 REST 端點 + Origin Access Control（SigV4），Bucket Policy 新增僅限 CloudFront 服務主體的讀取條目。舊版可推算的 User-Agent 條目與靜態網站設定暫時保留以確保切換不中斷，將於階段 B 移除。
+
+### Changed
+- **CloudFront Function 合併**：測試環境 Basic Auth 與目錄索引改寫（`/` 結尾補 `index.html`、無副檔名路徑 301 補斜線、排除 `opengraph-image`）合併為單一 `viewer-request` Function，正式與測試環境皆掛載。
+- **錯誤頁**：S3 REST 端點對不存在物件回應的 403 統一導向 `/404.html`。
+
+### Added
+- **回歸測試**：`tests/engine/cloudfront-viewer-request.test.mjs` 直接從 `template.yml` 取出 Function 原始碼驗證改寫與 Basic Auth 行為。
+
+---
+
 ## [1.27.4] - 2026-10-20
 
 ### Security
