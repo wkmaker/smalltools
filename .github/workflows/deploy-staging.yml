@@ -1,0 +1,37 @@
+name: 部署測試站
+
+# 所有非 main 分支共用同一個測試站，後推送的覆蓋先推送的；也可在 Actions 頁選分支手動部署
+on:
+  push:
+    branches-ignore:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.agents/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write # 用於 AWS OIDC 無金鑰認證
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    # 尚未執行 infra/bootstrap.sh 前沒有測試站部署角色，直接略過而不是失敗
+    if: vars.AWS_STAGING_DEPLOY_ROLE_ARN != ''
+    uses: ./.github/workflows/deploy-site.yml
+    with:
+      environment: staging
+      stack-name: smalltools-staging
+      deploy-role-arn: ${{ vars.AWS_STAGING_DEPLOY_ROLE_ARN }}
+      cfn-exec-role-arn: ${{ vars.AWS_STAGING_CFN_EXEC_ROLE_ARN }}
+      domain: ${{ vars.STAGING_DOMAIN }}
+      attach-domain: ${{ vars.STAGING_DOMAIN != '' && 'true' || 'false' }}
+    secrets:
+      basic-auth-user: ${{ secrets.STAGING_BASIC_AUTH_USER }}
+      basic-auth-pass: ${{ secrets.STAGING_BASIC_AUTH_PASS }}
