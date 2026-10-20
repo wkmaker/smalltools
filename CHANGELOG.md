@@ -2,6 +2,14 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.4] - 2026-10-20
+
+### Security
+- **測試環境預設帳密（#79）**：移除 `deploy.yml` 中寫死的 Basic Auth 預設帳密，未設定 `STAGING_BASIC_AUTH_USER` / `STAGING_BASIC_AUTH_PASS` Secret 時直接中斷部署。
+- **sharp 依賴漏洞（#74）**：`next` 間接依賴的 `sharp` 由 0.35.4 升至 0.35.5，修補 librsvg 漏洞 CVE-2026-96889。
+
+---
+
 ## [1.27.3] - 2026-10-20
 
 ### Changed
