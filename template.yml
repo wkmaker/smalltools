@@ -57,14 +57,12 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketName: !Ref BucketName
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: 404.html
+      # 僅允許 CloudFront 透過 OAC 讀取，Bucket 本身不對外公開
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: false
+        BlockPublicPolicy: true
         IgnorePublicAcls: true
-        RestrictPublicBuckets: false
+        RestrictPublicBuckets: true
 
   StaticWebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -74,17 +72,7 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          # [OAC 遷移階段 A] 舊版 User-Agent 條件可被推算（#78），待 Origin 切換至 OAC 並驗證後於階段 B 移除
-          - Sid: AllowCloudFrontCustomHeaderOnly
-            Effect: Allow
-            Principal: "*"
-            Action: s3:GetObject
-            Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
-            Condition:
-              StringEquals:
-                aws:UserAgent: !Sub "CF-Access-Header-${AWS::StackName}-${AWS::AccountId}"
-          # 僅允許本帳號 CloudFront 透過 OAC (SigV4) 讀取；
-          # 階段 A 以帳號層級萬用字元避開與 Distribution 的循環相依，讓 Policy 先於 Origin 切換生效，階段 B 收緊為本 Distribution ARN
+          # 僅允許本 Distribution 透過 OAC (SigV4) 讀取
           - Sid: AllowCloudFrontOriginAccessControl
             Effect: Allow
             Principal:
@@ -92,8 +80,8 @@ Resources:
             Action: s3:GetObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
             Condition:
-              StringLike:
-                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${StaticWebsiteDistribution}"
 
   StaticWebsiteOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -195,8 +183,6 @@ Resources:
   StaticWebsiteDistribution:
     Type: AWS::CloudFront::Distribution
     DeletionPolicy: Retain
-    # 確保 OAC 讀取權限先寫入 Bucket Policy，再切換 Origin，避免切換期間回 403
-    DependsOn: StaticWebsiteBucketPolicy
     Properties:
       DistributionConfig:
         Aliases: !If [HasCustomDomain, [!Ref DomainName], !Ref "AWS::NoValue"]
