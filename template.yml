@@ -206,7 +206,8 @@ Resources:
             - GET
           Compress: true
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
-          ResponseHeadersPolicyId: !If [IsNoIndexEnabled, !Ref NoIndexResponseHeadersPolicy, !Ref "AWS::NoValue"]
+          # 正式環境套用 AWS 託管 Managed-SecurityHeadersPolicy（HSTS 1 年、nosniff、SAMEORIGIN、strict-origin-when-cross-origin）
+          ResponseHeadersPolicyId: !If [IsNoIndexEnabled, !Ref NoIndexResponseHeadersPolicy, 67f7725c-6f97-4210-82d7-5512b31e9d03]
           FunctionAssociations:
             - EventType: viewer-request
               FunctionARN: !GetAtt ViewerRequestFunction.FunctionARN

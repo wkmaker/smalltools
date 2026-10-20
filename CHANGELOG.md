@@ -2,6 +2,16 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.8] - 2026-10-20
+
+### Security
+- **正式站補上安全標頭（#77）**：CloudFront `ResponseHeadersPolicyId` 在非 NoIndex 環境原為 `AWS::NoValue`，正式站完全沒有安全標頭；改為套用 AWS 託管 `Managed-SecurityHeadersPolicy`，提供 HSTS（`max-age=31536000`，不含 includeSubdomains / preload）、`X-Content-Type-Options: nosniff`、`X-Frame-Options: SAMEORIGIN`、`Referrer-Policy: strict-origin-when-cross-origin`。CSP 尚未處理。
+
+### Added
+- **回歸測試**：`tests/engine/cloudfront-response-headers.test.mjs` 確認 `ResponseHeadersPolicyId` 不再落到 `AWS::NoValue`，且 NoIndex policy 保有完整安全標頭。
+
+---
+
 ## [1.27.7] - 2026-10-20
 
 ### Security
