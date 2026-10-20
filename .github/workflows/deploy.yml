@@ -79,11 +79,13 @@ jobs:
             echo "S3_BUCKET=dev-${PROD_BUCKET}" >> $GITHUB_ENV
             echo "ENABLE_BASIC_AUTH=true" >> $GITHUB_ENV
             
-            # 使用 Secret 或預設帳密生成 Base64 編碼
+            # 以 Secret 帳密生成 Base64 編碼；未設定時直接中斷，不退回任何預設帳密
             AUTH_USER="${{ secrets.STAGING_BASIC_AUTH_USER }}"
             AUTH_PASS="${{ secrets.STAGING_BASIC_AUTH_PASS }}"
-            if [ -z "$AUTH_USER" ]; then AUTH_USER="admin"; fi
-            if [ -z "$AUTH_PASS" ]; then AUTH_PASS="devpass2026"; fi
+            if [ -z "$AUTH_USER" ] || [ -z "$AUTH_PASS" ]; then
+              echo "::error::尚未設定 STAGING_BASIC_AUTH_USER 或 STAGING_BASIC_AUTH_PASS Repository Secret，已中斷測試環境部署。"
+              exit 1
+            fi
             
             AUTH_BASE64=$(echo -n "${AUTH_USER}:${AUTH_PASS}" | base64)
             echo "BASIC_AUTH_BASE64=${AUTH_BASE64}" >> $GITHUB_ENV
