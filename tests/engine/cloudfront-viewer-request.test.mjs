@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 // 從 template.yml 取出 CloudFront viewer-request Function 原始碼，代入 !Sub 參數後於 Node 執行
-const TEMPLATE = fs.readFileSync(new URL('../../template.yml', import.meta.url), 'utf8');
+const TEMPLATE = fs.readFileSync(new URL('../../template.yml', import.meta.url), 'utf8').replace(/\r\n/g, '\n'); // Windows autocrlf 簽出時統一換行
 const match = TEMPLATE.match(/ViewerRequestFunction:[\s\S]*?FunctionCode: !Sub \|\n([\s\S]*?)\n\n {2}\S/);
 assert.ok(match, 'template.yml 找不到 ViewerRequestFunction 的 FunctionCode');
 const FUNCTION_SOURCE = match[1].replace(/^ {8}/gm, '');

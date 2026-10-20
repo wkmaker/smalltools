@@ -291,7 +291,7 @@ export default function ContractionTimerClient({ lang = 'zh-TW' }: { lang?: Lang
   };
 
   // ── 衍生資料 ──
-  const stats = useMemo(() => analyzeContractions(records, now || Date.now()), [records, now]);
+  const stats = useMemo(() => analyzeContractions(records, now), [records, now]);
 
   // 圖表以分鐘為單位刷新，避免計時中每秒重繪
   const chartNow = Math.floor(now / 60000) * 60000 + 60000;

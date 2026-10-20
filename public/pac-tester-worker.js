@@ -21,7 +21,100 @@
  * engine.ts 的這些函式時必須同步修改這裡；tests/engine/pac-tester-worker.test.mjs
  * 會在 Node 中直接載入這支檔案，並比對它與 engine.ts 真正實作在同一組測試案例下
  * 的輸出是否逐位元一致，兩邊沒同步時測試會直接失敗，不會靜默出現行為落差。
+ *
+ * 🔒 沙盒防護（三層）：
+ * 1. 靜態檢查：findForbiddenPacTokens 拒絕 import、eval、constructor 等關鍵字。
+ * 2. 參數遮蔽：PAC_FORBIDDEN_GLOBALS 以同名參數遮蔽為 undefined。
+ * 3. 執行環境封鎖（僅 Worker）：hardenWorkerScope 在載入時移除網路與程式碼載入 API，
+ *    並切斷各類函式原型上的 constructor，即使透過原型鏈取得真正的全域物件也無法連網。
  */
+
+// 在封鎖 Function 前先保留參照，供 runSinglePacTest 建立沙盒函式
+const SandboxFunction = Function;
+
+const PAC_FORBIDDEN_GLOBALS = [
+  'window',
+  'document',
+  'self',
+  'globalThis',
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
+  'WebTransport',
+  'EventSource',
+  'importScripts',
+  'localStorage',
+  'sessionStorage',
+  'indexedDB',
+  'caches',
+  'BroadcastChannel',
+  'Worker',
+  'SharedWorker',
+  'Function',
+  'setTimeout',
+  'setInterval',
+  'postMessage',
+];
+
+const PAC_FORBIDDEN_CODE_TOKENS = /\b(importScripts|eval|Function|constructor|__proto__|prototype|globalThis|self)\b/g;
+
+function findForbiddenPacTokens(pacScript) {
+  const found = new Set();
+  if (/\bimport\b/.test(pacScript)) found.add('import');
+  const code = pacScript.replace(
+    /\/\*[\s\S]*?\*\/|\/\/[^\n]*|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"/g,
+    ' '
+  );
+  for (const match of code.matchAll(PAC_FORBIDDEN_CODE_TOKENS)) found.add(match[1]);
+  return [...found];
+}
+
+/** Worker 專用：PAC 不需要的網路、程式碼載入與計時 API，載入時即從全域移除 */
+const WORKER_BLOCKED_APIS = [
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
+  'WebTransport',
+  'EventSource',
+  'importScripts',
+  'indexedDB',
+  'caches',
+  'BroadcastChannel',
+  'Worker',
+  'SharedWorker',
+  'eval',
+  'Function',
+  'setTimeout',
+  'setInterval',
+];
+
+function hardenWorkerScope(scope) {
+  for (const name of WORKER_BLOCKED_APIS) {
+    try {
+      delete scope[name];
+      if (name in scope) {
+        Object.defineProperty(scope, name, { value: undefined, writable: false, configurable: false });
+      }
+    } catch (err) {
+      console.error('[pac-tester-worker] 無法封鎖全域 API：' + name, err);
+    }
+  }
+
+  // 切斷 ({}).constructor.constructor('return this')() 這類以原型鏈取得函式建構子的逃逸路徑
+  const functionPrototypes = [
+    SandboxFunction.prototype,
+    Object.getPrototypeOf(async function () {}),
+    Object.getPrototypeOf(function* () {}),
+    Object.getPrototypeOf(async function* () {}),
+  ];
+  for (const proto of functionPrototypes) {
+    try {
+      Object.defineProperty(proto, 'constructor', { value: undefined, writable: false, configurable: false });
+    } catch (err) {
+      console.error('[pac-tester-worker] 無法封鎖函式建構子', err);
+    }
+  }
+}
 
 function parseIpv4ToInt(ipStr) {
   if (typeof ipStr !== 'string') return null;
@@ -442,6 +535,11 @@ function runSinglePacTest(pacScript, testUrl, mockContext) {
   const startTime = performance.now();
 
   try {
+    const forbiddenTokens = findForbiddenPacTokens(pacScript);
+    if (forbiddenTokens.length > 0) {
+      throw new Error('PAC 腳本含有基於安全考量禁止使用的關鍵字：' + forbiddenTokens.join('、'));
+    }
+
     const sandbox = createPacSandbox(mockContext, traceSteps);
     const resolvedIp = sandbox.dnsResolve(host);
     const hostType = ipv4ToInt(host) !== null ? 'IPv4' : ipv6ToBigInt(host) !== null ? 'IPv6' : 'Domain';
@@ -450,17 +548,7 @@ function runSinglePacTest(pacScript, testUrl, mockContext) {
     const sandboxScopeKeys = Object.keys(sandbox);
     const sandboxScopeValues = Object.values(sandbox);
 
-    const forbiddenGlobals = [
-      'window',
-      'document',
-      'globalThis',
-      'fetch',
-      'XMLHttpRequest',
-      'localStorage',
-      'sessionStorage',
-      'indexedDB',
-      'WebSocket',
-    ];
+    const forbiddenGlobals = PAC_FORBIDDEN_GLOBALS;
 
     const runnerCode =
       '"use strict";\n' +
@@ -471,7 +559,7 @@ function runSinglePacTest(pacScript, testUrl, mockContext) {
       '}\n' +
       'return FindProxyForURL(PAC_TEST_URL, PAC_TEST_HOST);';
 
-    const evaluator = new Function(
+    const evaluator = new SandboxFunction(
       ...forbiddenGlobals,
       ...sandboxScopeKeys,
       'PAC_TEST_URL',
@@ -538,6 +626,8 @@ function runBatchPacTest(pacScript, urls, mockContext) {
       };
     });
 }
+
+hardenWorkerScope(self);
 
 self.onmessage = function (event) {
   const data = event.data;

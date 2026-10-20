@@ -22,21 +22,29 @@ export interface StrengthResult {
   color: string;
 }
 
+export class CsprngUnavailableError extends Error {
+  constructor() {
+    super('Web Cryptography API (crypto.getRandomValues) is not available in this environment.');
+    this.name = 'CsprngUnavailableError';
+  }
+}
+
 export function secureRandomInt(max: number, randomUint32?: number): number {
   if (max <= 0) return 0;
   if (randomUint32 !== undefined) {
     return randomUint32 % max;
   }
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    const array = new Uint32Array(1);
-    const maxUint32 = 4294967295;
-    const limit = maxUint32 - (maxUint32 % max);
-    do {
-      crypto.getRandomValues(array);
-    } while (array[0] >= limit);
-    return array[0] % max;
+  // 不支援 CSPRNG 時直接中斷，絕不退回可預測的 Math.random()
+  if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+    throw new CsprngUnavailableError();
   }
-  return Math.floor(Math.random() * max);
+  const array = new Uint32Array(1);
+  const maxUint32 = 4294967295;
+  const limit = maxUint32 - (maxUint32 % max);
+  do {
+    crypto.getRandomValues(array);
+  } while (array[0] >= limit);
+  return array[0] % max;
 }
 
 export function secureShuffle<T>(array: T[]): void {
