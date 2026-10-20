@@ -2,22 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-// 從 template.yml 取出 CloudFront viewer-request Function 原始碼，代入 !Sub 參數後於 Node 執行
-const TEMPLATE = fs.readFileSync(new URL('../../template.yml', import.meta.url), 'utf8').replace(/\r\n/g, '\n'); // Windows autocrlf 簽出時統一換行
-const match = TEMPLATE.match(/ViewerRequestFunction:[\s\S]*?FunctionCode: !Sub \|\n([\s\S]*?)\n\n {2}\S/);
-assert.ok(match, 'template.yml 找不到 ViewerRequestFunction 的 FunctionCode');
+// 從 infra/site.yml 取出 CloudFront viewer-request Function 原始碼，代入 !Sub 參數後於 Node 執行
+const TEMPLATE = fs.readFileSync(new URL('../../infra/site.yml', import.meta.url), 'utf8').replace(/\r\n/g, '\n'); // Windows autocrlf 簽出時統一換行
+const match = TEMPLATE.match(/UrlFunction:[\s\S]*?FunctionCode: !Sub \|\n([\s\S]*?)\n\n {2}\S/);
+assert.ok(match, 'infra/site.yml 找不到 UrlFunction 的 FunctionCode');
 const FUNCTION_SOURCE = match[1].replace(/^ {8}/gm, '');
 
-function loadHandler(enableBasicAuth, basicAuthBase64 = '') {
-  const code = FUNCTION_SOURCE
-    .replace('${EnableBasicAuth}', enableBasicAuth)
-    .replace('${BasicAuthBase64}', basicAuthBase64);
+// BasicAuth 留空即不驗證（正式站）
+function loadHandler(basicAuthBase64 = '') {
+  const code = FUNCTION_SOURCE.replace('${BasicAuth}', basicAuthBase64);
   return new Function(`${code}\nreturn handler;`)();
 }
 
 const viewerEvent = (uri, querystring = {}, headers = {}) => ({ request: { uri, querystring, headers } });
-const prodHandler = loadHandler('false');
-const devHandler = loadHandler('true', 'YWRtaW46c2VjcmV0');
+const prodHandler = loadHandler();
+const devHandler = loadHandler('YWRtaW46c2VjcmV0');
 
 test('以 / 結尾的路徑補上 index.html（S3 REST 端點不解析目錄索引）', () => {
   assert.equal(prodHandler(viewerEvent('/')).uri, '/index.html');

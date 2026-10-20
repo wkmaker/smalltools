@@ -2,6 +2,24 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.28.0] - 2026-10-20
+
+### Changed
+- **部署搬到靜態網站共用 AWS 帳號**：改用與 cj-blog、pdways 相同的 bootstrap 模式。`infra/bootstrap.yml` 建立 OIDC 部署角色與 CloudFormation 執行角色，以 `site-stack` 標籤與堆疊名稱前綴把權限限制在本站；`infra/site.yml` 取代 `template.yml`，正式站 `smalltools-site`、測試站 `smalltools-staging` 各自獨立。
+- **Workflow 拆成三支**：`deploy.yml`（main → 正式站）、`deploy-staging.yml`（其他分支 → 測試站）共用 `deploy-site.yml`。建置與 S3 同步規則沿用原本設定；`NEXT_PUBLIC_SITE_URL` 改由堆疊輸出決定。
+- **ACM 憑證改由堆疊申請**，不再寫死 ARN；新增 `AttachDomain` 參數，網域從舊帳號搬入前可以先完成憑證驗證；新增 `CertificateDomain` 參數（儲存庫變數 `SITE_CERT_DOMAIN`），填根網域時改申請「根網域 + 萬用子網域」，和 cj-blog 共用同一筆驗證 CNAME，不必重複驗證。
+- **安全標頭**：正式站改用本站自訂的回應標頭政策（內容與原本的 `Managed-SecurityHeadersPolicy` 相同：HSTS 一年、nosniff、SAMEORIGIN、strict-origin-when-cross-origin），測試站另加 noindex。
+- **S3 儲存區政策加上 `ListBucket`**，不存在的路徑直接回 404；另外拒絕非 HTTPS 存取。
+
+### Removed
+- **WAF**：靜態網站不再掛 WAF web ACL。
+- **舊的孤兒資源清理步驟**：測試站改為固定的獨立堆疊，不再需要。
+
+### Added
+- **回歸測試**：`tests/engine/cloudfront-infra.test.mjs` 檢查部署角色的權限隔離、安全標頭政策一律套用、`site-stack` 標籤與網域掛載條件（取代 `cloudfront-response-headers.test.mjs`）；新增開發依賴 `js-yaml`，用來解析 CloudFormation 範本。
+
+---
+
 ## [1.27.8] - 2026-10-20
 
 ### Security

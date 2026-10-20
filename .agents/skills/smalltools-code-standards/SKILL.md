@@ -124,7 +124,7 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 
 ### 2. Windows UTF-8 編碼保護避坑原則
 * 在 Windows 環境下避免使用 PowerShell 預設管道（如 `Get-Content | Set-Content`），防止將 TypeScript/JSX 中的繁體中文字串轉為 ANSI/OEM 亂碼 (`?`)。必須確保所有原始碼檔案儲存為無 BOM 之 UTF-8 編碼。
-* 測試若要用 regex 解析簽出的文字檔（如 `template.yml`），讀檔後先 `.replace(/\r\n/g, '\n')`：Windows 的 `core.autocrlf` 會把檔案簽出成 CRLF，只寫 `\n` 的 regex 在 CI 會過、在本機卻會失敗。
+* 測試若要用 regex 解析簽出的文字檔（如 `infra/site.yml`），讀檔後先 `.replace(/\r\n/g, '\n')`：Windows 的 `core.autocrlf` 會把檔案簽出成 CRLF，只寫 `\n` 的 regex 在 CI 會過、在本機卻會失敗。
 * 在 Bash 工具裡用 heredoc 或 `sed` 寫入含反斜線的 regex（`\b`、`\n`、`\`）時，反斜線常被吃掉或轉成控制字元（如 `\b` 變成 0x08）。這類內容要用檔案編輯工具寫，或用 `String.raw` 寫成獨立的 Node 腳本。
 
 ### 3. 股票質押連續跌停板複利推算與擔保品追加整數標準

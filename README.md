@@ -94,7 +94,7 @@
 * **核心框架**：[Next.js 16 (App Router)](https://nextjs.org/) + [React 19](https://react.dev/) + [TypeScript 6](https://www.typescriptlang.org/)
 * **樣式與 UI**：[Tailwind CSS v4 (CSS-first 模式)](https://tailwindcss.com/) + Vanilla CSS Custom Tokens（具備完整的亮暗模式 CSS 變數與主題切換機制）
 * **客戶端運算庫**：`node-forge` (密碼/SSL 憑證處理)、`diff` (文字比對)、`qr-code-styling` (向量 QR 生成)
-* **佈署架構**：AWS S3 + CloudFront CDN + CloudFormation (`template.yml`) + GitHub Actions OIDC 自動化部署 workflow
+* **佈署架構**：AWS S3 + CloudFront CDN + CloudFormation (`infra/site.yml`、`infra/bootstrap.yml`) + GitHub Actions OIDC 自動化部署 workflow
 
 ---
 
@@ -169,8 +169,41 @@ Smalltools 具備完善的企業級 SEO 架構，確保全站所有工具與頁�
 
 * **架構流向**：`Cloudflare (Edge CDN / DNS)` ➔ `AWS CloudFront (CDN)` ➔ `AWS S3 (源站)`
 * **源站存取控制**：CloudFront 以 Origin Access Control（OAC，SigV4 簽章）讀取 S3 REST 端點，目錄索引改寫與測試環境 Basic Auth 由同一支 CloudFront Function 處理。
-* **自動化 CI/CD**：每次 Push 或 Merge 至 `main` 分支時，透過 GitHub Actions 觸發靜態建置，將產出之 `out/` 自動同步更新至 AWS S3 Bucket。
-* **智慧過濾部署**：具備智慧檔案變動偵測 (`dorny/paths-filter`) 與 `paths-ignore` 機制。若僅修改說明文件或程式碼完全未變動，會自動跳過打包與 AWS 快取刷新，大幅提升部署效率並減少不必要的回源請求。
+* **自動化 CI/CD**：推送 `main` 觸發「部署 smalltools」（`.github/workflows/deploy.yml`），其他分支觸發「部署測試站」（`deploy-staging.yml`，所有分支共用一個測試站，加 Basic Auth 與 noindex），兩者共用 `deploy-site.yml`：以 CloudFormation 建立 / 更新資源 → 靜態建置 → 同步 S3 → 清除 CloudFront 快取。
+* **智慧過濾部署**：具備智慧檔案變動偵測 (`dorny/paths-filter`) 與 `paths-ignore` 機制。若僅修改說明文件或程式碼完全未變動，會自動跳過打包與 AWS 快取刷新；在 Actions 頁手動執行則一律部署。
+
+### AWS 帳號與權限隔離
+
+所有資源放在靜態網站共用帳號（與 cj-blog、pdways 同帳號）的 `us-east-1`（CloudFront 使用的 ACM 憑證只能建在這裡），堆疊為 `smalltools-site`（正式站）與 `smalltools-staging`（測試站）。
+
+* 各站的部署角色彼此碰不到：GitHub 部署角色只能操作自己的堆疊與 S3 儲存區；CloudFormation 執行角色對 CloudFront 發佈與 ACM 憑證只能動帶本站 `site-stack` 標籤的資源，CloudFront 函式以名稱前綴限制，所以各站堆疊名稱不可互為前綴。
+* 正式站部署角色只信任 `main` 分支；測試站角色信任所有分支，但只能動測試站資源。
+* 已知殘餘風險：CloudFront 來源存取控制（OAC）與回應標頭政策在 IAM 無法以標籤或名稱限制，同帳號其他網站的執行角色理論上改得到。
+
+### 首次部署
+
+1. 本機以該帳號的管理員身分登入 AWS CLI 並登入 `gh`，執行 `bash infra/bootstrap.sh`：建立部署角色，並自動寫入儲存庫變數 `AWS_DEPLOY_ROLE_ARN`、`AWS_CFN_EXEC_ROLE_ARN`、`AWS_STAGING_DEPLOY_ROLE_ARN`、`AWS_STAGING_CFN_EXEC_ROLE_ARN`。可重複執行。
+2. 測試站需要 Repository Secrets `STAGING_BASIC_AUTH_USER`、`STAGING_BASIC_AUTH_PASS`，沒設定時部署直接中斷。
+3. 推送後先以堆疊輸出的 CloudFront 預設網域驗收。
+
+### 儲存庫變數
+
+| 變數 | 用途 |
+| :--- | :--- |
+| `SITE_DOMAIN` | 正式網域（`tools.cjkuo.net`）。設定後會申請 ACM 憑證，首次部署會停在等待 DNS 驗證：到 ACM 主控台（us-east-1）把驗證 CNAME 加到 Cloudflare（僅 DNS），驗證 CNAME 要一直留著 ACM 才能自動續期。 |
+| `SITE_CERT_DOMAIN` | 選用根網域（`cjkuo.net`）。設定後憑證改申請「根網域 + 萬用子網域」，與 cj-blog 等同帳號同網域的憑證共用同一筆驗證 CNAME，Cloudflare 已有該筆記錄就會立即通過，不用另外驗證。測試站共用此變數。 |
+| `SITE_ATTACH_DOMAIN` | `true` 才把網域與憑證掛上發佈；預設 `false`，讓網域從其他帳號搬入前可以先完成憑證驗證。 |
+| `STAGING_DOMAIN` | 選用，測試站自訂網域；設定即直接掛上。 |
+
+### 從其他 AWS 帳號切換正式網域
+
+CloudFront 的同一個網域不能同時掛在兩個發佈上，跨帳號搬移時舊發佈必須先拿掉網域，期間會短暫停機（數分鐘）：
+
+1. 設 `SITE_DOMAIN=tools.cjkuo.net`、`SITE_CERT_DOMAIN=cjkuo.net`、`SITE_ATTACH_DOMAIN` 不設，部署並完成憑證驗證，以 CloudFront 預設網域驗收。
+2. 在舊帳號把舊發佈的 Alternate domain name 拿掉，等狀態變回 Deployed。
+3. 設 `SITE_ATTACH_DOMAIN=true`，在 Actions 頁手動執行「部署 smalltools」。
+4. Cloudflare 把 `tools.cjkuo.net` 的 CNAME 改指向新發佈的 `DistributionDomainName`（維持代理）。
+5. 驗收無誤後，刪除舊帳號的舊堆疊與 S3 儲存區（儲存區設了 Retain，要另外手動刪）。
 
 ---
 

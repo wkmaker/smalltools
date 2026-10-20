@@ -1,0 +1,448 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  smalltools 部署前置：GitHub Actions OIDC 身分提供者，正式站與測試站各一組 GitHub 部署角色與 CloudFormation 執行角色。
+  測試站角色信任所有分支但只能動測試站資源，分支上的 workflow 無法碰到正式站。
+  CloudFront 發佈與 ACM 憑證以 site-stack 標籤（值為堆疊名稱）辨識歸屬，同帳號的其他網站彼此碰不到；
+  堆疊名稱不可互為前綴（例如 foo 與 foo-staging），否則名稱前綴限制會重疊。
+  只需在本機以管理員身分部署一次（infra/bootstrap.sh），之後所有網站資源由 GitHub Actions 自動建立。
+
+Parameters:
+  GitHubSubjectPrefix:
+    Type: String
+    Default: repo:wkmaker/smalltools
+    Description: >-
+      GitHub OIDC 權杖 sub 的儲存庫前綴。儲存庫啟用不可變主體時為 repo:擁有者@ID/名稱@ID，
+      bootstrap.sh 會向 GitHub API 查詢實際值帶入
+  GitHubBranch:
+    Type: String
+    Default: main
+    Description: 允許部署的分支，其他分支或 PR 無法取得 AWS 憑證
+  SiteStackName:
+    Type: String
+    Default: smalltools-site
+    Description: 網站資源堆疊名稱，部署角色只能操作這個堆疊與其 S3 儲存區
+  StagingStackName:
+    Type: String
+    Default: smalltools-staging
+    Description: 測試站資源堆疊名稱，測試站部署角色只能操作這個堆疊與其 S3 儲存區
+  ExistingOidcProviderArn:
+    Type: String
+    Default: ''
+    Description: 帳號內已有 token.actions.githubusercontent.com 身分提供者時填入其 ARN，留空則自動建立
+
+Conditions:
+  CreateOidcProvider: !Equals [!Ref ExistingOidcProviderArn, '']
+
+Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOidcProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+
+  # CloudFormation 建立網站資源時使用的執行角色；GitHub 角色本身不直接持有建立資源的權限
+  CfnExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: smalltools-cfn-exec
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: site-resources
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:*
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::${SiteStackName}-*
+                  - !Sub arn:${AWS::Partition}:s3:::${SiteStackName}-*/*
+              # ---- CloudFront 與 ACM：同帳號可能有其他網站，只能動帶本站 site-stack 標籤的發佈與憑證 ----
+              # 發佈與憑證的 ID 建立前無法得知，改以 site.yml 建立時帶上的 site-stack 標籤辨識；函式則以名稱前綴限制
+              # 讀取類動作不限資源（設定內容不含機密），但其他網站的函式程式碼可能含 Basic Auth，另外拒絕
+              - Effect: Allow
+                Action:
+                  - cloudfront:Get*
+                  - cloudfront:List*
+                  - cloudfront:Describe*
+                  - acm:ListCertificates
+                Resource: '*'
+              - Effect: Deny
+                Action: cloudfront:GetFunction
+                NotResource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:function/${SiteStackName}-*
+              - Effect: Allow
+                Action: cloudfront:CreateDistribution
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:RequestTag/site-stack: !Ref SiteStackName
+              - Effect: Allow
+                Action:
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:TagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref SiteStackName
+                  StringEqualsIfExists:
+                    aws:RequestTag/site-stack: !Ref SiteStackName
+              # 建立時一併上標籤：新資源尚無標籤，只允許標成本站；帳號內手動建立、沒有標籤的發佈理論上也能被認領，
+              # 所以既有網站的發佈與憑證要由 bootstrap.sh 補上標籤
+              - Effect: Allow
+                Action: cloudfront:TagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  'Null':
+                    aws:ResourceTag/site-stack: 'true'
+                  StringEquals:
+                    aws:RequestTag/site-stack: !Ref SiteStackName
+              # 移除標籤時不可拿掉 site-stack，否則發佈會變成無主、可被其他網站認領
+              - Effect: Allow
+                Action: cloudfront:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref SiteStackName
+                  ForAllValues:StringNotEquals:
+                    aws:TagKeys: site-stack
+              # CreateFunction 不支援資源 ARN；建立其他網站名稱的函式只會讓對方堆疊建立失敗，拿不到修改權
+              - Effect: Allow
+                Action: cloudfront:CreateFunction
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - cloudfront:UpdateFunction
+                  - cloudfront:PublishFunction
+                  - cloudfront:DeleteFunction
+                  - cloudfront:TagResource
+                  - cloudfront:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:function/${SiteStackName}-*
+              # 來源存取控制與回應標頭政策 IAM 不支援標籤或名稱條件，無法限制到本站；
+              # 其他網站的部署流程理論上可改到本站這兩項設定，屬已知殘餘風險（見 README 部署一節）
+              - Effect: Allow
+                Action:
+                  - cloudfront:CreateOriginAccessControl
+                  - cloudfront:UpdateOriginAccessControl
+                  - cloudfront:DeleteOriginAccessControl
+                  - cloudfront:CreateResponseHeadersPolicy
+                  - cloudfront:UpdateResponseHeadersPolicy
+                  - cloudfront:DeleteResponseHeadersPolicy
+                Resource: '*'
+              # CloudFormation 申請憑證時不帶標籤（建立後才另外上標籤），RequestCertificate 無法以標籤限制；
+              # 申請新憑證碰不到其他網站的既有憑證，修改與刪除仍限本站標籤。憑證內容本來就公開，讀取不限資源
+              - Effect: Allow
+                Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                  - acm:GetCertificate
+                  - acm:ListTagsForCertificate
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - acm:UpdateCertificateOptions
+                  - acm:DeleteCertificate
+                  - acm:AddTagsToCertificate
+                Resource: !Sub arn:${AWS::Partition}:acm:${AWS::Region}:${AWS::AccountId}:certificate/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref SiteStackName
+                  StringEqualsIfExists:
+                    aws:RequestTag/site-stack: !Ref SiteStackName
+              - Effect: Allow
+                Action: acm:AddTagsToCertificate
+                Resource: !Sub arn:${AWS::Partition}:acm:${AWS::Region}:${AWS::AccountId}:certificate/*
+                Condition:
+                  'Null':
+                    aws:ResourceTag/site-stack: 'true'
+                  StringEquals:
+                    aws:RequestTag/site-stack: !Ref SiteStackName
+              - Effect: Allow
+                Action: acm:RemoveTagsFromCertificate
+                Resource: !Sub arn:${AWS::Partition}:acm:${AWS::Region}:${AWS::AccountId}:certificate/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref SiteStackName
+                  ForAllValues:StringNotEquals:
+                    aws:TagKeys: site-stack
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: smalltools-github-deploy
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If
+                - CreateOidcProvider
+                - !Ref GitHubOidcProvider
+                - !Ref ExistingOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub ${GitHubSubjectPrefix}:ref:refs/heads/${GitHubBranch}
+      Policies:
+        - PolicyName: deploy-site
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:GetTemplateSummary
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${SiteStackName}/*
+              - Effect: Allow
+                Action: cloudformation:ValidateTemplate
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt CfnExecutionRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: cloudformation.amazonaws.com
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub arn:${AWS::Partition}:s3:::${SiteStackName}-${AWS::AccountId}
+              # 只限網站儲存區
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::${SiteStackName}-${AWS::AccountId}/*
+              # 發佈 ID 建立前無法得知，以 site-stack 標籤限制只能清本站快取
+              - Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref SiteStackName
+
+  # ---------------- 測試站：任何分支皆可扮演，但權限只及於測試站堆疊與儲存區 ----------------
+  StagingCfnExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: smalltools-staging-cfn-exec
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: staging-resources
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:*
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::${StagingStackName}-*
+                  - !Sub arn:${AWS::Partition}:s3:::${StagingStackName}-*/*
+              # ---- CloudFront 與 ACM：同帳號可能有其他網站，只能動帶本站 site-stack 標籤的發佈與憑證 ----
+              # 發佈與憑證的 ID 建立前無法得知，改以 site.yml 建立時帶上的 site-stack 標籤辨識；函式則以名稱前綴限制
+              # 讀取類動作不限資源（設定內容不含機密），但其他網站的函式程式碼可能含 Basic Auth，另外拒絕
+              - Effect: Allow
+                Action:
+                  - cloudfront:Get*
+                  - cloudfront:List*
+                  - cloudfront:Describe*
+                  - acm:ListCertificates
+                Resource: '*'
+              - Effect: Deny
+                Action: cloudfront:GetFunction
+                NotResource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:function/${StagingStackName}-*
+              - Effect: Allow
+                Action: cloudfront:CreateDistribution
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:RequestTag/site-stack: !Ref StagingStackName
+              - Effect: Allow
+                Action:
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:TagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref StagingStackName
+                  StringEqualsIfExists:
+                    aws:RequestTag/site-stack: !Ref StagingStackName
+              # 建立時一併上標籤：新資源尚無標籤，只允許標成本站；帳號內手動建立、沒有標籤的發佈理論上也能被認領，
+              # 所以既有網站的發佈與憑證要由 bootstrap.sh 補上標籤
+              - Effect: Allow
+                Action: cloudfront:TagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  'Null':
+                    aws:ResourceTag/site-stack: 'true'
+                  StringEquals:
+                    aws:RequestTag/site-stack: !Ref StagingStackName
+              # 移除標籤時不可拿掉 site-stack，否則發佈會變成無主、可被其他網站認領
+              - Effect: Allow
+                Action: cloudfront:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref StagingStackName
+                  ForAllValues:StringNotEquals:
+                    aws:TagKeys: site-stack
+              # CreateFunction 不支援資源 ARN；建立其他網站名稱的函式只會讓對方堆疊建立失敗，拿不到修改權
+              - Effect: Allow
+                Action: cloudfront:CreateFunction
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - cloudfront:UpdateFunction
+                  - cloudfront:PublishFunction
+                  - cloudfront:DeleteFunction
+                  - cloudfront:TagResource
+                  - cloudfront:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:function/${StagingStackName}-*
+              # 來源存取控制與回應標頭政策 IAM 不支援標籤或名稱條件，無法限制到本站；
+              # 其他網站的部署流程理論上可改到本站這兩項設定，屬已知殘餘風險（見 README 部署一節）
+              - Effect: Allow
+                Action:
+                  - cloudfront:CreateOriginAccessControl
+                  - cloudfront:UpdateOriginAccessControl
+                  - cloudfront:DeleteOriginAccessControl
+                  - cloudfront:CreateResponseHeadersPolicy
+                  - cloudfront:UpdateResponseHeadersPolicy
+                  - cloudfront:DeleteResponseHeadersPolicy
+                Resource: '*'
+              # CloudFormation 申請憑證時不帶標籤（建立後才另外上標籤），RequestCertificate 無法以標籤限制；
+              # 申請新憑證碰不到其他網站的既有憑證，修改與刪除仍限本站標籤。憑證內容本來就公開，讀取不限資源
+              - Effect: Allow
+                Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                  - acm:GetCertificate
+                  - acm:ListTagsForCertificate
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - acm:UpdateCertificateOptions
+                  - acm:DeleteCertificate
+                  - acm:AddTagsToCertificate
+                Resource: !Sub arn:${AWS::Partition}:acm:${AWS::Region}:${AWS::AccountId}:certificate/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref StagingStackName
+                  StringEqualsIfExists:
+                    aws:RequestTag/site-stack: !Ref StagingStackName
+              - Effect: Allow
+                Action: acm:AddTagsToCertificate
+                Resource: !Sub arn:${AWS::Partition}:acm:${AWS::Region}:${AWS::AccountId}:certificate/*
+                Condition:
+                  'Null':
+                    aws:ResourceTag/site-stack: 'true'
+                  StringEquals:
+                    aws:RequestTag/site-stack: !Ref StagingStackName
+              - Effect: Allow
+                Action: acm:RemoveTagsFromCertificate
+                Resource: !Sub arn:${AWS::Partition}:acm:${AWS::Region}:${AWS::AccountId}:certificate/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref StagingStackName
+                  ForAllValues:StringNotEquals:
+                    aws:TagKeys: site-stack
+
+  GitHubStagingDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: smalltools-github-staging-deploy
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If
+                - CreateOidcProvider
+                - !Ref GitHubOidcProvider
+                - !Ref ExistingOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub ${GitHubSubjectPrefix}:ref:refs/heads/*
+      Policies:
+        - PolicyName: deploy-staging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:GetTemplateSummary
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${StagingStackName}/*
+              - Effect: Allow
+                Action: cloudformation:ValidateTemplate
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt StagingCfnExecutionRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: cloudformation.amazonaws.com
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub arn:${AWS::Partition}:s3:::${StagingStackName}-${AWS::AccountId}
+              # 只限網站儲存區
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::${StagingStackName}-${AWS::AccountId}/*
+              # 發佈 ID 建立前無法得知，以 site-stack 標籤限制只能清測試站快取
+              - Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/site-stack: !Ref StagingStackName
+
+Outputs:
+  GitHubDeployRoleArn:
+    Description: 設為 GitHub 儲存庫變數 AWS_DEPLOY_ROLE_ARN
+    Value: !GetAtt GitHubDeployRole.Arn
+  CfnExecutionRoleArn:
+    Description: 設為 GitHub 儲存庫變數 AWS_CFN_EXEC_ROLE_ARN
+    Value: !GetAtt CfnExecutionRole.Arn
+  GitHubStagingDeployRoleArn:
+    Description: 設為 GitHub 儲存庫變數 AWS_STAGING_DEPLOY_ROLE_ARN
+    Value: !GetAtt GitHubStagingDeployRole.Arn
+  StagingCfnExecutionRoleArn:
+    Description: 設為 GitHub 儲存庫變數 AWS_STAGING_CFN_EXEC_ROLE_ARN
+    Value: !GetAtt StagingCfnExecutionRole.Arn

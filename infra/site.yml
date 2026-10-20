@@ -1,0 +1,277 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  smalltools 網站資源：私有 S3 儲存區（僅 CloudFront 經 OAC 可讀）、CloudFront 發佈、網址改寫、
+  選用的自訂網域 ACM 憑證。正式站（smalltools-site）與測試站（smalltools-staging）共用本範本，
+  測試站另加 Basic Auth 與 noindex。由 GitHub Actions 以各自的執行角色部署於 us-east-1。
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: ''
+    Description: >-
+      自訂網域（例如 tools.cjkuo.net）。留空則只用 CloudFront 預設網域驗收；填入後會申請 ACM 憑證，
+      堆疊會等到 Cloudflare 加上驗證 CNAME 才完成。
+  CertificateDomain:
+    Type: String
+    Default: ''
+    AllowedPattern: '^([a-z0-9-]+\.)+[a-z]{2,}$|^$'
+    Description: >-
+      選填。填根網域（例如 cjkuo.net）時，憑證改申請「根網域 + 萬用子網域」，DomainName 必須是它的子網域；
+      驗證 CNAME 與同帳號同網域的其他憑證相同，Cloudflare 已有就會立即通過。留空則只申請 DomainName 單一網域。
+  AttachDomain:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: >-
+      是否把 DomainName 掛上發佈。網域從其他帳號搬入時先保持 false 讓憑證預先驗證完成，
+      等舊發佈拿掉這個網域後再改 true，縮短切換時的停機時間
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging]
+    Description: staging 會加上 X-Robots-Tag noindex 回應標頭
+  BasicAuth:
+    Type: String
+    Default: ''
+    NoEcho: true
+    AllowedPattern: '^[A-Za-z0-9+/=]*$'
+    Description: >-
+      Basic Auth 帳密「帳號:密碼」的 Base64，留空則不驗證。會寫入 CloudFront Function 程式碼，
+      帳號內有 CloudFront 讀取權限者看得到，不要用在其他地方用過的密碼。
+
+Conditions:
+  HasDomain: !Not [!Equals [!Ref DomainName, '']]
+  HasCertificateDomain: !Not [!Equals [!Ref CertificateDomain, '']]
+  UseDomain: !And [!Condition HasDomain, !Equals [!Ref AttachDomain, 'true']]
+  IsStaging: !Equals [!Ref Environment, staging]
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    # 內容每次由建置產生，但保留儲存區避免誤刪堆疊時站台瞬間消失
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-${AWS::AccountId}
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # 給 ListBucket 讓不存在的路徑回 404 而不是 403
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt SiteBucket.Arn
+              - !Sub ${SiteBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}
+          - Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt SiteBucket.Arn
+              - !Sub ${SiteBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ${AWS::StackName}-oac
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: HasDomain
+    Properties:
+      DomainName: !If [HasCertificateDomain, !Ref CertificateDomain, !Ref DomainName]
+      SubjectAlternativeNames: !If
+        - HasCertificateDomain
+        - [!Sub '*.${CertificateDomain}']
+        - !Ref AWS::NoValue
+      ValidationMethod: DNS
+      # bootstrap.yml 的執行角色只能管理帶本堆疊 site-stack 標籤的憑證，拿掉會部署失敗
+      Tags:
+        - Key: site-stack
+          Value: !Ref AWS::StackName
+
+  # viewer-request：Basic Auth（測試站）、補結尾斜線、目錄對應 index.html
+  # 單元測試直接擷取下方 FunctionCode 執行（tests/engine/cloudfront-viewer-request.test.mjs），改規則請同步補測試
+  UrlFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub ${AWS::StackName}-url
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Basic Auth、補結尾斜線與目錄 index.html 改寫
+        Runtime: cloudfront-js-2.0
+      # !Sub 只替換 BasicAuth 參數；程式碼內不可出現錢字號接大括號（會被當成 CloudFormation 變數）
+      FunctionCode: !Sub |
+        var BASIC_AUTH = '${BasicAuth}';
+
+        // PWA 描述檔、Service Worker 與 OG 圖片不攔截，避免測試站 401 讓瀏覽器與爬蟲取用失敗
+        function isAuthExempt(uri) {
+          return uri === '/manifest.webmanifest' || uri === '/sw.js' || uri === '/favicon.ico' || uri.indexOf('opengraph-image') !== -1;
+        }
+
+        function serializeQuery(querystring) {
+          var parts = [];
+          Object.keys(querystring).forEach(function (key) {
+            var entry = querystring[key];
+            var values = entry.multiValue ? entry.multiValue : [entry];
+            values.forEach(function (item) {
+              parts.push(item.value === '' ? key : key + '=' + item.value);
+            });
+          });
+          return parts.length ? '?' + parts.join('&') : '';
+        }
+
+        function handler(event) {
+          var request = event.request;
+          var uri = request.uri;
+
+          if (BASIC_AUTH && !isAuthExempt(uri)) {
+            var auth = request.headers.authorization;
+            if (!auth || auth.value !== 'Basic ' + BASIC_AUTH) {
+              return {
+                statusCode: 401,
+                statusDescription: 'Unauthorized',
+                headers: {
+                  'www-authenticate': { value: 'Basic realm="smalltools staging", charset="UTF-8"' },
+                  'cache-control': { value: 'no-store' }
+                }
+              };
+            }
+          }
+
+          // S3 REST 端點不會自動解析目錄索引：以 / 結尾的路徑補上 index.html
+          if (uri.endsWith('/')) {
+            request.uri = uri + 'index.html';
+            return request;
+          }
+
+          // 無副檔名路徑 301 補斜線並保留查詢參數（opengraph-image 為無副檔名的實體檔案，須排除）
+          var lastSegment = uri.substring(uri.lastIndexOf('/') + 1);
+          if (lastSegment.indexOf('.') === -1 && lastSegment !== 'opengraph-image') {
+            return {
+              statusCode: 301,
+              statusDescription: 'Moved Permanently',
+              headers: {
+                location: { value: uri + '/' + serializeQuery(request.querystring || {}) }
+              }
+            };
+          }
+
+          return request;
+        }
+
+  SecurityHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub ${AWS::StackName}-security-headers
+        Comment: HSTS、nosniff、禁止跨站嵌入、Referrer-Policy；測試站另加 noindex
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: false
+            Preload: false
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: SAMEORIGIN
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+        CustomHeadersConfig: !If
+          - IsStaging
+          - Items:
+              - Header: X-Robots-Tag
+                Value: noindex, nofollow, noarchive
+                Override: true
+          - !Ref AWS::NoValue
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      # bootstrap.yml 的部署與執行角色只能管理帶本堆疊 site-stack 標籤的發佈，拿掉會部署失敗
+      Tags:
+        - Key: site-stack
+          Value: !Ref AWS::StackName
+      DistributionConfig:
+        Comment: !Sub ${AWS::StackName}
+        Enabled: true
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_All
+        DefaultRootObject: index.html
+        Aliases: !If [UseDomain, [!Ref DomainName], !Ref AWS::NoValue]
+        ViewerCertificate: !If
+          - UseDomain
+          - AcmCertificateArn: !Ref Certificate
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
+        Origins:
+          - Id: site-bucket
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: site-bucket
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          # AWS 受管快取政策 CachingOptimized：依來源 Cache-Control 決定 TTL，不帶查詢參數與 Cookie
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !Ref SecurityHeadersPolicy
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt UrlFunction.FunctionMetadata.FunctionARN
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 10
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 10
+
+Outputs:
+  BucketName:
+    Value: !Ref SiteBucket
+  DistributionId:
+    Value: !Ref Distribution
+  DistributionDomainName:
+    Description: 驗收用網址；切換正式網域時 Cloudflare 的 CNAME 指向這裡
+    Value: !GetAtt Distribution.DomainName

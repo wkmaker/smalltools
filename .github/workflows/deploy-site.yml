@@ -1,0 +1,297 @@
+name: 部署網站（共用流程）
+
+# 正式站（deploy.yml）與測試站（deploy-staging.yml）共用的建置與發佈步驟；差異只由 inputs 決定
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: production 或 staging
+        type: string
+        required: true
+      stack-name:
+        type: string
+        required: true
+      deploy-role-arn:
+        type: string
+        required: true
+      cfn-exec-role-arn:
+        type: string
+        required: true
+      domain:
+        description: 自訂網域，留空則只用 CloudFront 預設網域
+        type: string
+        default: ''
+      certificate-domain:
+        description: 選填根網域（例如 cjkuo.net），憑證改申請「根網域 + 萬用子網域」，沿用同網域既有的驗證 CNAME
+        type: string
+        default: ''
+      attach-domain:
+        description: 是否把自訂網域掛上發佈（'true' / 'false'），從其他帳號搬入網域時先維持 false 預先驗證憑證
+        type: string
+        default: 'false'
+    secrets:
+      basic-auth-user:
+        required: false
+      basic-auth-pass:
+        required: false
+
+permissions:
+  id-token: write # 用於 AWS OIDC 無金鑰認證
+  contents: read
+
+env:
+  AWS_REGION: us-east-1 # CloudFront 的 ACM 憑證只能建在 us-east-1，整組資源統一放這裡
+  SITE_STACK: ${{ inputs.stack-name }}
+  DEPLOY_ENV: ${{ inputs.environment }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90 # 首次加自訂網域時，堆疊會等 ACM 憑證 DNS 驗證
+
+    steps:
+      # ── 1. 檢查部署參數 ──────────────────────────────────────
+      - name: 檢查部署參數
+        id: params
+        env:
+          AUTH_USER: ${{ secrets.basic-auth-user }}
+          AUTH_PASS: ${{ secrets.basic-auth-pass }}
+          ATTACH_DOMAIN: ${{ inputs.attach-domain }}
+        run: |
+          case "${DEPLOY_ENV}" in
+            production|staging) ;;
+            *) echo "::error::environment 只能是 production 或 staging，收到「${DEPLOY_ENV}」"; exit 1 ;;
+          esac
+          case "${ATTACH_DOMAIN}" in
+            true|false) ;;
+            *) echo "::error::attach-domain 只能是 true 或 false，收到「${ATTACH_DOMAIN}」"; exit 1 ;;
+          esac
+          # 測試站以 Secret 帳密生成 Base64；未設定時直接中斷，不退回任何預設帳密
+          if [ "${DEPLOY_ENV}" = "staging" ]; then
+            if [ -z "${AUTH_USER}" ] || [ -z "${AUTH_PASS}" ]; then
+              echo "::error::尚未設定 STAGING_BASIC_AUTH_USER 或 STAGING_BASIC_AUTH_PASS Repository Secret，已中斷測試環境部署。"
+              exit 1
+            fi
+            encoded="$(printf '%s:%s' "${AUTH_USER}" "${AUTH_PASS}" | base64 -w0)"
+            echo "::add-mask::${encoded}"
+            echo "basic_auth=${encoded}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── 2. 拉取代碼並偵測變動 ────────────────────────────────
+      - name: 檢出儲存庫代碼
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 偵測程式碼與基礎架構變動
+        id: changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            build_and_deploy:
+              - 'app/**'
+              - 'components/**'
+              - 'public/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'next.config.*'
+              - 'tsconfig.json'
+              - 'infra/site.yml'
+              - '.github/workflows/deploy*.yml'
+
+      - name: 未偵測到變動，略過部署
+        if: steps.changes.outputs.build_and_deploy == 'false' && github.event_name != 'workflow_dispatch'
+        run: echo "ℹ️ app/、public/、package.json、infra/site.yml 等皆未變動，略過建置、S3 同步與快取清除。"
+
+      - name: 決定是否部署
+        id: gate
+        run: echo "deploy=${{ steps.changes.outputs.build_and_deploy == 'true' || github.event_name == 'workflow_dispatch' }}" >> "$GITHUB_OUTPUT"
+
+      # ── 3. 建立或更新網站資源 ────────────────────────────────
+      - name: 設定 AWS 憑證（OIDC 無金鑰認證）
+        if: steps.gate.outputs.deploy == 'true'
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ inputs.deploy-role-arn }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 建立或更新網站資源（CloudFormation）
+        if: steps.gate.outputs.deploy == 'true'
+        env:
+          SITE_DOMAIN: ${{ inputs.domain }}
+          SITE_CERT_DOMAIN: ${{ inputs.certificate-domain }}
+          ATTACH_DOMAIN: ${{ inputs.attach-domain }}
+          BASIC_AUTH_B64: ${{ steps.params.outputs.basic_auth }}
+          CFN_EXEC_ROLE_ARN: ${{ inputs.cfn-exec-role-arn }}
+        run: |
+          overrides=("Environment=${DEPLOY_ENV}" "BasicAuth=${BASIC_AUTH_B64}" "DomainName=${SITE_DOMAIN}" "CertificateDomain=${SITE_CERT_DOMAIN}" "AttachDomain=${ATTACH_DOMAIN}")
+          if [ -n "${SITE_DOMAIN}" ]; then
+            echo "::notice::自訂網域 ${SITE_DOMAIN}：首次加入時請到 ACM 主控台（us-east-1）複製驗證 CNAME 加到 Cloudflare（僅 DNS）"
+          fi
+          if ! aws cloudformation deploy \
+            --stack-name "${SITE_STACK}" \
+            --template-file infra/site.yml \
+            --role-arn "${CFN_EXEC_ROLE_ARN}" \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides "${overrides[@]}"; then
+            echo "❌ CloudFormation 部署失敗，近期錯誤事件："
+            aws cloudformation describe-stack-events \
+              --stack-name "${SITE_STACK}" \
+              --max-items 30 \
+              --query "StackEvents[?ResourceStatusReason!=null].[LogicalResourceId, ResourceStatus, ResourceStatusReason]" \
+              --output table || true
+            exit 1
+          fi
+
+      - name: 讀取堆疊輸出
+        if: steps.gate.outputs.deploy == 'true'
+        id: stack
+        env:
+          SITE_DOMAIN: ${{ inputs.domain }}
+          ATTACH_DOMAIN: ${{ inputs.attach-domain }}
+        run: |
+          output() {
+            aws cloudformation describe-stacks --stack-name "${SITE_STACK}" \
+              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
+          }
+          echo "bucket=$(output BucketName)" >> "$GITHUB_OUTPUT"
+          echo "distribution=$(output DistributionId)" >> "$GITHUB_OUTPUT"
+          dist_domain="$(output DistributionDomainName)"
+          # 正式站的 metadataBase 一律用正式網域（搬遷驗收期間尚未掛上網域也一樣）；測試站用實際可連的網址
+          if [ "${DEPLOY_ENV}" = "production" ]; then
+            site_url="https://tools.cjkuo.net"
+          elif [ -n "${SITE_DOMAIN}" ] && [ "${ATTACH_DOMAIN}" = "true" ]; then
+            site_url="https://${SITE_DOMAIN}"
+          else
+            site_url="https://${dist_domain}"
+          fi
+          echo "site_url=${site_url}" >> "$GITHUB_OUTPUT"
+          echo "dist_domain=${dist_domain}" >> "$GITHUB_OUTPUT"
+
+      # ── 4. 建置 ─────────────────────────────────────────────
+      - name: 測試站 robots.txt 改為 Disallow
+        if: steps.gate.outputs.deploy == 'true' && env.DEPLOY_ENV == 'staging'
+        run: |
+          printf 'User-agent: *\nDisallow: /\n' > ./public/robots.txt
+          echo "已將 ./public/robots.txt 覆寫為 Disallow: /"
+
+      - name: 安裝 Node.js 24
+        if: steps.gate.outputs.deploy == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Next.js 建置快取
+        if: steps.gate.outputs.deploy == 'true'
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+
+      - name: 安裝專案依賴
+        if: steps.gate.outputs.deploy == 'true'
+        run: npm ci
+
+      # prebuild 會先跑 UI / SEO / FAQ / 字典 / 引擎測試，任一失敗即中斷
+      - name: Next.js SSG 建置（產出 out/）
+        if: steps.gate.outputs.deploy == 'true'
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SITE_URL: ${{ steps.stack.outputs.site_url }}
+
+      # 每版 sw.js 必定有字元差異，確保瀏覽器偵測到新版 Service Worker
+      - name: 注入 Service Worker 版本戳記
+        if: steps.gate.outputs.deploy == 'true'
+        run: |
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "// PWA Build Version: ${GITHUB_SHA} | Built at: ${BUILD_TIME} | Env: ${DEPLOY_ENV}" | cat - ./out/sw.js > ./out/sw.js.tmp && mv ./out/sw.js.tmp ./out/sw.js
+
+      # ── 5. 同步 out/ 至 S3 ──────────────────────────────────
+      - name: 同步至 S3
+        if: steps.gate.outputs.deploy == 'true'
+        env:
+          S3_BUCKET: ${{ steps.stack.outputs.bucket }}
+        run: |
+          # 1. HTML 與其他一般靜態檔案（排除專屬處理的資產）
+          aws s3 sync ./out "s3://${S3_BUCKET}" \
+            --no-progress \
+            --delete \
+            --exclude "*.css" \
+            --exclude "*.js" \
+            --exclude "*.woff2" \
+            --exclude "*.woff" \
+            --exclude "_next/static/*" \
+            --exclude "img/*" \
+            --exclude "sw.js" \
+            --exclude "*opengraph-image*" \
+            --exclude "*.svg" \
+            --cache-control "public, max-age=300, s-maxage=300"
+
+          # 2. Service Worker (sw.js) & PWA 清單：完全不快取，確保版本即時感應與更新
+          aws s3 cp ./out "s3://${S3_BUCKET}" \
+            --no-progress \
+            --recursive \
+            --exclude "*" \
+            --include "sw.js" \
+            --include "manifest.webmanifest" \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --metadata-directive "REPLACE"
+
+          # 2b. public/ 根目錄的非雜湊 JS（如 pac-tester-worker.js）：步驟 1 排除了 *.js，
+          #     這裡必須另外上傳，否則線上 404，Worker 載入失敗。檔名不含 hash，故採短快取。
+          aws s3 cp ./out "s3://${S3_BUCKET}" \
+            --no-progress \
+            --recursive \
+            --exclude "*" \
+            --include "*.js" \
+            --exclude "_next/*" \
+            --exclude "sw.js" \
+            --content-type "text/javascript" \
+            --metadata-directive "REPLACE" \
+            --cache-control "public, max-age=300, s-maxage=300"
+
+          # 3. JS / CSS / 字型：Next.js 會生成 content hash 檔名，可長快取 1 年
+          aws s3 sync ./out/_next/static "s3://${S3_BUCKET}/_next/static" \
+            --no-progress \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # 4. img/ 靜態圖片：快取 1 天
+          aws s3 sync ./out/img "s3://${S3_BUCKET}/img" \
+            --no-progress \
+            --delete \
+            --cache-control "public, max-age=86400"
+
+          # 5. opengraph-image 動態圖片（無副檔名檔案）：強制 image/png MIME + inline 顯示 + 快取 1 天
+          aws s3 cp ./out "s3://${S3_BUCKET}" \
+            --no-progress \
+            --recursive \
+            --exclude "*" \
+            --include "*opengraph-image*" \
+            --content-type "image/png" \
+            --content-disposition "inline" \
+            --metadata-directive "REPLACE" \
+            --cache-control "public, max-age=86400"
+
+          # 6. SVG 圖片（support.svg 等）：強制 image/svg+xml MIME + inline 顯示 + 快取 600 秒
+          aws s3 cp ./out "s3://${S3_BUCKET}" \
+            --no-progress \
+            --recursive \
+            --exclude "*" \
+            --include "*.svg" \
+            --content-type "image/svg+xml" \
+            --content-disposition "inline" \
+            --metadata-directive "REPLACE" \
+            --cache-control "public, max-age=600"
+
+      # ── 6. 清除 CloudFront 快取 ─────────────────────────────
+      - name: 清除 CloudFront 快取
+        if: steps.gate.outputs.deploy == 'true'
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.stack.outputs.distribution }}" \
+            --paths "/*"
+          echo "::notice::已部署（${DEPLOY_ENV}）：https://${{ steps.stack.outputs.dist_domain }}/"
