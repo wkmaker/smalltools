@@ -403,6 +403,54 @@ export function classifyProxyStatus(
 }
 
 /**
+ * PAC 執行時以同名參數遮蔽為 undefined 的全域識別字（網路、程式碼載入、全域物件參照）。
+ * 註：strict mode 不允許以 eval 作為參數名稱，eval 改由靜態檢查與 Worker 啟動時移除處理。
+ */
+export const PAC_FORBIDDEN_GLOBALS = [
+  'window',
+  'document',
+  'self',
+  'globalThis',
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
+  'WebTransport',
+  'EventSource',
+  'importScripts',
+  'localStorage',
+  'sessionStorage',
+  'indexedDB',
+  'caches',
+  'BroadcastChannel',
+  'Worker',
+  'SharedWorker',
+  'Function',
+  'setTimeout',
+  'setInterval',
+  'postMessage',
+];
+
+/** 去除字串與註解後仍不得出現的關鍵字：可取得全域物件、動態產生或載入程式碼的途徑 */
+const PAC_FORBIDDEN_CODE_TOKENS = /\b(importScripts|eval|Function|constructor|__proto__|prototype|globalThis|self)\b/g;
+
+/**
+ * 找出 PAC 腳本中基於安全考量禁止使用的關鍵字（去重、依出現順序）。
+ *
+ * import() 無法以參數遮蔽或執行期移除，因此直接比對原始文字（含字串與註解）；
+ * 其餘關鍵字已有執行期遮蔽，先去除字串與註解再比對以減少主機名稱誤判。
+ */
+export function findForbiddenPacTokens(pacScript: string): string[] {
+  const found = new Set<string>();
+  if (/\bimport\b/.test(pacScript)) found.add('import');
+  const code = pacScript.replace(
+    /\/\*[\s\S]*?\*\/|\/\/[^\n]*|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"/g,
+    ' '
+  );
+  for (const match of code.matchAll(PAC_FORBIDDEN_CODE_TOKENS)) found.add(match[1]);
+  return [...found];
+}
+
+/**
  * 執行單次 PAC 模擬測試
  */
 export function runSinglePacTest(
@@ -415,6 +463,11 @@ export function runSinglePacTest(
   const startTime = performance.now();
 
   try {
+    const forbiddenTokens = findForbiddenPacTokens(pacScript);
+    if (forbiddenTokens.length > 0) {
+      throw new Error(`PAC 腳本含有基於安全考量禁止使用的關鍵字：${forbiddenTokens.join('、')}`);
+    }
+
     const sandbox = createPacSandbox(mockContext, traceSteps);
     const resolvedIp = sandbox.dnsResolve(host);
     const hostType: 'IPv4' | 'IPv6' | 'Domain' =
@@ -430,17 +483,7 @@ export function runSinglePacTest(
     const sandboxScopeValues = Object.values(sandbox);
 
     // 防護遮罩：阻斷 window, document, fetch 等瀏覽器環境
-    const forbiddenGlobals = [
-      'window',
-      'document',
-      'globalThis',
-      'fetch',
-      'XMLHttpRequest',
-      'localStorage',
-      'sessionStorage',
-      'indexedDB',
-      'WebSocket',
-    ];
+    const forbiddenGlobals = PAC_FORBIDDEN_GLOBALS;
 
     const runnerCode = `
       "use strict";
@@ -561,7 +604,17 @@ export function lintPacScript(pacScript: string): PacLintIssue[] {
     });
   }
 
-  // 2. 檢查舊版 isInNet 使用 IPv6 的情況
+  // 2. 檢查安全性禁用關鍵字
+  const forbiddenTokens = findForbiddenPacTokens(script);
+  if (forbiddenTokens.length > 0) {
+    issues.push({
+      severity: 'error',
+      messageZh: `偵測到基於安全考量禁止使用的關鍵字：${forbiddenTokens.join('、')}。PAC 腳本不需要也不允許存取全域物件、載入外部程式或動態產生程式碼。`,
+      messageEn: `Detected keywords forbidden for security reasons: ${forbiddenTokens.join(', ')}. PAC scripts may not access the global object, load external code, or generate code dynamically.`,
+    });
+  }
+
+  // 3. 檢查舊版 isInNet 使用 IPv6 的情況
   const isInNetIpv6Match = script.match(/isInNet\s*\([^)]*:[^)]*\)/);
   if (isInNetIpv6Match) {
     issues.push({
@@ -571,7 +624,7 @@ export function lintPacScript(pacScript: string): PacLintIssue[] {
     });
   }
 
-  // 3. 檢查是否存在 return 語句
+  // 4. 檢查是否存在 return 語句
   if (!script.includes('return')) {
     issues.push({
       severity: 'warning',
@@ -580,7 +633,7 @@ export function lintPacScript(pacScript: string): PacLintIssue[] {
     });
   }
 
-  // 4. 檢查常用回傳標籤拼寫
+  // 5. 檢查常用回傳標籤拼寫
   const hasValidReturnToken = /(DIRECT|PROXY|SOCKS|SOCKS5|HTTPS)/i.test(script);
   if (!hasValidReturnToken) {
     issues.push({

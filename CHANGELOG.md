@@ -2,6 +2,21 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.7] - 2026-10-20
+
+### Security
+- **密碼產生器不再退回 Math.random()（#81）**：環境不支援 `crypto.getRandomValues` 時，`secureRandomInt` 改為拋出 `CsprngUnavailableError`，介面顯示繁中錯誤並停止產生密碼。
+- **PAC 測試器沙盒強化（#80）**：執行前先做靜態檢查，拒絕 `import`、`importScripts`、`eval`、`constructor` 等關鍵字，`lintPacScript` 也會同步提示；遮蔽清單補上 `self`、`importScripts`、`Function`、計時器等全域；Worker 載入時移除網路與程式碼載入 API，並切斷函式原型上的 `constructor`，封住原型鏈逃逸路徑。CSP 隔離依賴 #77，尚未處理。
+
+### Fixed
+- **Lint error（#85）**：宮縮計時器與胎動紀錄改為不在 render 期間呼叫 `Date.now()`，`npm run lint` 恢復 0 error。
+- **測試換行相容**：`cloudfront-viewer-request.test.mjs` 讀取 `template.yml` 時先統一換行，修正 Windows CRLF 簽出時測試失敗的問題。
+
+### Added
+- **回歸測試**：補上 CSPRNG 不可用時的測試，以及 PAC 沙盒逃逸、禁用關鍵字與主機名稱不誤判的測試。
+
+---
+
 ## [1.27.6] - 2026-10-20
 
 ### Security

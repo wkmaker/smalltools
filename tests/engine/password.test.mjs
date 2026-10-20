@@ -5,6 +5,8 @@ import {
   CONFUSABLE,
   buildPassword,
   evaluateStrength,
+  secureRandomInt,
+  CsprngUnavailableError,
 } from '../../app/password/engine.ts';
 
 test('Password Generator Engine', async (t) => {
@@ -91,5 +93,28 @@ test('Password Generator Engine', async (t) => {
     const secure = evaluateStrength('A#b9!Kx2$P0@Lz1&', 4, 16, labels);
     assert.equal(secure.label, labels.secure);
     assert.equal(secure.percent, 100);
+  });
+  await t.test('不支援 CSPRNG 時拋出例外，不退回 Math.random()', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true, writable: true });
+    try {
+      assert.throws(() => secureRandomInt(10), CsprngUnavailableError);
+      assert.throws(
+        () => buildPassword({
+          length: 16,
+          useUpper: true,
+          useLower: true,
+          useNumber: true,
+          useCommonSymbol: false,
+          useOtherSymbol: false,
+          excludeConfusable: false,
+          strictMode: true,
+        }),
+        CsprngUnavailableError,
+      );
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', original);
+    }
+    assert.ok(secureRandomInt(10) < 10);
   });
 });

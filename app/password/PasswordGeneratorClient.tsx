@@ -13,6 +13,7 @@ import {
   StrengthResult,
   evaluateStrength,
   buildPassword,
+  CsprngUnavailableError,
 } from './engine';
 
 interface Props {
@@ -55,16 +56,26 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
 
   const generatePassword = useCallback(
     (pushHistory = false): string | null => {
-      const pwd = buildPassword({
-        length,
-        useUpper,
-        useLower,
-        useNumber,
-        useCommonSymbol,
-        useOtherSymbol,
-        excludeConfusable,
-        strictMode,
-      });
+      let pwd: string | null;
+      try {
+        pwd = buildPassword({
+          length,
+          useUpper,
+          useLower,
+          useNumber,
+          useCommonSymbol,
+          useOtherSymbol,
+          excludeConfusable,
+          strictMode,
+        });
+      } catch (err) {
+        if (!(err instanceof CsprngUnavailableError)) throw err;
+        console.error('[password] 無法取得 CSPRNG，已停止產生密碼', err);
+        setPassword(t.placeholderNoCsprng);
+        setPasswordColor('#ef4444');
+        setStrength({ label: '-', percent: 0, color: 'transparent' });
+        return null;
+      }
 
       if (!pwd) {
         const hasAny = useUpper || useLower || useNumber || useCommonSymbol || useOtherSymbol;
@@ -106,6 +117,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
       strictMode,
       t.placeholderSelectCharset,
       t.placeholderNoChars,
+      t.placeholderNoCsprng,
       t.strengthWeak,
       t.strengthMedium,
       t.strengthStrong,
@@ -130,9 +142,11 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
       val === TRANSLATIONS['zh-TW'].placeholderInitial ||
       val === TRANSLATIONS['zh-TW'].placeholderSelectCharset ||
       val === TRANSLATIONS['zh-TW'].placeholderNoChars ||
+      val === TRANSLATIONS['zh-TW'].placeholderNoCsprng ||
       val === TRANSLATIONS['en'].placeholderInitial ||
       val === TRANSLATIONS['en'].placeholderSelectCharset ||
-      val === TRANSLATIONS['en'].placeholderNoChars
+      val === TRANSLATIONS['en'].placeholderNoChars ||
+      val === TRANSLATIONS['en'].placeholderNoCsprng
     );
   };
 

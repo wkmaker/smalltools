@@ -272,7 +272,7 @@ export default function KickCounterClient({ lang = 'zh-TW' }: { lang?: Lang }) {
   const latestCompleted = history[0];
 
   const sevenDayAvg = useMemo(() => {
-    return calculateSevenDayAverage(history, now || Date.now());
+    return calculateSevenDayAverage(history, now);
   }, [history, now]);
 
   // 圖表點位（過去 8 天數滿 10 次的耗時曲線）

@@ -77,3 +77,15 @@ app/[tool-name]/
 
 * 測試範疇必須包含：雙語鍵值 100% 對稱性、FAQ 結構格式正確性、色碼 Hex 與尺寸規範完整性。
 * 整合至 `package.json` 的 `npm run test` 與 `prebuild` 管線，確保每次 CI/CD 與部署前 100% 通過。
+
+---
+
+## 五、 使用者腳本沙盒（PAC 測試器）
+
+`/pac-tester` 會執行使用者貼上的 PAC 腳本，只在 `public/pac-tester-worker.js` 的獨立 Worker 中執行，`app/pac-tester/engine.ts` 是供測試比對的同步副本。只用 `new Function` 參數遮蔽不足以隔離（`({}).constructor.constructor('return this')()` 可取得真正的全域物件），必須三層並用：
+
+1. **靜態檢查** `findForbiddenPacTokens`：`import()` 屬語法、無法遮蔽或移除，比對原始文字；其餘關鍵字先去除字串與註解再比對，避免主機名稱誤判。`lintPacScript` 與執行前都會檢查。
+2. **參數遮蔽** `PAC_FORBIDDEN_GLOBALS`：注意 strict mode 不允許 `eval` 當參數名稱（會 SyntaxError），`eval` 只能靠另外兩層處理。
+3. **Worker 環境封鎖** `hardenWorkerScope`：載入時移除網路、程式碼載入與計時 API，並把 `Function` / `AsyncFunction` / `GeneratorFunction` 原型上的 `constructor` 設為 `undefined`；自己要用的 `Function` 必須在封鎖前先存成 `SandboxFunction`。這層只能在專用 Worker 做，不能在主執行緒做（會破壞整個頁面）。
+
+新增或修改沙盒時，要同步修改兩份檔案，並在 `tests/engine/pac-tester-worker.test.mjs` 補上逃逸案例（包含用字串拼接繞過靜態檢查的案例）。

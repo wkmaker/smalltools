@@ -8,6 +8,7 @@ import {
   runSinglePacTest,
   runBatchPacTest,
   lintPacScript,
+  findForbiddenPacTokens,
   SAMPLE_PAC_SCRIPT,
 } from '../../app/pac-tester/engine.ts';
 
@@ -198,4 +199,16 @@ function FindProxyForURL(url, host) {
   assert.equal(res3.returnString, 'DIRECT');
 });
 
+test('findForbiddenPacTokens / lintPacScript: 偵測沙盒逃逸關鍵字', () => {
+  assert.deepEqual(
+    findForbiddenPacTokens('function FindProxyForURL(u, h) { importScripts("x"); return eval("1"); }'),
+    ['importScripts', 'eval'],
+  );
+  assert.deepEqual(findForbiddenPacTokens('// import 舊設定\nfunction FindProxyForURL(u, h) { return "DIRECT"; }'), ['import']);
+  assert.deepEqual(findForbiddenPacTokens(SAMPLE_PAC_SCRIPT), []);
 
+  const issues = lintPacScript('function FindProxyForURL(u, h) { return self.constructor ? "DIRECT" : "DIRECT"; }');
+  const forbidden = issues.find((i) => i.severity === 'error' && i.messageZh.includes('禁止使用的關鍵字'));
+  assert.ok(forbidden, '應回報禁用關鍵字錯誤');
+  assert.match(forbidden.messageEn, /constructor/);
+});
