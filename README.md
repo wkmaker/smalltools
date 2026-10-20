@@ -191,6 +191,7 @@ Smalltools 具備完善的企業級 SEO 架構，確保全站所有工具與頁�
 | 變數 | 用途 |
 | :--- | :--- |
 | `SITE_DOMAIN` | 正式網域（`tools.cjkuo.net`）。設定後會申請 ACM 憑證，首次部署會停在等待 DNS 驗證：到 ACM 主控台（us-east-1）把驗證 CNAME 加到 Cloudflare（僅 DNS），驗證 CNAME 要一直留著 ACM 才能自動續期。 |
+| `SITE_CERT_DOMAIN` | 選用根網域（`cjkuo.net`）。設定後憑證改申請「根網域 + 萬用子網域」，與 cj-blog 等同帳號同網域的憑證共用同一筆驗證 CNAME，Cloudflare 已有該筆記錄就會立即通過，不用另外驗證。測試站共用此變數。 |
 | `SITE_ATTACH_DOMAIN` | `true` 才把網域與憑證掛上發佈；預設 `false`，讓網域從其他帳號搬入前可以先完成憑證驗證。 |
 | `STAGING_DOMAIN` | 選用，測試站自訂網域；設定即直接掛上。 |
 
@@ -198,7 +199,7 @@ Smalltools 具備完善的企業級 SEO 架構，確保全站所有工具與頁�
 
 CloudFront 的同一個網域不能同時掛在兩個發佈上，跨帳號搬移時舊發佈必須先拿掉網域，期間會短暫停機（數分鐘）：
 
-1. 設 `SITE_DOMAIN=tools.cjkuo.net`、`SITE_ATTACH_DOMAIN` 不設，部署並完成憑證驗證，以 CloudFront 預設網域驗收。
+1. 設 `SITE_DOMAIN=tools.cjkuo.net`、`SITE_CERT_DOMAIN=cjkuo.net`、`SITE_ATTACH_DOMAIN` 不設，部署並完成憑證驗證，以 CloudFront 預設網域驗收。
 2. 在舊帳號把舊發佈的 Alternate domain name 拿掉，等狀態變回 Deployed。
 3. 設 `SITE_ATTACH_DOMAIN=true`，在 Actions 頁手動執行「部署 smalltools」。
 4. Cloudflare 把 `tools.cjkuo.net` 的 CNAME 改指向新發佈的 `DistributionDomainName`（維持代理）。

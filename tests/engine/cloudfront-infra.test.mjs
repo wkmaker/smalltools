@@ -52,6 +52,15 @@ test('憑證只看 DomainName，網域與憑證掛上發佈則另需 AttachDomai
   assert.deepEqual(site.Conditions.UseDomain.And, [{ Condition: 'HasDomain' }, { Equals: [{ Ref: 'AttachDomain' }, 'true'] }]);
 });
 
+test('CertificateDomain 有值時憑證申請根網域 + 萬用子網域，沿用同網域既有的驗證 CNAME', () => {
+  const props = site.Resources.Certificate.Properties;
+  assert.deepEqual(props.DomainName.If, ['HasCertificateDomain', { Ref: 'CertificateDomain' }, { Ref: 'DomainName' }]);
+  assert.deepEqual(props.SubjectAlternativeNames.If, ['HasCertificateDomain', [{ Sub: '*.${CertificateDomain}' }], { Ref: 'AWS::NoValue' }]);
+  const pattern = new RegExp(site.Parameters.CertificateDomain.AllowedPattern);
+  assert.ok(pattern.test('cjkuo.net') && pattern.test(''));
+  assert.ok(!pattern.test('*.cjkuo.net') && !pattern.test('https://cjkuo.net'));
+});
+
 test('S3 儲存區不公開，只允許本發佈經 OAC 讀取', () => {
   const block = site.Resources.SiteBucket.Properties.PublicAccessBlockConfiguration;
   for (const key of ['BlockPublicAcls', 'BlockPublicPolicy', 'IgnorePublicAcls', 'RestrictPublicBuckets']) {

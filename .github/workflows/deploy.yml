@@ -31,4 +31,5 @@ jobs:
       deploy-role-arn: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
       cfn-exec-role-arn: ${{ vars.AWS_CFN_EXEC_ROLE_ARN }}
       domain: ${{ vars.SITE_DOMAIN }}
+      certificate-domain: ${{ vars.SITE_CERT_DOMAIN }}
       attach-domain: ${{ vars.SITE_ATTACH_DOMAIN || 'false' }}

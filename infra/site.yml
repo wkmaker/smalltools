@@ -11,6 +11,13 @@ Parameters:
     Description: >-
       自訂網域（例如 tools.cjkuo.net）。留空則只用 CloudFront 預設網域驗收；填入後會申請 ACM 憑證，
       堆疊會等到 Cloudflare 加上驗證 CNAME 才完成。
+  CertificateDomain:
+    Type: String
+    Default: ''
+    AllowedPattern: '^([a-z0-9-]+\.)+[a-z]{2,}$|^$'
+    Description: >-
+      選填。填根網域（例如 cjkuo.net）時，憑證改申請「根網域 + 萬用子網域」，DomainName 必須是它的子網域；
+      驗證 CNAME 與同帳號同網域的其他憑證相同，Cloudflare 已有就會立即通過。留空則只申請 DomainName 單一網域。
   AttachDomain:
     Type: String
     Default: 'false'
@@ -34,6 +41,7 @@ Parameters:
 
 Conditions:
   HasDomain: !Not [!Equals [!Ref DomainName, '']]
+  HasCertificateDomain: !Not [!Equals [!Ref CertificateDomain, '']]
   UseDomain: !And [!Condition HasDomain, !Equals [!Ref AttachDomain, 'true']]
   IsStaging: !Equals [!Ref Environment, staging]
 
@@ -101,7 +109,11 @@ Resources:
     Type: AWS::CertificateManager::Certificate
     Condition: HasDomain
     Properties:
-      DomainName: !Ref DomainName
+      DomainName: !If [HasCertificateDomain, !Ref CertificateDomain, !Ref DomainName]
+      SubjectAlternativeNames: !If
+        - HasCertificateDomain
+        - [!Sub '*.${CertificateDomain}']
+        - !Ref AWS::NoValue
       ValidationMethod: DNS
       # bootstrap.yml 的執行角色只能管理帶本堆疊 site-stack 標籤的憑證，拿掉會部署失敗
       Tags:

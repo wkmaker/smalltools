@@ -31,6 +31,7 @@ jobs:
       deploy-role-arn: ${{ vars.AWS_STAGING_DEPLOY_ROLE_ARN }}
       cfn-exec-role-arn: ${{ vars.AWS_STAGING_CFN_EXEC_ROLE_ARN }}
       domain: ${{ vars.STAGING_DOMAIN }}
+      certificate-domain: ${{ vars.SITE_CERT_DOMAIN }}
       attach-domain: ${{ vars.STAGING_DOMAIN != '' && 'true' || 'false' }}
     secrets:
       basic-auth-user: ${{ secrets.STAGING_BASIC_AUTH_USER }}

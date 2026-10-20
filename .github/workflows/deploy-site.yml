@@ -21,6 +21,10 @@ on:
         description: 自訂網域，留空則只用 CloudFront 預設網域
         type: string
         default: ''
+      certificate-domain:
+        description: 選填根網域（例如 cjkuo.net），憑證改申請「根網域 + 萬用子網域」，沿用同網域既有的驗證 CNAME
+        type: string
+        default: ''
       attach-domain:
         description: 是否把自訂網域掛上發佈（'true' / 'false'），從其他帳號搬入網域時先維持 false 預先驗證憑證
         type: string
@@ -115,11 +119,12 @@ jobs:
         if: steps.gate.outputs.deploy == 'true'
         env:
           SITE_DOMAIN: ${{ inputs.domain }}
+          SITE_CERT_DOMAIN: ${{ inputs.certificate-domain }}
           ATTACH_DOMAIN: ${{ inputs.attach-domain }}
           BASIC_AUTH_B64: ${{ steps.params.outputs.basic_auth }}
           CFN_EXEC_ROLE_ARN: ${{ inputs.cfn-exec-role-arn }}
         run: |
-          overrides=("Environment=${DEPLOY_ENV}" "BasicAuth=${BASIC_AUTH_B64}" "DomainName=${SITE_DOMAIN}" "AttachDomain=${ATTACH_DOMAIN}")
+          overrides=("Environment=${DEPLOY_ENV}" "BasicAuth=${BASIC_AUTH_B64}" "DomainName=${SITE_DOMAIN}" "CertificateDomain=${SITE_CERT_DOMAIN}" "AttachDomain=${ATTACH_DOMAIN}")
           if [ -n "${SITE_DOMAIN}" ]; then
             echo "::notice::自訂網域 ${SITE_DOMAIN}：首次加入時請到 ACM 主控台（us-east-1）複製驗證 CNAME 加到 Cloudflare（僅 DNS）"
           fi
