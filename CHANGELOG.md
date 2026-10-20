@@ -2,6 +2,13 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.27.6] - 2026-10-20
+
+### Security
+- **S3 源站封閉（#78 階段 B）**：移除可由公開 Stack 名稱與 Account ID 推算的 User-Agent 讀取條目與 S3 靜態網站設定，Bucket Policy 收緊為僅限本 Distribution ARN 經 OAC 讀取，並開啟完整的 S3 公開存取封鎖，外部已無法繞過 CloudFront 與 WAF 直接存取源站。
+
+---
+
 ## [1.27.5] - 2026-10-20
 
 ### Security
