@@ -41,9 +41,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
   const isEn = lang === 'en';
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
-  // 當前即時看板
-  const [liveNow, setLiveNow] = useState<Date | null>(null);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
+  // 本機與時區狀態 (高頻動態看板已隔離至 LiveClockBanner 子組件)
 
   // 本機時區 (自動偵測與淨化)
   const [userTz, setUserTz] = useState<string>('Asia/Taipei');
@@ -86,7 +84,6 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
   useEffect(() => {
     setIsMounted(true);
     const now = new Date();
-    setLiveNow(now);
 
     // 預設 Timestamp 輸入框
     setTsInput(Math.floor(now.getTime() / 1000).toString());
@@ -126,14 +123,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
     }
   }, []);
 
-  // 即時動態看板計時器 (20fps)
-  useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(() => {
-      setLiveNow(new Date());
-    }, 50);
-    return () => clearInterval(timer);
-  }, [isPaused]);
+
 
   // A. 時間戳記 ➜ 日期時間算結果 (Memo 化)
   const tsToDateResult = useCallback(
@@ -284,9 +274,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
     showToast(t.toastFilledDtNow);
   };
 
-  const liveSec = liveNow ? Math.floor(liveNow.getTime() / 1000) : 0;
-  const liveMs = liveNow ? liveNow.getTime() : 0;
-  const liveDateStr = isMounted && liveNow ? formatLocalTime(liveNow) : 'YYYY-MM-DD HH:mm:ss.SSS';
+
 
   return (
     <ToolLayout
@@ -297,60 +285,13 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
       accentGlow="rgba(0, 255, 153, 0.6)"
     >
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
-        {/* 當前時間動態看板 */}
-        <div className={`${styles.cardContainer} flex flex-col gap-6`}>
-          <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-1">
-            <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
-              <span className="text-sm font-semibold text-text-sub truncate">{t.liveSecTitle}</span>
-              <div className="flex items-center justify-between gap-2 min-w-0">
-                <span className={`font-mono min-w-0 truncate ${styles.liveClock}`}>{isMounted ? liveSec : '-'}</span>
-                <button
-                  type="button"
-                  onClick={() => copyText(liveSec.toString())}
-                  className={styles.copyBtn}
-                >
-                  {t.copy}
-                </button>
-              </div>
-            </div>
-
-            <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
-              <span className="text-sm font-semibold text-text-sub truncate">{t.liveMsTitle}</span>
-              <div className="flex items-center justify-between gap-2 min-w-0">
-                <span className={`font-mono min-w-0 truncate ${styles.liveClock}`}>
-                  {isMounted ? liveMs : '-'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => copyText(liveMs.toString())}
-                  className={styles.copyBtn}
-                >
-                  {t.copy}
-                </button>
-              </div>
-            </div>
-
-            <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
-              <span className="text-sm font-semibold text-text-sub truncate">
-                {isMounted ? `${t.liveLocalTitle} (${displayTzLabel})` : `${t.liveLocalTitle} (UTC+8)`}
-              </span>
-              <div className="flex items-center justify-between gap-2 min-w-0">
-                <span className={`font-mono min-w-0 truncate ${styles.liveClock}`}>{liveDateStr}</span>
-                <button
-                  type="button"
-                  onClick={() => setIsPaused(!isPaused)}
-                  className={`px-2 py-1 text-xs font-medium border rounded-lg transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                    isPaused
-                      ? 'bg-red-500/15 border-red-500/40 text-red-400 hover:bg-red-500/30'
-                      : styles.secondaryBtn
-                  }`}
-                >
-                  {isPaused ? t.resumeClock : t.pauseClock}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* 當前時間動態看板 (獨立子組件隔離高頻 20fps 渲染) */}
+        <LiveClockBanner
+          isMounted={isMounted}
+          displayTzLabel={displayTzLabel}
+          t={t}
+          copyText={copyText}
+        />
 
         {/* 雙向轉換區 */}
         <div className="grid grid-cols-2 gap-8 max-lg:grid-cols-1">
@@ -805,5 +746,118 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
         </div>
       )}
     </ToolLayout>
+  );
+}
+
+interface LiveClockBannerProps {
+  isMounted: boolean;
+  displayTzLabel: string;
+  t: (typeof TRANSLATIONS)['zh-TW'];
+  copyText: (val: string) => void;
+}
+
+function LiveClockBanner({ isMounted, displayTzLabel, t, copyText }: LiveClockBannerProps) {
+  const [liveNow, setLiveNow] = useState<Date | null>(null);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+
+  useEffect(() => {
+    setLiveNow(new Date());
+  }, []);
+
+  useEffect(() => {
+    if (isPaused) return;
+
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const startTimer = () => {
+      if (!timer && !document.hidden) {
+        timer = setInterval(() => {
+          setLiveNow(new Date());
+        }, 50);
+      }
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    };
+
+    startTimer();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopTimer();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isPaused]);
+
+  const liveSec = liveNow ? Math.floor(liveNow.getTime() / 1000) : 0;
+  const liveMs = liveNow ? liveNow.getTime() : 0;
+  const liveDateStr = isMounted && liveNow ? formatLocalTime(liveNow) : 'YYYY-MM-DD HH:mm:ss.SSS';
+
+  return (
+    <div className={`${styles.cardContainer} flex flex-col gap-6`}>
+      <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-1">
+        <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
+          <span className="text-sm font-semibold text-text-sub truncate">{t.liveSecTitle}</span>
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <span className={`font-mono min-w-0 truncate ${styles.liveClock}`}>{isMounted ? liveSec : '-'}</span>
+            <button
+              type="button"
+              onClick={() => copyText(liveSec.toString())}
+              className={styles.copyBtn}
+            >
+              {t.copy}
+            </button>
+          </div>
+        </div>
+
+        <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
+          <span className="text-sm font-semibold text-text-sub truncate">{t.liveMsTitle}</span>
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <span className={`font-mono min-w-0 truncate ${styles.liveClock}`}>
+              {isMounted ? liveMs : '-'}
+            </span>
+            <button
+              type="button"
+              onClick={() => copyText(liveMs.toString())}
+              className={styles.copyBtn}
+            >
+              {t.copy}
+            </button>
+          </div>
+        </div>
+
+        <div className={`flex flex-col gap-1.5 ${styles.innerBlock} min-w-0`}>
+          <span className="text-sm font-semibold text-text-sub truncate">
+            {isMounted ? `${t.liveLocalTitle} (${displayTzLabel})` : `${t.liveLocalTitle} (UTC+8)`}
+          </span>
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <span className={`font-mono min-w-0 truncate ${styles.liveClock}`}>{liveDateStr}</span>
+            <button
+              type="button"
+              onClick={() => setIsPaused(!isPaused)}
+              className={`px-2 py-1 text-xs font-medium border rounded-lg transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                isPaused
+                  ? 'bg-red-500/15 border-red-500/40 text-red-400 hover:bg-red-500/30'
+                  : styles.secondaryBtn
+              }`}
+            >
+              {isPaused ? t.resumeClock : t.pauseClock}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

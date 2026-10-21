@@ -710,7 +710,7 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
                   <label htmlFor={validityId} className={styles.fieldLabel}>
                     {t.validityLabel}
                   </label>
-                  <span className="font-mono text-lg font-bold" style={{ color: '#38bdf8' }}>
+                  <span className={`font-mono text-lg font-bold ${styles.validityDisplay}`}>
                     {validityDays}
                   </span>
                 </div>

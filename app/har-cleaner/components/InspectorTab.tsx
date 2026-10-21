@@ -133,8 +133,9 @@ export default function InspectorTab({
         {/* Method Filter */}
         <select
           value={methodFilter}
+          aria-label="Filter by HTTP Method"
           onChange={(e) => setMethodFilter(e.target.value)}
-          className="text-xs px-3 py-2 rounded-xl bg-select-bg border border-border-glass text-text-main focus:outline-none"
+          className="text-sm px-3 py-2 rounded-xl bg-select-bg border border-border-glass text-text-main focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
         >
           <option value="ALL">Method: ALL</option>
           <option value="GET">GET</option>
@@ -147,8 +148,9 @@ export default function InspectorTab({
         {/* Status Filter */}
         <select
           value={statusFilter}
+          aria-label="Filter by HTTP Status"
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-xs px-3 py-2 rounded-xl bg-select-bg border border-border-glass text-text-main focus:outline-none"
+          className="text-sm px-3 py-2 rounded-xl bg-select-bg border border-border-glass text-text-main focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
         >
           <option value="ALL">Status: ALL</option>
           <option value="2xx">2xx Success</option>
@@ -160,8 +162,9 @@ export default function InspectorTab({
         {/* Redaction Rule Category Filter */}
         <select
           value={ruleCategoryFilter}
+          aria-label="Filter by Redaction Rule Category"
           onChange={(e) => setRuleCategoryFilter(e.target.value)}
-          className="text-xs px-3 py-2 rounded-xl bg-select-bg border border-border-glass text-text-main focus:outline-none"
+          className="text-sm px-3 py-2 rounded-xl bg-select-bg border border-border-glass text-text-main focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
         >
           <option value="ALL">{t.ruleFilterAll}</option>
           <option value="AUTH_HEADER">{t.ruleFilterAuth}</option>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useId } from 'react';
+import { useState, useRef, useCallback, useEffect, useId, useTransition } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './json.module.css';
@@ -219,14 +219,40 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
     [t.lintErrorTitle]
   );
 
-  const handleInputChange = (val: string) => {
+  const [isPending, startTransition] = useTransition();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+
+  const handleInputChange = (val: string, immediate = false) => {
     setInputText(val);
-    processJson(val, indentSize);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    if (immediate || !val.trim()) {
+      startTransition(() => {
+        processJson(val, indentSize);
+      });
+    } else {
+      debounceTimer.current = setTimeout(() => {
+        startTransition(() => {
+          processJson(val, indentSize);
+        });
+      }, 250);
+    }
   };
 
   const handleIndentChange = (val: number) => {
     setIndentSize(val);
-    if (inputText) processJson(inputText, val);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    if (inputText) {
+      startTransition(() => {
+        processJson(inputText, val);
+      });
+    }
   };
 
   const loadExample = () => {
@@ -241,11 +267,11 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
       null,
       2
     );
-    handleInputChange(ex);
+    handleInputChange(ex, true);
   };
 
   const clearInput = () => {
-    handleInputChange('');
+    handleInputChange('', true);
   };
 
   const copyResult = () => {
@@ -286,7 +312,7 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
       }
       const reader = new FileReader();
       reader.onload = evt => {
-        if (evt.target?.result) handleInputChange(evt.target.result as string);
+        if (evt.target?.result) handleInputChange(evt.target.result as string, true);
       };
       reader.readAsText(file);
     }
@@ -356,7 +382,7 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
                       }
                       const r = new FileReader();
                       r.onload = ev => {
-                        if (ev.target?.result) handleInputChange(ev.target.result as string);
+                        if (ev.target?.result) handleInputChange(ev.target.result as string, true);
                       };
                       r.readAsText(f);
                     }

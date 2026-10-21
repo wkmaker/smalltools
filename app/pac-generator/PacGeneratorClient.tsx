@@ -418,12 +418,9 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                         type="text"
                         value={proxy.name}
                         onChange={(e) => handleUpdateProxy(proxy.id, { name: e.target.value })}
-                        placeholder={t.proxyName}
-                        className={`text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
+                        placeholder={t.proxyName} aria-label={t.proxyName} className={`text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none ${styles.fieldInput}`}
                       />
-                      <select
-                        value={proxy.type}
-                        onChange={(e) => {
+                      <select value={proxy.type} aria-label={t.proxyType || "Proxy Type"} onChange={(e) => {
                           const newType = e.target.value as ProxyType;
                           const updates: Partial<ProxyNode> = { type: newType };
                           if (newType === 'CHAIN' && (!proxy.chainHops || proxy.chainHops.length === 0)) {
@@ -570,7 +567,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
                           <select
                             id={`select_hop_${proxy.id}`}
                             aria-label={t.chainAddHop}
-                            className="text-xs bg-select-bg border border-white/10 rounded-lg px-2.5 py-1.5 text-text-main focus:outline-none"
+                            className="text-sm bg-select-bg border border-white/10 rounded-lg px-2.5 py-1.5 text-text-main focus:outline-none"
                             defaultValue="DIRECT"
                           >
                             {proxies

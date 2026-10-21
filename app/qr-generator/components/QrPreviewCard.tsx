@@ -121,10 +121,7 @@ export default function QrPreviewCard({
                 <span>{t.downloadVcfBtn}</span>
               </button>
 
-              <button
-                type="button"
-                onClick={onCopyRawContent}
-                title={t.copyVcfBtn}
+              <button type="button" onClick={onCopyRawContent} title={t.copyVcfBtn} aria-label={t.copyVcfBtn}
                 className={styles.vcfCopyBtn}
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
@@ -162,10 +159,7 @@ export default function QrPreviewCard({
                 <span>{t.downloadIcsBtn}</span>
               </button>
 
-              <button
-                type="button"
-                onClick={onCopyRawContent}
-                title={t.copyIcsBtn}
+              <button type="button" onClick={onCopyRawContent} title={t.copyIcsBtn} aria-label={t.copyIcsBtn}
                 className={styles.vcfCopyBtn}
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">

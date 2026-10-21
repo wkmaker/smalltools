@@ -5,7 +5,10 @@ import { useEffect } from 'react';
 /**
  * ParticleCanvas - 全站共用背景微粒與氣泡爆炸反饋動效
  * 移植自 js/common-particles.js，改為 React Client Component
- * 遵循 toolbox-design-standards 規範
+ * 遵循 toolbox-design-standards 規範與介面流暢性準則：
+ * 1. 樣式與主題色全快取（MutationObserver），徹底消滅每幀逐粒子調用 getComputedStyle 造成的 Layout Thrashing。
+ * 2. 整合 Page Visibility API，分頁處於背景時智慧暫停動畫，節省 GPU 與 CPU 資源。
+ * 3. 支援 prefers-reduced-motion 與行動端自適應微粒密度，防止過度耗電與動態暈眩。
  */
 export default function ParticleCanvas() {
   useEffect(() => {
@@ -23,41 +26,77 @@ export default function ParticleCanvas() {
     let burstParticles: BurstParticle[] = [];
     const mouse = { x: null as number | null, y: null as number | null, radius: 160 };
     let flowDirection: 'up' | 'down' = 'up';
-    let animationId: number;
+    let animationId: number = 0;
+    let isRunning = false;
 
-    const LIGHT_PARTICLE_COLORS = [
-      'rgba(56, 189, 248, 0.72)',  // 湛藍
-      'rgba(99, 102, 241, 0.68)', // 靛藍
-      'rgba(14, 165, 233, 0.72)',  // 天藍
-      'rgba(129, 140, 248, 0.65)', // 柔紫
-    ];
+    // 主題狀態與色彩快取（徹底消滅逐幀 getComputedStyle）
+    let cachedIsLight = false;
+    let cachedThemeColor = '#00f0ff';
+    let cachedThemeRgb = '0, 240, 255';
+    let prefersReducedMotion = false;
 
-    function getActiveThemeColor(): string {
+    function updateThemeCache() {
       const docEl = document.documentElement;
-      const isLight = docEl.getAttribute('data-theme') === 'light';
-      let color =
+      cachedIsLight = docEl.getAttribute('data-theme') === 'light';
+      const rawColor =
         docEl.style.getPropertyValue('--theme-color').trim() ||
         getComputedStyle(docEl).getPropertyValue('--theme-color').trim() ||
         docEl.style.getPropertyValue('--accent-glow').trim() ||
         getComputedStyle(docEl).getPropertyValue('--accent-glow').trim() ||
         getComputedStyle(docEl).getPropertyValue('--accent-color').trim();
-      if (color) {
-        const rgbaMatch = color.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+
+      if (rawColor) {
+        const rgbaMatch = rawColor.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
         if (rgbaMatch) {
-          if (isLight) {
-            return `rgb(${Math.max(0, parseInt(rgbaMatch[1]) - 20)}, ${Math.max(0, parseInt(rgbaMatch[2]) - 20)}, ${Math.min(255, parseInt(rgbaMatch[3]) + 20)})`;
+          const r = parseInt(rgbaMatch[1], 10);
+          const g = parseInt(rgbaMatch[2], 10);
+          const b = parseInt(rgbaMatch[3], 10);
+          if (cachedIsLight) {
+            const lr = Math.max(0, r - 20);
+            const lg = Math.max(0, g - 20);
+            const lb = Math.min(255, b + 20);
+            cachedThemeColor = `rgb(${lr}, ${lg}, ${lb})`;
+            cachedThemeRgb = `${lr}, ${lg}, ${lb}`;
+          } else {
+            cachedThemeColor = `rgb(${r}, ${g}, ${b})`;
+            cachedThemeRgb = `${r}, ${g}, ${b}`;
           }
-          return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
+        } else {
+          cachedThemeColor = rawColor;
+          cachedThemeRgb = cachedIsLight ? '2, 132, 199' : '0, 240, 255';
         }
-        return color;
+      } else {
+        cachedThemeColor = cachedIsLight ? '#0284c7' : '#00f0ff';
+        cachedThemeRgb = cachedIsLight ? '2, 132, 199' : '0, 240, 255';
       }
-      return isLight ? '#0284c7' : '#00f0ff';
     }
 
+    // 監聽使用者偏好減少動效
+    const motionQuery = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    if (motionQuery) {
+      prefersReducedMotion = motionQuery.matches;
+      const onMotionChange = (e: MediaQueryListEvent) => {
+        prefersReducedMotion = e.matches;
+      };
+      if (motionQuery.addEventListener) {
+        motionQuery.addEventListener('change', onMotionChange);
+      }
+    }
+
+    // 初始化快取
+    updateThemeCache();
+
+    // 監聽 HTML 屬性與樣式變化以動態更新色彩快取
+    const themeObserver = new MutationObserver(() => {
+      updateThemeCache();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'style', 'class'],
+    });
+
     function connectParticles() {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
       const maxDistance = 125;
-      const themeColor = getActiveThemeColor();
 
       for (let a = 0; a < particles.length; a++) {
         for (let b = a + 1; b < particles.length; b++) {
@@ -70,17 +109,12 @@ export default function ParticleCanvas() {
             ctx.moveTo(particles[a].x, particles[a].y);
             ctx.lineTo(particles[b].x, particles[b].y);
 
-            if (isLight) {
+            if (cachedIsLight) {
               ctx.strokeStyle = `rgba(2, 132, 199, ${opacityFactor * 0.28})`;
               ctx.lineWidth = 1.2;
             } else {
-              // 暗色模式：動態連動工具主題霓虹發光色 (如科技藍 #00f0ff, 財富金 #ffb800 等)
-              const rgbaMatch = themeColor.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-              if (rgbaMatch) {
-                ctx.strokeStyle = `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${opacityFactor * 0.20})`;
-              } else {
-                ctx.strokeStyle = `rgba(0, 240, 255, ${opacityFactor * 0.20})`;
-              }
+              // 暗色模式：動態連動主題色彩快取
+              ctx.strokeStyle = `rgba(${cachedThemeRgb}, ${opacityFactor * 0.20})`;
               ctx.lineWidth = 0.9;
             }
             ctx.stroke();
@@ -104,15 +138,16 @@ export default function ParticleCanvas() {
         this.density = Math.random() * 25 + 5;
       }
       update() {
+        const speedMultiplier = prefersReducedMotion ? 0.2 : 1;
         if (flowDirection === 'down') {
-          this.y += this.speedY; this.x += this.speedX;
+          this.y += this.speedY * speedMultiplier; this.x += this.speedX * speedMultiplier;
           if (this.y > canvas!.height + 10) this.reset('top');
         } else {
-          this.y -= this.speedY; this.x += this.speedX;
+          this.y -= this.speedY * speedMultiplier; this.x += this.speedX * speedMultiplier;
           if (this.y < -10) this.reset('bottom');
         }
         if (this.x < -10 || this.x > canvas!.width + 10) this.x = Math.random() * canvas!.width;
-        if (mouse.x !== null && mouse.y !== null) {
+        if (mouse.x !== null && mouse.y !== null && !prefersReducedMotion) {
           const dx = mouse.x - this.x, dy = mouse.y - this.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           if (distance < mouse.radius) {
@@ -124,8 +159,7 @@ export default function ParticleCanvas() {
       }
       draw() {
         ctx.save();
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-        if (isLight) {
+        if (cachedIsLight) {
           // 亮色模式：清晰立體 2px 晶體星芒點
           ctx.globalAlpha = Math.min(0.85, this.opacity * 1.3);
           ctx.fillStyle = '#0284c7';
@@ -133,11 +167,10 @@ export default function ParticleCanvas() {
           ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // 暗色模式：經典賽博霓虹發光點與連線星網
+          // 暗色模式：經典賽博霓虹發光點與連線星網（直接讀取快取色彩）
           ctx.globalAlpha = Math.min(0.9, this.opacity * 1.25);
-          const color = getActiveThemeColor();
-          ctx.fillStyle = color;
-          ctx.shadowColor = color;
+          ctx.fillStyle = cachedThemeColor;
+          ctx.shadowColor = cachedThemeColor;
           ctx.shadowBlur = 8;
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -150,39 +183,46 @@ export default function ParticleCanvas() {
     class BurstParticle {
       x: number; y: number; size: number; vx: number; vy: number; alpha: number; color: string;
       constructor(x: number, y: number, isCountUp: boolean | null = null) {
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         this.x = x; this.y = y; this.size = Math.random() * 3.5 + 1.5;
         if (isCountUp === true) { this.vx = (Math.random() - 0.5) * 3.5; this.vy = -(Math.random() * 2.5 + 1); }
         else if (isCountUp === false) { this.vx = (Math.random() - 0.5) * 3.5; this.vy = (Math.random() * 2.5 + 1); }
         else { const angle = Math.random() * Math.PI * 2, speed = Math.random() * 3.5 + 1; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed; }
         this.alpha = 1;
-        this.color = isLight ? '#0284c7' : (Math.random() > 0.4 ? getActiveThemeColor() : '#ffffff');
+        this.color = cachedIsLight ? '#0284c7' : (Math.random() > 0.4 ? cachedThemeColor : '#ffffff');
       }
       update() { this.x += this.vx; this.y += this.vy; this.alpha -= 0.028; }
       draw() {
         ctx.save(); ctx.globalAlpha = Math.max(0, this.alpha);
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         ctx.fillStyle = this.color;
-        if (!isLight) { ctx.shadowBlur = 6; ctx.shadowColor = this.color; }
+        if (!cachedIsLight) { ctx.shadowBlur = 6; ctx.shadowColor = this.color; }
         ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
     }
 
     function adjustParticles() {
-      const targetCount = Math.min(200, Math.max(60, Math.floor((canvas!.width * canvas!.height) / 10000)));
+      // 根據裝置寬度自適應微粒數量：手機 (<768px) 減低至 25~45 顆以節省運算資源
+      const isMobile = window.innerWidth < 768;
+      const targetCount = isMobile
+        ? Math.min(45, Math.max(25, Math.floor((canvas!.width * canvas!.height) / 22000)))
+        : Math.min(180, Math.max(50, Math.floor((canvas!.width * canvas!.height) / 11000)));
+
       if (particles.length < targetCount) {
         for (let i = 0; i < targetCount - particles.length; i++) particles.push(new Particle());
-      } else particles.length = targetCount;
+      } else if (particles.length > targetCount) {
+        particles.length = targetCount;
+      }
     }
 
     function resizeCanvas() {
       canvas!.width = window.innerWidth;
       canvas!.height = window.innerHeight;
+      updateThemeCache();
       adjustParticles();
     }
 
     function animate() {
+      if (!isRunning) return;
       ctx.clearRect(0, 0, canvas!.width, canvas!.height);
       connectParticles();
       particles.forEach(p => { p.update(); p.draw(); });
@@ -193,14 +233,41 @@ export default function ParticleCanvas() {
       animationId = requestAnimationFrame(animate);
     }
 
+    function startAnimation() {
+      if (!isRunning && !document.hidden) {
+        isRunning = true;
+        animationId = requestAnimationFrame(animate);
+      }
+    }
+
+    function stopAnimation() {
+      if (isRunning) {
+        isRunning = false;
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = 0;
+        }
+      }
+    }
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stopAnimation();
+      } else {
+        startAnimation();
+      }
+    };
+
     // 掛載全域 API（與原始 common-particles.js 相容）
     (window as any).triggerParticleBurst = (x: number, y: number) => {
       for (let i = 0; i < 20; i++) burstParticles.push(new BurstParticle(x, y));
+      if (!isRunning) startAnimation();
     };
     (window as any).createBurst = (window as any).triggerParticleBurst;
     (window as any).triggerDirectionalBurst = (x: number, y: number, isCountUp: boolean) => {
       const offsetY = isCountUp ? y - 10 : y + 10;
       for (let i = 0; i < 15; i++) burstParticles.push(new BurstParticle(x, offsetY, isCountUp));
+      if (!isRunning) startAnimation();
     };
     (window as any).createDirectionalBurst = (window as any).triggerDirectionalBurst;
     (window as any).setParticleFlowDirection = (dir: 'up' | 'down') => {
@@ -213,14 +280,18 @@ export default function ParticleCanvas() {
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseout', onMouseOut);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     resizeCanvas();
-    animate();
+    startAnimation();
 
     return () => {
-      cancelAnimationFrame(animationId);
+      stopAnimation();
+      themeObserver.disconnect();
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseout', onMouseOut);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

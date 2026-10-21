@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useId } from 'react';
 import type { RateType, RepayType, Stage } from '../engine';
 import styles from '../mortgage-loan.module.css';
 
@@ -97,16 +97,33 @@ export default function CombinedLoanSettings({
   fee2,
   setFee2,
 }: CombinedLoanSettingsProps) {
+  const baseId = useId();
+  const idLoanName1 = `${baseId}-loan-name-1`;
+  const idLoanAmount1 = `${baseId}-loan-amount-1`;
+  const idPeriodVal1 = `${baseId}-period-val-1`;
+  const idGraceVal1 = `${baseId}-grace-val-1`;
+  const idSingleRate1 = `${baseId}-single-rate-1`;
+  const idFee1 = `${baseId}-fee-1`;
+
+  const idLoanName2 = `${baseId}-loan-name-2`;
+  const idLoanAmount2 = `${baseId}-loan-amount-2`;
+  const idPeriodVal2 = `${baseId}-period-val-2`;
+  const idGraceVal2 = `${baseId}-grace-val-2`;
+  const idSingleRate2 = `${baseId}-single-rate-2`;
+  const idFee2 = `${baseId}-fee-2`;
+
   return (
     <div className={`flex flex-col gap-6 ${styles.divider} pt-5`}>
       {/* 貸款 A 卡片 */}
       <div className={styles.subCard}>
         <div className="flex justify-between items-center">
           <input
+            id={idLoanName1}
+            aria-label={`${t.firstLoan} ${t.loanNameLabel || '名稱'}`}
             type="text"
             value={loanName1}
             onChange={e => setLoanName1(e.target.value)}
-            className={`bg-transparent border-b border-dashed border-[var(--theme-color)] ${styles.accentText} text-sm font-semibold outline-none px-1 py-0.5`}
+            className={`bg-transparent border-b border-dashed border-[var(--theme-color)] ${styles.accentText} text-sm font-semibold outline-none px-1 py-0.5 focus-visible:ring-1 focus-visible:ring-[var(--theme-color)] rounded`}
           />
           <span className={`text-xs ${styles.activeScheme} px-2 py-0.5 rounded-md font-mono`}>
             {t.firstLoan}
@@ -114,8 +131,12 @@ export default function CombinedLoanSettings({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-text-sub">{t.loanAmountLabel}</span>
+          <label htmlFor={idLoanAmount1} className="text-sm font-medium text-text-sub">
+            {t.loanAmountLabel}
+          </label>
           <input
+            id={idLoanAmount1}
+            aria-label={`${t.firstLoan} ${t.loanAmountLabel}`}
             type="number"
             value={loanAmount1}
             onChange={e => {
@@ -124,7 +145,7 @@ export default function CombinedLoanSettings({
               setLoanAmount1(val);
               setLoanAmount2(Math.max(0, totalLoan - amtA));
             }}
-            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono`}
+            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
           />
           <div className="flex gap-2 mt-1">
             <button
@@ -146,21 +167,29 @@ export default function CombinedLoanSettings({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-text-sub">{t.loanTermLabel}</span>
+            <label htmlFor={idPeriodVal1} className="text-sm font-medium text-text-sub">
+              {t.loanTermLabel}
+            </label>
             <input
+              id={idPeriodVal1}
+              aria-label={`${t.firstLoan} ${t.loanTermLabel}`}
               type="number"
               value={periodVal1}
               onChange={e => setPeriodVal1(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
             />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-text-sub">{t.gracePeriodLabel}</span>
+            <label htmlFor={idGraceVal1} className="text-sm font-medium text-text-sub">
+              {t.gracePeriodLabel}
+            </label>
             <input
+              id={idGraceVal1}
+              aria-label={`${t.firstLoan} ${t.gracePeriodLabel}`}
               type="number"
               value={graceVal1}
               onChange={e => setGraceVal1(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
             />
           </div>
         </div>
@@ -196,13 +225,17 @@ export default function CombinedLoanSettings({
 
         {rateType1 === 'single' ? (
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-text-sub">{t.annualRateLabel}</span>
+            <label htmlFor={idSingleRate1} className="text-sm font-medium text-text-sub">
+              {t.annualRateLabel}
+            </label>
             <input
+              id={idSingleRate1}
+              aria-label={`${t.firstLoan} ${t.annualRateLabel}`}
               type="number"
               step="0.001"
               value={singleRate1}
               onChange={e => setSingleRate1(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
             />
           </div>
         ) : (
@@ -210,10 +243,13 @@ export default function CombinedLoanSettings({
             <span className={`text-xs ${styles.accentText} font-medium`}>{t.multiRateSettings}</span>
             {stages1.map((stg, sIdx) => {
               const isLast = sIdx === stages1.length - 1;
+              const stageDurationId = `${baseId}-stage1-${sIdx}-duration`;
+              const stageRateId = `${baseId}-stage1-${sIdx}-rate`;
+              const stageTitle = `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}`;
               return (
                 <div key={sIdx} className={`flex flex-col gap-1.5 ${styles.divider} pb-2`}>
                   <div className="flex justify-between items-center text-xs font-medium text-text-sub">
-                    <span>{isLast ? `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}${t.remainingPeriods}` : `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}`}</span>
+                    <span>{isLast ? `${stageTitle}${t.remainingPeriods}` : stageTitle}</span>
                     {!isLast && stages1.length > 2 && (
                       <button
                         type="button"
@@ -228,6 +264,8 @@ export default function CombinedLoanSettings({
                     {!isLast ? (
                       <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                         <input
+                          id={stageDurationId}
+                          aria-label={`${t.firstLoan} ${stageTitle} ${t.placeholderPeriod}`}
                           type="number"
                           placeholder={t.placeholderPeriod}
                           value={stg.durationValue ?? ''}
@@ -236,15 +274,19 @@ export default function CombinedLoanSettings({
                             next[sIdx].durationValue = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                             setStages1(next);
                           }}
-                          className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                          className="w-full bg-transparent text-text-main text-sm py-1.5 outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
                         />
-                        <span className="text-xs text-text-sub ml-1">{t.unitYear}</span>
+                        <label htmlFor={stageDurationId} className="text-xs text-text-sub ml-1 cursor-pointer">
+                          {t.unitYear}
+                        </label>
                       </div>
                     ) : (
                       <div className="flex items-center text-xs text-text-sub px-2">{t.untilExpiry}</div>
                     )}
                     <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                       <input
+                        id={stageRateId}
+                        aria-label={`${t.firstLoan} ${stageTitle} ${t.placeholderRate}`}
                         type="number"
                         step="0.01"
                         placeholder={t.placeholderRate}
@@ -254,9 +296,9 @@ export default function CombinedLoanSettings({
                           next[sIdx].rate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                           setStages1(next);
                         }}
-                        className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                        className="w-full bg-transparent text-text-main text-sm py-1.5 outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
                       />
-                      <span className="text-xs text-text-sub ml-1">%</span>
+                      <label htmlFor={stageRateId} className="text-xs text-text-sub ml-1 cursor-pointer">%</label>
                     </div>
                   </div>
                 </div>
@@ -305,8 +347,12 @@ export default function CombinedLoanSettings({
 
         {/* 開辦手續費 */}
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">{t.originationFeeLabel}</span>
+          <label htmlFor={idFee1} className="text-xs font-medium text-text-sub uppercase tracking-[1px]">
+            {t.originationFeeLabel}
+          </label>
           <input
+            id={idFee1}
+            aria-label={`${t.firstLoan} ${t.originationFeeLabel}`}
             type="text"
             inputMode="numeric"
             value={fee1 === '' ? '' : fee1.toLocaleString('zh-TW')}
@@ -314,7 +360,7 @@ export default function CombinedLoanSettings({
               const raw = e.target.value.replace(/[^\d]/g, '');
               setFee1(raw === '' ? '' : parseInt(raw, 10));
             }}
-            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
           />
         </div>
       </div>
@@ -323,10 +369,12 @@ export default function CombinedLoanSettings({
       <div className={styles.subCard}>
         <div className="flex justify-between items-center">
           <input
+            id={idLoanName2}
+            aria-label={`${t.secondLoan} ${t.loanNameLabel || '名稱'}`}
             type="text"
             value={loanName2}
             onChange={e => setLoanName2(e.target.value)}
-            className={`bg-transparent border-b border-dashed border-amber-500/40 ${styles.interestText} text-sm font-semibold outline-none px-1 py-0.5`}
+            className={`bg-transparent border-b border-dashed border-amber-500/40 ${styles.interestText} text-sm font-semibold outline-none px-1 py-0.5 focus-visible:ring-1 focus-visible:ring-amber-500/50 rounded`}
           />
           <span className={`text-xs bg-amber-500/15 border border-amber-500/30 ${styles.interestText} px-2 py-0.5 rounded-md font-mono`}>
             {t.secondLoan}
@@ -334,8 +382,12 @@ export default function CombinedLoanSettings({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-text-sub">{t.loanAmountLabel}</span>
+          <label htmlFor={idLoanAmount2} className="text-sm font-medium text-text-sub">
+            {t.loanAmountLabel}
+          </label>
           <input
+            id={idLoanAmount2}
+            aria-label={`${t.secondLoan} ${t.loanAmountLabel}`}
             type="number"
             value={loanAmount2}
             onChange={e => {
@@ -344,27 +396,35 @@ export default function CombinedLoanSettings({
               setLoanAmount2(val);
               setLoanAmount1(Math.max(0, totalLoan - amtB));
             }}
-            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono`}
+            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-text-sub">{t.loanTermLabel}</span>
+            <label htmlFor={idPeriodVal2} className="text-sm font-medium text-text-sub">
+              {t.loanTermLabel}
+            </label>
             <input
+              id={idPeriodVal2}
+              aria-label={`${t.secondLoan} ${t.loanTermLabel}`}
               type="number"
               value={periodVal2}
               onChange={e => setPeriodVal2(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
             />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-text-sub">{t.gracePeriodLabel}</span>
+            <label htmlFor={idGraceVal2} className="text-sm font-medium text-text-sub">
+              {t.gracePeriodLabel}
+            </label>
             <input
+              id={idGraceVal2}
+              aria-label={`${t.secondLoan} ${t.gracePeriodLabel}`}
               type="number"
               value={graceVal2}
               onChange={e => setGraceVal2(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
             />
           </div>
         </div>
@@ -400,13 +460,17 @@ export default function CombinedLoanSettings({
 
         {rateType2 === 'single' ? (
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-text-sub">{t.annualRateLabel}</span>
+            <label htmlFor={idSingleRate2} className="text-sm font-medium text-text-sub">
+              {t.annualRateLabel}
+            </label>
             <input
+              id={idSingleRate2}
+              aria-label={`${t.secondLoan} ${t.annualRateLabel}`}
               type="number"
               step="0.001"
               value={singleRate2}
               onChange={e => setSingleRate2(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+              className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
             />
           </div>
         ) : (
@@ -414,10 +478,13 @@ export default function CombinedLoanSettings({
             <span className={`text-xs ${styles.accentText} font-medium`}>{t.multiRateSettings}</span>
             {stages2.map((stg, sIdx) => {
               const isLast = sIdx === stages2.length - 1;
+              const stageDurationId2 = `${baseId}-stage2-${sIdx}-duration`;
+              const stageRateId2 = `${baseId}-stage2-${sIdx}-rate`;
+              const stageTitle2 = `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}`;
               return (
                 <div key={sIdx} className={`flex flex-col gap-1.5 ${styles.divider} pb-2`}>
                   <div className="flex justify-between items-center text-xs font-medium text-text-sub">
-                    <span>{isLast ? `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}${t.remainingPeriods}` : `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}`}</span>
+                    <span>{isLast ? `${stageTitle2}${t.remainingPeriods}` : stageTitle2}</span>
                     {!isLast && stages2.length > 2 && (
                       <button
                         type="button"
@@ -432,6 +499,8 @@ export default function CombinedLoanSettings({
                     {!isLast ? (
                       <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                         <input
+                          id={stageDurationId2}
+                          aria-label={`${t.secondLoan} ${stageTitle2} ${t.placeholderPeriod}`}
                           type="number"
                           placeholder={t.placeholderPeriod}
                           value={stg.durationValue ?? ''}
@@ -440,15 +509,19 @@ export default function CombinedLoanSettings({
                             next[sIdx].durationValue = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                             setStages2(next);
                           }}
-                          className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                          className="w-full bg-transparent text-text-main text-sm py-1.5 outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
                         />
-                        <span className="text-xs text-text-sub ml-1">{t.unitYear}</span>
+                        <label htmlFor={stageDurationId2} className="text-xs text-text-sub ml-1 cursor-pointer">
+                          {t.unitYear}
+                        </label>
                       </div>
                     ) : (
                       <div className="flex items-center text-xs text-text-sub px-2">{t.untilExpiry}</div>
                     )}
                     <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                       <input
+                        id={stageRateId2}
+                        aria-label={`${t.secondLoan} ${stageTitle2} ${t.placeholderRate}`}
                         type="number"
                         step="0.01"
                         placeholder={t.placeholderRate}
@@ -458,9 +531,9 @@ export default function CombinedLoanSettings({
                           next[sIdx].rate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                           setStages2(next);
                         }}
-                        className="w-full bg-transparent text-text-main text-xs py-1.5 outline-none font-mono"
+                        className="w-full bg-transparent text-text-main text-sm py-1.5 outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
                       />
-                      <span className="text-xs text-text-sub ml-1">%</span>
+                      <label htmlFor={stageRateId2} className="text-xs text-text-sub ml-1 cursor-pointer">%</label>
                     </div>
                   </div>
                 </div>
@@ -509,12 +582,16 @@ export default function CombinedLoanSettings({
 
         {/* 開辦手續費 */}
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-text-sub uppercase tracking-[1px]">{t.originationFeeLabel}</span>
+          <label htmlFor={idFee2} className="text-xs font-medium text-text-sub uppercase tracking-[1px]">
+            {t.originationFeeLabel}
+          </label>
           <input
+            id={idFee2}
+            aria-label={`${t.secondLoan} ${t.originationFeeLabel}`}
             type="number"
             value={fee2}
             onChange={e => setFee2(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-xs outline-none font-mono`}
+            className={`w-full ${styles.inputField} px-3 py-2 rounded-lg text-sm outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
           />
         </div>
       </div>

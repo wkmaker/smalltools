@@ -2,6 +2,31 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.28.1] - 2026-10-21
+
+### Fixed
+- **UI 與無障礙 A11y 審查缺失全面修復（#91）**：
+  - 補齊房貸計算機單一與雙軌寬限期滑桿之語意 `label` / `aria-label`。
+  - 修復密碼產生器滑桿進度條於亮色模式下的高對比色差。
+  - 修復圖片壓縮工具在亮色模式下的深色卡片背景遺失與邊框不可見問題。
+  - PAC 產生器多規則模式補齊專屬卡片序號 `aria-label`。
+  - HAR 封包清洗器深色模式下 JSON 鍵名對比度提升至 WCAG AA 規範（#38bdf8）。
+  - 大話骰自訂懲罰清單亮色模式下白底白字修復。
+  - 憑證檢視器深層巢狀屬性白底灰字不可讀問題修復。
+  - QR Code 產生器 Logo 上傳拖放區補齊純文字 Accessible Name。
+  - 胎動計時器歷史紀錄深色卡片背景遺失修復。
+
+### Performance
+- **介面流暢性與主執行緒防護優化（#97）**：
+  - **ParticleCanvas 全站背景**：以 MutationObserver 快取主題色彩與狀態，徹底消滅每幀逐粒子調用 `getComputedStyle` 造成的 Layout Thrashing；整合 Page Visibility API 實現分頁背景自動休眠與前景喚醒；支援 `prefers-reduced-motion` 及小螢幕微粒密度自適應。
+  - **JsonFormatter**：輸入與編輯加入 250ms 防抖，並透過 React 18 `useTransition` 進行低優先級解析排程，消滅大文字鍵入時主執行緒卡頓。
+  - **ImageProcessor**：原圖 DataURL 改為僅於載入時計算，消除每次滑桿拖動重複產生 canvas 與 `toDataURL`；預覽渲染加入 120ms 防抖。
+  - **LuckyWheel**：旋轉動畫改以 Ref 維護角度並在 RAF 內直接重繪 Canvas，旋轉過程整樹 Re-render 次數降為 0；彩帶動畫補齊 RAF ID 追蹤與元件卸載取消機制。
+  - **QrGenerator**：輸入與滑桿變更加入 150ms 防抖，並在 QRCodeStyling 實例存在時優先呼叫 `update()` 原地更新，消滅反覆銷毀重掛 DOM 樹。
+  - **EpochClient**：將 20fps 高頻即時看板抽出為 `LiveClockBanner` 獨立子組件，整頁不再每秒 20 次 Re-render，並加入 `visibilitychange` 背景智慧暫停。
+
+---
+
 ## [1.28.0] - 2026-10-20
 
 ### Changed

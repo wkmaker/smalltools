@@ -437,3 +437,12 @@
     gap: 1.5rem;
   }
 }
+
+/* ── Validity Days WCAG AA ── */
+.validityDisplay {
+  color: #38bdf8;
+}
+
+:global([data-theme='light']) .validityDisplay {
+  color: #0284c7 !important;
+}

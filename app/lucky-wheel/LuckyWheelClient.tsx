@@ -25,7 +25,7 @@ import {
   generateId,
   getAvailablePrizes,
 } from './engine';
-import { renderWheelOnCanvas, triggerConfettiAnimation } from './utils/canvasRenderer';
+import { renderWheelOnCanvas, triggerConfettiAnimation, stopConfettiAnimation } from './utils/canvasRenderer';
 import { useWheelAudio } from './hooks/useWheelAudio';
 import { downloadBlob } from '../utils/downloadBlob';
 import { getLocalDateString } from '../utils/dateUtils';
@@ -70,6 +70,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     revealed: PrizeItem[];
   } | null>(null);
   const [currentRotationAngle, setCurrentRotationAngle] = useState<number>(0);
+  const currentRotationAngleRef = useRef<number>(0);
   const pointerDeflectionRef = useRef<number>(0);
   const animFrameIdRef = useRef<number | null>(null);
   // 抽獎流程中的逐輪排程，卸載時一併清除，避免背景持續 setState 與播放音效
@@ -114,6 +115,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       if (animFrameIdRef.current !== null) cancelAnimationFrame(animFrameIdRef.current);
       timeouts.forEach(clearTimeout);
       timeouts.clear();
+      stopConfettiAnimation();
     };
   }, []);
 
@@ -213,20 +215,20 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     [getUnfinishedPrizes]
   );
 
-  // 繪製轉盤 Canvas
+  // 繪製轉盤 Canvas (支援 overrideAngle 以在旋轉動畫 RAF 中直接重繪，免除整樹 Re-render)
   const drawWheelOnCanvas = useCallback(
-    (canvas: HTMLCanvasElement | null) => {
+    (canvas: HTMLCanvasElement | null, overrideAngle?: number) => {
       const { sectors, totalWeight } = calculateSectors();
       renderWheelOnCanvas({
         canvas,
         sectors,
         totalWeight,
-        currentRotationAngle,
+        currentRotationAngle: overrideAngle !== undefined ? overrideAngle : currentRotationAngleRef.current,
         pointerDeflection: pointerDeflectionRef.current,
         emptyLabel: t.allDrawn,
       });
     },
-    [calculateSectors, currentRotationAngle, t.allDrawn]
+    [calculateSectors, t.allDrawn]
   );
 
   useEffect(() => {
@@ -402,11 +404,16 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
           pointerDeflectionRef.current *= 0.82;
         }
 
-        setCurrentRotationAngle(currentAngle);
+        currentRotationAngleRef.current = currentAngle;
+        drawWheelOnCanvas(previewCanvasRef.current, currentAngle);
+        if (isFullscreen) {
+          drawWheelOnCanvas(fullscreenCanvasRef.current, currentAngle);
+        }
 
         if (progress < 1) {
           animFrameIdRef.current = requestAnimationFrame(animate);
         } else {
+          setCurrentRotationAngle(currentAngle);
           pointerDeflectionRef.current = 0;
           const nextRevealed = [...revealedSoFar, currentWinner];
 

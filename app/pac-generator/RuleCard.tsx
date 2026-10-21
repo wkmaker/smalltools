@@ -152,8 +152,7 @@ function RuleCard({
               type="text"
               value={rule.name}
               onChange={(e) => onUpdateRule(rule.id, { name: e.target.value })}
-              placeholder={t.ruleName}
-              className="flex-1 min-w-0 text-sm font-medium bg-transparent border-b border-white/10 px-2 py-1 text-text-main focus:outline-none focus:border-[var(--theme-color)] transition-colors"
+              placeholder={t.ruleName} aria-label={t.ruleName} className="flex-1 min-w-0 text-sm font-medium bg-transparent border-b border-white/10 px-2 py-1 text-text-main focus:outline-none focus:border-[var(--theme-color)] transition-colors"
             />
           </div>
 
@@ -204,8 +203,7 @@ function RuleCard({
                 rows={rule.value.includes('\n') ? Math.min(Math.max(rule.value.split('\n').length, 2), 6) : 1}
                 value={rule.value}
                 onChange={(e) => onUpdateRule(rule.id, { value: e.target.value })}
-                placeholder={t.conditionPlaceholders[rule.conditionType] || t.matchValue}
-                className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none transition-colors font-mono resize-y placeholder:text-text-sub/50 ${
+                placeholder={t.conditionPlaceholders[rule.conditionType] || t.matchValue} aria-label={t.conditionPlaceholders[rule.conditionType] || t.matchValue} className={`w-full text-sm rounded-lg px-3 py-2 text-text-main focus:outline-none transition-colors font-mono resize-y placeholder:text-text-sub/50 ${
                   !validation.isValid ? styles.inputWarning : styles.fieldInput
                 }`}
               />
