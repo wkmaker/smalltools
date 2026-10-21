@@ -201,6 +201,9 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
             setRotation(0);
             setFlipH(false);
             setFlipV(false);
+            if (e.target?.result) {
+              setBeforeDataUrl(e.target.result as string);
+            }
           };
           img.src = e.target?.result as string;
         };
@@ -363,7 +366,9 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     [rotation, flipH, flipV]
   );
 
-  // 單圖即時渲染與對比更新
+  const previewDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 單圖即時渲染與對比更新 (消除重複計算原圖 DataURL 與加入防抖)
   const updateSinglePreview = useCallback(() => {
     if (!singleImgElement || targetWidth <= 0 || targetHeight <= 0) return;
 
@@ -375,23 +380,20 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     const head = `data:${format};base64,`;
     const sizeInBytes = Math.round(((dataUrl.length - head.length) * 3) / 4);
     setProcessedSize(sizeInBytes);
-
-    // 原圖預覽 DataURL
-    const origCanvas = document.createElement('canvas');
-    origCanvas.width = singleImgElement.width;
-    origCanvas.height = singleImgElement.height;
-    const oCtx = origCanvas.getContext('2d');
-    if (oCtx) {
-      oCtx.drawImage(singleImgElement, 0, 0);
-      setBeforeDataUrl(origCanvas.toDataURL('image/png'));
-    }
   }, [singleImgElement, targetWidth, targetHeight, format, quality, renderProcessedCanvas]);
 
   useEffect(() => {
-    if (!isBatchMode) {
+    if (isBatchMode || !singleImgElement || targetWidth <= 0 || targetHeight <= 0) return;
+
+    if (previewDebounceRef.current) clearTimeout(previewDebounceRef.current);
+    previewDebounceRef.current = setTimeout(() => {
       updateSinglePreview();
-    }
-  }, [isBatchMode, updateSinglePreview]);
+    }, 120);
+
+    return () => {
+      if (previewDebounceRef.current) clearTimeout(previewDebounceRef.current);
+    };
+  }, [isBatchMode, singleImgElement, targetWidth, targetHeight, format, quality, updateSinglePreview]);
 
   // 單圖下載處理
   const downloadSingleImage = () => {
@@ -1047,7 +1049,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
       </div>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-8 sm:bottom-8 px-6 py-3 text-sm font-medium rounded-xl bg-[#d946ef]/20 dark:bg-[#d946ef]/20 border border-[#d946ef]/40 text-[#c026d3] dark:text-[#d946ef] bg-white/95 dark:bg-slate-900/90 backdrop-blur-md shadow-xl z-50 flex items-center justify-center gap-2">
+        <div className={styles.toastNotification}>
           <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
           </svg>

@@ -58,10 +58,11 @@ export default function SingleLoanSettings({
           <label htmlFor={singlePeriodInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.loanTermLabel}</label>
           <input
             id={singlePeriodInputId}
+            aria-label={t.loanTermLabel}
             type="number"
             value={singlePeriodVal}
             onChange={e => setSinglePeriodVal(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-            className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
+            className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
           />
         </div>
 
@@ -69,10 +70,11 @@ export default function SingleLoanSettings({
           <label htmlFor={singleGraceInputId} className="text-sm text-text-sub font-medium uppercase tracking-[1px]">{t.gracePeriodLabel}</label>
           <input
             id={singleGraceInputId}
+            aria-label={t.gracePeriodLabel}
             type="number"
             value={singleGraceVal}
             onChange={e => setSingleGraceVal(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-            className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
+            className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
           />
         </div>
       </div>
@@ -111,11 +113,12 @@ export default function SingleLoanSettings({
           <label htmlFor={singleRateInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">{t.annualRateLabel}</label>
           <input
             id={singleRateInputId}
+            aria-label={t.annualRateLabel}
             type="number"
             step="0.01"
             value={singleRate}
             onChange={e => setSingleRate(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-            className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
+            className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
           />
         </div>
       ) : (
@@ -123,10 +126,13 @@ export default function SingleLoanSettings({
           <span className={`text-xs ${styles.accentText} font-medium`}>{t.multiRateSettings}</span>
           {singleStages.map((stg, sIdx) => {
             const isLast = sIdx === singleStages.length - 1;
+            const stageDurationId = `single-stage-${sIdx}-duration`;
+            const stageRateId = `single-stage-${sIdx}-rate`;
+            const stageTitle = `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}`;
             return (
               <div key={sIdx} className={`flex flex-col gap-2 ${styles.divider} pb-3`}>
                 <div className="flex justify-between items-center text-sm font-medium text-text-sub">
-                  <span>{isLast ? `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}${t.remainingPeriods}` : `${t.stagePrefix}${sIdx + 1}${t.stageSuffix}`}</span>
+                  <span>{isLast ? `${stageTitle}${t.remainingPeriods}` : stageTitle}</span>
                   {!isLast && singleStages.length > 2 && (
                     <button
                       type="button"
@@ -141,6 +147,8 @@ export default function SingleLoanSettings({
                   {!isLast ? (
                     <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                       <input
+                        id={stageDurationId}
+                        aria-label={`${stageTitle} ${t.placeholderPeriod}`}
                         type="number"
                         placeholder={t.placeholderPeriod}
                         value={stg.durationValue ?? ''}
@@ -149,15 +157,19 @@ export default function SingleLoanSettings({
                           next[sIdx].durationValue = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                           setSingleStages(next);
                         }}
-                        className="w-full bg-transparent text-text-main text-xs py-2 outline-none font-mono"
+                        className="w-full bg-transparent text-text-main text-sm py-2 outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
                       />
-                      <span className="text-sm text-text-sub ml-1">{t.unitYear}</span>
+                      <label htmlFor={stageDurationId} className="text-sm text-text-sub ml-1 cursor-pointer">
+                        {t.unitYear}
+                      </label>
                     </div>
                   ) : (
                     <div className="flex items-center text-sm text-text-sub px-2">{t.untilExpiry}</div>
                   )}
                   <div className="flex items-center rounded-lg px-2 border border-border-glass bg-surface-glass">
                     <input
+                      id={stageRateId}
+                      aria-label={`${stageTitle} ${t.placeholderRate}`}
                       type="number"
                       step="0.01"
                       placeholder={t.placeholderRate}
@@ -167,9 +179,9 @@ export default function SingleLoanSettings({
                         next[sIdx].rate = e.target.value === '' ? '' : parseFloat(e.target.value) || 0;
                         setSingleStages(next);
                       }}
-                      className="w-full bg-transparent text-text-main text-xs py-2 outline-none font-mono"
+                      className="w-full bg-transparent text-text-main text-sm py-2 outline-none font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]"
                     />
-                    <span className="text-sm text-text-sub ml-1">%</span>
+                    <label htmlFor={stageRateId} className="text-sm text-text-sub ml-1 cursor-pointer">%</label>
                   </div>
                 </div>
               </div>
@@ -221,10 +233,11 @@ export default function SingleLoanSettings({
         <label htmlFor={singleFeeInputId} className="text-sm font-medium text-text-sub uppercase tracking-[1px]">{t.originationFeeLabel}</label>
         <input
           id={singleFeeInputId}
+          aria-label={t.originationFeeLabel}
           type="number"
           value={singleFee}
           onChange={e => setSingleFee(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-          className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono`}
+          className={`w-full ${styles.inputField} px-4 py-3 rounded-xl text-base outline-none transition-all font-mono focus-visible:ring-1 focus-visible:ring-[var(--theme-color)]`}
         />
       </div>
     </div>

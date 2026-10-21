@@ -178,6 +178,15 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
       .catch(() => showToast(t.toastCopyFailed));
   };
 
+  const strengthClass =
+    strength.percent <= 25
+      ? styles.strengthWeak
+      : strength.percent <= 50
+      ? styles.strengthMedium
+      : strength.percent <= 75
+      ? styles.strengthStrong
+      : styles.strengthSecure;
+
   return (
     <>
       <ToolLayout
@@ -274,13 +283,20 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
                       type="button"
                       onClick={handleRegenerate}
                       title="Re-generate"
+                      aria-label={t.generateBtn || 'Re-generate'}
                       className={styles.btnIconOnly}
                     >
                       <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                         <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
                       </svg>
                     </button>
-                    <button type="button" onClick={copyPassword} title="Copy" className={styles.btnCopyPrimary}>
+                    <button
+                      type="button"
+                      onClick={copyPassword}
+                      title="Copy"
+                      aria-label={t.copyBtn || 'Copy'}
+                      className={styles.btnCopyPrimary}
+                    >
                       <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                       </svg>
@@ -293,7 +309,10 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
                 <div className="flex flex-col gap-1.5 pt-2">
                   <div className="flex justify-between text-sm font-semibold uppercase tracking-[0.5px]">
                     <span className="text-text-sub">{t.strengthLabel}</span>
-                    <span className="font-bold transition-colors duration-300" style={{ color: strength.color }}>
+                    <span
+                      className={`font-bold transition-colors duration-300 ${strengthClass}`}
+                      style={{ color: strength.color }}
+                    >
                       {strength.label}
                     </span>
                   </div>
@@ -324,6 +343,7 @@ export default function PasswordGeneratorClient({ lang = 'zh-TW' }: Props) {
                           type="button"
                           onClick={() => copyHistoryItem(pwd)}
                           title="Copy"
+                          aria-label={`${t.copyBtn || 'Copy'} ${pwd}`}
                           className="text-text-sub hover:text-[var(--theme-color,#00ff66)] transition-colors p-1 cursor-pointer bg-none border-none flex shrink-0"
                         >
                           <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">

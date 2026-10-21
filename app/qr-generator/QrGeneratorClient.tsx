@@ -152,6 +152,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
 
   // --- Refs ---
   const qrCodeRef = useRef<any>(null);
+  const qrDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const getComputedData = (): string => {
@@ -440,55 +441,69 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
     isMounted,
   ]);
 
-  // --- 初始化或重置實例 ---
+  // --- 初始化或重置實例 (加入 150ms 防抖並優先呼叫 update 原地更新) ---
   useEffect(() => {
     if (!QRCodeStyling || !containerRef.current) return;
 
-    containerRef.current.innerHTML = '';
+    if (qrDebounceTimer.current) clearTimeout(qrDebounceTimer.current);
 
-    const qr = new QRCodeStyling({
-      width: 280,
-      height: 280,
-      type: 'svg',
-      data: toUtf8ByteString(getComputedData()),
-      image: logoBase64 || '',
-      backgroundOptions: {
-        color: bgTransparent ? 'transparent' : bgColor,
-      },
-      dotsOptions: {
-        type: dotsType as any,
-        color: useGradient ? undefined : singleColor,
-        gradient: useGradient
-          ? {
-              type: gradientType,
-              rotation: gradientType === 'linear' ? (gradientRotation * Math.PI) / 180 : undefined,
-              colorStops: [
-                { offset: 0, color: color1 },
-                { offset: 1, color: color2 },
-              ],
-            }
-          : undefined,
-      },
-      cornersSquareOptions: {
-        type: cornersSquare as any,
-        color: useGradient ? color1 : singleColor,
-      },
-      cornersDotOptions: {
-        type: cornersDot as any,
-        color: useGradient ? color2 : singleColor,
-      },
-      imageOptions: {
-        crossOrigin: 'anonymous',
-        margin: 4,
-        imageSize: logoSize / 100,
-      },
-      qrOptions: {
-        errorCorrectionLevel: logoBase64 ? 'H' : errorCorrection,
-      },
-    });
+    qrDebounceTimer.current = setTimeout(() => {
+      if (!QRCodeStyling || !containerRef.current) return;
 
-    qrCodeRef.current = qr;
-    qr.append(containerRef.current);
+      const options = {
+        width: 280,
+        height: 280,
+        type: 'svg' as const,
+        data: toUtf8ByteString(getComputedData()),
+        image: logoBase64 || '',
+        backgroundOptions: {
+          color: bgTransparent ? 'transparent' : bgColor,
+        },
+        dotsOptions: {
+          type: dotsType as any,
+          color: useGradient ? undefined : singleColor,
+          gradient: useGradient
+            ? {
+                type: gradientType,
+                rotation: gradientType === 'linear' ? (gradientRotation * Math.PI) / 180 : undefined,
+                colorStops: [
+                  { offset: 0, color: color1 },
+                  { offset: 1, color: color2 },
+                ],
+              }
+            : undefined,
+        },
+        cornersSquareOptions: {
+          type: cornersSquare as any,
+          color: useGradient ? color1 : singleColor,
+        },
+        cornersDotOptions: {
+          type: cornersDot as any,
+          color: useGradient ? color2 : singleColor,
+        },
+        imageOptions: {
+          crossOrigin: 'anonymous',
+          margin: 4,
+          imageSize: logoSize / 100,
+        },
+        qrOptions: {
+          errorCorrectionLevel: logoBase64 ? 'H' : errorCorrection,
+        },
+      };
+
+      if (qrCodeRef.current) {
+        qrCodeRef.current.update(options);
+      } else {
+        containerRef.current.innerHTML = '';
+        const qr = new QRCodeStyling(options);
+        qrCodeRef.current = qr;
+        qr.append(containerRef.current);
+      }
+    }, 150);
+
+    return () => {
+      if (qrDebounceTimer.current) clearTimeout(qrDebounceTimer.current);
+    };
   }, [
     QRCodeStyling,
     contentType,

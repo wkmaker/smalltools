@@ -75,10 +75,7 @@ export default function LogoUploader({
               />
               <span className="text-sm font-medium text-text-main max-w-[200px] truncate">{logoName}</span>
             </div>
-            <button
-              type="button"
-              onClick={onRemoveLogo}
-              title={t.removeLogo}
+            <button type="button" onClick={onRemoveLogo} title={t.removeLogo} aria-label={t.removeLogo}
               className="bg-transparent border-none text-text-sub hover:text-red-500 hover:scale-115 transition-all cursor-pointer p-1"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">

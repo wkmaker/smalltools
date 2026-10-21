@@ -215,3 +215,40 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ── Toast Notification ── */
+.toastNotification {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  left: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(18, 18, 24, 0.9);
+  border: 1px solid rgba(217, 70, 239, 0.4);
+  color: #d946ef;
+}
+
+@media (min-width: 640px) {
+  .toastNotification {
+    left: auto;
+    right: 2rem;
+    bottom: 2rem;
+  }
+}
+
+:global([data-theme='light']) .toastNotification {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(192, 38, 211, 0.35);
+  color: #a21caf;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}

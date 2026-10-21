@@ -318,11 +318,25 @@ export function triggerConfettiAnimation(canvas: HTMLCanvasElement | null) {
 
     frames++;
     if (frames < 140) {
-      requestAnimationFrame(renderConfetti);
+      activeConfettiAnimId = requestAnimationFrame(renderConfetti);
     } else {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      activeConfettiAnimId = null;
     }
   };
 
-  requestAnimationFrame(renderConfetti);
+  activeConfettiAnimId = requestAnimationFrame(renderConfetti);
+}
+
+let activeConfettiAnimId: number | null = null;
+
+export function stopConfettiAnimation(canvas?: HTMLCanvasElement | null) {
+  if (activeConfettiAnimId !== null) {
+    cancelAnimationFrame(activeConfettiAnimId);
+    activeConfettiAnimId = null;
+  }
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 }
