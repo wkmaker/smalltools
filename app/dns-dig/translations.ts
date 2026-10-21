@@ -36,6 +36,7 @@ export const TRANSLATIONS = {
     copyJsonToast: '已複製 JSON 數據',
     copyCellToast: '已複製',
     queryErrorMsg: '查詢 DNS 發生連線錯誤，請檢查網域或 API 回應。',
+    queryTimeoutMsg: 'DNS 查詢逾時（超過 8 秒未回應），請檢查網路連線或切換其他 DNS 伺服器重試。',
 
     faqTitle: '常見問題與專業指南',
     faqSubtitle: '深入了解 DNS Over HTTPS (DoH) 加密運作、DNS 紀錄類型與 RFC 9460 解碼',
@@ -129,6 +130,7 @@ export const TRANSLATIONS = {
     copyJsonToast: 'JSON data copied to clipboard',
     copyCellToast: 'Copied',
     queryErrorMsg: 'DNS query connection error. Please check domain or API availability.',
+    queryTimeoutMsg: 'DNS query timed out (no response within 8 seconds). Please check your connection or switch to another DNS server.',
 
     faqTitle: 'Frequently Asked Questions & Guide',
     faqSubtitle: 'Learn more about DNS Over HTTPS (DoH), record types, TTL propagation, and RFC 9460 decoding.',

@@ -175,6 +175,16 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
     [lang]
   );
 
+  const isInitialMountRef = useRef(true);
+  useEffect(() => {
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+    // 表單核心簽發參數異動時，清空下方舊產出物以維持介面狀態對稱
+    setIdentities(null);
+  }, [mode, algorithm, caCommonName, organization, countryCode, identityCommonName, sanInput, validityDays]);
+
   const [savedCa, setSavedCa] = useState<CertificateBundle | null>(null);
   const [savedCaLabel, setSavedCaLabel] = useState('');
   const [reuseCa, setReuseCa] = useState(false);
@@ -325,6 +335,9 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
     setErrorMsg(null);
     setInvalidSanHint(null);
     setIdentities(null);
+    setSavedCa(null);
+    setSavedCaLabel('');
+    setReuseCa(false);
   }, []);
 
   const copyText = (text: string) => {

@@ -206,6 +206,7 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
     setFileName('sample_session.har');
     setExcludedHeaders({});
     setSelectedEntry(null);
+    setErrorMessage(null); // 清空殘留錯誤
   };
 
   // 重置清空
@@ -215,6 +216,7 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
     setFileName('session.har');
     setSelectedEntry(null);
     setExcludedHeaders({});
+    setErrorMessage(null); // 清空殘留錯誤
   };
 
   // 下載脫敏 HAR
