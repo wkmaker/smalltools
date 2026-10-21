@@ -85,11 +85,13 @@ export default function EntryDetailModal({
     const uniqueTokens = Array.from(new Set(tokens.filter(Boolean)));
     const escaped = uniqueTokens.map((tok) => tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
     const regex = new RegExp(`(${escaped})`, 'g');
-    const parts = text.split(regex);
+    const isTruncated = text.length > 100000;
+    const processText = isTruncated ? text.slice(0, 100000) : text;
+    const parts = processText.split(regex);
 
     return (
       <>
-        {parts.map((part, i) => {
+        {parts.map((part: string, i: number) => {
           if (uniqueTokens.includes(part)) {
             return (
               <mark key={i} className={styles.redactedYellowHighlight}>

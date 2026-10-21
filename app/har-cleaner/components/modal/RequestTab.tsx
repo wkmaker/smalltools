@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { HarEntryAnalysis } from '../../types';
 import { formatPayload } from '../../engine/sanitizer';
 import KeyValueSection from './KeyValueSection';
@@ -36,8 +36,8 @@ export default function RequestTab({
   const req = selectedItem.cleaned.request;
   const origReq = selectedItem.original.request;
 
-  const cleanedPostFormatted = formatPayload(req?.postData?.text || req?.postData);
-  const origPostFormatted = formatPayload(origReq?.postData?.text || origReq?.postData);
+  const cleanedPostFormatted = useMemo(() => formatPayload(req?.postData?.text || req?.postData), [req?.postData]);
+  const origPostFormatted = useMemo(() => formatPayload(origReq?.postData?.text || origReq?.postData), [origReq?.postData]);
 
   return (
     <div className="space-y-5">

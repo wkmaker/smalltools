@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { HarEntryAnalysis } from '../../types';
 import { formatPayload } from '../../engine/sanitizer';
 import KeyValueSection from './KeyValueSection';
@@ -36,8 +36,8 @@ export default function ResponseTab({
   const res = selectedItem.cleaned.response;
   const origRes = selectedItem.original.response;
 
-  const cleanedResFormatted = formatPayload(res?.content?.text || '');
-  const origResFormatted = formatPayload(origRes?.content?.text || '');
+  const cleanedResFormatted = useMemo(() => formatPayload(res?.content?.text || ''), [res?.content?.text]);
+  const origResFormatted = useMemo(() => formatPayload(origRes?.content?.text || ''), [origRes?.content?.text]);
   const mime = res?.content?.mimeType || 'unknown';
 
   return (

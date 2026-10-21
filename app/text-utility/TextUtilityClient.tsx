@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useId } from 'react';
+import { useState, useEffect, useId, useMemo } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './text-utility.module.css';
 import { TRANSLATIONS } from './translations';
+import { computeTextStatistics } from './engine';
 
 interface TextUtilityClientProps {
   lang?: 'zh-TW' | 'en';
@@ -24,12 +25,11 @@ export default function TextUtilityClient({ lang = 'zh-TW' }: TextUtilityClientP
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 127, 0.6)');
   }, []);
 
-  // 統計數字
-  const totalChars = text.length;
-  const totalCharsNoSpace = text.replace(/\s/g, '').length;
-  const totalLines = text ? text.split('\n').length : 0;
-  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
-  const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+  // 單次巡訪 (Single Pass) 高效即時統計：零字串分割與陣列中介記憶體開銷
+  const { totalChars, totalCharsNoSpace, totalLines, chineseChars, englishWords } = useMemo(
+    () => computeTextStatistics(text),
+    [text]
+  );
 
   const showToast = (msg: string) => {
     setToast(msg);
