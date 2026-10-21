@@ -111,6 +111,7 @@ export default function MediaSettingsCard({
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]);
+                  e.target.value = '';
                 }}
               />
               <div className="text-sm font-medium text-text-main">
@@ -236,6 +237,7 @@ export default function MediaSettingsCard({
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) handleBgUpload(e.target.files[0]);
+                  e.target.value = '';
                 }}
               />
               <div className="text-sm font-medium text-text-main">

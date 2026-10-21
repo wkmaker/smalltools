@@ -205,7 +205,13 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
               setBeforeDataUrl(e.target.result as string);
             }
           };
+          img.onerror = () => {
+            showToast(lang === 'en' ? 'Failed to decode image data' : '圖片解碼失敗，格式可能不受支援');
+          };
           img.src = e.target?.result as string;
+        };
+        reader.onerror = () => {
+          showToast(lang === 'en' ? 'Failed to read image file' : '圖片讀取失敗');
         };
         reader.readAsDataURL(file);
       }
@@ -591,7 +597,10 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
               accept="image/*"
               multiple
               className="hidden"
-              onChange={(e) => e.target.files && handleFilesLoad(e.target.files)}
+              onChange={(e) => {
+                if (e.target.files) handleFilesLoad(e.target.files);
+                e.target.value = '';
+              }}
             />
             <div className="w-20 h-20 rounded-3xl bg-[#d946ef]/15 text-[#d946ef] flex items-center justify-center border border-[#d946ef]/30 shadow-[0_0_30px_rgba(217,70,239,0.2)]">
               <svg viewBox="0 0 24 24" width={36} height={36} fill="currentColor" className="text-[#d946ef]">
@@ -865,7 +874,10 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
                   accept="image/*"
                   multiple
                   className="hidden"
-                  onChange={(e) => e.target.files && handleFilesLoad(e.target.files, true)}
+                  onChange={(e) => {
+                  if (e.target.files) handleFilesLoad(e.target.files, true);
+                  e.target.value = '';
+                }}
                 />
                 <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
                   <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />

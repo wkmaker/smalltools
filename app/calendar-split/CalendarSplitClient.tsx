@@ -122,6 +122,7 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
     if (e.target.files && e.target.files.length > 0) {
       handleProcessFile(e.target.files[0]);
     }
+    e.target.value = '';
   };
 
   // 毫秒級快速計算分割規劃 (純數字索引計算，零字串拷貝，0ms 延遲)

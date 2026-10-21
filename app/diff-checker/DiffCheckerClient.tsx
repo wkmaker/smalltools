@@ -61,6 +61,7 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
 
   // --- Toast 狀態 ---
   const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- HTML ID 宣告 ---
   const originalInputId = useId();
@@ -86,6 +87,12 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
 
   // 初始化主題顏色
   useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#8b5cf6');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(139, 92, 246, 0.6)');
   }, []);
@@ -96,10 +103,11 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
     }
   }, [mergeResultText, viewMode, adjustMergeTextareaHeight]);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
+  }, []);
 
   const normalizeNewlines = (str: string): string => {
     if (!str) return '';
@@ -380,6 +388,11 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
         setModifiedText(content);
       }
       showToast(`${t.loadedFileToast}${file.name}`);
+    };
+    reader.onerror = () => {
+      if (readerRef.current === reader) {
+        showToast(lang === 'en' ? `Failed to read file: ${file.name}` : `讀取檔案失敗：${file.name}`);
+      }
     };
     reader.readAsText(file);
   };

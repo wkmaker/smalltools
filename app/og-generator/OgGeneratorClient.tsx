@@ -194,7 +194,13 @@ export default function OgGeneratorClient({ lang = 'zh-TW' }: OgGeneratorClientP
       img.onload = () => {
         setLogoImage(img);
       };
+      img.onerror = () => {
+        showToast(lang === 'en' ? 'Failed to parse logo image' : 'Logo 圖片解析失敗');
+      };
       img.src = e.target?.result as string;
+    };
+    reader.onerror = () => {
+      showToast(lang === 'en' ? 'Failed to read logo file' : 'Logo 讀取失敗');
     };
     reader.readAsDataURL(file);
   };

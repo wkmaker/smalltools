@@ -319,6 +319,9 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
       reader.onload = evt => {
         if (evt.target?.result) handleInputChange(evt.target.result as string, true);
       };
+      reader.onerror = () => {
+        showToast(lang === 'en' ? 'Failed to read JSON file' : '讀取 JSON 檔案失敗');
+      };
       reader.readAsText(file);
     }
   };
@@ -389,8 +392,12 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
                       r.onload = ev => {
                         if (ev.target?.result) handleInputChange(ev.target.result as string, true);
                       };
+                      r.onerror = () => {
+                        showToast(lang === 'en' ? 'Failed to read JSON file' : '讀取 JSON 檔案失敗');
+                      };
                       r.readAsText(f);
                     }
+                    e.target.value = '';
                   }}
                 />
               </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useId, useMemo, useCallback, useRef } from 'react';
 import ToolLayout from '@/app/components/ToolLayout';
 import { safeSessionStorage } from '@/app/utils/storage';
 import FaqSection from '@/app/components/FaqSection';
@@ -28,6 +28,19 @@ interface PacTesterClientProps {
 export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
   const isEn = lang === 'en';
+  const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast(msg);
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   // 動態主題色注入 (Cyan #00f0ff)
   useEffect(() => {
@@ -231,7 +244,11 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
       const content = event.target?.result as string;
       if (content) updatePacScript(content);
     };
+    reader.onerror = () => {
+      showToast(lang === 'en' ? 'Failed to read PAC script' : '讀取 PAC 腳本失敗');
+    };
     reader.readAsText(file);
+    e.target.value = '';
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -242,6 +259,9 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
       reader.onload = (event) => {
         const content = event.target?.result as string;
         if (content) updatePacScript(content);
+      };
+      reader.onerror = () => {
+        showToast(lang === 'en' ? 'Failed to read PAC script' : '讀取 PAC 腳本失敗');
       };
       reader.readAsText(file);
     }
@@ -883,6 +903,12 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
           items={t.faqItems}
           accentColor="#00f0ff"
         />
+        {/* Toast 提示 */}
+        {toast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0f172a]/95 text-white text-sm font-medium px-4 py-2.5 rounded-xl border border-white/10 shadow-2xl backdrop-blur-md animate-fade-in flex items-center gap-2">
+            <span>{toast}</span>
+          </div>
+        )}
       </div>
     </ToolLayout>
   );

@@ -2,6 +2,18 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.28.6] - 2026-10-22
+
+### Fixed
+- **憑證鏈尋訪死迴圈、FileReader 異常捕獲與上傳狀態重置全面修復（#90）**：
+  - **SSL 憑證轉換器（ssl-converter）環狀參照防護**：`buildUnifiedCertAnalysis` 引入 `visited = new Set()` 憑證造訪追蹤與 `MAX_CHAIN_DEPTH = 10` 最大深度防護，徹底解決交叉簽署（Cross-Signed）或相互簽發的中繼 CA 引發 `while (!isRootCertificate)` 無窮迴圈與分頁當機問題。
+  - **全站檔案讀取器（FileReader / Image）異常捕獲**：`qr-generator`, `diff-checker`, `json`, `har-cleaner`, `image-processor`, `og-generator`, `pac-tester`, `pac-generator` 等模組全面補齊 `reader.onerror`、`reader.onabort` 與 `img.onerror` 回呼，防範檔案被系統鎖定或格式損毀時介面掛起與 Loading 骨架屏無限懸掛。
+  - **多模組上傳控制項重複選取修復**：10 個工具模組在 `onChange` 處理完畢後立即執行 `e.target.value = ''`，徹底根除清空佇列或上傳失敗後無法再次選取相同名稱檔案的操作死胡同。
+  - **Base64 工具 DataURL 格式健全驗證**：`app/base64` 增加 `includes(',')` 格式校驗與空值回退，防止異常或空檔案切出 `undefined` 引發後續 `substring` 的 `TypeError`。
+  - **元件卸載計時器與全站 Toast 防抖清理**：`liars-dice` 0.9 秒手甩延遲受 `shakeTimerRef` 追蹤並於卸載時清理；`epoch`, `diff-checker`, `qr-generator`, `text-utility`, `resignation-calculator`, `pdf-compressor`, `pdf-processor` 等模組引入 `toastTimerRef`，解決連續操作時新 Toast 被前次定時器提早清除的體驗缺陷。
+
+---
+
 ## [1.28.5] - 2026-10-22
 
 ### Fixed

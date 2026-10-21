@@ -194,6 +194,13 @@ export default function HarCleanerClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | 
         );
       }
     };
+    reader.onerror = () => {
+      setErrorMessage(
+        lang === 'en'
+          ? 'Failed to read file from disk.'
+          : '無法讀取檔案，請檢查檔案權限或重試。'
+      );
+    };
     reader.readAsText(file);
   };
 

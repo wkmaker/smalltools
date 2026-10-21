@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
@@ -91,6 +91,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
   const [isCovered, setIsCovered] = useState<boolean>(false);
   const [autoCover, setAutoCover] = useState<boolean>(true);
   const [isPeeking, setIsPeeking] = useState<boolean>(false);
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 防作弊計時器 state
   const [lastRollTimestamp, setLastRollTimestamp] = useState<number | null>(null);
@@ -121,6 +122,12 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
   }, []);
 
   // 動態主題設定
+  useEffect(() => {
+    return () => {
+      if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#ffb800');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 184, 0, 0.6)');
@@ -374,7 +381,8 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
     }
 
     // 模擬擺動與骰子亂數產生 (0.9 秒真實手甩動畫與音效同步)
-    setTimeout(() => {
+    if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+    shakeTimerRef.current = setTimeout(() => {
       const newDice = getCryptoRandomDice(diceCount);
       newDice.sort((a, b) => a - b); // 自動從小到大排列，利於吹牛看牌
       setDiceValues(newDice);
@@ -396,6 +404,7 @@ export default function LiarsDiceClient({ lang = 'zh-TW' }: { lang?: 'zh-TW' | '
       };
 
       setHistory((prev) => [newItem, ...prev].slice(0, 5));
+      shakeTimerRef.current = null;
     }, 900);
   };
 

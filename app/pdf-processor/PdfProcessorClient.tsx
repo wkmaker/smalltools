@@ -45,6 +45,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
   const [isLoadingHighRes, setIsLoadingHighRes] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 密碼解鎖對話框狀態
   const [pendingPasswordFile, setPendingPasswordFile] = useState<{
@@ -119,10 +120,11 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
     }
   }, [previewPageIndex, pages]);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(''), 3000);
+  }, []);
 
   // 全域檔案拖曳事件處理
   const handleFileDragOver = (e: React.DragEvent) => {
@@ -475,7 +477,10 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
               accept=".pdf,.png,.jpg,.jpeg,.webp"
               multiple
               className="hidden"
-              onChange={(e) => e.target.files && handleFilesLoad(e.target.files)}
+              onChange={(e) => {
+                if (e.target.files) handleFilesLoad(e.target.files);
+                e.target.value = '';
+              }}
             />
             <button
               type="button"
