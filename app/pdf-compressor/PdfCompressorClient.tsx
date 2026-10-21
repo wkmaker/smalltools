@@ -98,6 +98,28 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
     []
   );
 
+  const resetDoneItemsToReady = useCallback(() => {
+    setFileQueue((prev) => {
+      let hasChanges = false;
+      const updated = prev.map((it) => {
+        if (it.status === 'done' || it.status === 'error') {
+          hasChanges = true;
+          return {
+            ...it,
+            status: 'ready' as const,
+            compressedBlob: null,
+            compressedSize: 0,
+            progressPct: 0,
+            progressMsg: '',
+            errorMsg: undefined,
+          };
+        }
+        return it;
+      });
+      return hasChanges ? updated : prev;
+    });
+  }, []);
+
   const applyModePreset = useCallback(
     (m: 'low' | 'medium' | 'high') => {
       setModePreset(m);
@@ -116,6 +138,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
       setQuality(q);
       setMaxDpi(dpi);
       syncToURL(m, q, dpi);
+      if (isMountedRef.current) resetDoneItemsToReady();
     },
     [syncToURL]
   );
@@ -528,6 +551,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                   onChange={(e) => {
                     const q = parseFloat(e.target.value);
                     setQuality(q);
+                    resetDoneItemsToReady();
                     syncToURL(modePreset, q, maxDpi);
                   }}
                   className="accent-[#eab308] cursor-pointer"
@@ -547,6 +571,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
                   onChange={(e) => {
                     const dpi = parseInt(e.target.value, 10);
                     setMaxDpi(dpi);
+                    resetDoneItemsToReady();
                     syncToURL(modePreset, quality, dpi);
                   }}
                   className={styles.selectInput}

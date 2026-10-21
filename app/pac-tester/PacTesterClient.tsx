@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useId, useMemo } from 'react';
+import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import ToolLayout from '@/app/components/ToolLayout';
 import { safeSessionStorage } from '@/app/utils/storage';
 import FaqSection from '@/app/components/FaqSection';
@@ -72,6 +72,19 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
       }
     }
   }, []);
+
+  // 腳本異動時無效化先前的測試成果與報表，防止匯出過期資料
+  const invalidateResults = useCallback(() => {
+    setSingleResult(null);
+    setBatchResults([]);
+    setBatchTimeoutError(false);
+    setBatchRunError(false);
+  }, []);
+
+  const updatePacScript = useCallback((newScript: string) => {
+    setPacScript(newScript);
+    invalidateResults();
+  }, [invalidateResults]);
 
   // 解析 Mock Context
   const mockContext: MockContext = useMemo(() => {
@@ -216,7 +229,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
-      if (content) setPacScript(content);
+      if (content) updatePacScript(content);
     };
     reader.readAsText(file);
   };
@@ -228,7 +241,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
       const reader = new FileReader();
       reader.onload = (event) => {
         const content = event.target?.result as string;
-        if (content) setPacScript(content);
+        if (content) updatePacScript(content);
       };
       reader.readAsText(file);
     }
@@ -278,7 +291,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     type="button"
-                    onClick={() => setPacScript(SAMPLE_PAC_SCRIPT)}
+                    onClick={() => updatePacScript(SAMPLE_PAC_SCRIPT)}
                     className={`${styles.actionButton} ${styles.secondaryButton}`}
                   >
                     <span>{t.loadSampleBtn}</span>
@@ -327,7 +340,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
               {/* 編輯器輸入區 */}
               <textarea
                 value={pacScript}
-                onChange={(e) => setPacScript(e.target.value)}
+                onChange={(e) => updatePacScript(e.target.value)}
                 placeholder={t.editorPlaceholder}
                 className={styles.editorTextarea}
                 spellCheck={false}

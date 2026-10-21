@@ -171,7 +171,11 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
 
     const controller = new AbortController();
     activeAbortControllerRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    let isTimedOut = false;
+    const timeoutId = setTimeout(() => {
+      isTimedOut = true;
+      controller.abort();
+    }, 8000);
 
     setLoading(true);
     setErrorMsg('');
@@ -206,9 +210,16 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
         setResult(data);
       }
     } catch (err: unknown) {
-      if ((err as Error).name === 'AbortError') return;
+      if ((err as Error).name === 'AbortError' || controller.signal.aborted) {
+        if (isTimedOut && activeAbortControllerRef.current === controller) {
+          setErrorMsg(t.queryTimeoutMsg);
+        }
+        return;
+      }
       console.error('[DnsDig] Query error:', err);
-      setErrorMsg((err as Error).message || t.queryErrorMsg);
+      if (activeAbortControllerRef.current === controller) {
+        setErrorMsg((err as Error).message || t.queryErrorMsg);
+      }
     } finally {
       clearTimeout(timeoutId);
       if (activeAbortControllerRef.current === controller) {
