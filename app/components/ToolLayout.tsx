@@ -27,6 +27,7 @@ import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/components/ThemeToggle';
 import { CATEGORIES } from '@/app/config/tools';
 import { generateBreadcrumbSchema, type BreadcrumbItem } from '@/app/utils/breadcrumbSchema';
+import { safeLocalStorage, safeSessionStorage } from '@/app/utils/storage';
 import { version as appVersion } from '@/package.json';
 
 export type { BreadcrumbItem };
@@ -146,12 +147,20 @@ export default function ToolLayout({
     if (typeof window === 'undefined' || !cleanPath) return;
     try {
       const storageKey = 'smalltools_recent_tools';
-      const raw = localStorage.getItem(storageKey);
-      let recents: string[] = raw ? JSON.parse(raw) : [];
+      const raw = safeLocalStorage.getItem(storageKey);
+      let recents: string[] = [];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            recents = parsed.filter((h): h is string => typeof h === 'string');
+          }
+        } catch {}
+      }
       const toolHref = `/${cleanPath.split('/')[0]}/`;
       if (toolHref && toolHref !== '//') {
         recents = [toolHref, ...recents.filter((h) => h !== toolHref)].slice(0, 8);
-        localStorage.setItem(storageKey, JSON.stringify(recents));
+        safeLocalStorage.setItem(storageKey, JSON.stringify(recents));
       }
     } catch (e) {}
   }, [cleanPath]);
@@ -241,7 +250,7 @@ export default function ToolLayout({
             return;
           }
           if (typeof window !== 'undefined' && pathname) {
-            sessionStorage.setItem('lastVisitedTool', pathname);
+            safeSessionStorage.setItem('lastVisitedTool', pathname);
           }
           if (typeof document !== 'undefined' && document.fullscreenElement) {
             document.exitFullscreen().catch(() => {});

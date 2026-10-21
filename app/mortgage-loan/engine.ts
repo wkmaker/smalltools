@@ -32,6 +32,8 @@ export interface CombinedDetailRow extends SingleLoanDetailRow {
 export type RepayType = 'equal-total' | 'equal-principal';
 export type RateType = 'single' | 'multi';
 
+export const MAX_MORTGAGE_MONTHS = 70 * 12; // 840 期 (70 年，放寬以應對政策變動並防護無窮迴圈)
+
 export interface SingleLoanDetailResult {
   totalMonths: number;
   graceMonths: number;
@@ -41,7 +43,9 @@ export interface SingleLoanDetailResult {
 }
 
 function months(value: number, unit: 'year' | 'month' | null): number {
-  return unit === 'year' ? toNumber(D(value).times(12).dp(0)) : toNumber(D(value).dp(0));
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  const m = unit === 'year' ? toNumber(D(value).times(12).dp(0)) : toNumber(D(value).dp(0));
+  return Math.min(MAX_MORTGAGE_MONTHS, Math.max(0, m));
 }
 
 /** 依單一利率或多段階梯利率，展開每個月適用的年利率（%） */
@@ -82,7 +86,7 @@ export function calculateSingleLoanDetail(
   stageList: Stage[],
   repayType: RepayType,
 ): SingleLoanDetailResult {
-  const totalMonths = Math.max(0, months(periodVal, periodUnit));
+  const totalMonths = Math.min(MAX_MORTGAGE_MONTHS, Math.max(0, months(periodVal, periodUnit)));
   let graceMonths = Math.max(0, months(graceVal, graceUnit));
   if (graceMonths > totalMonths) graceMonths = totalMonths;
 

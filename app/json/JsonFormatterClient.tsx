@@ -6,6 +6,7 @@ import FaqSection from '../components/FaqSection';
 import styles from './json.module.css';
 import { downloadBlob } from '../utils/downloadBlob';
 import { TRANSLATIONS } from './translations';
+import { detectUnsafeLargeIntegers } from './engine';
 
 // 大型 JSON 防護：深層或子節點過多時預設收合，展開後分頁渲染，避免一次掛載數萬個節點
 const TREE_AUTO_COLLAPSE_DEPTH = 2;
@@ -177,6 +178,7 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
   const [minifiedText, setMinifiedText] = useState('');
   const [parsedObject, setParsedObject] = useState<any>(null);
   const [lintError, setLintError] = useState<{ title: string; msg: string } | null>(null);
+  const [hasLargeIntWarning, setLargeIntWarning] = useState<boolean>(false);
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false });
@@ -201,6 +203,7 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
         setMinifiedText('');
         setParsedObject(null);
         setLintError(null);
+        setLargeIntWarning(false);
         return;
       }
       try {
@@ -209,11 +212,13 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
         setFormattedText(JSON.stringify(obj, null, space));
         setMinifiedText(JSON.stringify(obj));
         setLintError(null);
+        setLargeIntWarning(detectUnsafeLargeIntegers(text));
       } catch (err: any) {
         setFormattedText('');
         setMinifiedText('');
         setParsedObject(null);
         setLintError({ title: t.lintErrorTitle, msg: err.message || 'Invalid JSON format' });
+        setLargeIntWarning(false);
       }
     },
     [t.lintErrorTitle]
@@ -445,6 +450,18 @@ export default function JsonFormatterClient({ lang = 'zh-TW' }: Props) {
                   </button>
                 </div>
               </div>
+
+              {hasLargeIntWarning && !lintError && (
+                <div
+                  role="alert"
+                  className="mt-3 px-3.5 py-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2.5"
+                >
+                  <svg className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                  <span>{t.largeIntWarning}</span>
+                </div>
+              )}
 
               <div className={styles.resultBox}>
                 {!inputText.trim() && (

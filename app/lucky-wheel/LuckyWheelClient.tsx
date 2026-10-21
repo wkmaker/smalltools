@@ -146,22 +146,39 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         }
       }
 
+      const defaultTemplate = PRIZE_TEMPLATES.decision[lang] || PRIZE_TEMPLATES.decision['zh-TW'];
       const cachedPrizes = localStorage.getItem('lw_prizes');
       if (cachedPrizes) {
-        setPrizes(JSON.parse(cachedPrizes));
+        const parsed = JSON.parse(cachedPrizes);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPrizes(parsed);
+        } else {
+          setPrizes(defaultTemplate.map((p) => ({ ...p, id: generateId() })));
+        }
       } else {
-        const defaultTemplate = PRIZE_TEMPLATES.decision[lang] || PRIZE_TEMPLATES.decision['zh-TW'];
         setPrizes(defaultTemplate.map((p) => ({ ...p, id: generateId() })));
       }
 
       const cachedHistory = localStorage.getItem('lw_history');
-      if (cachedHistory) setHistory(JSON.parse(cachedHistory));
+      if (cachedHistory) {
+        const parsed = JSON.parse(cachedHistory);
+        if (Array.isArray(parsed)) setHistory(parsed);
+      }
 
       const cachedAwards = localStorage.getItem('lw_awards');
       if (cachedAwards) {
         const parsed = JSON.parse(cachedAwards);
-        setAwardTiers(parsed);
-        if (parsed.length > 0) setSelectedAwardId(parsed[0].id);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAwardTiers(parsed);
+          setSelectedAwardId(parsed[0].id);
+        } else {
+          const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
+            ...a,
+            id: generateId(),
+          }));
+          setAwardTiers(defAwards);
+          setSelectedAwardId(defAwards[0].id);
+        }
       } else {
         const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
           ...a,
@@ -178,7 +195,10 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       if (cachedQtyLimit !== null) setEnableQuantityLimit(cachedQtyLimit === 'true');
 
       const cachedSlots = localStorage.getItem('lw_save_slots');
-      if (cachedSlots) setSaveSlots(JSON.parse(cachedSlots));
+      if (cachedSlots) {
+        const parsed = JSON.parse(cachedSlots);
+        if (Array.isArray(parsed)) setSaveSlots(parsed);
+      }
     } catch {
       // 容錯防禦
     }

@@ -116,7 +116,8 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
     try {
       const saved = localStorage.getItem('epoch_conv_history');
       if (saved) {
-        setHistory(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setHistory(parsed);
       }
     } catch {
       // 忽略解析錯誤

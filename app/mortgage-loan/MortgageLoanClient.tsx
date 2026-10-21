@@ -128,14 +128,35 @@ export default function MortgageLoanClient({ lang = 'zh-TW' }: Props) {
     const pSr = params.get('sr');
     const pSf = params.get('sf');
 
-    if (pHp !== null && !isNaN(Number(pHp))) setHousePrice(Math.max(0, Number(pHp)));
-    if (pDp !== null && !isNaN(Number(pDp))) setDownPaymentPercent(Math.max(0, Number(pDp)));
-    if (pDa !== null && !isNaN(Number(pDa))) setDownPaymentAmount(Math.max(0, Number(pDa)));
+    const parseFinite = (val: string | null, min = 0, max = Infinity) => {
+      if (val === null) return null;
+      const num = Number(val);
+      if (!Number.isFinite(num)) return null;
+      return Math.min(max, Math.max(min, num));
+    };
+
+    const hp = parseFinite(pHp, 0);
+    if (hp !== null) setHousePrice(hp);
+
+    const dp = parseFinite(pDp, 0, 100);
+    if (dp !== null) setDownPaymentPercent(dp);
+
+    const da = parseFinite(pDa, 0);
+    if (da !== null) setDownPaymentAmount(da);
+
     if (pM === 'single' || pM === 'combined') setLoanMode(pM);
-    if (pSp !== null && !isNaN(Number(pSp))) setSinglePeriodVal(Math.max(1, Number(pSp)));
-    if (pSg !== null && !isNaN(Number(pSg))) setSingleGraceVal(Math.max(0, Number(pSg)));
-    if (pSr !== null && !isNaN(Number(pSr))) setSingleRate(Math.max(0, Number(pSr)));
-    if (pSf !== null && !isNaN(Number(pSf))) setSingleFee(Math.max(0, Number(pSf)));
+
+    const sp = parseFinite(pSp, 1, 70); // 最多 70 年 (840 個月)
+    if (sp !== null) setSinglePeriodVal(sp);
+
+    const sg = parseFinite(pSg, 0, 70);
+    if (sg !== null) setSingleGraceVal(sg);
+
+    const sr = parseFinite(pSr, 0, 100);
+    if (sr !== null) setSingleRate(sr);
+
+    const sf = parseFinite(pSf, 0);
+    if (sf !== null) setSingleFee(sf);
 
     isMountedRef.current = true;
   }, []);

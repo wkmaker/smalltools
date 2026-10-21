@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { safeLocalStorage, safeSessionStorage } from '@/app/utils/storage';
 import ThemeToggle from '@/components/ThemeToggle';
 
 import { CATEGORIES, Category, Tool, type CategorySection } from './config/tools';
@@ -24,7 +25,7 @@ const ACTIVE_TAB_KEY = 'smalltools_active_tab';
 
 function readLocalTab(): Tab | null {
   try {
-    const v = localStorage.getItem(ACTIVE_TAB_KEY);
+    const v = safeLocalStorage.getItem(ACTIVE_TAB_KEY);
     return v && (ALL_TABS as string[]).includes(v) ? (v as Tab) : null;
   } catch {
     return null;
@@ -102,13 +103,19 @@ export default function HomeClient({ lang }: HomeClientProps) {
   // 1. 初始化讀取 LocalStorage 中的常用釘選與最近使用工具
   useEffect(() => {
     try {
-      const savedPinned = localStorage.getItem('smalltools_pinned_tools');
+      const savedPinned = safeLocalStorage.getItem('smalltools_pinned_tools');
       if (savedPinned) {
-        setPinnedHrefs(JSON.parse(savedPinned));
+        const parsed = JSON.parse(savedPinned);
+        if (Array.isArray(parsed)) {
+          setPinnedHrefs(parsed.filter((x): x is string => typeof x === 'string'));
+        }
       }
-      const savedRecents = localStorage.getItem('smalltools_recent_tools');
+      const savedRecents = safeLocalStorage.getItem('smalltools_recent_tools');
       if (savedRecents) {
-        setRecentHrefs(JSON.parse(savedRecents));
+        const parsed = JSON.parse(savedRecents);
+        if (Array.isArray(parsed)) {
+          setRecentHrefs(parsed.filter((x): x is string => typeof x === 'string'));
+        }
       }
     } catch (e) {}
   }, []);
@@ -120,7 +127,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
     setPinnedHrefs((prev) => {
       const next = prev.includes(href) ? prev.filter((h) => h !== href) : [...prev, href];
       try {
-        localStorage.setItem('smalltools_pinned_tools', JSON.stringify(next));
+        safeLocalStorage.setItem('smalltools_pinned_tools', JSON.stringify(next));
       } catch (err) {}
       return next;
     });
@@ -130,7 +137,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
   const handleClearRecent = () => {
     setRecentHrefs([]);
     try {
-      localStorage.removeItem('smalltools_recent_tools');
+      safeLocalStorage.removeItem('smalltools_recent_tools');
     } catch (e) {}
   };
 
@@ -149,14 +156,14 @@ export default function HomeClient({ lang }: HomeClientProps) {
       }
 
       if (!targetId) {
-        const lastTool = sessionStorage.getItem('lastVisitedTool');
+        const lastTool = safeSessionStorage.getItem('lastVisitedTool');
         if (lastTool) {
           targetId = `tool-${lastTool.replace(/^\/|\/$/g, '').replace(/\/en$/, '')}`;
         }
       }
 
       if (targetId) {
-        sessionStorage.removeItem('lastVisitedTool');
+        safeSessionStorage.removeItem('lastVisitedTool');
         const timer = setTimeout(() => {
           const el = document.getElementById(targetId);
           if (el) {
@@ -420,7 +427,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                     onMouseMove={handleCardMouseMove}
                     onClick={() => {
                       if (typeof window !== 'undefined') {
-                        sessionStorage.setItem('lastVisitedTool', tool.href);
+                        safeSessionStorage.setItem('lastVisitedTool', tool.href);
                       }
                     }}
                   >
@@ -484,7 +491,7 @@ export default function HomeClient({ lang }: HomeClientProps) {
                       onMouseMove={handleCardMouseMove}
                       onClick={() => {
                         if (typeof window !== 'undefined') {
-                          sessionStorage.setItem('lastVisitedTool', tool.href);
+                          safeSessionStorage.setItem('lastVisitedTool', tool.href);
                           if (window.location.hash) {
                             window.history.replaceState(null, '', window.location.pathname + window.location.search);
                           }

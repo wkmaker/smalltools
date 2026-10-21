@@ -193,3 +193,19 @@ test('手續費 ≥ 貸款金額時 apr 為 null（無法求解，不得靜默�
   });
   assert.equal(r.apr, null);
 });
+
+test('極值防護：車貸期數帶入 Infinity 或超大數字時限制在上限 30 年 (360 期) 且不陷入死迴圈', () => {
+  const resInf = calculateCarLoan({
+    loanAmount: 500000, periodVal: Infinity, periodUnit: 'year', interestRatePercent: 4,
+    repayType: 'equal-total', loanScheme: 'standard', fee: 0,
+    gracePeriod: 0, stepPayment: 0, stepPeriods: 0, balloonAmount: 0, labels: L,
+  });
+  assert.equal(resInf.schedule.length, 0);
+
+  const resHuge = calculateCarLoan({
+    loanAmount: 500000, periodVal: 9999, periodUnit: 'year', interestRatePercent: 4,
+    repayType: 'equal-total', loanScheme: 'standard', fee: 0,
+    gracePeriod: 0, stepPayment: 0, stepPeriods: 0, balloonAmount: 0, labels: L,
+  });
+  assert.equal(resHuge.schedule.length, 361);
+});

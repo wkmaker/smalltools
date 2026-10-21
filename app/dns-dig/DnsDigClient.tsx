@@ -202,14 +202,18 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
       if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
 
       const data: DnsResponse = await res.json();
-      setResult(data);
+      if (activeAbortControllerRef.current === controller) {
+        setResult(data);
+      }
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
       console.error('[DnsDig] Query error:', err);
       setErrorMsg((err as Error).message || t.queryErrorMsg);
     } finally {
       clearTimeout(timeoutId);
-      setLoading(false);
+      if (activeAbortControllerRef.current === controller) {
+        setLoading(false);
+      }
     }
   }, [syncToURL, t.queryErrorMsg]);
 

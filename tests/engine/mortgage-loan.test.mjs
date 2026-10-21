@@ -178,3 +178,15 @@ test('手續費 ≥ 貸款金額時 aprPercent 為 null（無法求解，不得�
   });
   assert.equal(res.aprPercent, null);
 });
+
+test('極值防護：期數帶入 Infinity 或超大數字時限制在上限 70 年 (840 期) 且不陷入死迴圈', () => {
+  const calc = calculateSingleLoanDetail(
+    1000000, Infinity, 'year', 0, 'year', 'single', 2.0, SINGLE_STAGE, 'equal-total'
+  );
+  assert.equal(calc.totalMonths, 0); // Infinity 在 months 判定為非有限值回傳 0
+
+  const calcHuge = calculateSingleLoanDetail(
+    1000000, 9999, 'year', 0, 'year', 'single', 2.0, SINGLE_STAGE, 'equal-total'
+  );
+  assert.equal(calcHuge.totalMonths, 840); // 夾在 840 期 (70 年)
+});

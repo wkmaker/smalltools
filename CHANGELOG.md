@@ -2,6 +2,25 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.28.3] - 2026-10-22
+
+### Fixed
+- **資料流極值防護、Storage 反序列化安全與非同步競態全面修復（#93）**：
+  - **房貸與車貸 URL 極值防護**：
+    - `mortgage-loan` 與 `car-loan` 嚴格採用 `Number.isFinite` 進行參數解析，徹底杜絕 `Infinity` 穿透判定引發的階梯利率展開死迴圈（主執行緒凍結）與記憶體溢出崩潰。
+    - 房貸期數放寬設定物理上限至 70 年（840 期），車貸期數放寬上限至 30 年（360 期），保留因應政策彈性修改之空間並絕對防止無窮迴圈。
+  - **本地儲存反序列化健全防護**：
+    - `app/HomeClient`、`app/lucky-wheel`、`app/epoch` 與 `app/components/ToolLayout` 全面加入 `Array.isArray` 型別守衛校驗，防止本機快取損毀或異常結構引發全站首頁或工具頁 `.map()` / `.filter()` 白畫面崩潰（TypeError）。
+  - **全站 Storage 安全存取防護**：
+    - 新建 `app/utils/storage.ts` 封裝 `safeLocalStorage` 與 `safeSessionStorage`，修復全站「⟵ 返回首頁」按鈕與 PAC 工具在 Safari 隱私模式或受限 WebView 下觸發 `SecurityError` 阻斷跳轉的缺陷。
+  - **非同步網路請求競態防護**：
+    - `app/ip-detector`：在所有檢測回呼（IPv4 / IPv6 / Cloudflare Trace / GeoIP）賦值前補齊 `parentSignal.aborted` 取消檢查，防止慢速請求反向覆蓋最新檢測結果。
+    - `app/dns-dig`：在 `finally` 載入指示器狀態還原與結果賦值中加入 Controller 同一性檢查（`activeAbortControllerRef.current === controller`），防止併發查詢時前次請求提早關閉 Loading 骨架屏。
+  - **JSON 格式化工具大整數精度遺失防護**：
+    - 新增 `detectUnsafeLargeIntegers` 純函數與單元測試，精準偵測超出 JavaScript 安全整數範圍（超過 2^53 - 1）的 64 位元整數（如 Snowflake ID）。
+    - 格式化面板整合雙語 WCAG AA 對比警示橫幅，主動提醒使用者排版可能造成的精度遺失風險。
+
+---
 ## [1.28.2] - 2026-10-21
 
 ### Fixed
