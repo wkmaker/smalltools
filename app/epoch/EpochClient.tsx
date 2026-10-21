@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useId } from 'react';
+import { useState, useEffect, useCallback, useId, useRef } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './epoch.module.css';
@@ -60,6 +60,7 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
   // 歷史紀錄 (LocalStorage 持久化)
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 唯一 HTML ID
   const tsInputId = useId();
@@ -75,10 +76,11 @@ export default function EpochClient({ lang = 'zh-TW' }: EpochClientProps) {
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 255, 153, 0.6)');
   }, []);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
+  }, []);
 
   // 初始化與防呆
   useEffect(() => {

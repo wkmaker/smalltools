@@ -202,7 +202,11 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
         setImportContent(text);
       }
     };
+    reader.onerror = () => {
+      showToast(isEn ? 'Failed to read file' : '讀取檔案失敗');
+    };
     reader.readAsText(file);
+    e.target.value = '';
   };
 
   // 跨工具連動：傳送到 PAC 測試器

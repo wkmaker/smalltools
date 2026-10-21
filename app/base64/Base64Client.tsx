@@ -204,8 +204,8 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
 
       reader.onload = e => {
         if (activeFileReaderRef.current !== reader) return;
-        const dataUrl = e.target?.result as string;
-        const raw = dataUrl.split(',')[1];
+        const dataUrl = (e.target?.result as string) || '';
+        const raw = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
         const type = file.type;
 
         let previewType: FileState['previewType'] = 'binary';
@@ -230,6 +230,10 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
       reader.onerror = () => {
         if (activeFileReaderRef.current !== reader) return;
         showToast(t.toastReadError);
+        setFileState(s => ({ ...s, loading: false }));
+      };
+      reader.onabort = () => {
+        if (activeFileReaderRef.current !== reader) return;
         setFileState(s => ({ ...s, loading: false }));
       };
       reader.readAsDataURL(file);
@@ -417,6 +421,7 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
                     className="hidden"
                     onChange={e => {
                       if (e.target.files?.[0]) processFile(e.target.files[0]);
+                      e.target.value = '';
                     }}
                   />
                   <svg

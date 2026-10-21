@@ -53,15 +53,17 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fileInputId = useId();
   const maxDpiId = useId();
   const isMountedRef = useRef<boolean>(false);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(''), 3000);
+  }, []);
 
   // 全域拖曳事件處理
   const handleDragOver = (e: React.DragEvent) => {
@@ -434,7 +436,10 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
               accept="application/pdf"
               multiple
               className="hidden"
-              onChange={(e) => e.target.files && handleFilesSelect(e.target.files)}
+              onChange={(e) => {
+                if (e.target.files) handleFilesSelect(e.target.files);
+                e.target.value = '';
+              }}
             />
 
             <button

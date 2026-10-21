@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useId } from 'react';
+import { useState, useEffect, useRef, useId, useCallback } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './qr-generator.module.css';
@@ -109,6 +109,7 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
   const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('png');
   const [downloadSize, setDownloadSize] = useState<number>(600);
   const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- 唯一 HTML ID 宣告 ---
   const textInputId = useId();
@@ -209,10 +210,11 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
     return 'https://tools.cjkuo.net';
   };
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
+  }, []);
 
   // --- 載入核心主題顏色 ---
   useEffect(() => {
@@ -567,6 +569,9 @@ export default function QrGeneratorClient({ lang = 'zh-TW' }: QrGeneratorClientP
         setLogoBase64(e.target.result as string);
         setErrorCorrection('H');
       }
+    };
+    reader.onerror = () => {
+      showToast(lang === 'en' ? 'Failed to read image file' : '圖片讀取失敗');
     };
     reader.readAsDataURL(file);
   };

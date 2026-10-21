@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useId, useMemo } from 'react';
+import { useState, useEffect, useId, useMemo, useRef, useCallback } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './text-utility.module.css';
@@ -17,6 +17,7 @@ export default function TextUtilityClient({ lang = 'zh-TW' }: TextUtilityClientP
 
   const [text, setText] = useState<string>(t.defaultText);
   const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const textInputId = useId();
 
@@ -31,10 +32,11 @@ export default function TextUtilityClient({ lang = 'zh-TW' }: TextUtilityClientP
     [text]
   );
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
+  }, []);
 
   const copyText = () => {
     if (!text) return;

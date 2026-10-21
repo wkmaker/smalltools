@@ -153,3 +153,43 @@ test('extractAiaUrl：保留原始 HTTP 協定並支援無副檔名 AIA 端點',
     'http://r3.i.lencr.org/'
   );
 });
+
+test('buildUnifiedCertAnalysis：交叉簽署或循環父子關係不應陷入無窮迴圈', () => {
+  const keysA = forge.pki.rsa.generateKeyPair(1024);
+  const certA = forge.pki.createCertificate();
+  certA.publicKey = keysA.publicKey;
+  certA.serialNumber = '01';
+  certA.validity.notBefore = new Date('2026-01-01');
+  certA.validity.notAfter = new Date('2036-01-01');
+  certA.setSubject([{ name: 'commonName', value: 'CA A' }]);
+  certA.setIssuer([{ name: 'commonName', value: 'CA B' }]); // A is issued by B
+  certA.setExtensions([{ name: 'basicConstraints', cA: true }]);
+
+  const keysB = forge.pki.rsa.generateKeyPair(1024);
+  const certB = forge.pki.createCertificate();
+  certB.publicKey = keysB.publicKey;
+  certB.serialNumber = '02';
+  certB.validity.notBefore = new Date('2026-01-01');
+  certB.validity.notAfter = new Date('2036-01-01');
+  certB.setSubject([{ name: 'commonName', value: 'CA B' }]);
+  certB.setIssuer([{ name: 'commonName', value: 'CA A' }]); // B is issued by A
+  certB.setExtensions([{ name: 'basicConstraints', cA: true }]);
+
+  certA.sign(keysB.privateKey, forge.md.sha256.create());
+  certB.sign(keysA.privateKey, forge.md.sha256.create());
+
+  const leafKeys = forge.pki.rsa.generateKeyPair(1024);
+  const leafCert = forge.pki.createCertificate();
+  leafCert.publicKey = leafKeys.publicKey;
+  leafCert.serialNumber = '03';
+  leafCert.validity.notBefore = new Date('2026-01-01');
+  leafCert.validity.notAfter = new Date('2036-01-01');
+  leafCert.setSubject([{ name: 'commonName', value: 'test.example.com' }]);
+  leafCert.setIssuer([{ name: 'commonName', value: 'CA A' }]);
+  leafCert.setExtensions([{ name: 'basicConstraints', cA: false }]);
+  leafCert.sign(keysA.privateKey, forge.md.sha256.create());
+
+  const analysis = buildUnifiedCertAnalysis([leafCert, certA, certB]);
+  assert.ok(analysis.chain.length <= 3);
+  assert.equal(analysis.chain[0], leafCert);
+});

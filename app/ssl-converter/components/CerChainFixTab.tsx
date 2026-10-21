@@ -66,6 +66,7 @@ export default function CerChainFixTab({
                   setCerFile(f);
                   hideAlertMsg();
                 }
+                e.target.value = '';
               }}
             />
             <svg viewBox="0 0 24 24" className="w-12 h-12 fill-text-sub">

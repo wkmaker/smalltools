@@ -81,6 +81,7 @@ export default function DropzoneSection({
             if (e.target.files && e.target.files.length > 0) {
               onFileLoaded(e.target.files[0]);
             }
+            e.target.value = '';
           }}
         />
         <div className={`flex justify-center mb-4 ${styles.dropzoneIcon}`}>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import { downloadBlob } from '../utils/downloadBlob';
@@ -69,6 +69,7 @@ export default function ResignationCalculatorClient({ lang = 'zh-TW' }: Props) {
   const [handoverPerson, setHandoverPerson] = useState<string>('');
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef<boolean>(false);
 
   // 掛載時設置主題色
@@ -190,12 +191,13 @@ export default function ResignationCalculatorClient({ lang = 'zh-TW' }: Props) {
     employerShortNoticeDays,
   ]);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToastMessage(null);
     }, 3000);
-  };
+  }, []);
 
   // --- 計算核心邏輯（純函數引擎，見 ./engine.ts） ---
   const {

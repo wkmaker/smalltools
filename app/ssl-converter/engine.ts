@@ -360,10 +360,15 @@ export function buildUnifiedCertAnalysis(certs: forge.pki.Certificate[]) {
   let currentCert = endEntityCert;
 
   if (currentCert) {
-    while (!isRootCertificate(currentCert)) {
+    const visited = new Set<forge.pki.Certificate>();
+    visited.add(currentCert);
+    const MAX_CHAIN_DEPTH = 10;
+
+    while (!isRootCertificate(currentCert) && chain.length < MAX_CHAIN_DEPTH) {
       let parentFound = false;
       for (const candidate of caCerts) {
-        if (verifyCertIssuerMatch(currentCert, candidate)) {
+        if (!visited.has(candidate) && verifyCertIssuerMatch(currentCert, candidate)) {
+          visited.add(candidate);
           chain.push(candidate);
           currentCert = candidate;
           parentFound = true;
@@ -374,7 +379,13 @@ export function buildUnifiedCertAnalysis(certs: forge.pki.Certificate[]) {
     }
   }
 
-  const chainPems = chain.map(c => forge.pki.certificateToPem(c));
+  const chainPems = chain.map(c => {
+    try {
+      return forge.pki.certificateToPem(c);
+    } catch {
+      return '';
+    }
+  }).filter(Boolean);
   const isComplete = chain.length > 0 && isRootCertificate(chain[chain.length - 1]);
   const nextAiaUrl = !isComplete && chain.length > 0 ? extractAiaUrl(chain[chain.length - 1]) : null;
 

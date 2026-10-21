@@ -183,3 +183,29 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 ### 5. 巨量文本高亮與標記安全截斷
 * 在封包清洗器（HAR Cleaner）或 JSON/文字搜尋高亮中，若遭遇數十萬字元之 Payload，**嚴禁無上限向全文字串執行正則切割並生成 `<mark>` 標籤**。
 * 必須設定可見字符長度防護（如超過 10 萬字元只高亮前半段，其餘直接渲染或提示過長截斷），防範成千上萬個 DOM 節點導致瀏覽器排版引擎當機。
+
+---
+
+## 九、 檔案讀取、上傳控制項與計時器生命週期規範 (File Handling & Timer Lifecycle)
+
+### 1. FileReader 與 Image 異常捕獲對稱性 (Error Handling Symmetry)
+* 瀏覽器端使用 `new FileReader()` 時，**嚴禁僅監聽 `onload`**。
+* 當檔案權限受限、被其他系統處理序鎖定、中途被拔除 USB 或讀取中斷時，`onload` 永遠不會被觸發，導致元件的 `loading` 骨架屏或狀態旗標永久懸掛。
+* **標準實作**：凡宣告 `reader.onload`，必須同時宣告 `reader.onerror` 與 `reader.onabort`，向使用者顯示清晰錯誤 Toast 並重置 Loading 狀態。同理，使用 `new Image()` 解析 DataURL 或圖片 Blob 時，亦必須對稱監聽 `img.onerror`。
+
+### 2. `<input type="file">` 處理後即刻重置 `e.target.value = ''`
+* 原生 HTML 檔案上傳輸入框在選取相同檔案時，不會觸發 `onChange` 事件。
+* 若使用者清空檔案佇列或遭遇解析錯誤後，試圖重新選取同名檔案，將直接進入「點選無反應」的操作死胡同。
+* **標準實作**：在 `onChange` 事件回呼的結尾，強制將 `e.target.value = ''` 清空，確保下一次選取同名檔案時依然能順利觸發變更事件。
+
+### 3. 圖狀結構與憑證鏈尋訪之有界防護 (Bounded Graph Traversal)
+* 尋訪父子相依結構（如 X.509 憑證鏈尋找發證者、組織樹、相依套件）時，**嚴禁僅依賴終止狀態（如 `isRoot`）作為唯一跳出條件**。
+* 當遭遇交叉簽署憑證（Cross-Signed Certificates）或相互參照時，狀態會在多個節點間反覆跳躍引發無窮迴圈（UI 凍結死鎖）。
+* **標準實作**：
+  1. 宣告 `visited = new Set()` 追蹤造訪歷史，已納入鏈條的節點嚴禁二度拜訪。
+  2. 設定實務合理的物理上限門檻（如 `chain.length < MAX_CHAIN_DEPTH = 10`）。
+
+### 4. Toast 與動態計時器防抖及卸載清理 (Timer Debouncing & Cleanup)
+* 宣告 Toast 提示或動畫延遲時，**嚴禁直接呼叫 `setTimeout` 而未由 `useRef` 追蹤**。
+* 連續觸發時，前次計時器若未被清除，會導致後續剛彈出的新 Toast 在數毫秒內被舊的定時器強制關閉。
+* **標準實作**：使用 `toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)`，在 `showToast` 開頭 `if (toastTimerRef.current) clearTimeout(toastTimerRef.current);`，並在元件卸載生命週期（`useEffect` return）中清空所有進行中的定時器。

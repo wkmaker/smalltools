@@ -60,6 +60,7 @@ export default function LogoUploader({
               if (e.target.files && e.target.files.length > 0) {
                 onLogoSelected(e.target.files[0]);
               }
+              e.target.value = '';
             }}
             className="hidden"
           />
