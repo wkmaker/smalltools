@@ -53,6 +53,39 @@ const CLOUD_ENDPOINTS: Array<{ key: string; name: string; url: string }> = [
   { key: 'facebook', name: 'Meta / FB', url: 'https://www.facebook.com/' },
 ];
 
+function fetchWithTimeout(
+  url: string,
+  init: RequestInit = {},
+  parentSignal?: AbortSignal,
+  timeoutMs = 4500
+): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => {
+    ctrl.abort(new DOMException('Request timeout', 'TimeoutError'));
+  }, timeoutMs);
+
+  const cleanupParent = () => {
+    clearTimeout(timer);
+    ctrl.abort();
+  };
+
+  if (parentSignal) {
+    if (parentSignal.aborted) {
+      clearTimeout(timer);
+      ctrl.abort();
+    } else {
+      parentSignal.addEventListener('abort', cleanupParent, { once: true });
+    }
+  }
+
+  return fetch(url, { ...init, signal: ctrl.signal }).finally(() => {
+    clearTimeout(timer);
+    if (parentSignal) {
+      parentSignal.removeEventListener('abort', cleanupParent);
+    }
+  });
+}
+
 export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientProps) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
 
@@ -74,6 +107,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
 
   const [toast, setToast] = useState<string>('');
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeAbortControllerRef = useRef<AbortController | null>(null);
 
   const showToast = useCallback((msg: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -87,13 +121,12 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
   }, []);
 
   // 1. 檢測 IPv4
-  const detectIpv4 = useCallback(async () => {
+  const detectIpv4 = useCallback(async (parentSignal?: AbortSignal) => {
     setIpv4(t.detecting);
     setIpv4Status('loading');
     try {
-      const res = await fetch('https://api.ipify.org?format=json', {
-        signal: AbortSignal.timeout(4000),
-      });
+      const res = await fetchWithTimeout('https://api.ipify.org?format=json', {}, parentSignal, 4000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data && data.ip) {
         setIpv4(data.ip);
@@ -101,7 +134,8 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       } else {
         throw new Error('No IP');
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      if ((err as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
       console.warn('[IpDetector] IPv4 detection failed:', err);
       setIpv4(t.unsupported);
       setIpv4Status('unsupported');
@@ -109,13 +143,12 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
   }, [t.detecting, t.unsupported]);
 
   // 2. 檢測 IPv6
-  const detectIpv6 = useCallback(async () => {
+  const detectIpv6 = useCallback(async (parentSignal?: AbortSignal) => {
     setIpv6(t.detecting);
     setIpv6Status('loading');
     try {
-      const res = await fetch('https://api6.ipify.org?format=json', {
-        signal: AbortSignal.timeout(4000),
-      });
+      const res = await fetchWithTimeout('https://api6.ipify.org?format=json', {}, parentSignal, 4000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data && data.ip) {
         setIpv6(data.ip);
@@ -124,6 +157,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
         throw new Error('No IP');
       }
     } catch (err) {
+      if ((err as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
       console.warn('[IpDetector] IPv6 detection failed:', err);
       setIpv6(t.unsupported);
       setIpv6Status('unsupported');
@@ -131,13 +165,12 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
   }, [t.detecting, t.unsupported]);
 
   // 3. 檢測 Cloudflare Trace
-  const detectCfTrace = useCallback(async () => {
+  const detectCfTrace = useCallback(async (parentSignal?: AbortSignal) => {
     setCfLoading(true);
     const start = performance.now();
     try {
-      const res = await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
-        signal: AbortSignal.timeout(4500),
-      });
+      const res = await fetchWithTimeout('https://www.cloudflare.com/cdn-cgi/trace', {}, parentSignal, 4500);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const latency = Math.round(performance.now() - start);
       const text = await res.text();
       const lines = text.split('\n');
@@ -157,22 +190,24 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
         uag: map.uag || (typeof navigator !== 'undefined' ? navigator.userAgent : t.unknown),
         latency,
       });
-    } catch (err) {
+    } catch (err: unknown) {
+      if ((err as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
       console.warn('[IpDetector] Cloudflare trace fetch failed:', err);
       setCfTrace({ error: true });
     } finally {
-      setCfLoading(false);
+      if (!parentSignal?.aborted) {
+        setCfLoading(false);
+      }
     }
   }, [t.unknown]);
 
   // 4. 檢測 IP 地理位置
-  const detectGeoLocation = useCallback(async () => {
+  const detectGeoLocation = useCallback(async (parentSignal?: AbortSignal) => {
     setGeoLoading(true);
 
     try {
-      const res = await fetch('https://ipapi.co/json/', {
-        signal: AbortSignal.timeout(4500),
-      });
+      const res = await fetchWithTimeout('https://ipapi.co/json/', {}, parentSignal, 4500);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const raw = await res.json();
       if (raw.error) throw new Error(raw.reason || 'Rate limit');
 
@@ -191,12 +226,12 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
         currency: currStr,
         source: 'ipapi.co',
       });
-    } catch (err) {
+    } catch (err: unknown) {
+      if ((err as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
       console.warn('[IpDetector] Primary GeoIP lookup failed, trying fallback:', err);
       try {
-        const resFallback = await fetch('https://ipwhois.app/json/', {
-          signal: AbortSignal.timeout(4500),
-        });
+        const resFallback = await fetchWithTimeout('https://ipwhois.app/json/', {}, parentSignal, 4500);
+        if (!resFallback.ok) throw new Error(`HTTP ${resFallback.status}`);
         const rawFallback = await resFallback.json();
         if (!rawFallback.success) throw new Error('ipwhois failed');
 
@@ -218,50 +253,68 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
           currency: currStr,
           source: 'ipwhois.app',
         });
-      } catch (fallbackErr) {
+      } catch (fallbackErr: unknown) {
+        if ((fallbackErr as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
         console.error('[IpDetector] Fallback GeoIP lookup failed:', fallbackErr);
         setGeoInfo({ error: true });
       }
     } finally {
-      setGeoLoading(false);
+      if (!parentSignal?.aborted) {
+        setGeoLoading(false);
+      }
     }
   }, [t.unknown]);
 
   // 5. 測速公有雲
-  const runCloudDiagnostics = useCallback(async () => {
+  const runCloudDiagnostics = useCallback(async (parentSignal?: AbortSignal) => {
     setCloudTargets(prev => prev.map(target => ({ ...target, latency: null, status: 'loading' })));
 
     const updated = await Promise.all(
       CLOUD_ENDPOINTS.map(async ep => {
         const start = performance.now();
         try {
-          await fetch(ep.url, {
+          await fetchWithTimeout(ep.url, {
             mode: 'no-cors',
             cache: 'no-store',
-            signal: AbortSignal.timeout(4500),
-          });
+          }, parentSignal, 4500);
           const latency = Math.round(performance.now() - start);
           return { ...ep, latency, status: 'connected' as const };
-        } catch (err) {
+        } catch (err: unknown) {
+          if ((err as Error)?.name === 'AbortError' && parentSignal?.aborted) {
+            return { ...ep, latency: null, status: 'loading' as const };
+          }
           console.warn('[IpDetector] Edge latency ping failed for endpoint:', ep.name, err);
           return { ...ep, latency: null, status: 'failed' as const };
         }
       })
     );
 
-    setCloudTargets(updated);
+    if (!parentSignal?.aborted) {
+      setCloudTargets(updated);
+    }
   }, []);
 
   const runAllChecks = useCallback(() => {
-    detectIpv4();
-    detectIpv6();
-    detectCfTrace();
-    detectGeoLocation();
-    runCloudDiagnostics();
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+    }
+    const ac = new AbortController();
+    activeAbortControllerRef.current = ac;
+
+    detectIpv4(ac.signal);
+    detectIpv6(ac.signal);
+    detectCfTrace(ac.signal);
+    detectGeoLocation(ac.signal);
+    runCloudDiagnostics(ac.signal);
   }, [detectIpv4, detectIpv6, detectCfTrace, detectGeoLocation, runCloudDiagnostics]);
 
   useEffect(() => {
     runAllChecks();
+    return () => {
+      if (activeAbortControllerRef.current) {
+        activeAbortControllerRef.current.abort();
+      }
+    };
   }, [runAllChecks]);
 
   const copyText = (text: string, label: string) => {
@@ -445,7 +498,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
             </h3>
             <button
               type="button"
-              onClick={runCloudDiagnostics}
+              onClick={() => runCloudDiagnostics()}
               className={styles.accentBtn}
             >
               {t.retestBtn}

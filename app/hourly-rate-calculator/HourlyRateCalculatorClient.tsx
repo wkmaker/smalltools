@@ -920,7 +920,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                     </a>
                     &
                     <a
-                      href="http://numbeo.com/cost-of-living/"
+                      href="https://www.numbeo.com/cost-of-living/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`underline ${styles.themeAccentText} transition-colors ml-1`}
@@ -941,7 +941,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
                     </a>
                     與
                     <a
-                      href="http://numbeo.com/cost-of-living/"
+                      href="https://www.numbeo.com/cost-of-living/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`underline ${styles.themeAccentText} transition-colors ml-1`}

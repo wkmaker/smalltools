@@ -89,3 +89,20 @@ app/[tool-name]/
 3. **Worker 環境封鎖** `hardenWorkerScope`：載入時移除網路、程式碼載入與計時 API，並把 `Function` / `AsyncFunction` / `GeneratorFunction` 原型上的 `constructor` 設為 `undefined`；自己要用的 `Function` 必須在封鎖前先存成 `SandboxFunction`。這層只能在專用 Worker 做，不能在主執行緒做（會破壞整個頁面）。
 
 新增或修改沙盒時，要同步修改兩份檔案，並在 `tests/engine/pac-tester-worker.test.mjs` 補上逃逸案例（包含用字串拼接繞過靜態檢查的案例）。
+---
+
+## 六、 外部存取與網路健壯性原則 (External Access & Network Robustness)
+
+### 1. Service Worker 同源嚴格隔離
+* `public/sw.js` 的 fetch 監聽器開頭**必須強制校驗同源**：`if (url.origin !== self.location.origin) return;`。
+* 嚴禁讓 Service Worker 介入任何第三方跨域 API 請求（如 `ipify.org`、DoH 端點等）。若無同源守衛，跨站 API 請求失敗時會被誤判為 HTML 路由並回傳快取的 `offline.html`（HTTP 200），導致前端 `res.json()` 拋出語法解析錯誤崩潰。
+
+### 2. 外部 API 連線生命週期與 AbortController 防護
+* **卸載取消**：元件初次掛載觸發外部請求時，`useEffect` cleanup 函式必須主動呼叫 `abortController.abort()`，防止使用者快速切換頁面時背景連線持續耗損頻寬與造成卸載元件 State 更新報錯。
+* **狀態碼先行校驗**：呼叫第三方 API 時，解析前必須強制執行 `if (!res.ok) throw new Error(...)`。避免遇上第三方伺服器 429 限流或 CDN 403 阻擋回傳 HTML 頁面時直接觸發 JSON 語法崩潰。
+* **重測競態防護 (Race Condition)**：使用者重複點擊「重新檢測」時，必須先取消前次未完成的 `AbortController`，避免延遲返回的舊請求反向覆蓋最新狀態。
+
+### 3. RFC 5280 AIA 端點與 Mixed Content 處理原則
+* 依據 RFC 5280 規範，全球 CA 官方之 AIA (`caIssuers`) 端點為防止 TLS 握手驗證陷入遞迴死結，絕大多數**僅監聽純 HTTP (Port 80)**。
+* **嚴禁粗暴改寫協定**：切勿在前端程式碼中將 AIA URL 強制 `replace(/^http:\/\/, 'https://')`，這會導致伺服器 443 埠連線拒絕 (`ERR_CONNECTION_REFUSED`)。
+* **避開混合內容下載阻擋 (Mixed Content Download)**：HTTPS 網站中點擊 HTTP 下載會受瀏覽器阻擋。最佳實務為「保留真實宣告網址 + 提供複製網址按鈕 + 明確指引使用者右鍵『另存連結為...』」，既遵循安全規範亦不增添終端指令使用門檻。

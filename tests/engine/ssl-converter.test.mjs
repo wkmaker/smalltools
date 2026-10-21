@@ -8,6 +8,7 @@ import {
   parseSslPayload,
   buildUnifiedCertAnalysis,
   verifyCertIssuerMatch,
+  extractAiaUrl,
 } from '../../app/ssl-converter/engine.ts';
 
 /**
@@ -118,4 +119,37 @@ test('verifyCertIssuerMatch：issuer/subject DN 相符時才視為親子關係',
   const { caCert, leafCert } = buildTestChain();
   assert.equal(verifyCertIssuerMatch(leafCert, caCert), true);
   assert.equal(verifyCertIssuerMatch(caCert, leafCert), false);
+});
+
+test('extractAiaUrl：保留原始 HTTP 協定並支援無副檔名 AIA 端點', () => {
+  const { leafCert } = buildTestChain();
+
+  // 1. 無 AIA 擴充欄位回傳 null
+  assert.equal(extractAiaUrl(leafCert), null);
+
+  // 2. 模擬標準 HTTP AIA 端點
+  const certWithAia = forge.pki.createCertificate();
+  certWithAia.setExtensions([
+    {
+      name: 'authorityInfoAccess',
+      value: 'http://cacerts.digicert.com/DigiCertSHA2SecureServerCA.crt',
+    },
+  ]);
+  assert.equal(
+    extractAiaUrl(certWithAia),
+    'http://cacerts.digicert.com/DigiCertSHA2SecureServerCA.crt'
+  );
+
+  // 3. 模擬 Let's Encrypt 無副檔名 AIA 端點
+  const certWithLeAia = forge.pki.createCertificate();
+  certWithLeAia.setExtensions([
+    {
+      name: 'authorityInfoAccess',
+      value: 'http://r3.i.lencr.org/',
+    },
+  ]);
+  assert.equal(
+    extractAiaUrl(certWithLeAia),
+    'http://r3.i.lencr.org/'
+  );
 });

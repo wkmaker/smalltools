@@ -46,6 +46,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // 僅攔截本站同源請求，完全放行所有跨域第三方 API（例如 ipify, DoH 等），防止誤攔回傳 offline.html 假資料與引發 JSON 解析崩潰
+  if (url.origin !== self.location.origin) return;
+
   // ✅ 策略一：HTML 頁面 → Network-First
   // HTML 每次部署後會引用新的 JS/CSS hash，必須永遠從網路取最新版
   // 離線時才 fallback 到快取（可能是舊版，但至少不會白畫面）

@@ -240,6 +240,18 @@ export default function DnsDigClient({ lang = 'zh-TW' }: DnsDigClientProps) {
     if (cleaned) {
       executeQuery(cleaned, initProvider, initRecordType);
     }
+
+    return () => {
+      if (activeAbortControllerRef.current) {
+        activeAbortControllerRef.current.abort();
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
   }, [executeQuery]);
 
   const handleQuery = () => {

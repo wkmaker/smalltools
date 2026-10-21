@@ -128,12 +128,14 @@ export function extractAiaUrl(certObj: forge.pki.Certificate): string | null {
     return null;
   }
 
-  const aiaRegex = /https?:\/\/[A-Za-z0-9\-\.\/_~%]+\.(cer|crt|p7b)/i;
+  // 匹配 RFC 5280 AIA 端點，支援 Let's Encrypt 等無副檔名 URL 與傳統 .cer/.crt/.p7b 端點
+  const aiaRegex = /https?:\/\/[A-Za-z0-9\-._~:/?#[\]@!$&'*+,;%=]+/i;
   const match = derStr.match(aiaRegex);
   if (!match) return null;
 
-  // 將 http:// 自動重寫升級為 https://，避免現代瀏覽器在 HTTPS 站點下因 Mixed Content 混合內容安全機制阻擋檔案下載
-  return match[0].replace(/^http:\/\//i, 'https://');
+  // 保留真實宣告協定（RFC 5280 規範 CA AIA 端點通常為 HTTP 80，不可強制改為 https://）
+  const url = match[0].replace(/[^\w/]+$/, '');
+  return url;
 }
 
 export function getCertKeyAlgorithm(certObj: forge.pki.Certificate): string {

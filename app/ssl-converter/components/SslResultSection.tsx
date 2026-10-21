@@ -73,15 +73,33 @@ export default function SslResultSection({
 
           <div className="text-sm text-text-sub flex flex-col gap-2 leading-relaxed">
             <p>{t.aiaHelpText}</p>
-            <div className="flex flex-col gap-1 bg-surface-glass p-3 rounded-xl border border-border-glass">
-              <a
-                href={aiaFixUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${styles.accentText} underline font-mono text-xs break-all hover:text-text-main transition-colors`}
-              >
-                {aiaFixUrl}
-              </a>
+            <div className="flex flex-col gap-2 bg-surface-glass p-3 rounded-xl border border-border-glass">
+              <div className="flex items-center justify-between gap-3 max-sm:flex-col max-sm:items-start">
+                <a
+                  href={aiaFixUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${styles.accentText} underline font-mono text-xs break-all hover:text-text-main transition-colors flex-1`}
+                >
+                  {aiaFixUrl}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                      navigator.clipboard.writeText(aiaFixUrl).then(() => {
+                        showToast(t.urlCopied || '已複製');
+                      });
+                    }
+                  }}
+                  className={`${styles.btnSecondary} text-xs py-1 px-2.5 shrink-0 cursor-pointer flex items-center gap-1`}
+                >
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                  </svg>
+                  <span>{t.copyUrl || '複製網址'}</span>
+                </button>
+              </div>
               <div className="flex items-center gap-1.5 text-xs text-text-sub opacity-80 mt-1">
                 <svg viewBox="0 0 24 24" className={`w-4 h-4 ${styles.accentText} shrink-0`}>
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />

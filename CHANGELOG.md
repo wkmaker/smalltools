@@ -2,6 +2,21 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.28.2] - 2026-10-21
+
+### Fixed
+- **外部訪問與網路請求健壯性缺陷全面修復（#94）**：
+  - **Service Worker 同源防護**：`public/sw.js` fetch 監聽器加入 `url.origin !== self.location.origin` 同源判定，徹底根除 Service Worker 誤攔跨站第三方 API 請求並在離線/失敗時回傳本站 `offline.html` 假資料引發 JSON 解析拋錯問題。
+  - **IP 偵測器連線與卸載防護**：`app/ip-detector` 全面引入 `fetchWithTimeout` 與 `AbortController` 生命週期管理，支援元件卸載即時中止請求；所有第三方 API 回應強制校驗 `res.ok`，防止 429/403 等 HTTP 錯誤回傳 HTML 頁面導致語法解析崩潰；重新檢測時自動取消前次未完成連線，防範舊數據反向覆蓋。
+  - **DNS 查詢器請求清理**：`app/dns-dig` 補齊元件卸載（Unmount）時的 `activeAbortControllerRef`、防抖定時器與 Toast 定時器清理機制。
+  - **SSL 憑證轉換器 AIA 端點與下載修復**：
+    - 移除 AIA URL 將 `http://` 強制改寫為 `https://` 的非標準行為，遵循 RFC 5280 規範保留 CA 原始宣告端點，避免伺服器未開啟 443 埠導致下載失敗。
+    - 放寬 AIA URL 正則表達式匹配範圍，支援如 Let's Encrypt 等結尾無 `.cer` 副檔名的標準 CA 端點。
+    - 結果卡片新增「複製網址」按鈕與明確的「右鍵另存連結為...」指引，有效避免現代瀏覽器針對跨協定下載之混合內容 (Mixed Content) 攔截。
+  - **時薪計算機外部引用連結安全升級**：將 Numbeo 參考鏈結由明文 `http://` 修正為加密安全的 `https://`。
+
+---
+
 ## [1.28.1] - 2026-10-21
 
 ### Fixed
