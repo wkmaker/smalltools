@@ -30,6 +30,7 @@ export const TRANSLATIONS = {
     toastEmptyExport: '內容為空無法匯出',
     toastFileTooLarge: '檔案大小超過 50MB 上限，請選擇較小的 JSON 檔案',
     toastExported: '已匯出 JSON 檔案',
+    largeIntWarning: '警告：偵測到超出 JavaScript 安全精度範圍（超過 2^53 - 1）的 64 位元大整數（如 Snowflake ID）。排版可能導致末尾精度遺失。建議在原始 JSON 中將大整數加上雙引號作為字串傳遞。',
 
     // FAQ
     faqTitle: '常見問題與專業指南',
@@ -93,6 +94,7 @@ export const TRANSLATIONS = {
     toastEmptyExport: 'Cannot export empty content',
     toastFileTooLarge: 'File size exceeds 50MB limit. Please upload a smaller JSON file',
     toastExported: 'Exported JSON file',
+    largeIntWarning: 'Warning: Detected 64-bit large integer(s) exceeding JavaScript safe integer limit (2^53 - 1, e.g. Snowflake ID). Formatting may cause precision loss. Consider wrapping large integers in quotes as strings.',
 
     // FAQ
     faqTitle: 'Frequently Asked Questions (FAQ)',

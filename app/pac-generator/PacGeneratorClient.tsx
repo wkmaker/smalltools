@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import ToolLayout from '@/app/components/ToolLayout';
+import { safeSessionStorage } from '@/app/utils/storage';
 import FaqSection from '@/app/components/FaqSection';
 import { downloadBlob } from '@/app/utils/downloadBlob';
 import styles from './pac-generator.module.css';
@@ -56,11 +57,11 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
   // 檢查由 PAC 測試器帶來的腳本，自動帶入匯入視窗
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const transferred = sessionStorage.getItem('pac_tester_export_code');
+      const transferred = safeSessionStorage.getItem('pac_tester_export_code');
       if (transferred && transferred.trim().length > 0) {
         setImportContent(transferred);
         setIsImportModalOpen(true);
-        sessionStorage.removeItem('pac_tester_export_code');
+        safeSessionStorage.removeItem('pac_tester_export_code');
       }
     }
   }, []);
@@ -207,7 +208,7 @@ export default function PacGeneratorClient({ lang = 'zh-TW' }: PacGeneratorClien
   // 跨工具連動：傳送到 PAC 測試器
   const handleGoToTester = () => {
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('pac_transfer_code', generatedScript);
+      safeSessionStorage.setItem('pac_transfer_code', generatedScript);
       const targetUrl = isEn ? '/pac-tester/en/' : '/pac-tester/';
       window.location.href = targetUrl;
     }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useId, useMemo } from 'react';
 import ToolLayout from '@/app/components/ToolLayout';
+import { safeSessionStorage } from '@/app/utils/storage';
 import FaqSection from '@/app/components/FaqSection';
 import { downloadBlob } from '@/app/utils/downloadBlob';
 import styles from './pac-tester.module.css';
@@ -64,10 +65,10 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
   // 檢查由 PAC 產生器帶來的程式碼
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const transferred = sessionStorage.getItem('pac_transfer_code');
+      const transferred = safeSessionStorage.getItem('pac_transfer_code');
       if (transferred && transferred.trim().length > 0) {
         setPacScript(transferred);
-        sessionStorage.removeItem('pac_transfer_code');
+        safeSessionStorage.removeItem('pac_transfer_code');
       }
     }
   }, []);
@@ -160,7 +161,7 @@ export default function PacTesterClient({ lang = 'zh-TW' }: PacTesterClientProps
   // 跨工具連動：送回 PAC 產生器匯入
   const handleSendToGenerator = () => {
     if (typeof window !== 'undefined' && pacScript.trim().length > 0) {
-      sessionStorage.setItem('pac_tester_export_code', pacScript);
+      safeSessionStorage.setItem('pac_tester_export_code', pacScript);
       const targetUrl = isEn ? '/pac-generator/en/' : '/pac-generator/';
       window.location.href = targetUrl;
     }

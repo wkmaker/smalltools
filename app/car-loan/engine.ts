@@ -30,6 +30,8 @@ export interface CarLoanLabels {
   balloon: string;
 }
 
+export const MAX_CAR_LOAN_MONTHS = 30 * 12; // 360 期 (30 年，放寬以應對政策變動並防護無窮迴圈)
+
 export interface CarLoanInput {
   /** 貸款金額（元） */
   loanAmount: number;
@@ -93,7 +95,8 @@ export function calculateCarLoan(input: CarLoanInput): CarLoanResult {
   const numBalloonAmount = Math.max(0, Number(input.balloonAmount) || 0);
   const numFee = Math.max(0, Number(input.fee) || 0);
 
-  const totalMonths = Math.max(0, input.periodUnit === 'year' ? numPeriodVal * 12 : numPeriodVal);
+  const rawMonths = input.periodUnit === 'year' ? numPeriodVal * 12 : numPeriodVal;
+  const totalMonths = Math.min(MAX_CAR_LOAN_MONTHS, Math.max(0, Number.isFinite(rawMonths) ? Math.round(rawMonths) : 0));
   if (totalMonths <= 0 || numLoanAmount <= 0) return ZERO_RESULT(input.labels);
 
   const monthlyRate = monthlyRateFromAnnualPercent(input.interestRatePercent);

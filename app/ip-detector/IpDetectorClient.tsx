@@ -128,6 +128,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       const res = await fetchWithTimeout('https://api.ipify.org?format=json', {}, parentSignal, 4000);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (parentSignal?.aborted) return;
       if (data && data.ip) {
         setIpv4(data.ip);
         setIpv4Status('success');
@@ -150,6 +151,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       const res = await fetchWithTimeout('https://api6.ipify.org?format=json', {}, parentSignal, 4000);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (parentSignal?.aborted) return;
       if (data && data.ip) {
         setIpv6(data.ip);
         setIpv6Status('success');
@@ -173,6 +175,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const latency = Math.round(performance.now() - start);
       const text = await res.text();
+      if (parentSignal?.aborted) return;
       const lines = text.split('\n');
       const map: Record<string, string> = {};
       lines.forEach(line => {

@@ -100,6 +100,14 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 * 所有 `<select>` 與 `<option>` 控制項背景統一套用語意類別 **`bg-select-bg`**（連動 `--select-bg`）與文字 `var(--text-primary)`，全站嚴禁在組件中硬編碼寫死色碼。
 * 原生日期與時間輸入框 `input[type="date"]` 與 `input[type="datetime-local"]` 必須宣告 **`[color-scheme:dark]`**，確保彈出的 Date Picker 自動連動暗色系。
 
+### 4. URL 參數數值解析與物理上限防護 (Number.isFinite & Upper Bounds)
+* **嚴禁僅用 `!isNaN(Number(val))` 判定 URL 數字參數**：在 JavaScript 中 `Number('Infinity') === Infinity` 且 `!isNaN(Infinity)` 為真！若未過濾，將導致還款展開迴圈 `for (let k = 0; k < totalMonths; k++)` 條件永遠成立，主執行緒永久凍結崩潰。
+* 數值轉換一律強制使用 `Number.isFinite(n)`，並配合業務邏輯加上合理的物理上限（例如房貸 70 年 / 840 期、車貸 30 年 / 360 期），保留因應條文調整之彈性，同時根除極值死迴圈。
+
+### 5. Web Storage 安全存取與反序列化 Array.isArray 守衛 (Safe Storage Pattern)
+* **全站 Storage 安全存取**：在 Safari 隱私模式或受限 WebView 中，調用 `sessionStorage.setItem` / `localStorage` 會直接拋出 `SecurityError`。全站應使用 `app/utils/storage.ts` 封裝的 `safeLocalStorage` 與 `safeSessionStorage`，避免點擊返回等操作中斷報錯。
+* **反序列化型別守衛**：從 Storage 取得資料並以 `JSON.parse()` 還原後，**必須先以 `Array.isArray(parsed)` 進行型別校驗**，防止使用者端快取損毀或被寫入非陣列物件時，在渲染層執行 `.map()` / `.filter()` 引發未捕獲之 TypeError 導致整頁白畫面。
+
 ---
 
 ## 五、 全站 Typography 字級階層與 iOS Auto-Zoom 防護

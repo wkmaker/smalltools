@@ -93,30 +93,50 @@ export default function CarLoanClient({ lang = 'zh-TW' }: Props) {
     const pStepPer = searchParams.get('stepPer');
     const pBalloon = searchParams.get('balloon');
 
-    if (pPrice && !isNaN(Number(pPrice))) {
-      const priceVal = Number(pPrice);
+    const parseFinite = (val: string | null, min = 0, max = Infinity) => {
+      if (val === null) return null;
+      const num = Number(val);
+      if (!Number.isFinite(num)) return null;
+      return Math.min(max, Math.max(min, num));
+    };
+
+    if (pUnit && (pUnit === 'year' || pUnit === 'month')) setPeriodUnit(pUnit);
+
+    const priceVal = parseFinite(pPrice, 0);
+    if (priceVal !== null) {
       setCarPrice(priceVal);
-      if (pDpAmt && !isNaN(Number(pDpAmt))) {
-        setDownPaymentAmount(Number(pDpAmt));
-      } else if (pDpPct && !isNaN(Number(pDpPct))) {
-        const pct = Number(pDpPct);
-        setDownPaymentPercent(pct);
-        setDownPaymentAmount(toNumber(D(priceVal).times(pct).div(100).dp(0)));
+      const dpAmt = parseFinite(pDpAmt, 0);
+      const dpPct = parseFinite(pDpPct, 0, 100);
+      if (dpAmt !== null) {
+        setDownPaymentAmount(dpAmt);
+      } else if (dpPct !== null) {
+        setDownPaymentPercent(dpPct);
+        setDownPaymentAmount(toNumber(D(priceVal).times(dpPct).div(100).dp(0)));
       }
-      if (pLoan && !isNaN(Number(pLoan))) {
-        setLoanAmount(Number(pLoan));
+      const loan = parseFinite(pLoan, 0);
+      if (loan !== null) {
+        setLoanAmount(loan);
       }
     }
-    if (pRate && !isNaN(Number(pRate))) setInterestRate(Number(pRate));
-    if (pPeriod && !isNaN(Number(pPeriod))) setPeriodVal(Number(pPeriod));
-    if (pUnit && (pUnit === 'year' || pUnit === 'month')) setPeriodUnit(pUnit);
+    const rate = parseFinite(pRate, 0, 100);
+    if (rate !== null) setInterestRate(rate);
+
+    const periodMax = (pUnit === 'month') ? 360 : 30; // 30 年 (360 個月)
+    const period = parseFinite(pPeriod, 1, periodMax);
+    if (period !== null) setPeriodVal(period);
+
     if (pScheme && ['standard', 'grace', 'stepped', 'balloon'].includes(pScheme)) setLoanScheme(pScheme as LoanScheme);
     if (pRepay && (pRepay === 'equal-total' || pRepay === 'equal-principal')) setRepayType(pRepay as RepayType);
-    if (pFee && !isNaN(Number(pFee))) setFee(Number(pFee));
-    if (pGrace && !isNaN(Number(pGrace))) setGracePeriod(Number(pGrace));
-    if (pStepPmt && !isNaN(Number(pStepPmt))) setStepPayment(Number(pStepPmt));
-    if (pStepPer && !isNaN(Number(pStepPer))) setStepPeriods(Number(pStepPer));
-    if (pBalloon && !isNaN(Number(pBalloon))) setBalloonAmount(Number(pBalloon));
+    const feeVal = parseFinite(pFee, 0);
+    if (feeVal !== null) setFee(feeVal);
+    const graceVal = parseFinite(pGrace, 0, 120);
+    if (graceVal !== null) setGracePeriod(graceVal);
+    const stepPmt = parseFinite(pStepPmt, 0);
+    if (stepPmt !== null) setStepPayment(stepPmt);
+    const stepPer = parseFinite(pStepPer, 1, 120);
+    if (stepPer !== null) setStepPeriods(stepPer);
+    const balloon = parseFinite(pBalloon, 0);
+    if (balloon !== null) setBalloonAmount(balloon);
 
     isMountedRef.current = true;
   }, []);
