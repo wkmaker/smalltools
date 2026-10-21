@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useLayoutEffect, useCallback, useRef, useId } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, useId } from 'react';
 import * as Diff from 'diff';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
@@ -251,11 +251,72 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
     return () => clearTimeout(timer);
   }, [runDiff, originalText.length, modifiedText.length]);
 
+  // --- 虛擬滾動狀態與切片計算 (DOM 防卡頓) ---
+  const VIRTUAL_ROW_HEIGHT = 24;
+  const VIRTUAL_THRESHOLD = 120;
+  const OVERSCAN = 25;
+  const VIEWPORT_HEIGHT = 600;
+
+  const [splitScrollTop, setSplitScrollTop] = useState<number>(0);
+  const [unifiedScrollTop, setUnifiedScrollTop] = useState<number>(0);
+  const splitRafRef = useRef<number | null>(null);
+  const unifiedRafRef = useRef<number | null>(null);
+
+  const { visibleSplitRows, splitStartIndex, splitTopSpacer, splitBottomSpacer } = useMemo(() => {
+    const total = splitRows.length;
+    if (total <= VIRTUAL_THRESHOLD) {
+      return {
+        visibleSplitRows: splitRows,
+        splitStartIndex: 0,
+        splitTopSpacer: 0,
+        splitBottomSpacer: 0,
+      };
+    }
+    const startIndex = Math.max(0, Math.floor(splitScrollTop / VIRTUAL_ROW_HEIGHT) - OVERSCAN);
+    const endIndex = Math.min(total, Math.ceil((splitScrollTop + VIEWPORT_HEIGHT) / VIRTUAL_ROW_HEIGHT) + OVERSCAN);
+    return {
+      visibleSplitRows: splitRows.slice(startIndex, endIndex),
+      splitStartIndex: startIndex,
+      splitTopSpacer: startIndex * VIRTUAL_ROW_HEIGHT,
+      splitBottomSpacer: (total - endIndex) * VIRTUAL_ROW_HEIGHT,
+    };
+  }, [splitRows, splitScrollTop]);
+
+  const { visibleUnifiedDecisions, uStartIndex, uTopSpacer, uBottomSpacer } = useMemo(() => {
+    const total = unifiedDecisions.length;
+    if (total <= VIRTUAL_THRESHOLD) {
+      return {
+        visibleUnifiedDecisions: unifiedDecisions,
+        uStartIndex: 0,
+        uTopSpacer: 0,
+        uBottomSpacer: 0,
+      };
+    }
+    const startIndex = Math.max(0, Math.floor(unifiedScrollTop / VIRTUAL_ROW_HEIGHT) - OVERSCAN);
+    const endIndex = Math.min(total, Math.ceil((unifiedScrollTop + VIEWPORT_HEIGHT) / VIRTUAL_ROW_HEIGHT) + OVERSCAN);
+    return {
+      visibleUnifiedDecisions: unifiedDecisions.slice(startIndex, endIndex),
+      uStartIndex: startIndex,
+      uTopSpacer: startIndex * VIRTUAL_ROW_HEIGHT,
+      uBottomSpacer: (total - endIndex) * VIRTUAL_ROW_HEIGHT,
+    };
+  }, [unifiedDecisions, unifiedScrollTop]);
+
+  const updateSplitScroll = (top: number) => {
+    if (splitRafRef.current === null) {
+      splitRafRef.current = requestAnimationFrame(() => {
+        setSplitScrollTop(top);
+        splitRafRef.current = null;
+      });
+    }
+  };
+
   const handleLeftScroll = () => {
     if (!isSyncingLeft.current && leftPaneRef.current && rightPaneRef.current) {
       isSyncingRight.current = true;
       rightPaneRef.current.scrollTop = leftPaneRef.current.scrollTop;
       rightPaneRef.current.scrollLeft = leftPaneRef.current.scrollLeft;
+      updateSplitScroll(leftPaneRef.current.scrollTop);
     }
     isSyncingLeft.current = false;
   };
@@ -265,8 +326,19 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
       isSyncingLeft.current = true;
       leftPaneRef.current.scrollTop = rightPaneRef.current.scrollTop;
       leftPaneRef.current.scrollLeft = rightPaneRef.current.scrollLeft;
+      updateSplitScroll(rightPaneRef.current.scrollTop);
     }
     isSyncingRight.current = false;
+  };
+
+  const handleUnifiedScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const top = e.currentTarget.scrollTop;
+    if (unifiedRafRef.current === null) {
+      unifiedRafRef.current = requestAnimationFrame(() => {
+        setUnifiedScrollTop(top);
+        unifiedRafRef.current = null;
+      });
+    }
   };
 
   const swapDocuments = () => {
@@ -510,23 +582,36 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
               <div ref={leftPaneRef} onScroll={handleLeftScroll} className={styles.diffPane}>
                 <table className={styles.diffTable}>
                   <tbody>
-                    {splitRows.map((row, idx) => (
-                      <tr
-                        key={idx}
-                        className={
-                          row.leftType === 'removed'
-                            ? styles.diffRemoved
-                            : row.leftType === 'empty'
-                            ? styles.emptyRow
-                            : styles.diffUnchanged
-                        }
-                      >
-                        <td className={styles.lineNum}>{row.leftLineNum || ''}</td>
-                        <td className={styles.codeLine}>
-                          {row.leftType === 'removed' ? `- ${row.leftContent}` : row.leftContent || ''}
-                        </td>
+                    {splitTopSpacer > 0 && (
+                      <tr style={{ height: `${splitTopSpacer}px`, border: 'none' }}>
+                        <td colSpan={2} style={{ padding: 0, border: 'none', background: 'transparent' }} />
                       </tr>
-                    ))}
+                    )}
+                    {visibleSplitRows.map((row, rIdx) => {
+                      const idx = splitStartIndex + rIdx;
+                      return (
+                        <tr
+                          key={idx}
+                          className={
+                            row.leftType === 'removed'
+                              ? styles.diffRemoved
+                              : row.leftType === 'empty'
+                              ? styles.emptyRow
+                              : styles.diffUnchanged
+                          }
+                        >
+                          <td className={styles.lineNum}>{row.leftLineNum || ''}</td>
+                          <td className={styles.codeLine}>
+                            {row.leftType === 'removed' ? `- ${row.leftContent}` : row.leftContent || ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {splitBottomSpacer > 0 && (
+                      <tr style={{ height: `${splitBottomSpacer}px`, border: 'none' }}>
+                        <td colSpan={2} style={{ padding: 0, border: 'none', background: 'transparent' }} />
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -535,33 +620,55 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
               <div ref={rightPaneRef} onScroll={handleRightScroll} className={styles.diffPane}>
                 <table className={styles.diffTable}>
                   <tbody>
-                    {splitRows.map((row, idx) => (
-                      <tr
-                        key={idx}
-                        className={
-                          row.rightType === 'added'
-                            ? styles.diffAdded
-                            : row.rightType === 'empty'
-                            ? styles.emptyRow
-                            : styles.diffUnchanged
-                        }
-                      >
-                        <td className={styles.lineNum}>{row.rightLineNum || ''}</td>
-                        <td className={styles.codeLine}>
-                          {row.rightType === 'added' ? `+ ${row.rightContent}` : row.rightContent || ''}
-                        </td>
+                    {splitTopSpacer > 0 && (
+                      <tr style={{ height: `${splitTopSpacer}px`, border: 'none' }}>
+                        <td colSpan={2} style={{ padding: 0, border: 'none', background: 'transparent' }} />
                       </tr>
-                    ))}
+                    )}
+                    {visibleSplitRows.map((row, rIdx) => {
+                      const idx = splitStartIndex + rIdx;
+                      return (
+                        <tr
+                          key={idx}
+                          className={
+                            row.rightType === 'added'
+                              ? styles.diffAdded
+                              : row.rightType === 'empty'
+                              ? styles.emptyRow
+                              : styles.diffUnchanged
+                          }
+                        >
+                          <td className={styles.lineNum}>{row.rightLineNum || ''}</td>
+                          <td className={styles.codeLine}>
+                            {row.rightType === 'added' ? `+ ${row.rightContent}` : row.rightContent || ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {splitBottomSpacer > 0 && (
+                      <tr style={{ height: `${splitBottomSpacer}px`, border: 'none' }}>
+                        <td colSpan={2} style={{ padding: 0, border: 'none', background: 'transparent' }} />
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           ) : (
-            /* Unified 單視窗樣式 (互動式逐行選擇合併) */
-            <div className="bg-select-bg border border-border-glass rounded-xl p-3 flex flex-col gap-1 overflow-x-auto">
+            /* Unified 單視窗樣式 (互動式逐行選擇合併，具備虛擬滾動防護) */
+            <div
+              onScroll={handleUnifiedScroll}
+              className="bg-select-bg border border-border-glass rounded-xl p-3 flex flex-col gap-1 overflow-auto max-h-[600px]"
+            >
               <table className={styles.unifiedTable}>
                 <tbody>
-                  {unifiedDecisions.map((dec, idx) => {
+                  {uTopSpacer > 0 && (
+                    <tr style={{ height: `${uTopSpacer}px`, border: 'none' }}>
+                      <td colSpan={4} style={{ padding: 0, border: 'none', background: 'transparent' }} />
+                    </tr>
+                  )}
+                  {visibleUnifiedDecisions.map((dec, rIdx) => {
+                    const idx = uStartIndex + rIdx;
                     const isDefault = dec.state === dec.defaultState;
                     return (
                       <tr
@@ -603,6 +710,11 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
                       </tr>
                     );
                   })}
+                  {uBottomSpacer > 0 && (
+                    <tr style={{ height: `${uBottomSpacer}px`, border: 'none' }}>
+                      <td colSpan={4} style={{ padding: 0, border: 'none', background: 'transparent' }} />
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -154,3 +154,32 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 * **轉盤扇區安全隨機落點與拉霸機 Payline 固定步進對齊**：
   - 圓形轉盤計算目標旋轉角度時，應於命中扇區中心角基礎上加入 `±36%` 扇區寬度內之安全隨機偏移（`jitterOffset = (unit - 0.5) * 0.72 * angleSpan`），兼顧真實擦邊物理感與不壓線無爭議性。
   - 拉霸機（Slot Machine）滾輪帶在一般視窗與全螢幕舞台必須維持同一套內部像素座標系（如視窗高 `270px`、卡片高 `66px` + 間距 `10px` = 步進 `76px`），以 `targetTranslateY = windowHalf - (firstCardCenter + winIdx * stride)` 精準停靠於紅線正中央，嚴禁讓全螢幕容器改用 `vh` 動態高度卻沿用固定像素位移常數。
+
+---
+
+## 八、 巨量資料與高效運算效能規範 (High Performance & Anti-Lag Guidelines)
+
+### 1. 二進位大型 Buffer 自 React State 抽離 (Binary Buffer Isolation)
+* 處理 PDF、音訊、高解析度圖檔等二進位大型資料時，**嚴禁將數十 MB 的 `ArrayBuffer` 或 `Uint8Array` 直接存入 React State**（如 `pages: { buffer: ArrayBuffer }[]`）。
+* React State 在卡片拖曳排序、勾選、選取時會反覆觸發 shallow copy 或 clone，造成記憶體成倍飆升，極易引發行動端或低階裝置瀏覽器 OOM 閃退。
+* **標準實作**：以 `useRef<Map<string, ArrayBuffer>>(new Map())` 作為外部記憶體池，State 僅儲存輕量的純資料元數據（`fileId`, `pageIndex`, `rotation`, `thumbnailUrl`）；當項目被刪除或重置時，主動自 Map 快取釋放（GC）對應二進位快取。
+
+### 2. 批次處理單次狀態提交 (Batch Dispatching)
+* 多頁文件解析（如 100 頁 PDF 或千筆日誌匯入）時，**嚴禁在非同步迴圈內逐項呼叫 `setState(prev => [...prev, item])`**。
+* 逐項 setState 會觸發 $O(N^2)$ 的組件全量 re-render，導致主執行緒在解析期間完全凍結死鎖。
+* **標準實作**：在迴圈中收集於本地陣列，解析完成或依檔案為單位整批單次派發 `setPages(prev => [...prev, ...newItemsBatch])`。
+
+### 3. 萬行文字比對與日誌虛擬滾動 (Virtualization & Spacer Fallback)
+* 當表格、日誌或代碼差異比對行數超過 120 行時，**嚴禁一次性向 DOM 注入數千至數萬個 `<tr>` / `<div>` 節點**。
+* 採用輕量切片虛擬滾動演算法（Virtual Scrolling）：
+  - 依據固定行高（如 24px）與目前 `scrollTop`，計算可見視窗行索引並保留上下 25 行 overscan 緩衝。
+  - 上下各以單一 `<tr style={{ height: spacer }}>` 撐開滾動軸，既能保留 100% 原生滾動條外觀與手感，又能將活體 DOM 節點恆定壓制在 80 個以內，維持 60 FPS 流暢度。
+
+### 4. 單次巡訪（Single Pass）零記憶體配置文字統計
+* 純文字分析工具（如字數、中文字元、英文字母、數字、符號、空白、行數統計），**嚴禁串列呼叫 10 次全文本正則匹配**（如 `text.match(/.../g)?.length`）或 `text.split()`。
+* 這類操作在大文本（10 萬字以上）下會瞬間產出數十萬個短暫字串物件，觸發頻繁 Garbage Collection 與 100ms+ 主執行緒卡頓。
+* **標準實作**：採用單次 `for...of` 或字元碼點巡訪（Single Pass $O(N)$），以計數器整併所有統計維度，達成零記憶體中介配置，運算耗時壓制在 3ms 以內。
+
+### 5. 巨量文本高亮與標記安全截斷
+* 在封包清洗器（HAR Cleaner）或 JSON/文字搜尋高亮中，若遭遇數十萬字元之 Payload，**嚴禁無上限向全文字串執行正則切割並生成 `<mark>` 標籤**。
+* 必須設定可見字符長度防護（如超過 10 萬字元只高亮前半段，其餘直接渲染或提示過長截斷），防範成千上萬個 DOM 節點導致瀏覽器排版引擎當機。

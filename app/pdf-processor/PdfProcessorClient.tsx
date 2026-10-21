@@ -18,6 +18,7 @@ import { TRANSLATIONS } from './translations';
 
 export interface PdfPageItem extends PdfComposerItem {
   fileSize?: number;
+  fileId?: string;
 }
 
 
@@ -28,6 +29,8 @@ interface PdfProcessorClientProps {
 export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClientProps) {
   const t = TRANSLATIONS[lang];
   const [pages, setPages] = useState<PdfPageItem[]>([]);
+  // 外部記憶體快取：以 fileId 儲存二進位 rawBuffer，防止 React State 反覆複製與 OOM 記憶體洩漏
+  const fileBuffersRef = useRef<Map<string, ArrayBuffer>>(new Map());
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingMsg, setProcessingMsg] = useState<string>('');
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -89,10 +92,14 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
     const currentItem = pages[previewPageIndex];
     setZoomScale(1);
 
-    if (currentItem.sourceType === 'PDF' && currentItem.pdfArrayBuffer) {
+    const pdfBuf = currentItem.fileId
+      ? fileBuffersRef.current.get(currentItem.fileId)
+      : currentItem.pdfArrayBuffer;
+
+    if (currentItem.sourceType === 'PDF' && pdfBuf) {
       setIsLoadingHighRes(true);
       renderSinglePdfPageHighRes(
-        currentItem.pdfArrayBuffer,
+        pdfBuf,
         currentItem.pageIndex,
         2400,
         currentItem.password
@@ -219,23 +226,23 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
         try {
           const rawBuffer = await file.arrayBuffer();
+          const fileId = `f_${Date.now()}_${fIdx}_${randomToken(4)}`;
+          fileBuffersRef.current.set(fileId, rawBuffer);
 
+          const newPagesForFile: PdfPageItem[] = [];
           await renderPdfPagesProgressive(
-            rawBuffer.slice(0),
+            rawBuffer,
             (p) => {
-              setPages((prev) => [
-                ...prev,
-                {
-                  id: `pdf_${Date.now()}_${fIdx}_${p.pageIndex}_${randomToken(4)}`,
-                  sourceType: 'PDF',
-                  fileName: file.name,
-                  pageIndex: p.pageIndex,
-                  rotation: 0,
-                  thumbnailUrl: p.thumbnailUrl,
-                  pdfArrayBuffer: rawBuffer,
-                  fileSize: file.size,
-                },
-              ]);
+              newPagesForFile.push({
+                id: `pdf_${fileId}_${p.pageIndex}_${randomToken(4)}`,
+                fileId,
+                sourceType: 'PDF',
+                fileName: file.name,
+                pageIndex: p.pageIndex,
+                rotation: 0,
+                thumbnailUrl: p.thumbnailUrl,
+                fileSize: file.size,
+              });
             },
             (curr, total) => {
               setProcessingMsg(
@@ -244,6 +251,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
             },
             800
           );
+          setPages((prev) => [...prev, ...newPagesForFile]);
         } catch (err: any) {
           if (err.message === 'PASSWORD_REQUIRED' || err.message === 'PASSWORD_INCORRECT') {
             const buffer = await file.arrayBuffer();
@@ -305,23 +313,24 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
       const { file, buffer } = pendingPasswordFile;
       const pwd = passwordInput;
 
+      const fileId = `f_pwd_${Date.now()}_${randomToken(4)}`;
+      fileBuffersRef.current.set(fileId, buffer);
+
+      const newPagesForFile: PdfPageItem[] = [];
       await renderPdfPagesProgressive(
         buffer,
         (p) => {
-          setPages((prev) => [
-            ...prev,
-            {
-              id: `pdf_${Date.now()}_${p.pageIndex}_${randomToken(4)}`,
-              sourceType: 'PDF',
-              fileName: file.name,
-              pageIndex: p.pageIndex,
-              rotation: 0,
-              thumbnailUrl: p.thumbnailUrl,
-              pdfArrayBuffer: buffer,
-              fileSize: file.size,
-              password: pwd,
-            },
-          ]);
+          newPagesForFile.push({
+            id: `pdf_${fileId}_${p.pageIndex}_${randomToken(4)}`,
+            fileId,
+            sourceType: 'PDF',
+            fileName: file.name,
+            pageIndex: p.pageIndex,
+            rotation: 0,
+            thumbnailUrl: p.thumbnailUrl,
+            fileSize: file.size,
+            password: pwd,
+          });
         },
         (curr, total) => {
           setProcessingMsg(`PDF [${file.name}]: ${curr} / ${total}`);
@@ -329,6 +338,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
         800,
         pwd
       );
+      setPages((prev) => [...prev, ...newPagesForFile]);
 
       setPendingPasswordFile(null);
       setPasswordInput('');
@@ -350,7 +360,15 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
 
   // 單頁刪除
   const removePage = (id: string) => {
-    setPages((prev) => prev.filter((p) => p.id !== id));
+    setPages((prev) => {
+      const removed = prev.find((p) => p.id === id);
+      const next = prev.filter((p) => p.id !== id);
+      if (removed?.fileId) {
+        const stillUsed = next.some((p) => p.fileId === removed.fileId);
+        if (!stillUsed) fileBuffersRef.current.delete(removed.fileId);
+      }
+      return next;
+    });
     if (previewPageIndex !== null) {
       if (pages.length <= 1) setPreviewPageIndex(null);
       else if (previewPageIndex >= pages.length - 1) setPreviewPageIndex(pages.length - 2);
@@ -380,6 +398,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
   // 清空全部
   const clearAllPages = () => {
     if (confirm(t.confirmClearAll)) {
+      fileBuffersRef.current.clear();
       setPages([]);
       setPreviewPageIndex(null);
       showToast(t.toastClearedAll);
@@ -393,8 +412,12 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
     showToast(t.toastExporting);
 
     try {
+      const pagesWithBuffers = pages.map((p) => ({
+        ...p,
+        pdfArrayBuffer: p.fileId ? fileBuffersRef.current.get(p.fileId) : p.pdfArrayBuffer,
+      }));
       const pdfBlob = await compilePagesToPdfBlob(
-        pages,
+        pagesWithBuffers,
         exportQuality,
         (curr, total) => {
           setProcessingMsg(`Compiling (${curr}/${total})...`);
