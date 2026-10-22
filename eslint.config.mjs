@@ -28,6 +28,7 @@ const config = [
       // 降為 warning 保留訊號以攔截新程式碼的「純衍生狀態誤用 effect」，但不阻斷 CI。
       'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/immutability': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
     },
   },
 ];

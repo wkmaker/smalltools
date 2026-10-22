@@ -209,3 +209,26 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 * 宣告 Toast 提示或動畫延遲時，**嚴禁直接呼叫 `setTimeout` 而未由 `useRef` 追蹤**。
 * 連續觸發時，前次計時器若未被清除，會導致後續剛彈出的新 Toast 在數毫秒內被舊的定時器強制關閉。
 * **標準實作**：使用 `toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)`，在 `showToast` 開頭 `if (toastTimerRef.current) clearTimeout(toastTimerRef.current);`，並在元件卸載生命週期（`useEffect` return）中清空所有進行中的定時器。
+
+---
+
+## 十、 套件升級相容性與生態系鎖定原則 (Package Upgrade & Ecosystem Compatibility)
+
+在執行全站依賴升級（如 `ncu -u`）時，必須遵守以下生態系約束，嚴禁破壞建置與型別檢查閉環：
+
+### 1. ESLint 9 vs 10 跨版本 Peer 衝突防護
+* `eslint-config-next` 內建的官方/社群外掛（如 `eslint-plugin-react`、`eslint-plugin-jsx-a11y`、`eslint-plugin-import`）通常落後於 ESLint 頂層大版本。
+* 升級套件時若將 `eslint` 盲目升至 10.x，會引發多個 Peer Dependency ERESOLVE 衝突與執行期崩潰。應鎖定在最新穩定分支（如 `^9.39.x`）。
+
+### 2. TypeScript 6 vs 7 與 `typescript-eslint` 支援度
+* `eslint-config-next` 內嵌之 `typescript-eslint` 核心對 TypeScript 主版號有剛性邊界限制。
+* 升級至 TS 7.0 會在 ESLint 階段擲出 `Error: typescript-eslint does not support TS 7.0` 致命錯誤。TypeScript 版本需維持在 `^6.0.x`，待官方支援釋出後再平滑升級。
+
+### 3. React Compiler 建議規則在 `eslint.config.mjs` 的降階防禦
+* 升級 `eslint-config-next` v16 之後，React Compiler 規則（如 `react-hooks/preserve-manual-memoization`）可能預設升級為 Error。
+* 當手動 `useCallback` 依賴項未列入無害的 `setState` 時，編譯器會報錯阻斷 CI。
+* **標準實作**：在 `eslint.config.mjs` 中將 React Compiler 建議性規則（`react-hooks/set-state-in-effect`, `react-hooks/immutability`, `react-hooks/preserve-manual-memoization`）降為 `'warn'`，保留檢查訊號但不中斷打包。
+
+### 4. `js-yaml` v4 與 v5 破壞性 API 重構避坑
+* `js-yaml` v5 移除了 `yaml.DEFAULT_SCHEMA.extend` 與 `new yaml.Type`，亦取消了預設匯出（Default Export）。
+* 專案內針對 CloudFormation（`!Sub`, `!Ref` 等標籤）之自訂 Schema 契約需維持在 `js-yaml: "^4.3.2"` 穩定分支。
