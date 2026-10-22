@@ -37,7 +37,7 @@
 
 上層 DoD 四步照走；本專案的具體落地：
 
-1. **`CHANGELOG.md`**：Keep a Changelog 格式（Added / Changed / Fixed / Security），同步更新 `package.json` 版本號（SemVer）。
+1. **`CHANGELOG.md`**：Keep a Changelog 格式（Added / Changed / Fixed / Security），並遵循上層版本號推進規則（`fix`/`feat` 升版號並切出具體版本；日常相容依賴升級或內部重構維持現有版號，記錄於 `[Unreleased]`）。
 2. **`README.md`**：同步更新收錄工具清單、分類連結與功能簡介。
 3. **技能沉澱**：本次踩到的專案專屬雷 / 模式，寫回 **`.agents/skills/`** 對應手冊（跨專案通用的則沉澱回 `C:\PG\skills\`）。
 4. **`npm run test` 完整驗證**：`test:ui`（UI 規範 + WCAG 亮暗對比）+ `test:seo`（SEO 深度審計）+ `test:faq`（FAQ 結構化資料）+ `test:og`（雙語字典 / 常數）四套件 100% 通過。`npm run build` 會先跑 `prebuild` 執行同一批檢查，任何工具遺漏 SEO 標記、未配置 FAQ 或違反 UI 規範將**自動中斷建置**。
