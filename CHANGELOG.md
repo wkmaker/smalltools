@@ -2,6 +2,25 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [1.28.7] - 2026-10-23
+
+### Changed
+- **專案依賴套件全面升級與相容性維護**：
+  - `next`: `^16.3.8` → `^16.4.2`（包含 Turbopack 最佳化與效能升級）
+  - `react`: `^19.3.0` → `^19.3.1`
+  - `react-dom`: `^19.3.0` → `^19.3.1`
+  - `@peculiar/x509`: `^2.1.0` → `^2.2.0`（X.509 憑證解析工具更新）
+  - `pdfjs-dist`: `^6.3.289` → `^6.4.299`（PDF 解析核心修補）
+  - `eslint-config-next`: `^16.3.8` → `^16.4.2`
+  - `@types/node`: `^24.13.4` → `^24.19.2`（匹配 Node 24 執行期環境）
+  - **ESLint 扁平設定微調**：配合 `eslint-config-next@16.4.2`，在 `eslint.config.mjs` 中將 React Compiler 建議性規則 `react-hooks/preserve-manual-memoization` 設為 `warn`，避免 CI 與建置阻斷。
+  - **套件生態相容性鎖定**：
+    - `eslint`: 維持 `^9.39.5`（因 `eslint-config-next` 內建插件尚未支援 ESLint 10）。
+    - `typescript`: 維持 `^6.0.3`（因 `typescript-eslint` 尚未支援 TS 7.0）。
+    - `js-yaml`: 維持 `^4.3.2`（CloudFormation 測試需沿用 4.x 延伸 Schema 與 Type 構造器）。
+
+---
+
 ## [1.28.6] - 2026-10-22
 
 ### Fixed
