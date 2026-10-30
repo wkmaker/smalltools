@@ -37,7 +37,7 @@ const jsonLd = {
   name: 'Free Online Screen Recorder',
   url: 'https://tools.cjkuo.net/screen-capture/en/',
   description:
-    'Pure client-side screen recording tool with real-time audio mixing, VP9/MP4 encoding, and zero server storage.',
+    'Pure client-side screen recording tool with real-time audio mixing, WebM/MKV/MP4 encoding, and zero server storage.',
   applicationCategory: 'UtilityApplication',
   operatingSystem: 'All',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
