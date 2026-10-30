@@ -10,12 +10,16 @@ import {
   BITRATE_PRESETS,
   DEFAULT_BITRATE_PRESET,
   DEFAULT_FPS,
+  DEFAULT_RESOLUTION_PRESET,
   FPS_OPTIONS,
+  RESOLUTION_PRESETS,
   bitrateOf,
   formatDuration,
   minutesPerGigabyte,
+  sanitizeResolutionPreset,
   type BitratePresetId,
   type FpsOption,
+  type ResolutionPresetId,
 } from './engine';
 import { useMicrophone } from './useMicrophone';
 import { useScreenRecorder, type RecorderNotice } from './useScreenRecorder';
@@ -33,11 +37,13 @@ export default function ScreenCaptureClient({ lang = 'zh-TW' }: Props) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
 
   const micSelectId = useId();
+  const resolutionSelectId = useId();
   const fpsSelectId = useId();
   const bitrateSelectId = useId();
 
   const [micEnabled, setMicEnabled] = useState(false);
   const [countdownEnabled, setCountdownEnabled] = useState(true);
+  const [resolutionPreset, setResolutionPreset] = useState<ResolutionPresetId>(DEFAULT_RESOLUTION_PRESET);
   const [fps, setFps] = useState<FpsOption>(DEFAULT_FPS);
   const [bitratePreset, setBitratePreset] = useState<BitratePresetId>(DEFAULT_BITRATE_PRESET);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
@@ -117,6 +123,7 @@ export default function ScreenCaptureClient({ lang = 'zh-TW' }: Props) {
   const handleStart = () => {
     start({
       fps,
+      resolutionPreset,
       videoBitsPerSecond: bitrateOf(bitratePreset),
       countdownEnabled,
       micEnabled,
@@ -545,6 +552,29 @@ export default function ScreenCaptureClient({ lang = 'zh-TW' }: Props) {
 
                   {showAdvanced && (
                     <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-border-glass">
+                      <div>
+                        <label htmlFor={resolutionSelectId} className="text-xs font-medium text-text-sub block mb-1.5">
+                          {t.resolutionLabel}
+                        </label>
+                        <select
+                          id={resolutionSelectId}
+                          value={resolutionPreset}
+                          disabled={isRecordingActive}
+                          onChange={e => setResolutionPreset(sanitizeResolutionPreset(e.target.value))}
+                          className={styles.customSelect}
+                        >
+                          {RESOLUTION_PRESETS.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.id === '1080p'
+                                ? t.resolutionPreset1080p
+                                : p.id === 'original'
+                                ? t.resolutionPresetOriginal
+                                : t.resolutionPreset720p}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
                       <div>
                         <label htmlFor={fpsSelectId} className="text-xs font-medium text-text-sub block mb-1.5">
                           {t.fpsLabel}

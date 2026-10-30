@@ -27,6 +27,10 @@ export interface TranslationDict {
   micSelectPlaceholder: string;
   micLevelLabel: string;
   advancedSettingsTitle: string;
+  resolutionLabel: string;
+  resolutionPreset1080p: string;
+  resolutionPresetOriginal: string;
+  resolutionPreset720p: string;
   fpsLabel: string;
   bitrateLabel: string;
   bitratePresetHigh: string;
@@ -106,6 +110,10 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
     micSelectPlaceholder: '預設麥克風',
     micLevelLabel: '音量檢測條 (VU Meter)',
     advancedSettingsTitle: '進階錄影參數設定',
+    resolutionLabel: '解析度畫質',
+    resolutionPreset1080p: '1080p 全高清（預設推薦，兼顧畫質與流暢）',
+    resolutionPresetOriginal: '原始解析度（不限制，適合效能強大的電腦）',
+    resolutionPreset720p: '720p 高清（最流暢，檔案最小）',
     fpsLabel: '幀率 (FPS)',
     bitrateLabel: '影像畫質位元率',
     bitratePresetHigh: '高畫質 (5.0 Mbps)',
@@ -165,11 +173,11 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
       },
       {
         q: '錄影支援哪些螢幕解析度？支援 4K、雙螢幕或超寬螢幕 (21:9) 嗎？',
-        a: '支援所有原生螢幕尺寸與長寬比：\n\n① 原始解析度捕捉：\n我們不強制限制或壓縮畫面的 width 與 height，完全依照您螢幕或視窗的真實像素點對點擷取，無論是 1080p、2K、4K、32:9 超寬螢幕或直立式副螢幕皆能原汁原味呈現。\n\n② 響應式自適應容器：\n預覽播放器採用等比縮放容器，可自動適配任意長寬比畫面，不會產生黑邊硬裁切或形狀拉伸失真。',
+        a: '支援所有螢幕尺寸與長寬比，預設以 1080p 為上限，可隨時切換：\n\n① 預設 1080p 上限：\n高解析度即時編碼相當耗費運算資源，容易造成 CPU 滿載與滑鼠卡頓。因此 2K、4K 螢幕預設會等比縮小至 1920×1080 以內再錄製，不裁切也不變形；想要更流暢、檔案更小可改選 720p。\n\n② 原始解析度：\n若需保留每個像素，請在「進階錄影參數設定」選擇「原始解析度」，將依螢幕或視窗的真實像素擷取，直立式副螢幕也建議使用此選項以保留完整畫質。電腦效能不足時可能出現卡頓。\n\n③ 響應式自適應容器：\n預覽播放器採用等比縮放容器，可自動適配任意長寬比畫面，不會產生黑邊硬裁切或形狀拉伸失真。',
       },
       {
-        q: '錄出來的影片是什麼格式？為什麼優先採用 WebM (VP9/Opus)？',
-        a: '依瀏覽器環境自動採用最佳現代編碼：\n\n① 現代開源標準：\n在 Chrome、Edge 與 Firefox 下，優先採用 Google VP9 視訊編碼搭配 Opus 高音質音訊編碼封裝為 WebM。在同等畫質下，VP9 的壓縮效率遠優於舊款 H.264，能大幅縮減檔案體積並保留字型邊緣銳利度。\n\n② Safari 與 Apple 裝置相容：\n若在 macOS/iOS Safari 上執行，系統會自動切換為 Safari 支援之 MP4/H.264 編碼，確保錄影檔案具備跨平台通用相容性。',
+        q: '錄出來的影片是什麼格式？為什麼優先採用 H.264 而不是 VP9？',
+        a: '依瀏覽器環境自動選擇，以錄影流暢為優先：\n\n① 編碼優先順序：\n優先採用通常可硬體加速的 H.264，其次是運算負擔較輕的 VP8，最後才是 VP9。VP9 壓縮效率較高，但在 Windows 上多半只能以軟體即時編碼，容易造成 CPU 滿載與滑鼠卡頓。音訊一律搭配 Opus 高音質編碼。\n\n② 檔案格式：\nChrome 與 Edge 錄製 H.264 時會輸出 MKV 檔（Matroska 容器），VP8 與 VP9 則為 WebM 檔；若播放器無法開啟 MKV，可改用 VLC 等通用播放器。Safari 會依支援度自動採用 WebM 或 MP4。',
       },
       {
         q: '為什麼有些線上錄製的 WebM 影片無法拖曳時間軸進度條？本工具如何解決？',
@@ -209,6 +217,10 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
     micSelectPlaceholder: 'Default Microphone',
     micLevelLabel: 'Input Level Meter (VU Meter)',
     advancedSettingsTitle: 'Advanced Recording Parameters',
+    resolutionLabel: 'Resolution',
+    resolutionPreset1080p: '1080p Full HD (recommended, balances quality and smoothness)',
+    resolutionPresetOriginal: 'Original (no limit, for powerful computers)',
+    resolutionPreset720p: '720p HD (smoothest, smallest files)',
     fpsLabel: 'Frame Rate (FPS)',
     bitrateLabel: 'Video Bitrate',
     bitratePresetHigh: 'High Quality (5.0 Mbps)',
@@ -268,11 +280,11 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
       },
       {
         q: 'What screen resolutions are supported? Does it work with 4K or ultra-wide (21:9) monitors?',
-        a: 'All native display resolutions and aspect ratios are fully supported:\n\n① Native Pixel Capture:\nWe do not hardcode or downscale width and height constraints. Capture runs at full native resolution, including 1080p, 2K, 4K, 32:9 ultra-wide displays, and vertical secondary monitors.\n\n② Responsive Viewport:\nThe preview player utilizes an adaptive aspect container that naturally scales to any aspect ratio without black-bar cropping or stretch distortion.',
+        a: 'All display sizes and aspect ratios are supported. Capture is capped at 1080p by default, and you can change it at any time:\n\n① Default 1080p Cap:\nReal-time encoding at high resolution is demanding and can max out the CPU and cause mouse stutter. 2K and 4K displays are therefore scaled down proportionally to fit within 1920×1080, with no cropping or distortion. Choose 720p for even smoother recording and smaller files.\n\n② Original Resolution:\nTo keep every pixel, select "Original" under Advanced Recording Parameters. Capture then runs at the true pixel size of the screen or window, which is also recommended for vertical secondary monitors. Slower computers may stutter.\n\n③ Responsive Viewport:\nThe preview player utilizes an adaptive aspect container that naturally scales to any aspect ratio without black-bar cropping or stretch distortion.',
       },
       {
-        q: 'What video format is produced? Why is WebM (VP9/Opus) preferred?',
-        a: 'Modern video codecs are selected dynamically based on browser capabilities:\n\n① Modern Open Standard:\nOn Chrome, Edge, and Firefox, Google VP9 video with Opus high-fidelity audio packaged in WebM is selected by default. VP9 provides superior compression compared to legacy H.264, preserving sharp text edges at smaller file sizes.\n\n② Safari & Apple Ecosystem Compatibility:\nOn macOS and iOS Safari, the recorder automatically switches to MP4 (H.264/AAC), ensuring broad cross-device playback compatibility.',
+        q: 'What video format is produced? Why is H.264 preferred over VP9?',
+        a: 'The codec is selected automatically based on your browser, with smooth recording as the priority:\n\n① Codec Priority:\nH.264, which can usually be hardware accelerated, comes first, followed by the lighter VP8, then VP9. VP9 compresses better, but on Windows it usually has to be encoded in software in real time, which can max out the CPU and cause mouse stutter. Audio always uses high-fidelity Opus.\n\n② File Format:\nChrome and Edge produce MKV files (Matroska container) when recording H.264, while VP8 and VP9 produce WebM files. If your player cannot open MKV, use a universal player such as VLC. Safari uses WebM or MP4 depending on support.',
       },
       {
         q: 'Why do some online WebM recordings lack a seekable timeline, and how is it fixed here?',

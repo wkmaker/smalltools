@@ -37,7 +37,7 @@ const jsonLd = {
   name: '極簡線上螢幕錄影工具',
   url: 'https://tools.cjkuo.net/screen-capture/',
   description:
-    '純前端 100% 本地執行之極簡螢幕錄製工具，支援電腦畫面擷取、麥克風旁白即時混音與 WebM/MP4 高清錄製。',
+    '純前端 100% 本地執行之極簡螢幕錄製工具，支援電腦畫面擷取、麥克風旁白即時混音與 WebM/MKV/MP4 高清錄製。',
   applicationCategory: 'UtilityApplication',
   operatingSystem: 'All',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },

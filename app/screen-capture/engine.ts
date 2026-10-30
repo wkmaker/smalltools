@@ -2,8 +2,8 @@
  * screen-capture/engine.ts
  * ──────────────────────────────────────────────────────────────
  * 極簡螢幕錄影工具的純函數引擎，與 UI / 瀏覽器媒體 API 完全分離，可獨立單元測試。
- * - 編碼格式嗅探（VP9 → VP8 → WebM → MP4）、副檔名與下載檔名格式化。
- * - 畫質預設（FPS / 位元率）與外部輸入清洗。
+ * - 編碼格式嗅探（H.264 → VP8 → VP9 → WebM → MP4）、副檔名與下載檔名格式化。
+ * - 畫質預設（解析度 / FPS / 位元率）、擷取約束組裝與外部輸入清洗。
  * - 錄影時長格式化、容量估算、VU 音量條 RMS 換算。
  * - WebM 時長補寫：Chrome / Edge 的 MediaRecorder 輸出之 WebM 缺少 Duration 欄位，
  *   導致播放器無法拖曳進度條。`patchWebmDuration` 只改寫檔頭的 Segment Info，
@@ -13,10 +13,16 @@
 
 // ── 編碼格式 ─────────────────────────────────────────────
 
-/** MediaRecorder 編碼格式優先順序（Chrome/Edge 走 VP9/Opus，Safari 走 MP4） */
+/**
+ * MediaRecorder 編碼格式優先順序。
+ * VP9 在 Windows Chrome 通常只能軟體即時編碼，高解析度下會造成 CPU 滿載與滑鼠卡頓，
+ * 因此將可硬體加速的 H.264 與運算負擔較輕的 VP8 排在前面。
+ * 注意：Chrome 請求 H.264 時實際輸出 Matroska 容器（`recorder.mimeType` 為 `video/x-matroska`）。
+ */
 export const MIME_CANDIDATES = [
-  'video/webm;codecs=vp9,opus',
+  'video/webm;codecs=h264,opus',
   'video/webm;codecs=vp8,opus',
+  'video/webm;codecs=vp9,opus',
   'video/webm',
   'video/mp4;codecs=avc1',
   'video/mp4',
@@ -45,13 +51,16 @@ export function baseMimeType(mime: string): string {
 }
 
 /** 依 MIME 推導副檔名 */
-export function mimeToExtension(mime: string): 'mp4' | 'webm' {
-  return baseMimeType(mime) === 'video/mp4' ? 'mp4' : 'webm';
+export function mimeToExtension(mime: string): 'mp4' | 'webm' | 'mkv' {
+  const base = baseMimeType(mime);
+  if (base === 'video/mp4') return 'mp4';
+  return base === 'video/x-matroska' ? 'mkv' : 'webm';
 }
 
-/** 依 MIME 判斷是否為 WebM 容器 */
-export function isWebmMime(mime: string): boolean {
-  return baseMimeType(mime) === 'video/webm';
+/** 依 MIME 判斷是否為 EBML 容器（WebM / Matroska），兩者皆缺 Duration、需補寫時長 */
+export function isEbmlMime(mime: string): boolean {
+  const base = baseMimeType(mime);
+  return base === 'video/webm' || base === 'video/x-matroska';
 }
 
 function pad2(n: number): string {
@@ -70,6 +79,22 @@ export function buildRecordingFileName(date: Date, ext: string): string {
 }
 
 // ── 畫質設定 ─────────────────────────────────────────────
+
+export type ResolutionPresetId = '1080p' | 'original' | '720p';
+
+export interface ResolutionPreset {
+  id: ResolutionPresetId;
+  /** 擷取寬高上限；null 表示不限制，依來源原始解析度擷取 */
+  max: { width: number; height: number } | null;
+}
+
+export const RESOLUTION_PRESETS: ResolutionPreset[] = [
+  { id: '1080p', max: { width: 1920, height: 1080 } },
+  { id: 'original', max: null },
+  { id: '720p', max: { width: 1280, height: 720 } },
+];
+
+export const DEFAULT_RESOLUTION_PRESET: ResolutionPresetId = '1080p';
 
 export type BitratePresetId = 'high' | 'standard' | 'saver';
 
@@ -106,6 +131,24 @@ export function sanitizeFps(value: unknown): FpsOption {
 export function sanitizeBitratePreset(value: unknown): BitratePresetId {
   const id = typeof value === 'string' ? value.trim().toLowerCase() : '';
   return BITRATE_PRESETS.some(p => p.id === id) ? (id as BitratePresetId) : DEFAULT_BITRATE_PRESET;
+}
+
+/** 清洗解析度預設 ID，非法值回退 1080p */
+export function sanitizeResolutionPreset(value: unknown): ResolutionPresetId {
+  const id = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return RESOLUTION_PRESETS.some(p => p.id === id) ? (id as ResolutionPresetId) : DEFAULT_RESOLUTION_PRESET;
+}
+
+/**
+ * 組裝 getDisplayMedia 的影像約束。
+ * 只能使用 max / ideal：帶 min 或 exact 時 getDisplayMedia 會直接丟 TypeError。
+ */
+export function buildDisplayVideoConstraints(fps: number, presetId: ResolutionPresetId): MediaTrackConstraints {
+  const max = RESOLUTION_PRESETS.find(p => p.id === presetId)?.max ?? null;
+  return {
+    ...(max ? { width: { max: max.width }, height: { max: max.height } } : {}),
+    frameRate: { ideal: fps, max: fps },
+  };
 }
 
 export function bitrateOf(id: BitratePresetId): number {
