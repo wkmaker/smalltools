@@ -2,6 +2,22 @@
 
 本專案遵循 [Semantic Versioning (語意化版本 2.0.0)](https://semver.org/lang/zh-TW/) 與 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.0.0/) 規範。
 
+## [Unreleased]
+
+## [1.29.0] - 2026-10-30
+
+### Added
+- **全新上線：純前端極簡線上螢幕錄影工具與 PRV5 快捷傳送發送端 (`/screen-capture/`) (#104)**：
+  - **100% 本地畫面擷取 (Screen Capture API)**：免安裝外掛、無浮水印，支援「整個螢幕」、「應用程式視窗」與「瀏覽器分頁」，不限制解析度（完美支援 1080p、2K、4K、32:9 超寬螢幕與直式多螢幕）。
+  - **麥克風旁白收音與雙軌混音 (Web Audio API)**：支援選取指定外接/內建麥克風裝置，提供即時動態音量條 (VU Meter)；錄製時將電腦系統聲音與麥克風即時合軌混音無失真輸出。
+  - **自訂幀率與畫質位元率**：提供 3 秒倒數計時緩衝切換目標視窗；支援 30/60 FPS 與高畫質 (5.0 Mbps) / 標準 (2.5 Mbps) / 容量節省 (1.0 Mbps) 三段位元率配置，並具備容量與錄影時長即時預估。
+  - **WebM EBML Segment Duration 時長補全技術**：針對 Chromium MediaRecorder 輸出 WebM 缺少總長度導致播放器無法拖曳時間軸之長年缺陷，實作位元組級檔頭解析與 Duration 補寫引擎，其餘資料 Blob.slice 零拷貝無損銜接。
+  - **單次聚焦防護與本機安全下載**：介面維持單次聚焦，重新錄製時彈出防誤觸確認對話框並即時調用 `URL.revokeObjectURL` 徹底釋放記憶體。
+  - **PRV5 (USSL) 跨視窗安全握手分享通道 (postMessage)**：支援一鍵跨分頁傳遞原始 File 至 PRV5 免費私密分享，採雙向握手嚴格比對 `event.origin === 'https://www.prv5.com'`，Smalltools 端不設檔案大小上限。
+  - **雙語與 SEO 完整合規**：支援 `/screen-capture/` 與 `/screen-capture/en/` 雙語路由、WebPage/WebApplication/FAQPage JSON-LD 結構化資料，通過全套自動化測試。
+
+---
+
 ## [1.28.7] - 2026-10-23
 
 ### Changed
