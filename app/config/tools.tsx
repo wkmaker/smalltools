@@ -853,6 +853,25 @@ export const CATEGORIES: CategorySection[] = [
           </svg>
         ),
       },
+      {
+        name: '極簡線上螢幕錄影工具',
+        nameEn: 'Online Screen Recorder',
+        subtitle: 'MINIMALIST ONLINE SCREEN & AUDIO RECORDER',
+        subtitleEn: 'MINIMALIST ONLINE SCREEN & AUDIO RECORDER',
+        description: '免安裝、無浮水印且 100% 於瀏覽器本地執行的極簡螢幕錄影工具。支援系統音訊與麥克風旁白即時混音，錄製完成後可直接本地下載，或透過安全握手通道快捷傳送至 PRV5 私密分享。',
+        descriptionEn: 'Free, minimalist, zero-install, and watermark-free online screen recorder running 100% locally in your browser. Features real-time audio mixing for system sound and microphone voiceover, with direct local download or secure handshake transfer to PRV5 private sharing.',
+        href: '/screen-capture/',
+        hrefEn: '/screen-capture/en/',
+        cardClass: 'screenCaptureCard',
+        category: 'utility',
+        keywords: '線上螢幕錄影 免安裝螢幕錄影 電腦錄影 麥克風收音 系統聲音混音 無浮水印 screen recorder webm 錄製工具 螢幕擷取',
+        keywordsEn: 'online screen recorder screen capture with audio no install screen recorder no watermark in-browser video recorder webm recorder client-side audio mixing',
+        svg: (
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#ff3b30]">
+            <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+          </svg>
+        ),
+      },
     ],
   },
 ];

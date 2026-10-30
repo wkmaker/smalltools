@@ -67,6 +67,7 @@ const CARD_ACCENT_COLORS: Record<string, string> = {
   diceCard: '#ea580c', // 深橘
   liarsDiceCard: '#ea580c', // 深橘
   ogGeneratorCard: '#4f46e5', // 湛藍靛青
+screenCaptureCard: '#dc2626', // 深紅
 };
 
 const CATEGORY_NAMES_ZH: Record<string, string> = {
