@@ -177,7 +177,7 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
       },
       {
         q: '錄出來的影片是什麼格式？為什麼優先採用 H.264 而不是 VP9？',
-        a: '依瀏覽器環境自動選擇，以錄影流暢為優先：\n\n① 編碼優先順序：\n優先採用通常可硬體加速的 H.264，其次是運算負擔較輕的 VP8，最後才是 VP9。VP9 壓縮效率較高，但在 Windows 上多半只能以軟體即時編碼，容易造成 CPU 滿載與滑鼠卡頓。音訊一律搭配 Opus 高音質編碼。\n\n② 檔案格式：\nChrome 與 Edge 錄製 H.264 時會輸出 MKV 檔（Matroska 容器），VP8 與 VP9 則為 WebM 檔；若播放器無法開啟 MKV，可改用 VLC 等通用播放器。Safari 會依支援度自動採用 WebM 或 MP4。',
+        a: '依瀏覽器環境自動選擇，以錄影流暢為優先：\n\n① 編碼優先順序：\n優先採用通常可硬體加速的 H.264，其次是運算負擔較輕的 VP8，最後才是 VP9。VP9 壓縮效率較高，但在 Windows 上多半只能以軟體即時編碼，容易造成 CPU 滿載與滑鼠卡頓。\n\n② 檔案格式：\nChrome 與 Edge 通常會輸出 MP4 檔（H.264 影像搭配 AAC 音訊），幾乎所有裝置與播放器都能直接開啟。瀏覽器不支援 MP4 錄製時，會改用 WebM 檔（VP8 或 VP9 影像搭配 Opus 音訊）。',
       },
       {
         q: '為什麼有些線上錄製的 WebM 影片無法拖曳時間軸進度條？本工具如何解決？',
@@ -284,7 +284,7 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
       },
       {
         q: 'What video format is produced? Why is H.264 preferred over VP9?',
-        a: 'The codec is selected automatically based on your browser, with smooth recording as the priority:\n\n① Codec Priority:\nH.264, which can usually be hardware accelerated, comes first, followed by the lighter VP8, then VP9. VP9 compresses better, but on Windows it usually has to be encoded in software in real time, which can max out the CPU and cause mouse stutter. Audio always uses high-fidelity Opus.\n\n② File Format:\nChrome and Edge produce MKV files (Matroska container) when recording H.264, while VP8 and VP9 produce WebM files. If your player cannot open MKV, use a universal player such as VLC. Safari uses WebM or MP4 depending on support.',
+        a: 'The codec is selected automatically based on your browser, with smooth recording as the priority:\n\n① Codec Priority:\nH.264, which can usually be hardware accelerated, comes first, followed by the lighter VP8, then VP9. VP9 compresses better, but on Windows it usually has to be encoded in software in real time, which can max out the CPU and cause mouse stutter.\n\n② File Format:\nChrome and Edge usually produce MP4 files (H.264 video with AAC audio), which open directly on nearly every device and player. If the browser cannot record MP4, the tool falls back to WebM files (VP8 or VP9 video with Opus audio).',
       },
       {
         q: 'Why do some online WebM recordings lack a seekable timeline, and how is it fixed here?',

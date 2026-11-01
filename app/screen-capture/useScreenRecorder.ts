@@ -18,7 +18,7 @@ import {
   buildDisplayVideoConstraints,
   buildRecordingFileName,
   fixWebmBlobDuration,
-  isEbmlMime,
+  isWebmMime,
   mimeToExtension,
   pickSupportedMimeType,
   type ResolutionPresetId,
@@ -117,7 +117,7 @@ export function useScreenRecorder(onNotice: (notice: RecorderNotice) => void) {
     resultRef.current = null;
   }, []);
 
-  /** 錄影停止後封裝成 File，WebM / Matroska 會補寫時長讓播放器可拖曳進度 */
+  /** 錄影停止後封裝成 File，WebM 會補寫時長讓播放器可拖曳進度 */
   const finalize = useCallback(
     async (mimeType: string) => {
       clearTimers();
@@ -133,12 +133,12 @@ export function useScreenRecorder(onNotice: (notice: RecorderNotice) => void) {
         updatePhase('idle');
         return;
       }
-      if (isEbmlMime(containerMime)) {
+      if (isWebmMime(containerMime)) {
         try {
           blob = await fixWebmBlobDuration(blob, durationMs);
         } catch (err) {
           // 補寫失敗仍保留原始影片，僅影響部分播放器的進度條
-          console.warn('[screen-capture] 影片時長補寫失敗，保留原始檔案', { containerMime, err });
+          console.warn('[screen-capture] WebM 時長補寫失敗，保留原始檔案', err);
         }
       }
       if (!isMountedRef.current) return;

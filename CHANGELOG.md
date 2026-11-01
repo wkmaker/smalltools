@@ -4,13 +4,13 @@
 
 ## [Unreleased]
 
-## [1.29.1] - 2026-10-30
+## [1.29.1] - 2026-11-01
 
 ### Fixed
 - **螢幕錄影 CPU 滿載與滑鼠卡頓修復 (`/screen-capture/`) (#106)**：
   - **預設 1080p 擷取上限**：`getDisplayMedia` 原本未限制寬高，2K / 4K 螢幕會以原生解析度即時編碼；現預設等比縮小至 1920×1080 以內，並於進階設定新增「1080p 全高清（預設）／原始解析度／720p 高清」選項。使用者選擇的 30 / 60 FPS 維持不變。
-  - **編碼優先順序調校**：改為 H.264 → VP8 → VP9，避開 VP9 在 Windows Chrome 上的軟體即時編碼負擔。
-  - **H.264 錄影維持可拖曳進度條**：Chrome 請求 `video/webm;codecs=h264` 時實際輸出 Matroska（`video/x-matroska`），時長補寫改為同時涵蓋 WebM 與 Matroska，下載副檔名也依實際容器改為 `.mkv`。
+  - **編碼優先順序調校**：改為 MP4（H.264 / AAC）→ VP8 → VP9，避開 VP9 在 Windows Chrome 上的軟體即時編碼負擔；Chrome 與 Edge 的預設下載格式由 `.webm` 改為 `.mp4`。
+  - **不採用 `video/webm;codecs=h264`**：Chrome 實際輸出的是 Matroska（`video/x-matroska`），會被 PRV5 檔案格式白名單拒收，因此 H.264 一律走 MP4 容器。
 
 ---
 

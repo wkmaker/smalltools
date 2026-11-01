@@ -2,7 +2,7 @@
  * screen-capture/engine.ts
  * ──────────────────────────────────────────────────────────────
  * 極簡螢幕錄影工具的純函數引擎，與 UI / 瀏覽器媒體 API 完全分離，可獨立單元測試。
- * - 編碼格式嗅探（H.264 → VP8 → VP9 → WebM → MP4）、副檔名與下載檔名格式化。
+ * - 編碼格式嗅探（MP4/H.264 → VP8 → VP9 → WebM → MP4）、副檔名與下載檔名格式化。
  * - 畫質預設（解析度 / FPS / 位元率）、擷取約束組裝與外部輸入清洗。
  * - 錄影時長格式化、容量估算、VU 音量條 RMS 換算。
  * - WebM 時長補寫：Chrome / Edge 的 MediaRecorder 輸出之 WebM 缺少 Duration 欄位，
@@ -17,10 +17,11 @@
  * MediaRecorder 編碼格式優先順序。
  * VP9 在 Windows Chrome 通常只能軟體即時編碼，高解析度下會造成 CPU 滿載與滑鼠卡頓，
  * 因此將可硬體加速的 H.264 與運算負擔較輕的 VP8 排在前面。
- * 注意：Chrome 請求 H.264 時實際輸出 Matroska 容器（`recorder.mimeType` 為 `video/x-matroska`）。
+ * H.264 一律走 MP4：`video/webm;codecs=h264` 在 Chrome 實際輸出 Matroska（`video/x-matroska`），
+ * 不只副檔名與容器不符、需另外補寫時長，還會被 PRV5 的檔案格式白名單拒收。
  */
 export const MIME_CANDIDATES = [
-  'video/webm;codecs=h264,opus',
+  'video/mp4;codecs=avc1,mp4a.40.2',
   'video/webm;codecs=vp8,opus',
   'video/webm;codecs=vp9,opus',
   'video/webm',
@@ -51,16 +52,13 @@ export function baseMimeType(mime: string): string {
 }
 
 /** 依 MIME 推導副檔名 */
-export function mimeToExtension(mime: string): 'mp4' | 'webm' | 'mkv' {
-  const base = baseMimeType(mime);
-  if (base === 'video/mp4') return 'mp4';
-  return base === 'video/x-matroska' ? 'mkv' : 'webm';
+export function mimeToExtension(mime: string): 'mp4' | 'webm' {
+  return baseMimeType(mime) === 'video/mp4' ? 'mp4' : 'webm';
 }
 
-/** 依 MIME 判斷是否為 EBML 容器（WebM / Matroska），兩者皆缺 Duration、需補寫時長 */
-export function isEbmlMime(mime: string): boolean {
-  const base = baseMimeType(mime);
-  return base === 'video/webm' || base === 'video/x-matroska';
+/** 依 MIME 判斷是否為 WebM 容器 */
+export function isWebmMime(mime: string): boolean {
+  return baseMimeType(mime) === 'video/webm';
 }
 
 function pad2(n: number): string {

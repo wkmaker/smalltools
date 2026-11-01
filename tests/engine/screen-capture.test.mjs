@@ -5,7 +5,7 @@ import {
   pickSupportedMimeType,
   baseMimeType,
   mimeToExtension,
-  isEbmlMime,
+  isWebmMime,
   buildRecordingFileName,
   sanitizeFps,
   sanitizeBitratePreset,
@@ -62,18 +62,23 @@ function chromeLikeWebm(infoPayload = concat(TIMECODE_SCALE_1MS, MUXING_APP)) {
 // ── 編碼格式 ────────────────────────────────────────────
 
 test('pickSupportedMimeType：依優先順序挑選第一個支援格式', () => {
-  assert.equal(pickSupportedMimeType(() => true), 'video/webm;codecs=h264,opus');
-  assert.equal(pickSupportedMimeType(m => m.startsWith('video/mp4')), 'video/mp4;codecs=avc1');
+  assert.equal(pickSupportedMimeType(() => true), 'video/mp4;codecs=avc1,mp4a.40.2');
+  assert.equal(pickSupportedMimeType(m => m === 'video/mp4;codecs=avc1'), 'video/mp4;codecs=avc1');
   assert.equal(pickSupportedMimeType(m => m === 'video/webm'), 'video/webm');
   assert.equal(pickSupportedMimeType(() => false), '');
 });
 
 test('MIME_CANDIDATES：H.264 與 VP8 排在 VP9 之前，避免軟體即時編碼造成 CPU 滿載（#106）', () => {
   assert.deepEqual([...MIME_CANDIDATES].slice(0, 3), [
-    'video/webm;codecs=h264,opus',
+    'video/mp4;codecs=avc1,mp4a.40.2',
     'video/webm;codecs=vp8,opus',
     'video/webm;codecs=vp9,opus',
   ]);
+});
+
+test('MIME_CANDIDATES：不得請求 WebM + H.264（#106）', () => {
+  // Chrome 會改輸出 video/x-matroska，被 PRV5 檔案格式白名單（僅 webm / mp4）拒收
+  assert.equal(MIME_CANDIDATES.some(m => m.startsWith('video/webm') && m.includes('h264')), false);
 });
 
 test('pickSupportedMimeType：嗅探函式丟例外時視為不支援並繼續', () => {
@@ -81,7 +86,7 @@ test('pickSupportedMimeType：嗅探函式丟例外時視為不支援並繼續',
   console.warn = () => {};
   try {
     const result = pickSupportedMimeType(m => {
-      if (m.includes('h264')) throw new Error('boom');
+      if (m.includes('avc1')) throw new Error('boom');
       return m.includes('vp8');
     });
     assert.equal(result, 'video/webm;codecs=vp8,opus');
@@ -90,24 +95,15 @@ test('pickSupportedMimeType：嗅探函式丟例外時視為不支援並繼續',
   }
 });
 
-test('baseMimeType / mimeToExtension / isEbmlMime', () => {
+test('baseMimeType / mimeToExtension / isWebmMime', () => {
   assert.equal(baseMimeType('video/webm;codecs=vp9,opus'), 'video/webm');
   assert.equal(baseMimeType('VIDEO/MP4; codecs=avc1'), 'video/mp4');
   assert.equal(baseMimeType(''), 'video/webm');
   assert.equal(mimeToExtension('video/mp4;codecs=avc1'), 'mp4');
   assert.equal(mimeToExtension('video/webm'), 'webm');
   assert.equal(mimeToExtension(''), 'webm');
-  assert.equal(isEbmlMime('video/webm;codecs=vp8'), true);
-  assert.equal(isEbmlMime('video/mp4'), false);
-});
-
-test('Chrome 請求 H.264 實際輸出 Matroska：仍需補寫時長，副檔名須與容器一致（#106）', () => {
-  // Chrome 請求 video/webm;codecs=h264,opus 時，recorder.mimeType 回報的是下列值
-  const actual = 'video/x-matroska;codecs=avc1,opus';
-  assert.equal(baseMimeType(actual), 'video/x-matroska');
-  assert.equal(isEbmlMime(actual), true);
-  assert.equal(mimeToExtension(actual), 'mkv');
-  assert.equal(buildRecordingFileName(new Date(2026, 9, 30, 19, 30, 5), 'mkv'), 'screen-recording-20261030-193005.mkv');
+  assert.equal(isWebmMime('video/webm;codecs=vp8'), true);
+  assert.equal(isWebmMime('video/mp4'), false);
 });
 
 test('buildRecordingFileName：本地時間 YYYYMMDD-HHmmss 格式', () => {
