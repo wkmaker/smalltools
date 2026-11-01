@@ -4,7 +4,7 @@
  * useScreenRecorder.ts
  * ──────────────────────────────────────────────────────────────
  * 螢幕錄影生命週期：選取畫面 → 倒數 → 錄影 / 暫停 → 封裝 → 完成。
- * - 畫面擷取：getDisplayMedia（不寫死寬高，原生支援任意解析度與長寬比）。
+ * - 畫面擷取：getDisplayMedia（依解析度預設限制寬高上限，預設 1080p 以避免高解析度即時編碼滿載）。
  * - 混音：以 AudioContext 將系統音訊與麥克風合成單一音軌。
  * - 錄影資料區塊存於 ref，不進 React State，避免大檔觸發重新渲染與複製。
  * - 單次聚焦：同時間只保留最新一筆錄影，丟棄時立即 revokeObjectURL 釋放記憶體。
@@ -15,11 +15,13 @@ import {
   AUDIO_BITRATE_BPS,
   COUNTDOWN_SECONDS,
   baseMimeType,
+  buildDisplayVideoConstraints,
   buildRecordingFileName,
   fixWebmBlobDuration,
   isWebmMime,
   mimeToExtension,
   pickSupportedMimeType,
+  type ResolutionPresetId,
 } from './engine';
 
 export type RecorderPhase = 'idle' | 'selecting' | 'countdown' | 'recording' | 'paused' | 'processing' | 'done';
@@ -42,6 +44,7 @@ export interface RecordingResult {
 
 export interface RecorderOptions {
   fps: number;
+  resolutionPreset: ResolutionPresetId;
   videoBitsPerSecond: number;
   countdownEnabled: boolean;
   micEnabled: boolean;
@@ -252,7 +255,7 @@ export function useScreenRecorder(onNotice: (notice: RecorderNotice) => void) {
       let display: MediaStream;
       try {
         const displayOptions: ExtendedDisplayMediaOptions = {
-          video: { frameRate: { ideal: options.fps, max: options.fps } },
+          video: buildDisplayVideoConstraints(options.fps, options.resolutionPreset),
           audio: true,
           systemAudio: 'include',
           selfBrowserSurface: 'exclude',

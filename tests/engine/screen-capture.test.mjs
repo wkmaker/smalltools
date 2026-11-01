@@ -9,6 +9,8 @@ import {
   buildRecordingFileName,
   sanitizeFps,
   sanitizeBitratePreset,
+  sanitizeResolutionPreset,
+  buildDisplayVideoConstraints,
   bitrateOf,
   minutesPerGigabyte,
   formatDuration,
@@ -60,11 +62,23 @@ function chromeLikeWebm(infoPayload = concat(TIMECODE_SCALE_1MS, MUXING_APP)) {
 // ── 編碼格式 ────────────────────────────────────────────
 
 test('pickSupportedMimeType：依優先順序挑選第一個支援格式', () => {
-  assert.equal(pickSupportedMimeType(() => true), 'video/webm;codecs=vp9,opus');
-  assert.equal(pickSupportedMimeType(m => m.startsWith('video/mp4')), 'video/mp4;codecs=avc1');
+  assert.equal(pickSupportedMimeType(() => true), 'video/mp4;codecs=avc1,mp4a.40.2');
+  assert.equal(pickSupportedMimeType(m => m === 'video/mp4;codecs=avc1'), 'video/mp4;codecs=avc1');
   assert.equal(pickSupportedMimeType(m => m === 'video/webm'), 'video/webm');
   assert.equal(pickSupportedMimeType(() => false), '');
-  assert.deepEqual([...MIME_CANDIDATES].slice(0, 2), ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus']);
+});
+
+test('MIME_CANDIDATES：H.264 與 VP8 排在 VP9 之前，避免軟體即時編碼造成 CPU 滿載（#106）', () => {
+  assert.deepEqual([...MIME_CANDIDATES].slice(0, 3), [
+    'video/mp4;codecs=avc1,mp4a.40.2',
+    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=vp9,opus',
+  ]);
+});
+
+test('MIME_CANDIDATES：不得請求 WebM + H.264（#106）', () => {
+  // Chrome 會改輸出 video/x-matroska，被 PRV5 檔案格式白名單（僅 webm / mp4）拒收
+  assert.equal(MIME_CANDIDATES.some(m => m.startsWith('video/webm') && m.includes('h264')), false);
 });
 
 test('pickSupportedMimeType：嗅探函式丟例外時視為不支援並繼續', () => {
@@ -72,7 +86,7 @@ test('pickSupportedMimeType：嗅探函式丟例外時視為不支援並繼續',
   console.warn = () => {};
   try {
     const result = pickSupportedMimeType(m => {
-      if (m.includes('vp9')) throw new Error('boom');
+      if (m.includes('avc1')) throw new Error('boom');
       return m.includes('vp8');
     });
     assert.equal(result, 'video/webm;codecs=vp8,opus');
@@ -102,6 +116,40 @@ test('buildRecordingFileName：本地時間 YYYYMMDD-HHmmss 格式', () => {
 });
 
 // ── 畫質設定 ────────────────────────────────────────────
+
+test('buildDisplayVideoConstraints：依解析度預設產生擷取約束（#106）', () => {
+  assert.deepEqual(buildDisplayVideoConstraints(30, '1080p'), {
+    width: { max: 1920 },
+    height: { max: 1080 },
+    frameRate: { ideal: 30, max: 30 },
+  });
+  assert.deepEqual(buildDisplayVideoConstraints(30, '720p'), {
+    width: { max: 1280 },
+    height: { max: 720 },
+    frameRate: { ideal: 30, max: 30 },
+  });
+  // 使用者選的 60 FPS 不被解析度預設覆寫
+  assert.deepEqual(buildDisplayVideoConstraints(60, '1080p').frameRate, { ideal: 60, max: 60 });
+});
+
+test('buildDisplayVideoConstraints：原始解析度不限制寬高', () => {
+  assert.deepEqual(buildDisplayVideoConstraints(30, 'original'), { frameRate: { ideal: 30, max: 30 } });
+});
+
+test('buildDisplayVideoConstraints：getDisplayMedia 不接受 min / exact 約束', () => {
+  // 帶 min 或 exact 會讓 getDisplayMedia 直接丟 TypeError，所有預設一律只用 max / ideal
+  for (const id of ['1080p', 'original', '720p']) {
+    const json = JSON.stringify(buildDisplayVideoConstraints(30, id));
+    assert.doesNotMatch(json, /"(min|exact)"/);
+  }
+});
+
+test('sanitizeResolutionPreset：非法值回退 1080p', () => {
+  assert.equal(sanitizeResolutionPreset('720p'), '720p');
+  assert.equal(sanitizeResolutionPreset(' ORIGINAL '), 'original');
+  assert.equal(sanitizeResolutionPreset('4k'), '1080p');
+  assert.equal(sanitizeResolutionPreset(undefined), '1080p');
+});
 
 test('sanitizeFps / sanitizeBitratePreset：非法值回退預設', () => {
   assert.equal(sanitizeFps(60), 60);
