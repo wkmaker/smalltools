@@ -78,6 +78,10 @@ export interface TranslationDict {
   noticeRecorderFailed: string;
   noticeNoData: string;
   toastDownloaded: string;
+  cachedRecordingTitle: string;
+  cachedRecordingDesc: (name: string, duration: string, size: string) => string;
+  restoreRecordingBtn: string;
+  clearRecordingCacheBtn: string;
 
   // FAQ
   faqTitle: string;
@@ -159,6 +163,11 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
     noticeRecorderFailed: '錄影引擎異常中斷，請重試。',
     noticeNoData: '未錄製到任何畫面資料。',
     toastDownloaded: '已觸發瀏覽器下載。',
+    cachedRecordingTitle: '偵測到上次尚未清除的錄影暫存',
+    cachedRecordingDesc: (name: string, duration: string, size: string) =>
+      `本機瀏覽器儲存空間保留了「${name}」（時長 ${duration}・${size}），可直接還原預覽下載或清除暫存。`,
+    restoreRecordingBtn: '還原預覽與下載',
+    clearRecordingCacheBtn: '清除本地暫存',
 
     faqTitle: '常見問題與技術指南',
     faqSubtitle: '了解瀏覽器螢幕錄影原理、音訊混音限制、畫質位元率與 PRV5 跨視窗私密分享傳輸機制',
@@ -266,6 +275,11 @@ export const TRANSLATIONS: Record<'zh-TW' | 'en', TranslationDict> = {
     noticeRecorderFailed: 'Recording engine encountered an unexpected error. Please try again.',
     noticeNoData: 'No video data was recorded.',
     toastDownloaded: 'Download initiated.',
+    cachedRecordingTitle: 'Previous Screen Recording Found in Local Cache',
+    cachedRecordingDesc: (name: string, duration: string, size: string) =>
+      `Your browser storage contains "${name}" (${duration} · ${size}). You can restore it to preview and download, or clear the local cache.`,
+    restoreRecordingBtn: 'Restore & Download',
+    clearRecordingCacheBtn: 'Clear Local Cache',
 
     faqTitle: 'Frequently Asked Questions & Guide',
     faqSubtitle: 'Learn how in-browser screen recording works, audio mixing details, bitrate tuning, and PRV5 cross-window private sharing',

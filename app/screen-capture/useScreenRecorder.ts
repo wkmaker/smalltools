@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { safeIdb } from '../utils/idb';
 import {
   AUDIO_BITRATE_BPS,
   COUNTDOWN_SECONDS,
@@ -42,6 +43,18 @@ export interface RecordingResult {
   mimeType: string;
 }
 
+export interface CachedRecordingPayload {
+  blob: Blob;
+  fileName: string;
+  durationMs: number;
+  mimeType: string;
+  lastModified: number;
+}
+
+const SCREEN_REC_IDB_NAMESPACE = 'screen-capture';
+const SCREEN_REC_IDB_KEY = 'last_recording_v1';
+const SCREEN_REC_IDB_TTL_MS = 24 * 60 * 60 * 1000;
+
 export interface RecorderOptions {
   fps: number;
   resolutionPreset: ResolutionPresetId;
@@ -63,6 +76,7 @@ export function useScreenRecorder(onNotice: (notice: RecorderNotice) => void) {
   const [countdown, setCountdown] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [result, setResult] = useState<RecordingResult | null>(null);
+  const [cachedRecording, setCachedRecording] = useState<CachedRecordingPayload | null>(null);
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null);
 
   const phaseRef = useRef<RecorderPhase>('idle');
@@ -154,6 +168,18 @@ export function useScreenRecorder(onNotice: (notice: RecorderNotice) => void) {
       setResult(next);
       setElapsedMs(durationMs);
       updatePhase('done');
+
+      const cachePayload: CachedRecordingPayload = {
+        blob,
+        fileName: file.name,
+        durationMs,
+        mimeType: containerMime,
+        lastModified: now.getTime(),
+      };
+      setCachedRecording(cachePayload);
+      void safeIdb.set(SCREEN_REC_IDB_NAMESPACE, SCREEN_REC_IDB_KEY, cachePayload, {
+        ttlMs: SCREEN_REC_IDB_TTL_MS,
+      });
     },
     [clearTimers, releaseStreams, revokeResult, updatePhase]
   );
@@ -356,17 +382,49 @@ export function useScreenRecorder(onNotice: (notice: RecorderNotice) => void) {
     [beginRecording, releaseStreams, revokeResult, stop, updatePhase]
   );
 
-  /** 丟棄目前錄影並釋放記憶體（重新錄製前呼叫） */
+  /** 丟棄目前錄影並釋放記憶體與本地暫存（重新錄製前呼叫） */
   const discard = useCallback(() => {
     revokeResult();
     setResult(null);
+    setCachedRecording(null);
+    void safeIdb.remove(SCREEN_REC_IDB_NAMESPACE, SCREEN_REC_IDB_KEY);
     setElapsedMs(0);
     updatePhase('idle');
   }, [revokeResult, updatePhase]);
 
-  // 卸載時中止錄影、釋放所有軌道與 Object URL
+  const restoreCachedRecording = useCallback(() => {
+    if (!cachedRecording) return;
+    const file = new File([cachedRecording.blob], cachedRecording.fileName, {
+      type: cachedRecording.mimeType,
+      lastModified: cachedRecording.lastModified,
+    });
+    const next: RecordingResult = {
+      file,
+      url: URL.createObjectURL(file),
+      durationMs: cachedRecording.durationMs,
+      mimeType: cachedRecording.mimeType,
+    };
+    revokeResult();
+    resultRef.current = next;
+    setResult(next);
+    setElapsedMs(cachedRecording.durationMs);
+    updatePhase('done');
+  }, [cachedRecording, revokeResult, updatePhase]);
+
+  const clearCachedRecording = useCallback(() => {
+    setCachedRecording(null);
+    void safeIdb.remove(SCREEN_REC_IDB_NAMESPACE, SCREEN_REC_IDB_KEY);
+  }, []);
+
+  // 初次掛載時檢查 IndexedDB 是否有上次未清除的錄影暫存；卸載時中止錄影、釋放所有軌道與 Object URL
   useEffect(() => {
     isMountedRef.current = true;
+    void safeIdb
+      .get<CachedRecordingPayload>(SCREEN_REC_IDB_NAMESPACE, SCREEN_REC_IDB_KEY)
+      .then((saved) => {
+        if (!isMountedRef.current || !saved || !(saved.blob instanceof Blob) || !saved.fileName) return;
+        setCachedRecording(saved);
+      });
     return () => {
       isMountedRef.current = false;
       const recorder = recorderRef.current;
@@ -383,5 +441,19 @@ export function useScreenRecorder(onNotice: (notice: RecorderNotice) => void) {
     };
   }, [clearTimers, releaseStreams, revokeResult]);
 
-  return { phase, countdown, elapsedMs, result, previewStream, start, pause, resume, stop, discard };
+  return {
+    phase,
+    countdown,
+    elapsedMs,
+    result,
+    cachedRecording,
+    previewStream,
+    start,
+    pause,
+    resume,
+    stop,
+    discard,
+    restoreCachedRecording,
+    clearCachedRecording,
+  };
 }

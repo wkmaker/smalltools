@@ -4,6 +4,22 @@
 
 ## [Unreleased]
 
+## [1.30.0] - 2026-11-08
+
+### Added
+- **導入共用 `IndexedDB` 非同步本地儲存架構與媒體檔案／大型文本防重整復原 (#109)**：
+  - **共用 `IndexedDB` 安全封裝 (`app/utils/idb.ts`)**：建立零外部依賴、型別安全的 `createSafeIdb` 與 `safeIdb` 模組，支援原生儲存二進位 `Blob` / `File` / `Uint8Array`，內建 TTL 過期自動清理、Namespace 級別 LRU 筆數上限控制、Safari 無痕模式與 `QuotaExceededError` 安全降級，以及供 Node.js 單元測試使用的 `createMemoryIdbBackend`。
+  - **共用本地暫存復原橫幅 (`app/components/IdbRestoreBanner.tsx`)**：提供支援亮暗雙主題、語意解耦 (`headingAs`) 與無障礙標籤的「還原工作階段／一鍵清除本地暫存」控制橫幅。
+  - **兩份文件比對工具 (`/diff-checker/`)**：新增 600ms 防抖非同步草稿自動保存（7 天 TTL），支援數萬行 Log 比對草稿不阻塞主執行緒，重新整理自動還原並提供「還原範例並清除暫存」控制項。
+  - **日曆切割助手 (`/calendar-split/`)**：解析 `.ics` 後自動將日曆內容與檔名暫存於 `IndexedDB`（3 天 TTL，35MB 上限），重整頁面可一鍵還原分割工作區。
+  - **極簡線上螢幕錄影工具 (`/screen-capture/`)**：錄影封裝完成時自動將影片 `Blob` 寫入 `IndexedDB` 暫存（24 小時 TTL），防止使用者下載前誤關或重整分頁導致錄影遺失；點擊「重新錄製」或「清除本地暫存」時同步釋放。
+  - **萬能圖片處理大師 (`/image-processor/`)**：自動暫存單張或批次上傳的原圖 `Blob` 清單（24 小時 TTL，最多 15 張 / 50MB 上限），支援重整後一鍵還原上次編輯圖片。
+  - **PDF 壓縮大師 (`/pdf-compressor/`)**：自動保留最近 5 筆「非加密」PDF 壓縮成品 `Blob`（24 小時 TTL，嚴格排除受密碼保護之 PDF 以保障隱私），支援直接重新下載或一鍵清空暫存。
+  - **幸運轉盤抽獎小工具 (`/lucky-wheel/`)**：將本地存檔槽 (`lw_save_slots`) 擴充遷移至 `IndexedDB`（向下相容既有 `localStorage` 資料），存檔槽上限由 12 組提升至 30 組。
+  - **資安紅線契約測試 (`tests/engine/idb.test.mjs`)**：新增單元測試與靜態架構契約檢查，強制驗證敏感工具（`password`、`har-cleaner`、`ssl-converter`、`cert-generator`、`checksum-verifier`）維持 100% 純記憶體零 `IndexedDB` 寫入。
+
+---
+
 ## [1.29.2] - 2026-11-08
 
 ### Security

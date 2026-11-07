@@ -21,8 +21,23 @@ interface ImageProcessorClientProps {
 import { createSimpleZip } from './utils/zipBuilder';
 import { formatBytes } from '../utils/formatBytes';
 import { downloadBlob } from '../utils/downloadBlob';
+import IdbRestoreBanner from '../components/IdbRestoreBanner';
+import { safeIdb } from '../utils/idb';
 import { calculateBatchDimensions } from './engine';
 import { TRANSLATIONS } from './translations';
+
+const IMG_IDB_NAMESPACE = 'image-processor';
+const IMG_IDB_KEY = 'last_workspace_v1';
+const IMG_IDB_TTL_MS = 24 * 60 * 60 * 1000;
+const IMG_IDB_MAX_BYTES = 50 * 1024 * 1024;
+const IMG_IDB_MAX_COUNT = 15;
+
+interface CachedImageItem {
+  blob: Blob;
+  name: string;
+  type: string;
+  lastModified: number;
+}
 
 const safeLoadImage = (src: string, timeoutMs = 10000): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
@@ -55,6 +70,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
 
   // 檔案與模式狀態
   const [files, setFiles] = useState<File[]>([]);
+  const [cachedWorkspace, setCachedWorkspace] = useState<CachedImageItem[]>([]);
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const batchItemsRef = useRef<BatchItem[]>([]);
@@ -129,7 +145,33 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         if (!isNaN(parsedS) && parsedS >= 10 && parsedS <= 100) setScalePercent(parsedS);
       }
     }
+
+    let active = true;
+    void safeIdb.get<CachedImageItem[]>(IMG_IDB_NAMESPACE, IMG_IDB_KEY).then((saved) => {
+      if (!active || !Array.isArray(saved) || saved.length === 0) return;
+      const valid = saved.filter(
+        (it) => it && it.blob instanceof Blob && typeof it.name === 'string'
+      );
+      if (valid.length > 0) setCachedWorkspace(valid);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
+
+  const persistFilesToIdb = (nextFiles: File[]) => {
+    const slice = nextFiles.slice(0, IMG_IDB_MAX_COUNT);
+    const totalBytes = slice.reduce((acc, f) => acc + f.size, 0);
+    if (slice.length === 0 || totalBytes > IMG_IDB_MAX_BYTES) return;
+    const payload: CachedImageItem[] = slice.map((f) => ({
+      blob: f,
+      name: f.name,
+      type: f.type || 'image/png',
+      lastModified: f.lastModified || Date.now(),
+    }));
+    setCachedWorkspace(payload);
+    void safeIdb.set(IMG_IDB_NAMESPACE, IMG_IDB_KEY, payload, { ttlMs: IMG_IDB_TTL_MS });
+  };
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -157,6 +199,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     if (append && files.length > 0) {
       const combined = [...files, ...acceptedFiles];
       setFiles(combined);
+      persistFilesToIdb(combined);
       setIsBatchMode(true);
 
       const appendItems: BatchItem[] = acceptedFiles.map((file, idx) => ({
@@ -176,6 +219,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         }
       });
       setFiles(acceptedFiles);
+      persistFilesToIdb(acceptedFiles);
       if (acceptedFiles.length > 1) {
         setIsBatchMode(true);
         const items: BatchItem[] = acceptedFiles.map((file, idx) => ({
@@ -581,6 +625,28 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         </div>
 
         {/* 初始檔案上傳 Dropzone */}
+        {files.length === 0 && cachedWorkspace.length > 0 && (
+          <IdbRestoreBanner
+            title={t.cachedWorkspaceTitle}
+            description={t.cachedWorkspaceDesc(
+              cachedWorkspace.length,
+              formatBytes(cachedWorkspace.reduce((acc, it) => acc + it.blob.size, 0))
+            )}
+            restoreLabel={t.restoreCachedBtn}
+            onRestore={() => {
+              const restoredFiles = cachedWorkspace.map(
+                (it) => new File([it.blob], it.name, { type: it.type, lastModified: it.lastModified })
+              );
+              handleFilesLoad(restoredFiles, false);
+            }}
+            clearLabel={t.clearCachedBtn}
+            onClear={() => {
+              setCachedWorkspace([]);
+              void safeIdb.remove(IMG_IDB_NAMESPACE, IMG_IDB_KEY);
+            }}
+          />
+        )}
+
         {files.length === 0 ? (
           <div
             onDragOver={(e) => e.preventDefault()}

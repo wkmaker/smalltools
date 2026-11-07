@@ -59,6 +59,11 @@ export const TRANSLATIONS = {
     previewModalDesc: '以下顯示此切割檔案包含的前 5 筆活動預覽：',
     startTimeLabel: '開始時間: ',
     noTimeSpecified: '無指定時間',
+    cachedSessionTitle: '偵測到上次尚未清除的日曆暫存',
+    cachedSessionDesc: (name: string, size: string) =>
+      `本機瀏覽器儲存空間保留了「${name}」（${size}），可直接還原分割設定或清除暫存。`,
+    restoreCachedBtn: '還原上次日曆',
+    clearCachedBtn: '清除本地暫存',
     langSwitchLabel: 'English',
     langSwitchHref: '/calendar-split/en/',
 
@@ -145,6 +150,11 @@ export const TRANSLATIONS = {
     previewModalDesc: 'Preview of the first 5 events in this split chunk:',
     startTimeLabel: 'Start Time: ',
     noTimeSpecified: 'No time specified',
+    cachedSessionTitle: 'Previous Calendar Session Found',
+    cachedSessionDesc: (name: string, size: string) =>
+      `Your browser storage contains "${name}" (${size}). You can restore the split workspace or clear the local cache.`,
+    restoreCachedBtn: 'Restore Calendar',
+    clearCachedBtn: 'Clear Local Cache',
     langSwitchLabel: '繁體中文',
     langSwitchHref: '/calendar-split/',
 

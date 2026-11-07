@@ -13,8 +13,24 @@ import { downloadBlob } from '../utils/downloadBlob';
 import { createSimpleZip } from '../image-processor/utils/zipBuilder';
 import { getLocalDateString } from '../utils/dateUtils';
 import { randomToken } from '../utils/randomToken';
+import IdbRestoreBanner from '../components/IdbRestoreBanner';
+import { safeIdb } from '../utils/idb';
 import styles from './pdf-compressor.module.css';
 import { TRANSLATIONS } from './translations';
+
+const PDF_IDB_NAMESPACE = 'pdf-compressor';
+const PDF_IDB_TTL_MS = 24 * 60 * 60 * 1000;
+const PDF_IDB_MAX_ENTRIES = 5;
+const PDF_IDB_MAX_SINGLE_BYTES = 50 * 1024 * 1024;
+
+interface CachedCompressedPdf {
+  id: string;
+  name: string;
+  originalSize: number;
+  compressedSize: number;
+  blob: Blob;
+  savedAt: number;
+}
 
 interface QueueItem {
   id: string;
@@ -52,6 +68,7 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
 
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [cachedPdfs, setCachedPdfs] = useState<CachedCompressedPdf[]>([]);
   const [toast, setToast] = useState<string>('');
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -157,6 +174,12 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
       }
     }
     isMountedRef.current = true;
+    void safeIdb.listNamespace<CachedCompressedPdf>(PDF_IDB_NAMESPACE).then((entries) => {
+      const valid = entries
+        .map((e) => e.value)
+        .filter((v) => v && v.blob instanceof Blob && typeof v.name === 'string');
+      setCachedPdfs(valid);
+    });
   }, [applyModePreset]);
 
   // 上傳 PDF 檔案並自動非同步預檢
@@ -347,6 +370,31 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
               : it
           )
         );
+
+        // 僅在非加密 PDF 且大小合宜時寫入本地 IndexedDB 暫存，保護加密文件隱私
+        if (!item.password && compressedBlob.size <= PDF_IDB_MAX_SINGLE_BYTES) {
+          const cacheItem: CachedCompressedPdf = {
+            id: item.id,
+            name: item.name,
+            originalSize: item.size,
+            compressedSize: compressedBlob.size,
+            blob: compressedBlob,
+            savedAt: Date.now(),
+          };
+          void safeIdb
+            .set(PDF_IDB_NAMESPACE, item.id, cacheItem, {
+              ttlMs: PDF_IDB_TTL_MS,
+              maxEntriesInNamespace: PDF_IDB_MAX_ENTRIES,
+            })
+            .then(() => safeIdb.listNamespace<CachedCompressedPdf>(PDF_IDB_NAMESPACE))
+            .then((entries) => {
+              setCachedPdfs(
+                entries
+                  .map((e) => e.value)
+                  .filter((v) => v && v.blob instanceof Blob && typeof v.name === 'string')
+              );
+            });
+        }
       } catch (err) {
         console.error('壓縮失敗:', err);
         setFileQueue((prev) =>
@@ -494,6 +542,50 @@ export default function PdfCompressorClient({ lang = 'zh-TW' }: PdfCompressorCli
         </div>
 
         {/* 壓縮模式控制面板 */}
+        {fileQueue.length === 0 && cachedPdfs.length > 0 && (
+          <IdbRestoreBanner
+            title={t.cachedPdfsTitle}
+            description={t.cachedPdfsDesc(cachedPdfs.length)}
+            clearLabel={t.clearCachedPdfsBtn}
+            onClear={() => {
+              setCachedPdfs([]);
+              void safeIdb.clearNamespace(PDF_IDB_NAMESPACE);
+            }}
+          >
+            <div className="flex flex-col gap-2">
+              {cachedPdfs.map((cp) => {
+                const ratio =
+                  cp.originalSize > 0
+                    ? Math.max(0, ((cp.originalSize - cp.compressedSize) / cp.originalSize) * 100).toFixed(1)
+                    : '0.0';
+                return (
+                  <div
+                    key={cp.id}
+                    className="flex items-center justify-between gap-3 bg-select-bg border border-border-glass rounded-xl px-3.5 py-2 min-w-0 flex-wrap"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="text-xs font-semibold text-text-main truncate">{cp.name}</span>
+                      <span className="text-xs text-text-sub font-mono shrink-0">
+                        {formatBytes(cp.originalSize)} → {formatBytes(cp.compressedSize)} {t.saved(ratio)}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const baseName = cp.name.replace(/\.pdf$/i, '');
+                        downloadBlob(cp.blob, `${baseName}_compressed.pdf`, 5000);
+                      }}
+                      className={`px-3 py-1 text-xs font-semibold rounded-lg cursor-pointer shrink-0 ${styles.accentBtn}`}
+                    >
+                      {t.downloadPdf}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </IdbRestoreBanner>
+        )}
+
         <div className={`${styles.cardContainer} flex flex-col gap-4`}>
           <div className="flex justify-between items-center flex-wrap gap-4">
             <div className="flex items-center gap-2 flex-wrap">
