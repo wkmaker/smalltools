@@ -44,8 +44,10 @@ export const DEFAULT_AWARD_TIERS: Record<'zh-TW' | 'en', Omit<AwardTier, 'id'>[]
   ],
 };
 
+export type PrizeTemplateKey = 'annual' | 'staff' | 'lucky' | 'punish' | 'dinner';
+
 // 快速模板預設資料 (雙語)
-export const PRIZE_TEMPLATES: Record<string, { 'zh-TW': Omit<PrizeItem, 'id'>[]; en: Omit<PrizeItem, 'id'>[] }> = {
+export const PRIZE_TEMPLATES: Record<PrizeTemplateKey, { 'zh-TW': Omit<PrizeItem, 'id'>[]; en: Omit<PrizeItem, 'id'>[] }> = {
   annual: {
     'zh-TW': [
       { title: '特等獎 - Mac Mini', weight: 1, quantity: 1, drawnCount: 0, color: '#ff0055' },

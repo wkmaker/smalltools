@@ -15,7 +15,7 @@
   - **極簡線上螢幕錄影工具 (`/screen-capture/`)**：錄影封裝完成時自動將影片 `Blob` 寫入 `IndexedDB` 暫存（24 小時 TTL），防止使用者下載前誤關或重整分頁導致錄影遺失；點擊「重新錄製」或「清除本地暫存」時同步釋放。
   - **萬能圖片處理大師 (`/image-processor/`)**：自動暫存單張或批次上傳的原圖 `Blob` 清單（24 小時 TTL，最多 15 張 / 50MB 上限），支援重整後一鍵還原上次編輯圖片。
   - **PDF 壓縮大師 (`/pdf-compressor/`)**：自動保留最近 5 筆「非加密」PDF 壓縮成品 `Blob`（24 小時 TTL，嚴格排除受密碼保護之 PDF 以保障隱私），支援直接重新下載或一鍵清空暫存。
-  - **幸運轉盤抽獎小工具 (`/lucky-wheel/`)**：將本地存檔槽 (`lw_save_slots`) 擴充遷移至 `IndexedDB`（向下相容既有 `localStorage` 資料），存檔槽上限由 12 組提升至 30 組。
+  - **幸運轉盤抽獎小工具 (`/lucky-wheel/`)**：將本地存檔槽 (`lw_save_slots`) 擴充遷移至 `IndexedDB`（向下相容既有 `localStorage` 資料），存檔槽上限由 12 組提升至 30 組；同時修復初次載入讀取不存在之 `PRIZE_TEMPLATES.decision` 並被空 `catch` 靜默吞掉導致預設獎項與存檔槽未初始化之缺陷，並為 `PRIZE_TEMPLATES` 補上嚴格聯集型別 `PrizeTemplateKey`。
   - **資安紅線契約測試 (`tests/engine/idb.test.mjs`)**：新增單元測試與靜態架構契約檢查，強制驗證敏感工具（`password`、`har-cleaner`、`ssl-converter`、`cert-generator`、`checksum-verifier`）維持 100% 純記憶體零 `IndexedDB` 寫入。
 
 ---

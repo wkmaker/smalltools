@@ -11,7 +11,7 @@ import WheelControlsBar from './components/WheelControlsBar';
 import StageView from './components/StageView';
 import styles from './lucky-wheel.module.css';
 import type { PrizeItem, AwardTier, HistoryRecord, SpinSpeed, SaveSlot } from './types';
-import { PRESET_COLORS, PRIZE_TEMPLATES, DEFAULT_AWARD_TIERS, SPIN_SPEED_MS } from './constants';
+import { PRESET_COLORS, PRIZE_TEMPLATES, DEFAULT_AWARD_TIERS, SPIN_SPEED_MS, type PrizeTemplateKey } from './constants';
 import {
   calculateSectors as calculateSectorsEngine,
   computeTargetSpinAngle,
@@ -150,7 +150,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         }
       }
 
-      const defaultTemplate = PRIZE_TEMPLATES.decision[lang] || PRIZE_TEMPLATES.decision['zh-TW'];
+      const defaultTemplate = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
       const cachedPrizes = localStorage.getItem('lw_prizes');
       if (cachedPrizes) {
         const parsed = JSON.parse(cachedPrizes);
@@ -212,13 +212,13 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
             if (Array.isArray(parsed) && parsed.length > 0) {
               void safeIdb.set(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY, parsed);
             }
-          } catch {
-            // ignore
+          } catch (err) {
+            console.warn('[lucky-wheel] 遷移存檔槽至 IndexedDB 失敗', err);
           }
         }
       });
-    } catch {
-      // 容錯防禦
+    } catch (err) {
+      console.warn('[lucky-wheel] 初始化讀取本地狀態失敗', err);
     }
   }, [lang]);
 
@@ -722,8 +722,9 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
 
   // 載入快速模板
   const loadTemplate = (templateKey: string) => {
-    if (PRIZE_TEMPLATES[templateKey]) {
-      const templateData = PRIZE_TEMPLATES[templateKey][lang] || PRIZE_TEMPLATES[templateKey]['zh-TW'];
+    if (templateKey in PRIZE_TEMPLATES) {
+      const validKey = templateKey as PrizeTemplateKey;
+      const templateData = PRIZE_TEMPLATES[validKey][lang] || PRIZE_TEMPLATES[validKey]['zh-TW'];
       const newItems = templateData.map((p) => ({ ...p, id: generateId() }));
       setPrizes(newItems);
       setEnableAwardMode(false);
