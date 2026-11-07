@@ -59,6 +59,10 @@ export const TRANSLATIONS = {
     invalidPasswordMsg: '密碼不正確，請確認後重新輸入。',
     showPassword: '顯示密碼',
     hidePassword: '隱藏密碼',
+    cachedPdfsTitle: '最近壓縮完成的本地暫存檔案',
+    cachedPdfsDesc: (count: number) =>
+      `本機瀏覽器儲存空間保留了最近 ${count} 筆壓縮結果（未加密檔案），可直接下載或一鍵清除暫存。`,
+    clearCachedPdfsBtn: '清除本地暫存',
     switchLangText: 'English',
     switchLangHref: '/pdf-compressor/en/',
     faqTitle: '常見問題與專業指南',
@@ -163,6 +167,10 @@ export const TRANSLATIONS = {
     invalidPasswordMsg: 'Incorrect password. Please try again.',
     showPassword: 'Show Password',
     hidePassword: 'Hide Password',
+    cachedPdfsTitle: 'Recently Compressed PDFs in Local Cache',
+    cachedPdfsDesc: (count: number) =>
+      `Your browser storage retains your last ${count} non-encrypted compressed PDF(s). You can download them directly or clear the cache.`,
+    clearCachedPdfsBtn: 'Clear Local Cache',
     switchLangText: '繁體中文',
     switchLangHref: '/pdf-compressor/',
     faqTitle: 'Frequently Asked Questions & Guide (FAQ)',

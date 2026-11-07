@@ -11,7 +11,7 @@ import WheelControlsBar from './components/WheelControlsBar';
 import StageView from './components/StageView';
 import styles from './lucky-wheel.module.css';
 import type { PrizeItem, AwardTier, HistoryRecord, SpinSpeed, SaveSlot } from './types';
-import { PRESET_COLORS, PRIZE_TEMPLATES, DEFAULT_AWARD_TIERS, SPIN_SPEED_MS } from './constants';
+import { PRESET_COLORS, PRIZE_TEMPLATES, DEFAULT_AWARD_TIERS, SPIN_SPEED_MS, type PrizeTemplateKey } from './constants';
 import {
   calculateSectors as calculateSectorsEngine,
   computeTargetSpinAngle,
@@ -29,7 +29,11 @@ import { renderWheelOnCanvas, triggerConfettiAnimation, stopConfettiAnimation } 
 import { useWheelAudio } from './hooks/useWheelAudio';
 import { downloadBlob } from '../utils/downloadBlob';
 import { getLocalDateString } from '../utils/dateUtils';
+import { safeIdb } from '../utils/idb';
 import { TRANSLATIONS } from './translations';
+
+const LW_IDB_NAMESPACE = 'lucky-wheel';
+const LW_SLOTS_IDB_KEY = 'save_slots_v1';
 
 interface LuckyWheelClientProps {
   lang?: 'zh-TW' | 'en';
@@ -146,7 +150,7 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         }
       }
 
-      const defaultTemplate = PRIZE_TEMPLATES.decision[lang] || PRIZE_TEMPLATES.decision['zh-TW'];
+      const defaultTemplate = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
       const cachedPrizes = localStorage.getItem('lw_prizes');
       if (cachedPrizes) {
         const parsed = JSON.parse(cachedPrizes);
@@ -199,8 +203,22 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
         const parsed = JSON.parse(cachedSlots);
         if (Array.isArray(parsed)) setSaveSlots(parsed);
       }
-    } catch {
-      // 容錯防禦
+      void safeIdb.get<SaveSlot[]>(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY).then((idbSlots) => {
+        if (Array.isArray(idbSlots) && idbSlots.length > 0) {
+          setSaveSlots(idbSlots);
+        } else if (cachedSlots) {
+          try {
+            const parsed = JSON.parse(cachedSlots);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              void safeIdb.set(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY, parsed);
+            }
+          } catch (err) {
+            console.warn('[lucky-wheel] 遷移存檔槽至 IndexedDB 失敗', err);
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('[lucky-wheel] 初始化讀取本地狀態失敗', err);
     }
   }, [lang]);
 
@@ -704,8 +722,9 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
 
   // 載入快速模板
   const loadTemplate = (templateKey: string) => {
-    if (PRIZE_TEMPLATES[templateKey]) {
-      const templateData = PRIZE_TEMPLATES[templateKey][lang] || PRIZE_TEMPLATES[templateKey]['zh-TW'];
+    if (templateKey in PRIZE_TEMPLATES) {
+      const validKey = templateKey as PrizeTemplateKey;
+      const templateData = PRIZE_TEMPLATES[validKey][lang] || PRIZE_TEMPLATES[validKey]['zh-TW'];
       const newItems = templateData.map((p) => ({ ...p, id: generateId() }));
       setPrizes(newItems);
       setEnableAwardMode(false);
@@ -824,10 +843,11 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
       enableAwardMode,
       awardTiers,
     };
-    const nextSlots = [newSlot, ...saveSlots].slice(0, 12);
+    const nextSlots = [newSlot, ...saveSlots].slice(0, 30);
     setSaveSlots(nextSlots);
+    void safeIdb.set(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY, nextSlots);
     try {
-      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots));
+      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots.slice(0, 12)));
     } catch {
       // ignore
     }
@@ -849,8 +869,9 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
   const handleDeleteSlot = (slotId: string) => {
     const nextSlots = saveSlots.filter((s) => s.id !== slotId);
     setSaveSlots(nextSlots);
+    void safeIdb.set(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY, nextSlots);
     try {
-      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots));
+      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots.slice(0, 12)));
     } catch {
       // ignore
     }

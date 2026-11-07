@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useCallback, useRef, useMemo, useTransition } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, useTransition } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import IdbRestoreBanner from '../components/IdbRestoreBanner';
+import { safeIdb } from '../utils/idb';
 import {
   parseIcsFast,
   planIcsSplit,
@@ -16,6 +18,18 @@ import styles from './calendar-split.module.css';
 import { formatBytes } from '../utils/formatBytes';
 import { downloadBlob } from '../utils/downloadBlob';
 import { TRANSLATIONS } from './translations';
+
+const CAL_IDB_NAMESPACE = 'calendar-split';
+const CAL_IDB_KEY = 'last_ics_v1';
+const CAL_IDB_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+const CAL_IDB_MAX_BYTES = 35 * 1024 * 1024;
+
+interface CachedCalendarSession {
+  rawText: string;
+  filename: string;
+  fileSize: number;
+  filenamePrefix: string;
+}
 
 interface CalendarSplitClientProps {
   lang?: 'zh-TW' | 'en';
@@ -43,6 +57,18 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
 
   // 預覽彈窗
   const [previewModalChunk, setPreviewModalChunk] = useState<SplitChunkMeta | null>(null);
+  const [cachedSession, setCachedSession] = useState<CachedCalendarSession | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void safeIdb.get<CachedCalendarSession>(CAL_IDB_NAMESPACE, CAL_IDB_KEY).then((saved) => {
+      if (!active || !saved || typeof saved.rawText !== 'string' || !saved.filename) return;
+      setCachedSession(saved);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // 處理檔案載入 (非同步解耦，保證 UI 60fps 流暢度)
   const handleProcessFile = useCallback(
@@ -81,6 +107,18 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
               startTransition(() => {
                 setParsedData(parsed);
               });
+              if (file.size <= CAL_IDB_MAX_BYTES) {
+                const payload: CachedCalendarSession = {
+                  rawText: text,
+                  filename: file.name,
+                  fileSize: file.size,
+                  filenamePrefix: defaultPrefix,
+                };
+                setCachedSession(payload);
+                void safeIdb.set(CAL_IDB_NAMESPACE, CAL_IDB_KEY, payload, {
+                  ttlMs: CAL_IDB_TTL_MS,
+                });
+              }
             }
           } catch (err) {
             console.error('[CalendarSplit] Failed to parse ICS:', err);
@@ -200,6 +238,35 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
     }
   };
 
+  const handleRestoreCached = () => {
+    if (!cachedSession) return;
+    setIsParsing(true);
+    setErrorMessage('');
+    setRawFilename(cachedSession.filename);
+    setRawFileSize(cachedSession.fileSize);
+    setFilenamePrefix(cachedSession.filenamePrefix || 'calendar');
+    setTimeout(() => {
+      try {
+        const parsed = parseIcsFast(cachedSession.rawText);
+        if (parsed.events.length > 0) {
+          startTransition(() => {
+            setParsedData(parsed);
+          });
+        }
+      } catch (err) {
+        console.error('[CalendarSplit] Failed to restore cached ICS:', err);
+        setErrorMessage(t.parseError);
+      } finally {
+        setIsParsing(false);
+      }
+    }, 16);
+  };
+
+  const handleClearCached = () => {
+    setCachedSession(null);
+    void safeIdb.remove(CAL_IDB_NAMESPACE, CAL_IDB_KEY);
+  };
+
   return (
     <ToolLayout
       title={t.title}
@@ -209,6 +276,17 @@ export default function CalendarSplitClient({ lang = 'zh-TW' }: CalendarSplitCli
       accentGlow="rgba(6, 182, 212, 0.4)"
     >
       <div className={styles.container}>
+        {!parsedData && cachedSession && (
+          <IdbRestoreBanner
+            title={t.cachedSessionTitle}
+            description={t.cachedSessionDesc(cachedSession.filename, formatBytes(cachedSession.fileSize))}
+            restoreLabel={t.restoreCachedBtn}
+            onRestore={handleRestoreCached}
+            clearLabel={t.clearCachedBtn}
+            onClear={handleClearCached}
+          />
+        )}
+
         {/* 上傳區域 */}
         {!parsedData && (
           <div

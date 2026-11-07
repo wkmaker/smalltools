@@ -104,8 +104,12 @@ description: Smalltools 專案專屬的 Tailwind v4 Cascade Layer 避坑、行�
 * **嚴禁僅用 `!isNaN(Number(val))` 判定 URL 數字參數**：在 JavaScript 中 `Number('Infinity') === Infinity` 且 `!isNaN(Infinity)` 為真！若未過濾，將導致還款展開迴圈 `for (let k = 0; k < totalMonths; k++)` 條件永遠成立，主執行緒永久凍結崩潰。
 * 數值轉換一律強制使用 `Number.isFinite(n)`，並配合業務邏輯加上合理的物理上限（例如房貸 70 年 / 840 期、車貸 30 年 / 360 期），保留因應條文調整之彈性，同時根除極值死迴圈。
 
-### 5. Web Storage 安全存取與反序列化 Array.isArray 守衛 (Safe Storage Pattern)
-* **全站 Storage 安全存取**：在 Safari 隱私模式或受限 WebView 中，調用 `sessionStorage.setItem` / `localStorage` 會直接拋出 `SecurityError`。全站應使用 `app/utils/storage.ts` 封裝的 `safeLocalStorage` 與 `safeSessionStorage`，避免點擊返回等操作中斷報錯。
+### 5. Web Storage 與 IndexedDB 安全分級存取 (Safe Storage & IndexedDB Pattern)
+* **全站輕量 Storage 安全存取**：在 Safari 隱私模式或受限 WebView 中，調用 `sessionStorage.setItem` / `localStorage` 會直接拋出 `SecurityError`。全站輕量設定（主題、首頁釘選、計時器小量狀態）應使用 `app/utils/storage.ts` 封裝的 `safeLocalStorage` 與 `safeSessionStorage`，避免點擊返回等操作中斷報錯。
+* **大容量二進位 (`Blob`/`File`) 與大型文本草稿一律走 `safeIdb` (`app/utils/idb.ts`)**：
+  - 媒體檔案（螢幕錄影、圖片處理、PDF 壓縮成品）與萬行文本草稿（Diff 比對、`.ics` 日曆分割）嚴禁塞入 `localStorage`（5MB 限制且同步 `JSON.stringify` 會阻塞主執行緒），一律使用 `app/utils/idb.ts` 的 `safeIdb` 非同步寫入，並配置合理的 `ttlMs` 與 `maxEntriesInNamespace`。
+  - 搭配 `app/components/IdbRestoreBanner.tsx` 在 UI 明確提供「還原上次工作階段」與「清除本地暫存」按鈕。
+  - **資安零持久化紅線**：`password`、`har-cleaner`、`ssl-converter`、`cert-generator`、`checksum-verifier` 等涉及私密金鑰、密碼或敏感封包的工具（含受密碼保護的 PDF），嚴禁寫入 `localStorage` 或 `IndexedDB`（由 `tests/engine/idb.test.mjs` 自動化把關）。
 * **反序列化型別守衛**：從 Storage 取得資料並以 `JSON.parse()` 還原後，**必須先以 `Array.isArray(parsed)` 進行型別校驗**，防止使用者端快取損毀或被寫入非陣列物件時，在渲染層執行 `.map()` / `.filter()` 引發未捕獲之 TypeError 導致整頁白畫面。
 
 ---

@@ -62,6 +62,11 @@ export const TRANSLATIONS = {
     srQuality: '壓縮品質滑塊',
     srScale: '縮放百分比滑塊',
     srComp: '左右比對位置滑塊',
+    cachedWorkspaceTitle: '偵測到上次尚未清除的圖片暫存',
+    cachedWorkspaceDesc: (count: number, size: string) =>
+      `本機瀏覽器儲存空間保留了上次編輯的 ${count} 張圖片（共 ${size}），可直接還原工作階段或清除暫存。`,
+    restoreCachedBtn: '還原上次圖片',
+    clearCachedBtn: '清除本地暫存',
 
     // FAQ
     faqTitle: '常見問題與專業指南',
@@ -157,6 +162,11 @@ export const TRANSLATIONS = {
     srQuality: 'Compression Quality Slider',
     srScale: 'Scale Percentage Slider',
     srComp: 'Comparison Slider Position',
+    cachedWorkspaceTitle: 'Previous Image Session Found in Local Cache',
+    cachedWorkspaceDesc: (count: number, size: string) =>
+      `Your browser storage contains ${count} image(s) (${size} total) from your last session. You can restore them or clear the local cache.`,
+    restoreCachedBtn: 'Restore Images',
+    clearCachedBtn: 'Clear Local Cache',
 
     // FAQ
     faqTitle: 'Frequently Asked Questions (FAQ)',

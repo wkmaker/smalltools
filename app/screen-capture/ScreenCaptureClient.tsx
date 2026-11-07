@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import IdbRestoreBanner from '../components/IdbRestoreBanner';
 import { formatBytes } from '../utils/formatBytes';
 import { downloadBlob } from '../utils/downloadBlob';
 import styles from './screen-capture.module.css';
@@ -111,11 +112,14 @@ export default function ScreenCaptureClient({ lang = 'zh-TW' }: Props) {
     countdown,
     elapsedMs,
     result,
+    cachedRecording,
     start,
     pause,
     resume,
     stop,
     discard,
+    restoreCachedRecording,
+    clearCachedRecording,
   } = useScreenRecorder(handleNotice);
 
   const { status: prv5Status, send: sendToPrv5, focusPrv5 } = usePrv5Sender(result?.file ?? null);
@@ -209,6 +213,21 @@ export default function ScreenCaptureClient({ lang = 'zh-TW' }: Props) {
               <span className={styles.timerValue}>{formatDuration(elapsedMs)}</span>
             </div>
           </div>
+
+          {phase === 'idle' && cachedRecording && (
+            <IdbRestoreBanner
+              title={t.cachedRecordingTitle}
+              description={t.cachedRecordingDesc(
+                cachedRecording.fileName,
+                formatDuration(cachedRecording.durationMs),
+                formatBytes(cachedRecording.blob.size)
+              )}
+              restoreLabel={t.restoreRecordingBtn}
+              onRestore={restoreCachedRecording}
+              clearLabel={t.clearRecordingCacheBtn}
+              onClear={clearCachedRecording}
+            />
+          )}
 
           {/* 主要控制區塊 */}
           {phase === 'done' && result ? (

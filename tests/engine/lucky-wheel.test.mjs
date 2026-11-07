@@ -15,6 +15,7 @@ import {
   formatHistoryCsv,
 } from '../../app/lucky-wheel/engine.ts';
 import { TRANSLATIONS } from '../../app/lucky-wheel/translations.ts';
+import { PRIZE_TEMPLATES } from '../../app/lucky-wheel/constants.ts';
 
 test('calculateSectors：依權重比例分配扇區角度，總和為 360 度', () => {
   const { sectors, totalWeight } = calculateSectors([
@@ -174,4 +175,13 @@ test('getContrastYIQ：淺色背景配深色文字，深色背景配白色文字
   assert.equal(getContrastYIQ('#ffffff'), '#0f172a');
   assert.equal(getContrastYIQ('#000000'), '#ffffff');
   assert.equal(getContrastYIQ('#f59e0b'), '#0f172a');
+});
+
+test('PRIZE_TEMPLATES：預設模板 (annual, staff, lucky, punish, dinner) 皆完整具備 zh-TW 與 en 非空陣列', () => {
+  const requiredKeys = ['annual', 'staff', 'lucky', 'punish', 'dinner'];
+  for (const key of requiredKeys) {
+    assert.ok(PRIZE_TEMPLATES[key], `應存在 PRIZE_TEMPLATES.${key}`);
+    assert.ok(Array.isArray(PRIZE_TEMPLATES[key]['zh-TW']) && PRIZE_TEMPLATES[key]['zh-TW'].length > 0);
+    assert.ok(Array.isArray(PRIZE_TEMPLATES[key].en) && PRIZE_TEMPLATES[key].en.length > 0);
+  }
 });

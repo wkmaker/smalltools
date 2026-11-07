@@ -4,12 +4,24 @@ import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, use
 import * as Diff from 'diff';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import IdbRestoreBanner from '../components/IdbRestoreBanner';
+import { safeIdb } from '../utils/idb';
 import styles from './diff-checker.module.css';
 import { TRANSLATIONS } from './translations';
 
 // 合計字元數在此門檻內即時比對，超過則防抖延遲
 const DIFF_INSTANT_MAX_CHARS = 20_000;
 const DIFF_DEBOUNCE_MS = 400;
+const DIFF_IDB_NAMESPACE = 'diff-checker';
+const DIFF_IDB_KEY = 'draft_v1';
+const DIFF_IDB_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+interface DiffDraftPayload {
+  originalText: string;
+  modifiedText: string;
+  viewMode: 'split' | 'unified';
+  ignoreCase: boolean;
+}
 
 // Split 視窗單列型態
 interface SplitRow {
@@ -47,6 +59,9 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
   const [ignoreCase, setIgnoreCase] = useState<boolean>(false);
   const [isEditorVisible, setIsEditorVisible] = useState<boolean>(true);
+  const [hasSavedDraft, setHasSavedDraft] = useState<boolean>(false);
+  const isDraftHydratedRef = useRef<boolean>(false);
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- 比對計算結果 ---
   const [splitRows, setSplitRows] = useState<SplitRow[]>([]);
@@ -85,12 +100,71 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
     el.style.height = `${Math.max(100, el.scrollHeight)}px`;
   }, []);
 
-  // 初始化主題顏色
+  // 初始化主題顏色與讀取 IndexedDB 草稿
   useEffect(() => {
+    let active = true;
+    void safeIdb.get<DiffDraftPayload>(DIFF_IDB_NAMESPACE, DIFF_IDB_KEY).then((draft) => {
+      if (!active) return;
+      if (
+        draft &&
+        typeof draft === 'object' &&
+        typeof draft.originalText === 'string' &&
+        typeof draft.modifiedText === 'string' &&
+        (draft.originalText.length > 0 || draft.modifiedText.length > 0) &&
+        (draft.originalText !== t.defaultOriginal || draft.modifiedText !== t.defaultModified)
+      ) {
+        setOriginalText(draft.originalText);
+        setModifiedText(draft.modifiedText);
+        if (draft.viewMode === 'split' || draft.viewMode === 'unified') {
+          setViewMode(draft.viewMode);
+        }
+        if (typeof draft.ignoreCase === 'boolean') {
+          setIgnoreCase(draft.ignoreCase);
+        }
+        setHasSavedDraft(true);
+      }
+      isDraftHydratedRef.current = true;
+    });
+
     return () => {
+      active = false;
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
     };
-  }, []);
+  }, [t.defaultModified, t.defaultOriginal]);
+
+  // 非同步防抖自動保存比對草稿至 IndexedDB（不阻塞主執行緒打字）
+  useEffect(() => {
+    if (!isDraftHydratedRef.current) return;
+    if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+
+    draftSaveTimerRef.current = setTimeout(() => {
+      const isEmpty = originalText.length === 0 && modifiedText.length === 0;
+      const isDefaultSample =
+        originalText === t.defaultOriginal && modifiedText === t.defaultModified;
+
+      if (isEmpty || isDefaultSample) {
+        void safeIdb.remove(DIFF_IDB_NAMESPACE, DIFF_IDB_KEY);
+        setHasSavedDraft(false);
+        return;
+      }
+
+      void safeIdb
+        .set<DiffDraftPayload>(
+          DIFF_IDB_NAMESPACE,
+          DIFF_IDB_KEY,
+          { originalText, modifiedText, viewMode, ignoreCase },
+          { ttlMs: DIFF_IDB_TTL_MS }
+        )
+        .then((ok) => {
+          if (ok) setHasSavedDraft(true);
+        });
+    }, 600);
+
+    return () => {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    };
+  }, [originalText, modifiedText, viewMode, ignoreCase, t.defaultOriginal, t.defaultModified]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--theme-color', '#8b5cf6');
@@ -358,7 +432,17 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
   const clearAll = () => {
     setOriginalText('');
     setModifiedText('');
+    setHasSavedDraft(false);
+    void safeIdb.remove(DIFF_IDB_NAMESPACE, DIFF_IDB_KEY);
     showToast(t.clearToast);
+  };
+
+  const resetSampleAndClearDraft = () => {
+    setOriginalText(t.defaultOriginal);
+    setModifiedText(t.defaultModified);
+    setHasSavedDraft(false);
+    void safeIdb.remove(DIFF_IDB_NAMESPACE, DIFF_IDB_KEY);
+    showToast(t.resetDraftToast);
   };
 
   const toggleEditorVisibility = () => {
@@ -439,6 +523,14 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
       accentGlow="rgba(139, 92, 246, 0.6)"
     >
       <div className="flex flex-col gap-6 text-left w-full px-4 max-sm:px-0">
+        {hasSavedDraft && (
+          <IdbRestoreBanner
+            title={t.draftRestoredTitle}
+            description={t.draftRestoredDesc}
+            clearLabel={t.resetDraftBtn}
+            onClear={resetSampleAndClearDraft}
+          />
+        )}
 
         {/* 控制設定列 */}
         <div className={styles.panelCard}>

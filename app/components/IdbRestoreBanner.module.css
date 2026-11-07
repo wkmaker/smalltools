@@ -1,0 +1,97 @@
+.bannerCard {
+  background: var(--card-bg, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-left: 4px solid var(--theme-color, #38bdf8);
+  border-radius: 14px;
+  padding: 14px 18px;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+:global([data-theme='light']) .bannerCard {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.12);
+  border-left-color: var(--theme-color, #0284c7);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.iconBadge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  color: var(--text-primary);
+}
+
+:global([data-theme='light']) .iconBadge {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+}
+
+.restoreBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--theme-color, #38bdf8);
+  color: #090d16;
+  border: none;
+}
+
+.restoreBtn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+:global([data-theme='light']) .restoreBtn {
+  color: #ffffff;
+  background: #0f172a;
+}
+
+.clearBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+}
+
+.clearBtn:hover {
+  color: var(--text-primary);
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+:global([data-theme='light']) .clearBtn {
+  background: #f8fafc;
+  color: #475569;
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+:global([data-theme='light']) .clearBtn:hover {
+  color: #b91c1c;
+  border-color: rgba(185, 28, 28, 0.4);
+  background: rgba(254, 226, 226, 0.6);
+}
