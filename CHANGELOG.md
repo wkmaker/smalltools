@@ -4,6 +4,29 @@
 
 ## [Unreleased]
 
+## [1.29.2] - 2026-11-08
+
+### Security
+- **高危相依性漏洞修補（`npm audit` High Severity 清零）**：
+  - `node-forge`: `^1.4.0` → `^1.4.3`（修補 CVE-2026-33891 / GHSA-h6cr-wjv9-3cpp `BigInteger.modInverse` 無窮迴圈 DoS、GHSA-86w9-cpqp-85rv RSA PKCS#1 v1.5 簽章驗證、GHSA-jc66-7q78-782g PKCS#12 MAC 偽造與 PEM 解碼 ReDoS 等高危漏洞）
+  - `zod`（間接依賴）: 升級至 `>=4.6.6`（修補 GHSA-mrhx-c7xc-m3w5 超大受限集合驗證之記憶體耗盡高危漏洞）
+
+### Changed
+- **專案依賴套件全面升級與跨大版遷移**：
+  - `next`: `^16.4.2` → `^16.4.5`
+  - `eslint-config-next`: `^16.4.2` → `^16.4.5`
+  - `eslint`: `^9.39.5` → `^10.14.0`
+  - `@peculiar/x509`: `^2.2.0` → `^3.1.0`
+  - `pdfjs-dist`: `^6.4.299` → `^6.5.438`
+  - `tailwindcss` & `@tailwindcss/postcss`: `^4.3.3` → `^4.3.5`
+  - `hash-wasm`: `^4.12.0` → `^4.13.0`
+  - `js-yaml`: `^4.3.2` → `^5.5.0`（同步將 `tests/engine/cloudfront-infra.test.mjs` 的 CloudFormation 短標記解析遷移至 v5 ESM 具名匯入與 `CORE_SCHEMA.withTags` + `defineScalarTag` / `defineSequenceTag` / `defineMappingTag` API）
+  - `@types/node`: `^24.19.2` → `^26.6.6`
+  - 移除已由 `diff@^9.0.0` 內建型別取代之冗餘過渡套件 `@types/diff`
+  - **套件生態相容性紀錄**：`typescript` 維持 `^6.0.3`（實測 `typescript@7.0.2` 時，`eslint-config-next` 所依賴之 `typescript-eslint` 因尚未支援 TS 7.0 原生編譯器 API 而拋出 `Error: typescript-eslint does not support TS 7.0` 阻斷 `npm run lint`）。
+
+---
+
 ## [1.29.1] - 2026-11-01
 
 ### Fixed
