@@ -1,19 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 /**
  * infra/site.yml 與 infra/bootstrap.yml 的結構契約。CloudFormation 短標記（!Sub、!Ref…）只保留原值供比對。
  * 同帳號放多個網站：部署與執行角色對 CloudFront 發佈、ACM 憑證的寫入權限必須以 site-stack 標籤限制在本站。
  */
 const CFN_TAGS = ['Sub', 'Ref', 'GetAtt', 'If', 'Equals', 'Not', 'And', 'Condition', 'Select', 'Split'];
-const schema = yaml.DEFAULT_SCHEMA.extend(
-  CFN_TAGS.flatMap((name) =>
-    ['scalar', 'sequence', 'mapping'].map(
-      (kind) => new yaml.Type(`!${name}`, { kind, construct: (value) => ({ [name]: value }) }),
-    ),
-  ),
+const schema = yaml.CORE_SCHEMA.withTags(
+  CFN_TAGS.flatMap((name) => [
+    yaml.defineScalarTag(`!${name}`, { resolve: (value) => ({ [name]: value }) }),
+    yaml.defineSequenceTag(`!${name}`, { ...yaml.seqTag, finalize: (value) => ({ [name]: value }) }),
+    yaml.defineMappingTag(`!${name}`, { ...yaml.mapTag, finalize: (value) => ({ [name]: value }) }),
+  ]),
 );
 
 const load = (file) => yaml.load(fs.readFileSync(new URL(`../../infra/${file}`, import.meta.url), 'utf8'), { schema });
