@@ -4,10 +4,21 @@
 
 ## [Unreleased]
 
+## [1.33.0] - 2026-11-25
+
+### Added
+- **全新上線：台灣身分證產生器與驗證器 (`/taiwan-id-generator/`、`/taiwan-id-generator/en/`)**：
+  - 支援「國民身分證（1/2）」、「新式外來人口統一證號（8/9，2021 年起）」與「舊式外來人口統一證號（A–D）」三種格式產生與即時驗證。
+  - 支援多選 26 縣市代碼（含「六都」一鍵快選與可選納入 L/R/S/Y 已停發舊縣市代碼）與性別篩選、批次產生（1/5/10/20/50 筆）、一鍵複製與 TXT / CSV / JSON 匯出。
+  - 內建 11 碼加權檢查碼逐步驗算明細、可折疊 26 縣市代碼對照表、完整繁英雙語 FAQ 與 JSON-LD 結構化資料；100% 瀏覽器端 CSPRNG 運算、零持久化儲存。
+  - 新增純函式核心引擎 (`app/taiwan-id-generator/engine.ts`) 與單元測試 (`tests/engine/taiwan-id-generator.test.mjs`)。
+
 ### Changed
 - **更新 `README.md` 與新增英文版 `README.en.md` 雙語文件**：
-  - 於 `README.md` 與 `README.en.md` 頂部加入 GitHub 雙語切換列，英文版完整收錄全站 39 項工具介紹並對應 `/en/` 路由。
-  - 同步 `README.md` 工具總數（39 項）、自動化測試與 PR CI 指令（`test:i18n`、`test:og`、`test:engine`、`audit:aria`、`tsc --noEmit`）、技術棧與頁尾版本資訊（`v1.32.0`）。
+  - 於 `README.md` 與 `README.en.md` 頂部加入 GitHub 雙語切換列，英文版完整收錄全站 40 項工具介紹並對應 `/en/` 路由。
+  - 同步 `README.md` 工具總數（40 項）、自動化測試與 PR CI 指令（`test:i18n`、`test:og`、`test:engine`、`audit:aria`、`tsc --noEmit`）、技術棧與頁尾版本資訊（`v1.33.0`）。
+
+---
 
 ## [1.32.0] - 2026-11-25
 

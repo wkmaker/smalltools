@@ -22,7 +22,7 @@
 * 🔒 **零隱私疑慮 (Client-side Privacy First)**：所有運算（含 PDF 壓縮、圖片轉檔處理、密碼產生、憑證轉換與金融計算）100% 於使用者瀏覽器端本地完成，檔案與敏感數據絕不上傳至任何伺服器。
 * ⚡ **靜態超速載入與非阻塞運算 (SSG & Non-Blocking Yielding)**：使用 Next.js App Router `output: 'export'` 靜態導出，結合 AWS S3 + CloudFront CDN 全球加速；高負載運算採用非同步時間片釋放與防抖技術，確保介面 60fps 滑順不卡死。
 * 🔗 **網址參數雙向同步 (URL State Sync)**：輸入資料即時無感同步至 URL Query 參數，方便複製網址隨時分享、備份計算結果或加入書籤。
-* ⚡ **全域快捷搜尋彈窗 (Command Palette `Cmd + K` / `Ctrl + K`)**：支援在全站任何頁面隨時喚出 Spotlight 搜尋面板，即時模糊搜尋 39+ 小工具與分類，並支援切換主題、雙語切換等快捷指令。
+* ⚡ **全域快捷搜尋彈窗 (Command Palette `Cmd + K` / `Ctrl + K`)**：支援在全站任何頁面隨時喚出 Spotlight 搜尋面板，即時模糊搜尋 40+ 小工具與分類，並支援切換主題、雙語切換等快捷指令。
 * ⭐ **我的常用工具與最近使用工作台 (Favorites & Recent Tools)**：首頁支援一鍵釘選常用小工具與自動記錄最近使用歷程，資料 100% 留存於使用者瀏覽器本地 `localStorage`，兼顧便利與隱私。
 * 💾 **智慧分級本地儲存與防重整復原 (`IndexedDB` & Zero-Persistence Security)**：針對螢幕錄影、圖片處理、PDF 壓縮、日曆分割與大型文本比對，透過非同步 `IndexedDB` 自動暫存二進位 `Blob` 與草稿，重整分頁不遺失心血並可隨時一鍵清除；同時對密碼產生、HAR 封包脫敏、SSL 憑證轉換等敏感工具嚴格執行「純記憶體零寫入」紅線。
 * 🧭 **階層式麵包屑、相關工具內鏈與 Schema.org (Breadcrumb, Related Tools & Structured Data)**：全站工具頁配置流暢毛玻璃麵包屑（`首頁 > 分類 > 工具名稱`）與底部同分類相關工具推薦，並自動注入 `BreadcrumbList`、`WebApplication`、`FAQPage` JSON-LD 結構化資料，提升搜尋結果呈現品質。
@@ -59,6 +59,7 @@
 * **[Epoch 時間戳記轉換](https://tools.cjkuo.net/epoch/)** (`/epoch`) - 支援秒與毫秒自動判定，即時在台北時間、UTC、美西時區之間雙向轉換。
 * **[CA / 伺服器憑證產生器](https://tools.cjkuo.net/cert-generator/)** (`/cert-generator`) - 純前端自簽憑證產生工具，支援純自簽或 CA + 伺服器兩種模式、RSA/ECDSA/Ed25519 金鑰演算法與 PEM/DER/PKCS#12 輸出格式，適合本地開發與內部測試 HTTPS 環境。
 * **[檔案雜湊計算與校驗工具](https://tools.cjkuo.net/checksum-verifier/)** (`/checksum-verifier`) - 拖曳檔案計算 MD5/SHA-1/SHA-256/SHA-512/CRC32，可直接丟入官方校驗清單檔案（sha256sum、CHECKSUMS、.sfv 等）自動比對是否相符，100% 本機運算。
+* **[台灣身分證產生器](https://tools.cjkuo.net/taiwan-id-generator/)** (`/taiwan-id-generator`) - 純前端台灣國民身分證與新／舊式居留證統一證號產生及驗證工具，支援 26 縣市與性別篩選、批次匯出 TXT/CSV/JSON 與加權檢查碼逐步拆解，專為軟體開發與測試打造。
 
 ### 🌐 網路維運 (Network Utilities)
 * **[DIG 網路診斷工具](https://tools.cjkuo.net/dns-dig/)** (`/dns-dig`) - 支援 Cloudflare / Google 加密 DoH 切換、即時發送 DIG 請求查詢 A, CNAME, MX, TXT 等記錄。
@@ -241,5 +242,5 @@ CloudFront 的同一個網域不能同時掛在兩個發佈上，跨帳號搬移
 ---
 
 <p align="center">
-  <sub>Smalltools Current Version: <b>v1.32.0</b> (Updated: 2026-11-25)</sub>
+  <sub>Smalltools Current Version: <b>v1.33.0</b> (Updated: 2026-11-25)</sub>
 </p>
