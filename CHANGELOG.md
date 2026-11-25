@@ -4,6 +4,23 @@
 
 ## [Unreleased]
 
+## [1.34.0] - 2026-11-25
+
+### Added
+- **全新上線：測試信用卡號產生器與 Luhn 驗證器 (`/credit-card-generator/`、`/credit-card-generator/en/`)**：
+  - 支援 Visa、Mastercard、JCB、American Express（15 碼）、UnionPay 銀聯與 Discover 六大發卡組織多選、自訂 BIN 前綴、批次產生（1/5/10/20/50 筆）、可選空格分段與模擬效期／安全碼，並支援 TXT / CSV / JSON 匯出。
+  - 內建 Luhn（Mod 10）演算法逐步驗算明細、多筆卡號即時驗證與發卡組織辨識、常見金流商官方沙盒測試卡速查（Stripe 公開測試卡）、雙語 FAQ 與 Open Graph 封面圖。
+  - 頁面橫幅、結果卡片與 FAQ 明確標示所有號碼皆為瀏覽器端隨機演算之測試資料、並非實際可用的信用卡，且零網路傳輸與零持久化儲存。
+  - 新增純函式核心引擎 (`app/credit-card-generator/engine.ts`) 與單元測試 (`tests/engine/credit-card-generator.test.mjs`)。
+
+### Changed
+- **全新設計全站網站圖示與 Favicon (`public/icon.svg`、`favicon.ico`、PWA 全尺寸 PNG)**：
+  - 採用「深空圓角底框 + 青藍／極光綠 2×2 幾何模組方塊」設計，完整替換 `icon.svg`、`favicon.ico`、`16x16`、`32x32`、`apple-touch-icon (180x180)` 與 `android-chrome (192x192 / 512x512)`，並同步更新 `layout.tsx`、`manifest.ts` 與 `sw.js`（快取升版至 `smalltools-v6`）。
+- **優化清單整列點擊切換驗算體驗 (`credit-card-generator`、`taiwan-id-generator`)**：
+  - 產生器批次清單與驗證清單支援直接點擊整列（含手機版直式卡片）即可切換焦點與下方檢查碼驗算明細。
+
+---
+
 ## [1.33.0] - 2026-11-25
 
 ### Added

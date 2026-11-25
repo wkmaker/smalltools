@@ -1,5 +1,6 @@
-const CACHE_NAME = 'smalltools-v5';
+const CACHE_NAME = 'smalltools-v6';
 const PRECACHE_ASSETS = [
+  '/icon.svg',
   '/support.svg',
   '/favicon.ico',
   '/apple-touch-icon.png',

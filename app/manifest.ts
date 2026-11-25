@@ -33,7 +33,7 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'maskable',
       },
       {
-        src: '/support.svg',
+        src: '/icon.svg',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'any',

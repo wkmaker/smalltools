@@ -757,7 +757,8 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                           return (
                             <tr
                               key={item.id}
-                              className={isSelected ? styles.rowSelected : undefined}
+                              onClick={() => setSelectedId(item.id)}
+                              className={`cursor-pointer ${isSelected ? styles.rowSelected : ''}`}
                             >
                               <td className="text-text-sub font-mono text-xs">{idx + 1}</td>
                               <td className="font-mono font-bold tracking-wider">{item.id}</td>
@@ -771,20 +772,24 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                                 <div className="flex items-center gap-1.5">
                                   <button
                                     type="button"
-                                    onClick={() =>
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       copyText(
                                         item.id,
                                         `row-${item.id}`,
                                         interpolate(t.toastCopied, { id: item.id })
-                                      )
-                                    }
+                                      );
+                                    }}
                                     className={styles.secondaryBtn}
                                   >
                                     {copiedKey === `row-${item.id}` ? t.btnCopied : t.btnCopy}
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => setSelectedId(item.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedId(item.id);
+                                    }}
                                     className={styles.secondaryBtn}
                                   >
                                     {t.inspectBreakdown}
@@ -804,7 +809,8 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                       return (
                         <div
                           key={item.id}
-                          className={`${styles.mobileCard} ${
+                          onClick={() => setSelectedId(item.id)}
+                          className={`${styles.mobileCard} cursor-pointer ${
                             isSelected ? styles.mobileCardSelected : ''
                           }`}
                         >
@@ -825,20 +831,24 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                           <div className="flex items-center gap-2 pt-1">
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 copyText(
                                   item.id,
                                   `m-${item.id}`,
                                   interpolate(t.toastCopied, { id: item.id })
-                                )
-                              }
+                                );
+                              }}
                               className={`${styles.secondaryBtn} flex-1`}
                             >
                               {copiedKey === `m-${item.id}` ? t.btnCopied : t.btnCopy}
                             </button>
                             <button
                               type="button"
-                              onClick={() => setSelectedId(item.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedId(item.id);
+                              }}
                               className={`${styles.secondaryBtn} flex-1`}
                             >
                               {t.inspectBreakdown}
@@ -982,7 +992,12 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                         {validationResults.map((res, idx) => (
                           <tr
                             key={`${res.normalized}-${idx}`}
-                            className={selectedValIndex === idx ? styles.rowSelected : undefined}
+                            onClick={() => {
+                              if (res.steps) setSelectedValIndex(idx);
+                            }}
+                            className={`${res.steps ? 'cursor-pointer' : ''} ${
+                              selectedValIndex === idx ? styles.rowSelected : ''
+                            }`}
                           >
                             <td className="font-mono font-bold tracking-wider">
                               <div>{res.normalized}</div>
@@ -1014,7 +1029,10 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                                 {res.steps && (
                                   <button
                                     type="button"
-                                    onClick={() => setSelectedValIndex(idx)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedValIndex(idx);
+                                    }}
                                     className={styles.secondaryBtn}
                                   >
                                     {t.inspectBreakdown}
@@ -1033,7 +1051,10 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                     {validationResults.map((res, idx) => (
                       <div
                         key={`${res.normalized}-${idx}`}
-                        className={`${styles.mobileCard} ${
+                        onClick={() => {
+                          if (res.steps) setSelectedValIndex(idx);
+                        }}
+                        className={`${styles.mobileCard} ${res.steps ? 'cursor-pointer' : ''} ${
                           selectedValIndex === idx ? styles.mobileCardSelected : ''
                         }`}
                       >
@@ -1067,7 +1088,10 @@ export default function TaiwanIdGeneratorClient({ lang = 'zh-TW' }: Props) {
                         {res.steps && (
                           <button
                             type="button"
-                            onClick={() => setSelectedValIndex(idx)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedValIndex(idx);
+                            }}
                             className={styles.secondaryBtn}
                           >
                             {t.inspectBreakdown}

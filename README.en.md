@@ -60,6 +60,7 @@
 * **[CA & Server Certificate Generator](https://tools.cjkuo.net/cert-generator/en/)** (`/cert-generator/en/`) - Pure browser self-signed and CA-issued certificate generator supporting RSA, ECDSA, and Ed25519 keys with PEM, DER, and PKCS#12 exports for local HTTPS dev/testing.
 * **[File Hash Calculator & Checksum Verifier](https://tools.cjkuo.net/checksum-verifier/en/)** (`/checksum-verifier/en/`) - Drag and drop files to compute MD5, SHA-1, SHA-256, SHA-512, and CRC32 locally, or drop official checksum manifests (`sha256sum`, `CHECKSUMS`, `.sfv`) for automatic verification.
 * **[Taiwan National ID Generator](https://tools.cjkuo.net/taiwan-id-generator/en/)** (`/taiwan-id-generator/en/`) - Pure client-side Taiwan National ID and New/Legacy Resident Certificate generator & validator with county/gender filters, TXT/CSV/JSON batch export, and step-by-step checksum breakdown for QA testing.
+* **[Test Credit Card Generator](https://tools.cjkuo.net/credit-card-generator/en/)** (`/credit-card-generator/en/`) - Pure client-side random test credit card generator & Luhn validator supporting 6 card networks, custom BIN prefixes, batch export, and payment sandbox test card lookup (randomly generated test data only — not real working cards).
 
 ### 🌐 Network & DevOps
 * **[DNS DIG Web Tool](https://tools.cjkuo.net/dns-dig/en/)** (`/dns-dig/en/`) - Query A, CNAME, MX, TXT, and NS records via encrypted Cloudflare or Google DNS over HTTPS (DoH).
@@ -203,5 +204,5 @@ Users should independently verify critical figures with authoritative sources be
 ---
 
 <p align="center">
-  <sub>Smalltools Current Version: <b>v1.33.0</b> (Updated: 2026-11-25)</sub>
+  <sub>Smalltools Current Version: <b>v1.34.0</b> (Updated: 2026-11-25)</sub>
 </p>

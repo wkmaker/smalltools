@@ -165,6 +165,13 @@ export const TOOL_ICONS: Record<string, ReactNode> = {
       <line x1="13" y1="14" x2="17" y2="14" />
     </svg>
   ),
+  "/credit-card-generator/": (
+    <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#ffb800]">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+      <line x1="6" y1="15" x2="10" y2="15" />
+    </svg>
+  ),
   "/dns-dig/": (
     <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#8b5cf6]">
                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-2h6v2h-6zm-10-7l3.5-3.5L7 10l-2.5 2.5L2 10l2.5-2.5L3 6l-3.5 3.5L3 13z" />

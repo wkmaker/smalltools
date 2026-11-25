@@ -1,0 +1,526 @@
+/* app/credit-card-generator/credit-card-generator.module.css
+ * 測試信用卡號產生器與 Luhn 驗證器 — 亮暗雙主題毛玻璃與 WCAG AA 高對比降階樣式
+ */
+
+.panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1.5rem;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  min-width: 0;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+:global([data-theme='light']) .panel {
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* ====== 醒目合規警示橫幅 ====== */
+.disclaimerBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.95rem 1.2rem;
+  border-radius: 14px;
+  background: rgba(255, 184, 0, 0.09);
+  border: 1px solid rgba(255, 184, 0, 0.35);
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.disclaimerIcon {
+  color: #ffb800;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.disclaimerTitle {
+  color: #ffb800;
+  font-weight: 700;
+  font-size: 0.875rem;
+  margin-bottom: 0.2rem;
+}
+
+:global([data-theme='light']) .disclaimerBanner {
+  background: rgba(217, 119, 6, 0.09);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+:global([data-theme='light']) .disclaimerIcon,
+:global([data-theme='light']) .disclaimerTitle {
+  color: #b45309;
+}
+
+/* ====== 模式切換 Tabs ====== */
+.modeTabs {
+  display: inline-flex;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.5rem;
+}
+
+:global([data-theme='light']) .modeTabs {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.modeTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modeTabBtn:hover {
+  color: var(--text-primary);
+}
+
+.modeTabActive {
+  background: rgba(255, 184, 0, 0.16);
+  border-color: rgba(255, 184, 0, 0.45);
+  color: #ffb800;
+  box-shadow: 0 0 16px rgba(255, 184, 0, 0.16);
+}
+
+:global([data-theme='light']) .modeTabActive {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #b45309;
+  box-shadow: none;
+}
+
+/* ====== 選項按鈕與發卡組織多選 ====== */
+.segmentBtn {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.segmentBtn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+:global([data-theme='light']) .segmentBtn {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+:global([data-theme='light']) .segmentBtn:hover {
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.segmentBtnActive {
+  background: rgba(255, 184, 0, 0.16);
+  border-color: rgba(255, 184, 0, 0.52);
+  color: #ffb800;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .segmentBtnActive {
+  background: rgba(217, 119, 6, 0.13);
+  border-color: rgba(217, 119, 6, 0.48);
+  color: #b45309;
+}
+
+.networkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.networkChip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  min-width: 0;
+}
+
+.networkChip:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+:global([data-theme='light']) .networkChip {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+:global([data-theme='light']) .networkChip:hover {
+  border-color: rgba(217, 119, 6, 0.45);
+}
+
+.networkChipActive {
+  background: rgba(255, 184, 0, 0.15);
+  border-color: rgba(255, 184, 0, 0.55);
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .networkChipActive {
+  background: rgba(217, 119, 6, 0.13);
+  border-color: rgba(217, 119, 6, 0.5);
+  color: #b45309;
+}
+
+/* ====== 輸入框 ====== */
+.inputControl,
+.textareaControl {
+  width: 100%;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.inputControl:focus,
+.textareaControl:focus {
+  border-color: #ffb800;
+  box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.18);
+}
+
+:global([data-theme='light']) .inputControl,
+:global([data-theme='light']) .textareaControl {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+:global([data-theme='light']) .inputControl:focus,
+:global([data-theme='light']) .textareaControl:focus {
+  background: #ffffff;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.16);
+}
+
+/* ====== 按鈕 ====== */
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 184, 0, 0.55);
+  background: linear-gradient(135deg, rgba(255, 184, 0, 0.24), rgba(245, 158, 11, 0.14));
+  color: #ffb800;
+  transition: all 0.2s ease;
+}
+
+.primaryBtn:hover {
+  background: linear-gradient(135deg, rgba(255, 184, 0, 0.34), rgba(245, 158, 11, 0.22));
+  box-shadow: 0 0 20px rgba(255, 184, 0, 0.28);
+  transform: translateY(-1px);
+}
+
+:global([data-theme='light']) .primaryBtn {
+  background: #d97706;
+  border-color: #b45309;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.24);
+}
+
+:global([data-theme='light']) .primaryBtn:hover {
+  background: #b45309;
+  box-shadow: 0 6px 18px rgba(180, 83, 9, 0.3);
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.48rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondaryBtn:hover {
+  border-color: rgba(255, 184, 0, 0.5);
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .secondaryBtn {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+:global([data-theme='light']) .secondaryBtn:hover {
+  border-color: #d97706;
+  color: #b45309;
+}
+
+/* ====== 焦點模擬卡面 ====== */
+.heroCardBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 184, 0, 0.11), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 184, 0, 0.34);
+  margin-bottom: 1.25rem;
+}
+
+:global([data-theme='light']) .heroCardBox {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.09), rgba(255, 255, 255, 0.55));
+  border-color: rgba(217, 119, 6, 0.32);
+}
+
+.heroCardNumber {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: clamp(1.35rem, 3vw, 2.05rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #ffb800;
+  line-height: 1.3;
+  word-break: break-all;
+}
+
+:global([data-theme='light']) .heroCardNumber {
+  color: #b45309;
+}
+
+/* ====== 語意字色與徽章 ====== */
+.accentText {
+  color: #ffb800;
+}
+
+:global([data-theme='light']) .accentText {
+  color: #b45309;
+}
+
+.badgeValid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(74, 222, 128, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+}
+
+:global([data-theme='light']) .badgeValid {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.32);
+  color: #15803d;
+}
+
+.badgeInvalid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 82, 82, 0.14);
+  border: 1px solid rgba(255, 82, 82, 0.35);
+  color: #ff6b6b;
+}
+
+:global([data-theme='light']) .badgeInvalid {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.32);
+  color: #b91c1c;
+}
+
+.badgeNeutral {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+}
+
+:global([data-theme='light']) .badgeNeutral {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* ====== 資料表與手機卡片 ====== */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.dataTable th {
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.dataTable td {
+  padding: 0.65rem 0.75rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.dataTable tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:global([data-theme='light']) .dataTable th {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+:global([data-theme='light']) .dataTable td {
+  border-bottom-color: rgba(15, 23, 42, 0.07);
+}
+
+:global([data-theme='light']) .dataTable tr:hover td {
+  background: rgba(217, 119, 6, 0.05);
+}
+
+.rowSelected td {
+  background: rgba(255, 184, 0, 0.08) !important;
+}
+
+:global([data-theme='light']) .rowSelected td {
+  background: rgba(217, 119, 6, 0.1) !important;
+}
+
+.mobileCard {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+:global([data-theme='light']) .mobileCard {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+.mobileCardSelected {
+  border-color: rgba(255, 184, 0, 0.48);
+}
+
+:global([data-theme='light']) .mobileCardSelected {
+  border-color: rgba(217, 119, 6, 0.48);
+}
+
+/* ====== Luhn 拆解格 ====== */
+.luhnGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  gap: 0.35rem;
+}
+
+.luhnCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.25rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.luhnCellDoubled {
+  border-color: rgba(255, 184, 0, 0.32);
+  background: rgba(255, 184, 0, 0.06);
+}
+
+:global([data-theme='light']) .luhnCell {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+:global([data-theme='light']) .luhnCellDoubled {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+/* ====== Toast ====== */
+.toast {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 0.65rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(24, 18, 8, 0.94);
+  border: 1px solid rgba(255, 184, 0, 0.48);
+  color: #ffb800;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme='light']) .toast {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(217, 119, 6, 0.48);
+  color: #b45309;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+}
