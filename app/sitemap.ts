@@ -13,6 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [
     { url: `${BASE_URL}/`, lastModified: LAST_MODIFIED, changeFrequency: 'monthly', priority: 1.0 },
     { url: `${BASE_URL}/en/`, lastModified: LAST_MODIFIED, changeFrequency: 'monthly', priority: 1.0 },
+    { url: `${BASE_URL}/privacy/`, lastModified: LAST_MODIFIED, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/privacy/en/`, lastModified: LAST_MODIFIED, changeFrequency: 'yearly', priority: 0.3 },
   ];
 
   // 工具頁一律由中央註冊表 app/config/tools-meta.ts 推導，新增工具無需再改本檔。

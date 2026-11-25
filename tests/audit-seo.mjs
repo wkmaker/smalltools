@@ -14,7 +14,7 @@ console.log('========================================\n');
 // 1. 取得所有 tool 目錄
 const toolDirs = fs.readdirSync(appDir).filter(f => {
   const stat = fs.statSync(path.join(appDir, f));
-  return stat.isDirectory() && !['components', 'config', 'utils', 'en', 'tests'].includes(f);
+  return stat.isDirectory() && !['components', 'config', 'utils', 'en', 'tests', 'privacy'].includes(f);
 });
 
 console.log(`📦 偵測到 ${toolDirs.length} 個主要工具模組\n`);

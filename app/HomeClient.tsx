@@ -585,6 +585,13 @@ export default function HomeClient({ lang }: HomeClientProps) {
           {t.sponsorText}
         </a>
         <span className="hidden sm:inline text-white/20">•</span>
+        <Link
+          href={lang === 'en' ? '/privacy/en/' : '/privacy/'}
+          className="text-text-sub hover:text-text-main transition-colors no-underline text-xs font-medium"
+        >
+          {lang === 'en' ? 'Privacy' : '隱私權說明'}
+        </Link>
+        <span className="hidden sm:inline text-white/20">•</span>
         <span className="font-mono opacity-60">v{appVersion}</span>
       </div>
 

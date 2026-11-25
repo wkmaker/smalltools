@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [1.35.2] - 2026-11-25
+
+### Added
+- **新增雙語隱私權說明頁 (`/privacy/`、`/privacy/en/`) 與全站工具頁頁尾 GitHub / 隱私權連結**：
+  - 清楚揭露 100% 純前端本機運算、極簡脫敏版 GA4 流量統計（含 Google Analytics Opt-out 停用說明）、本機儲存用途與開源透明承諾，並同步納入 `sitemap.ts`。
+  - 於首頁 (`HomeClient.tsx`) 與全站工具頁頁尾 (`ToolLayout.tsx`) 加入隱私權說明連結，並於工具頁頁尾補齊 GitHub 儲存庫入口。
+
 ## [1.35.1] - 2026-11-25
 
 ### Fixed
