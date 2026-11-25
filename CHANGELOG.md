@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Changed
+- **更新 `README.md` 與新增英文版 `README.en.md` 雙語文件**：
+  - 於 `README.md` 與 `README.en.md` 頂部加入 GitHub 雙語切換列，英文版完整收錄全站 39 項工具介紹並對應 `/en/` 路由。
+  - 同步 `README.md` 工具總數（39 項）、自動化測試與 PR CI 指令（`test:i18n`、`test:og`、`test:engine`、`audit:aria`、`tsc --noEmit`）、技術棧與頁尾版本資訊（`v1.32.0`）。
+
 ## [1.32.0] - 2026-11-25
 
 ### Added

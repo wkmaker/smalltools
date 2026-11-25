@@ -1,5 +1,9 @@
 # 🛠️ Smalltools - 現代化極簡線上工具庫
 
+<p align="center">
+  <strong>繁體中文</strong> | <a href="./README.en.md">English</a>
+</p>
+
 [![Online Tools](https://img.shields.io/badge/Online%20Tools-tools.cjkuo.net-00f0ff?style=for-the-badge&logo=vercel)](https://tools.cjkuo.net/)
 [![Donate Stripe](https://img.shields.io/badge/Donate-Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools)
 [![Next.js](https://img.shields.io/badge/Next.js-16.4.6-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
@@ -18,10 +22,10 @@
 * 🔒 **零隱私疑慮 (Client-side Privacy First)**：所有運算（含 PDF 壓縮、圖片轉檔處理、密碼產生、憑證轉換與金融計算）100% 於使用者瀏覽器端本地完成，檔案與敏感數據絕不上傳至任何伺服器。
 * ⚡ **靜態超速載入與非阻塞運算 (SSG & Non-Blocking Yielding)**：使用 Next.js App Router `output: 'export'` 靜態導出，結合 AWS S3 + CloudFront CDN 全球加速；高負載運算採用非同步時間片釋放與防抖技術，確保介面 60fps 滑順不卡死。
 * 🔗 **網址參數雙向同步 (URL State Sync)**：輸入資料即時無感同步至 URL Query 參數，方便複製網址隨時分享、備份計算結果或加入書籤。
-* ⚡ **全域快捷搜尋彈窗 (Command Palette `Cmd + K` / `Ctrl + K`)**：支援在全站任何頁面隨時喚出 Spotlight 搜尋面板，即時模糊搜尋 30+ 小工具與分類，並支援切換主題、雙語切換等快捷指令。
+* ⚡ **全域快捷搜尋彈窗 (Command Palette `Cmd + K` / `Ctrl + K`)**：支援在全站任何頁面隨時喚出 Spotlight 搜尋面板，即時模糊搜尋 39+ 小工具與分類，並支援切換主題、雙語切換等快捷指令。
 * ⭐ **我的常用工具與最近使用工作台 (Favorites & Recent Tools)**：首頁支援一鍵釘選常用小工具與自動記錄最近使用歷程，資料 100% 留存於使用者瀏覽器本地 `localStorage`，兼顧便利與隱私。
 * 💾 **智慧分級本地儲存與防重整復原 (`IndexedDB` & Zero-Persistence Security)**：針對螢幕錄影、圖片處理、PDF 壓縮、日曆分割與大型文本比對，透過非同步 `IndexedDB` 自動暫存二進位 `Blob` 與草稿，重整分頁不遺失心血並可隨時一鍵清除；同時對密碼產生、HAR 封包脫敏、SSL 憑證轉換等敏感工具嚴格執行「純記憶體零寫入」紅線。
-* 🧭 **階層式麵包屑導航與 Schema.org (Breadcrumb & Structured Data)**：全站工具頁面標題上方配置流暢毛玻璃麵包屑（`首頁 > 分類 > 工具名稱`），並自動注入 Google `BreadcrumbList` JSON-LD 結構化資料，提升搜尋結果呈現品質。
+* 🧭 **階層式麵包屑、相關工具內鏈與 Schema.org (Breadcrumb, Related Tools & Structured Data)**：全站工具頁配置流暢毛玻璃麵包屑（`首頁 > 分類 > 工具名稱`）與底部同分類相關工具推薦，並自動注入 `BreadcrumbList`、`WebApplication`、`FAQPage` JSON-LD 結構化資料，提升搜尋結果呈現品質。
 * 🌐 **多語言支援 (i18n Ready)**：全站支援繁體中文（預設）與英文介面動態切換，兼具 SEO 結構化資料與語意標籤。
 * 📱 **全平台響應式設計 (Responsive Design)**：針對桌面端、平板與行動裝置深度優化，支援手機版「多欄表格自動自適應為直式小卡片」、橫向凍結表格與手勢互動，打造零橫向捲動的行動端流暢體驗。
 
@@ -95,8 +99,8 @@
 
 * **核心框架**：[Next.js 16 (App Router)](https://nextjs.org/) + [React 19](https://react.dev/) + [TypeScript 6](https://www.typescriptlang.org/)
 * **樣式與 UI**：[Tailwind CSS v4 (CSS-first 模式)](https://tailwindcss.com/) + Vanilla CSS Custom Tokens（具備完整的亮暗模式 CSS 變數與主題切換機制）
-* **客戶端運算庫**：`node-forge` (密碼/SSL 憑證處理)、`diff` (文字比對)、`qr-code-styling` (向量 QR 生成)
-* **佈署架構**：AWS S3 + CloudFront CDN + CloudFormation (`infra/site.yml`、`infra/bootstrap.yml`) + GitHub Actions OIDC 自動化部署 workflow
+* **客戶端運算庫**：`bignumber.js`（金融高精度定點運算）、`echarts`（互動式趨勢與堆疊圖表）、`pdf-lib` / `pdfjs-dist`（PDF 合併與點陣圖壓縮）、`diff`（文字比對）、`qr-code-styling`（向量 QR 生成）；重型加密與雜湊庫 `node-forge`、`@peculiar/x509`、`hash-wasm` 全面採按需動態載入（Dynamic Import）以降低首屏體積
+* **佈署與品質架構**：AWS S3 + CloudFront CDN + CloudFormation (`infra/site.yml`、`infra/bootstrap.yml`) + GitHub Actions OIDC 自動化部署與 PR CI 品質把關（`.github/workflows/ci.yml`）
 
 ---
 
@@ -125,19 +129,20 @@ npm run build
 
 ### 4. 執行自動化檢查與測試 (Quality Assurance & SEO Tests)
 ```bash
-# 執行全套測試 (包含 UI 規範、SEO 檢查與 FAQ 結構化資料)
+# 執行全套自動化測試（UI / SEO / FAQ / OG / i18n / 39 工具核心引擎單元測試）
 npm test
 
-# 單獨執行 SEO 深度檢查 (檢查 Metadata, Canonical, Hreflang, Schema.org, Sitemap)
-npm run test:seo
+# 單獨執行各類稽核與單元測試
+npm run test:ui       # UI 設計規範與 WCAG 亮暗模式色彩對比
+npm run test:seo      # SEO 深度稽核（Metadata、Canonical、Hreflang、Schema.org、Sitemap）
+npm run test:faq      # FAQ 結構化資料覆蓋率
+npm run test:og       # OG 產生器翻譯與常數檢查
+npm run test:i18n     # 全站中英雙語字典對稱驗證
+npm run test:engine   # 全站 39 工具核心引擎單元測試（100% 覆蓋）
+npm run audit:aria    # ARIA 無障礙按鈕與標籤稽核
 
-# 單獨驗證 FAQ 結構化資料覆蓋率
-npm run test:faq
-
-# 單獨檢查 UI 設計規範與 WCAG 亮暗模式色彩對比
-npm run test:ui
-
-# 執行 ESLint 程式碼檢查
+# 執行 TypeScript 型別檢查與 ESLint 靜態檢查
+npx tsc --noEmit
 npm run lint
 ```
 
@@ -155,13 +160,13 @@ Smalltools 具備完善的企業級 SEO 架構，確保全站所有工具與頁�
    - 雙語系頁面全面配置 `alternates.languages`（`zh-TW`、`en` 以及 `x-default` 預設國際語言指向英文版）。
 3. **📊 豐富結構化資料 (Schema.org JSON-LD Rich Snippets)**：
    - **`WebApplication` / `SoftwareApplication`**：定義應用程式類別、作業系統相容性與免費價格（Price 0 TWD）。
-   - **`FAQPage`**：全站 32 個工具均配備 7~9 則專業問答，於 Google 搜尋結果呈現問答手風琴展開卡片。
+   - **`FAQPage`**：全站 39 個工具均配備 7~9 則專業問答，於 Google 搜尋結果呈現問答手風琴展開卡片。
    - **`WebSite`**：首頁配置 SearchAction 搜尋框結構化資料。
 4. **🗺️ 靜態 Sitemap 與 Robots.txt (Automated Sitemap & Indexing)**：
-   - `app/sitemap.ts` 自動生成包含 32 項工具中文版、英文版、首頁以及全台時薪 PR 排名動態頁面之完整網站地圖。
+   - `app/sitemap.ts` 自動生成包含 39 項工具中文版、英文版、首頁以及全台時薪 PR 排名動態頁面之完整網站地圖。
    - `robots.txt` 明確規範允許檢索範圍並正確導向 `sitemap.xml`。
-5. **🛡️ 建置自動化卡關守門員 (Prebuild Gatekeeper)**：
-   - 每次執行 `npm run build` 時自動觸發 `prebuild`，若有任何工具遺漏 SEO 標記、未配置 FAQ 或違反 UI 規範，將自動中斷建置以防瑕疵代碼上線。
+5. **🛡️ 建置與 PR 自動化品質守門員 (Prebuild & CI Gatekeeper)**：
+   - 每次執行 `npm run build` 時自動觸發 `prebuild`，且所有合併至 `main` 的 PR 都會執行 `.github/workflows/ci.yml`（含 `tsc --noEmit`、`lint`、`npm test`、`audit:aria`）；若有任何工具遺漏 SEO 標記、未配置 FAQ、雙語缺鍵或違反 UI 規範，將自動阻斷合併與建置。
 
 ---
 
@@ -236,5 +241,5 @@ CloudFront 的同一個網域不能同時掛在兩個發佈上，跨帳號搬移
 ---
 
 <p align="center">
-  <sub>Smalltools Current Version: <b>v1.24.0</b> (Updated: 2026-10-18)</sub>
+  <sub>Smalltools Current Version: <b>v1.32.0</b> (Updated: 2026-11-25)</sub>
 </p>
