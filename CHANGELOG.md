@@ -4,6 +4,24 @@
 
 ## [Unreleased]
 
+## [1.31.1] - 2026-11-25
+
+### Security
+- **修補開發工具鏈 `minimatch` 中危漏洞（`npm audit` 歸零）**：
+  - 升級 `eslint` 與間接依賴 `typescript-eslint`（至 `8.74.0`），徹底清除 9 筆因 `minimatch`（GHSA-g3hv-75wg-m249）引起的 Moderate 安全警告，`npm audit` 達 `0 vulnerabilities`。
+
+### Changed
+- **專案相依套件例行升級**：
+  - `next`: `^16.4.5` → `^16.4.6`
+  - `node-forge`: `^1.4.3` → `^1.4.4`
+  - `eslint-config-next`: `^16.4.5` → `^16.4.6`
+  - `eslint`: `^10.14.0` → `^10.15.0`
+  - `@types/node`: `^26.6.6` → `^26.6.7`
+  - `@types/react`: `^19.3.0` → `^19.3.1`
+  - `typescript` 維持 `^6.0.3`（實測 `typescript@7.0.2` 雖可通過 `tsc --noEmit`，但 `eslint-config-next` 內建之 `typescript-eslint` 尚未支援 TS 7.0，待後續官方支援 TS 7.1+ 後再行跨版遷移）。
+
+---
+
 ## [1.31.0] - 2026-11-25
 
 ### Added
