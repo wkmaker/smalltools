@@ -5,6 +5,7 @@ import ParticleCanvas from '@/app/components/ParticleCanvas';
 import ServiceWorkerRegister from '@/app/components/ServiceWorkerRegister';
 import { ThemeProvider } from '@/app/components/ThemeProvider';
 import CommandPalette from '@/app/components/CommandPalette';
+import GoogleAnalytics from '@/app/components/GoogleAnalytics';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tools.cjkuo.net';
 
@@ -96,6 +97,7 @@ export default function RootLayout({
           {/* 全站粒子背景動效 */}
           <ParticleCanvas />
           <ServiceWorkerRegister />
+          <GoogleAnalytics />
           <CommandPalette />
           {children}
         </ThemeProvider>

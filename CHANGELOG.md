@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [1.35.0] - 2026-11-25
+
+### Added
+- **極簡脫敏版 GA4 流量分析（#112）**：
+  - 新增 `app/utils/analytics.ts` 與 `app/components/GoogleAnalytics.tsx` 並掛載於 `app/layout.tsx`，僅於正式站建置且設定 `NEXT_PUBLIC_GA_ID` 時載入，嚴格排除本機開發與測試站。
+  - 初始化與 SPA 換頁均強制脫敏為純路徑（`origin + pathname`）並以純路徑覆寫 `page_title`，徹底剝除 `?query`、`#hash`、動態活動標題與同站 referrer 參數，且關閉 `allow_google_signals` 與 `allow_ad_personalization_signals`。
+  - 以模組層 `lastTrackedPath` 防護首頁重複計數、React StrictMode 重跑與計算機即時改寫 query 觸發多餘事件；不埋設任何自訂行為事件。
+  - 更新 `.github/workflows/deploy-site.yml` 與 `.github/workflows/deploy.yml` 僅於正式站注入 `NEXT_PUBLIC_GA_ID`，並新增單元測試 `tests/engine/google-analytics.test.mjs`。
+
 ## [1.34.0] - 2026-11-25
 
 ### Added

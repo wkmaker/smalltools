@@ -33,3 +33,4 @@ jobs:
       domain: ${{ vars.SITE_DOMAIN }}
       certificate-domain: ${{ vars.SITE_CERT_DOMAIN }}
       attach-domain: ${{ vars.SITE_ATTACH_DOMAIN || 'false' }}
+      ga-id: ${{ vars.NEXT_PUBLIC_GA_ID || '' }}
