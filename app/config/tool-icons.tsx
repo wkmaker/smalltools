@@ -156,6 +156,15 @@ export const TOOL_ICONS: Record<string, ReactNode> = {
                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
               </svg>
   ),
+  "/taiwan-id-generator/": (
+    <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#00ffaa]">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <circle cx="8" cy="11" r="2" />
+      <path d="M5.5 16c.6-1.4 1.5-2 2.5-2s1.9.6 2.5 2" />
+      <line x1="13" y1="10" x2="19" y2="10" />
+      <line x1="13" y1="14" x2="17" y2="14" />
+    </svg>
+  ),
   "/dns-dig/": (
     <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" className="text-[#8b5cf6]">
                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-2h6v2h-6zm-10-7l3.5-3.5L7 10l-2.5 2.5L2 10l2.5-2.5L3 6l-3.5 3.5L3 13z" />

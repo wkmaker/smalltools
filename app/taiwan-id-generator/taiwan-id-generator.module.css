@@ -1,0 +1,528 @@
+/* app/taiwan-id-generator/taiwan-id-generator.module.css
+ * 台灣身分證產生器與驗證器 — 亮暗雙主題毛玻璃與 WCAG AA 高對比降階樣式
+ */
+
+.panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1.5rem;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  min-width: 0;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+:global([data-theme='light']) .panel {
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* ====== 免責聲明橫幅 ====== */
+.disclaimerBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1.15rem;
+  border-radius: 14px;
+  background: rgba(0, 255, 170, 0.07);
+  border: 1px solid rgba(0, 255, 170, 0.24);
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.disclaimerIcon {
+  color: #00ffaa;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.disclaimerTitle {
+  color: #00ffaa;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.15rem;
+}
+
+:global([data-theme='light']) .disclaimerBanner {
+  background: rgba(13, 148, 136, 0.08);
+  border-color: rgba(13, 148, 136, 0.28);
+}
+
+:global([data-theme='light']) .disclaimerIcon,
+:global([data-theme='light']) .disclaimerTitle {
+  color: #0f766e;
+}
+
+/* ====== 頂部模式切換 ====== */
+.modeTabs {
+  display: inline-flex;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.5rem;
+}
+
+:global([data-theme='light']) .modeTabs {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.modeTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modeTabBtn:hover {
+  color: var(--text-primary);
+}
+
+.modeTabActive {
+  background: rgba(0, 255, 170, 0.14);
+  border-color: rgba(0, 255, 170, 0.42);
+  color: #00ffaa;
+  box-shadow: 0 0 16px rgba(0, 255, 170, 0.14);
+}
+
+:global([data-theme='light']) .modeTabActive {
+  background: rgba(13, 148, 136, 0.14);
+  border-color: rgba(13, 148, 136, 0.42);
+  color: #0f766e;
+  box-shadow: none;
+}
+
+/* ====== 選項按鈕 / 分段控制 ====== */
+.segmentBtn {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.segmentBtn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+:global([data-theme='light']) .segmentBtn {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+:global([data-theme='light']) .segmentBtn:hover {
+  border-color: rgba(13, 148, 136, 0.35);
+}
+
+.segmentBtnActive {
+  background: rgba(0, 255, 170, 0.14);
+  border-color: rgba(0, 255, 170, 0.5);
+  color: #00ffaa;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .segmentBtnActive {
+  background: rgba(13, 148, 136, 0.12);
+  border-color: rgba(13, 148, 136, 0.45);
+  color: #0f766e;
+}
+
+/* ====== 多選縣市按鈕網格 ====== */
+.countyChipGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 0.45rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='light']) .countyChipGrid {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+.countyChip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  min-width: 0;
+}
+
+.countyChip:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+:global([data-theme='light']) .countyChip {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+:global([data-theme='light']) .countyChip:hover {
+  border-color: rgba(13, 148, 136, 0.4);
+}
+
+.countyChipActive {
+  background: rgba(0, 255, 170, 0.15);
+  border-color: rgba(0, 255, 170, 0.55);
+  color: #00ffaa;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .countyChipActive {
+  background: rgba(13, 148, 136, 0.14);
+  border-color: rgba(13, 148, 136, 0.5);
+  color: #0f766e;
+}
+
+/* ====== 表單輸入框與下拉選單 ====== */
+.selectControl,
+.textareaControl {
+  width: 100%;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.selectControl:focus,
+.textareaControl:focus {
+  border-color: #00ffaa;
+  box-shadow: 0 0 0 3px rgba(0, 255, 170, 0.16);
+}
+
+:global([data-theme='light']) .selectControl,
+:global([data-theme='light']) .textareaControl {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+:global([data-theme='light']) .selectControl:focus,
+:global([data-theme='light']) .textareaControl:focus {
+  background: #ffffff;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.16);
+}
+
+/* ====== 主行動按鈕 ====== */
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 255, 170, 0.55);
+  background: linear-gradient(135deg, rgba(0, 255, 170, 0.22), rgba(0, 210, 180, 0.14));
+  color: #00ffaa;
+  transition: all 0.2s ease;
+}
+
+.primaryBtn:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 170, 0.3), rgba(0, 210, 180, 0.22));
+  box-shadow: 0 0 20px rgba(0, 255, 170, 0.28);
+  transform: translateY(-1px);
+}
+
+:global([data-theme='light']) .primaryBtn {
+  background: #0d9488;
+  border-color: #0f766e;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.22);
+}
+
+:global([data-theme='light']) .primaryBtn:hover {
+  background: #0f766e;
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.3);
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.48rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondaryBtn:hover {
+  border-color: rgba(0, 255, 170, 0.45);
+  color: #00ffaa;
+}
+
+:global([data-theme='light']) .secondaryBtn {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+:global([data-theme='light']) .secondaryBtn:hover {
+  border-color: #0d9488;
+  color: #0f766e;
+}
+
+/* ====== 大字焦點結果卡 ====== */
+.heroIdBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(0, 255, 170, 0.06);
+  border: 1px solid rgba(0, 255, 170, 0.28);
+  margin-bottom: 1.25rem;
+}
+
+:global([data-theme='light']) .heroIdBox {
+  background: rgba(13, 148, 136, 0.07);
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+.heroIdText {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #00ffaa;
+  line-height: 1.2;
+}
+
+:global([data-theme='light']) .heroIdText {
+  color: #0f766e;
+}
+
+/* ====== 語意徽章 ====== */
+.accentText {
+  color: #00ffaa;
+}
+
+:global([data-theme='light']) .accentText {
+  color: #0f766e;
+}
+
+.badgeValid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(74, 222, 128, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+}
+
+:global([data-theme='light']) .badgeValid {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.32);
+  color: #15803d;
+}
+
+.badgeInvalid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 82, 82, 0.14);
+  border: 1px solid rgba(255, 82, 82, 0.35);
+  color: #ff6b6b;
+}
+
+:global([data-theme='light']) .badgeInvalid {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.32);
+  color: #b91c1c;
+}
+
+.badgeNeutral {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+}
+
+:global([data-theme='light']) .badgeNeutral {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* ====== 資料表與卡片 ====== */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.dataTable th {
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.dataTable td {
+  padding: 0.65rem 0.75rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.dataTable tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:global([data-theme='light']) .dataTable th {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+:global([data-theme='light']) .dataTable td {
+  border-bottom-color: rgba(15, 23, 42, 0.07);
+}
+
+:global([data-theme='light']) .dataTable tr:hover td {
+  background: rgba(13, 148, 136, 0.04);
+}
+
+.rowSelected td {
+  background: rgba(0, 255, 170, 0.07) !important;
+}
+
+:global([data-theme='light']) .rowSelected td {
+  background: rgba(13, 148, 136, 0.09) !important;
+}
+
+.mobileCard {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+:global([data-theme='light']) .mobileCard {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+.mobileCardSelected {
+  border-color: rgba(0, 255, 170, 0.45);
+}
+
+:global([data-theme='light']) .mobileCardSelected {
+  border-color: rgba(13, 148, 136, 0.45);
+}
+
+/* ====== 權重拆解方格 ====== */
+.weightGrid {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(56px, 1fr));
+  gap: 0.4rem;
+}
+
+.weightCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0.3rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+:global([data-theme='light']) .weightCell {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* ====== Toast 提示 ====== */
+.toast {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 0.65rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(12, 24, 22, 0.92);
+  border: 1px solid rgba(0, 255, 170, 0.45);
+  color: #00ffaa;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme='light']) .toast {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(13, 148, 136, 0.45);
+  color: #0f766e;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+}
