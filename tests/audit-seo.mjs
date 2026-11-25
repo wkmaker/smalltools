@@ -113,6 +113,31 @@ toolDirs.forEach(tool => {
       issues.push({ type: 'TWITTER', severity: 'LOW', message: `${relPath} metadata 缺少 twitter 卡片設定` });
     }
 
+    // 檢查英文頁禁止繼承中文 title.template 與必須設定英文 OG locale / siteName
+    if (lang === 'en') {
+      if (!content.includes('absolute:')) {
+        issues.push({
+          type: 'TITLE_TEMPLATE',
+          severity: 'HIGH',
+          message: `${relPath} 英文頁未使用 title: { absolute: ... }，將被加上中文後綴「| 工具庫 - tools.cjkuo.net」`,
+        });
+      }
+      if (!content.includes("locale: 'en_US'") && !content.includes('locale: "en_US"')) {
+        issues.push({
+          type: 'OG_LOCALE',
+          severity: 'MEDIUM',
+          message: `${relPath} 英文頁 openGraph 缺少 locale: 'en_US'`,
+        });
+      }
+      if (!content.includes('siteName:')) {
+        issues.push({
+          type: 'OG_SITENAME',
+          severity: 'MEDIUM',
+          message: `${relPath} 英文頁 openGraph 缺少 siteName 設定`,
+        });
+      }
+    }
+
     // 檢查 Structured Data (JSON-LD)
     if (!content.includes('application/ld+json')) {
       issues.push({ type: 'SCHEMA', severity: 'MEDIUM', message: `${relPath} 缺少 application/ld+json 結構化資料` });
@@ -139,8 +164,28 @@ toolDirs.forEach(tool => {
     if (!content.includes('application/ld+json')) {
       issues.push({ type: 'SCHEMA', severity: 'MEDIUM', message: `${homeRel} 缺少 WebSite Schema` });
     }
+    if (homeRel === 'app/en/page.tsx' && !content.includes('absolute:')) {
+      issues.push({
+        type: 'TITLE_TEMPLATE',
+        severity: 'HIGH',
+        message: `${homeRel} 英文首頁未使用 title: { absolute: ... }，將被加上中文後綴`,
+      });
+    }
   }
 });
+
+// 4.5 檢查英文動態 PR 排行頁
+const enRankPath = path.join(appDir, 'hourly-rate-calculator', 'en', 'rank', '[slug]', 'page.tsx');
+if (fs.existsSync(enRankPath)) {
+  const rankContent = fs.readFileSync(enRankPath, 'utf-8');
+  if (!rankContent.includes('absolute:')) {
+    issues.push({
+      type: 'TITLE_TEMPLATE',
+      severity: 'HIGH',
+      message: `app/hourly-rate-calculator/en/rank/[slug]/page.tsx 英文排行頁未使用 title: { absolute: ... }`,
+    });
+  }
+}
 
 // 5. 輸出報告
 console.log('----------------------------------------');
@@ -156,3 +201,8 @@ issues.forEach((item, idx) => {
 });
 
 console.log('\n========================================\n');
+
+if (issues.some((i) => i.severity === 'CRITICAL' || i.severity === 'HIGH')) {
+  console.error('⛔ SEO 檢查發現 CRITICAL / HIGH 嚴重項目，建置已中斷。');
+  process.exit(1);
+}

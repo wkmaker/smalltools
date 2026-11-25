@@ -3,7 +3,7 @@ import MySalaryCalculatorClient from '../MySalaryCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Taiwan Salary & Tax Calculator - Free Online Net Pay & Employer Cost Calculator',
+  title: { absolute: 'Taiwan Salary & Tax Calculator - Free Online Net Pay & Employer Cost Calculator | Online Toolbox' },
   description:
     'Free online Taiwan salary, labor insurance, health insurance & pension calculator. Supports up-to-date brackets, take-home pay, tax withholding, and employer total cost breakdowns.',
   keywords: 'Taiwan salary calculator, Taiwan labor insurance, Taiwan health insurance, take home pay Taiwan, labor pension Taiwan',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Taiwan Salary & Tax Calculator - Free Online Net Pay & Employer Cost Calculator',
     description: 'Calculate Taiwan labor insurance, health insurance, tax withholding, net salary, and total employer labor cost.',
     url: 'https://tools.cjkuo.net/my-salary-calculator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

@@ -3,7 +3,7 @@ import PregnancyCalculatorClient from '../PregnancyCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Pregnancy & Maternity Leave Calculator - Due Date, Milestones & Statutory Leave Estimator',
+  title: { absolute: 'Pregnancy & Maternity Leave Calculator - Due Date, Milestones & Statutory Leave Estimator | Online Toolbox' },
   description:
     'Free online pregnancy and maternity leave calculator. Calculate estimated due date (EDD), gestational age, 40-week clinical checkup milestones, fetal development size benchmarks, statutory maternity leave duration, and parental leave allowance.',
   keywords: 'pregnancy calculator, due date calculator, maternity leave, gestational age, ultrasound dating, ivf due date, pregnancy milestones, hospital bag checklist',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Pregnancy & Maternity Leave Calculator - Due Date & Benefits Estimator',
     description: 'Calculate due date, pregnancy milestones, fetal growth benchmarks, and statutory maternity benefits.',
     url: 'https://tools.cjkuo.net/pregnancy-calculator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

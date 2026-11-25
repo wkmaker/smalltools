@@ -3,7 +3,7 @@ import HttpsDnsGeneratorClient from '../HttpsDnsGeneratorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'DNS HTTPS Record (Type 65) Generator & Tutorial - Free Online DNS Tool',
+  title: { absolute: 'DNS HTTPS Record (Type 65) Generator & Tutorial - Free Online DNS Tool | Online Toolbox' },
   description:
     'Free online DNS HTTPS (Type 65 / RFC 9460) record generator and setup tutorial. Supports Service Mode and Alias Mode with ALPN, ipv4hint, ipv6hint, port, and ECH parameters.',
   keywords: 'DNS HTTPS record generator, Type 65, RFC 9460, SVCB, Cloudflare HTTPS record, ALPN, ipv4hint, ipv6hint, DNS tutorial',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'DNS HTTPS Record (Type 65) Generator & Tutorial',
     description: 'Interactive generator for standard RFC 9460 DNS HTTPS (Type 65) records with provider guides.',
     url: 'https://tools.cjkuo.net/https-dns-generator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

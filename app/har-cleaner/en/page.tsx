@@ -3,7 +3,7 @@ import HarCleanerClient from '../HarCleanerClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'HAR Sensitive Data Sanitizer - Free Online HTTP Archive Privacy Scrubber & Size Reducer',
+  title: { absolute: 'HAR Sensitive Data Sanitizer - Free Online HTTP Archive Privacy Scrubber & Size Reducer | Online Toolbox' },
   description:
     'Professional free online HAR privacy cleaner (HAR Sensitive Data Sanitizer)! Redact Cookies, Authorization headers, Bearer JWTs, API keys, sensitive query params, and JSON payloads. 100% in-browser security.',
   keywords:
@@ -21,6 +21,8 @@ export const metadata: Metadata = {
     description:
       'Professional client-side HAR privacy scrubber! Strip cookies, tokens, API keys, and heavy base64 media with 100% local processing.',
     url: 'https://tools.cjkuo.net/har-cleaner/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

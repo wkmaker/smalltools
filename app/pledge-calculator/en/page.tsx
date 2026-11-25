@@ -3,7 +3,7 @@ import PledgeCalculatorClient from '../PledgeCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Stock Margin & Pledge Calculator - Margin Call & Stress Test Tool',
+  title: { absolute: 'Stock Margin & Pledge Calculator - Margin Call & Stress Test Tool | Online Toolbox' },
   description:
     'Free online stock margin pledge calculator! Supports maintenance ratio calculation, 130% margin call price threshold, stress testing, and cash replenishment simulation.',
   keywords: 'stock pledge calculator, margin call price, maintenance ratio, stock loan, margin ratio, stock leverage',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Stock Margin & Pledge Calculator - Margin Call & Stress Test Tool',
     description: 'Calculate stock pledge margin ratios, 130% margin call price thresholds, and market drop stress test.',
     url: 'https://tools.cjkuo.net/pledge-calculator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

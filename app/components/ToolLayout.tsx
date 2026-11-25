@@ -107,7 +107,26 @@ export default function ToolLayout({
 
   const resolvedLangSwitchLabel = customLangSwitchLabel || (isEn ? '繁體中文' : 'English');
 
-  // 1. 動態解析階層麵包屑 (Breadcrumbs)
+  // 1. 動態解析所屬分類、階層麵包屑 (Breadcrumbs) 與同分類相關工具
+  const matchedCategory = useMemo(
+    () =>
+      CATEGORIES.find((cat) =>
+        cat.tools.some((t) => {
+          const rootHref = t.href.replace(/^\/|\/$/g, '');
+          return cleanPath === rootHref || cleanPath.startsWith(`${rootHref}/`);
+        })
+      ),
+    [cleanPath]
+  );
+
+  const relatedTools = useMemo(() => {
+    if (!matchedCategory) return [];
+    const currentSlug = cleanPath.split('/')[0];
+    return matchedCategory.tools
+      .filter((t) => t.href.replace(/^\/|\/$/g, '') !== currentSlug)
+      .slice(0, 4);
+  }, [matchedCategory, cleanPath]);
+
   const resolvedBreadcrumbs: BreadcrumbItem[] = useMemo(() => {
     if (customBreadcrumbs && customBreadcrumbs.length > 0) {
       return customBreadcrumbs;
@@ -116,14 +135,6 @@ export default function ToolLayout({
       name: isEn ? 'Home' : '首頁',
       url: isEn ? '/en/' : '/',
     };
-
-    // 尋找當前工具所屬分類
-    const matchedCategory = CATEGORIES.find((cat) =>
-      cat.tools.some((t) => {
-        const rootHref = t.href.replace(/^\/|\/$/g, '');
-        return cleanPath === rootHref || cleanPath.startsWith(`${rootHref}/`);
-      })
-    );
 
     const items: BreadcrumbItem[] = [homeItem];
 
@@ -140,7 +151,7 @@ export default function ToolLayout({
     });
 
     return items;
-  }, [customBreadcrumbs, isEn, cleanPath, title, pathname]);
+  }, [customBreadcrumbs, isEn, matchedCategory, cleanPath, title, pathname]);
 
   // 2. 記錄最近造訪工具至 LocalStorage (供首頁最近使用工作台存取)
   useEffect(() => {
@@ -362,6 +373,55 @@ export default function ToolLayout({
       <div className="w-full">
         {children}
       </div>
+
+      {/* ── 同分類相關工具推薦（提升內部連結與跨工具探索） ── */}
+      {!hideFooter && matchedCategory && relatedTools.length > 0 && (
+        <aside
+          aria-label={isEn ? 'Related Tools' : '同分類推薦工具'}
+          className="mt-12 pt-8 border-t border-black/10 dark:border-white/[.08] w-full"
+        >
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <h2 className="text-sm font-semibold text-text-main inline-flex items-center gap-2 tracking-wide">
+              {matchedCategory.icon}
+              <span>
+                {isEn
+                  ? `More in ${matchedCategory.labelEn}`
+                  : `更多${matchedCategory.label}工具`}
+              </span>
+            </h2>
+            <Link
+              href={isEn ? `/en/?category=${matchedCategory.id}` : `/?category=${matchedCategory.id}`}
+              prefetch={false}
+              className="text-xs font-medium text-text-sub hover:text-text-main transition-colors no-underline inline-flex items-center gap-1"
+            >
+              <span>{isEn ? 'View all' : '查看全部'}</span>
+              <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {relatedTools.map((tool) => (
+              <Link
+                key={tool.href}
+                href={isEn ? tool.hrefEn : tool.href}
+                prefetch={false}
+                className="group flex items-start gap-3 p-3.5 rounded-2xl bg-black/[.03] dark:bg-white/[.04] border border-black/10 dark:border-white/10 hover:bg-black/[.06] dark:hover:bg-white/[.08] hover:border-black/20 dark:hover:border-white/25 transition-all no-underline"
+              >
+                <div className="mt-0.5 shrink-0">{tool.svg}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold text-text-main group-hover:underline truncate">
+                    {isEn ? tool.nameEn : tool.name}
+                  </div>
+                  <p className="text-xs text-text-sub mt-1 line-clamp-2 leading-relaxed">
+                    {isEn ? tool.descriptionEn : tool.description}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </aside>
+      )}
 
       {/* ── 頁尾贊助與自訂連結 (可透過 hideFooter 隱藏) ── */}
       {!hideFooter && (

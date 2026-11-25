@@ -3,7 +3,7 @@ import CalendarSplitClient from '../CalendarSplitClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Google Calendar ICS Splitter - Split Large .ics Calendar Files Online',
+  title: { absolute: 'Google Calendar ICS Splitter - Split Large .ics Calendar Files Online | Online Toolbox' },
   description:
     'Free online iCalendar (.ics) Splitter! Solve Google Calendar 1MB file size import limits by automatically splitting large calendar files into smaller compliant chunks under 1MB. 100% local in-browser processing with one-click ZIP download.',
   keywords: 'ics splitter,calendar splitter,split google calendar,google calendar import limit,icalendar split,export google calendar too large,ics chunk',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'ICS Calendar Splitter - Free Online Tool to Split Large .ics Files',
     description: 'Free online iCalendar (.ics) Splitter! Overcome Google Calendar 1MB import limit, auto split large calendars into valid <1MB chunks with ZIP download.',
     url: 'https://tools.cjkuo.net/calendar-split/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

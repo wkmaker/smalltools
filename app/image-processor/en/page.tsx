@@ -3,7 +3,7 @@ import ImageProcessorClient from '../ImageProcessorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Universal Image Processor - Free Online Image Crop, Resize, Compress & WebP Batch Convert',
+  title: { absolute: 'Universal Image Processor - Free Online Image Crop, Resize, Compress & WebP Batch Convert | Online Toolbox' },
   description:
     'Free professional online image processing tool! Supports image cropping, proportional resizing, quality compression (PNG/JPG/WebP), side-by-side comparison slider, and multi-file batch ZIP download.',
   keywords: 'image processor, crop image, compress image, image resizer, webp converter, batch image compression, online image editor',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Universal Image Processor - Free Online Image Crop, Resize & Compress',
     description: 'Pure client-side image editor supporting cropping, resizing, quality compression, and batch ZIP export.',
     url: 'https://tools.cjkuo.net/image-processor/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

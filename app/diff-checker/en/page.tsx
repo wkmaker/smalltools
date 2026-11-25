@@ -3,7 +3,7 @@ import DiffCheckerClient from '../DiffCheckerClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Document Diff Checker - Free Online Code & Text Comparison Tool',
+  title: { absolute: 'Document Diff Checker - Free Online Code & Text Comparison Tool | Online Toolbox' },
   description:
     'Free online Document Diff Checker tool! Supports side-by-side split view, unified line-by-line comparison, Myers algorithm diff parsing, and local privacy security.',
   keywords:
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'Document Diff Checker - Free Online Code & Text Comparison Tool',
     description: '100% private and secure text diff tool supporting Split and Unified view modes.',
     url: 'https://tools.cjkuo.net/diff-checker/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

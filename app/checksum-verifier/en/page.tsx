@@ -3,7 +3,7 @@ import ChecksumVerifierClient from '../ChecksumVerifierClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'File Hash Calculator & Checksum Verifier - Free Online MD5 / SHA-256 / SHA-512 / CRC32 Tool',
+  title: { absolute: 'File Hash Calculator & Checksum Verifier - Free Online MD5 / SHA-256 / SHA-512 / CRC32 Tool | Online Toolbox' },
   description:
     'Free client-side file hash calculator! Drag & drop files to compute MD5, SHA-1, SHA-256, SHA-512, CRC32, and drop the official checksum manifest (sha256sum, CHECKSUMS, .sfv) to automatically verify integrity — 100% local, nothing uploaded.',
   keywords:
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'File Hash Calculator & Checksum Verifier - Free Online MD5 / SHA-256 / SHA-512 / CRC32 Tool',
     description: 'Drag & drop files to compute MD5/SHA-1/SHA-256/SHA-512/CRC32 and verify against a checksum manifest, 100% client-side.',
     url: 'https://tools.cjkuo.net/checksum-verifier/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

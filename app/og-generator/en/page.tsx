@@ -3,7 +3,7 @@ import OgGeneratorClient from '../OgGeneratorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'OG Image Generator - Free Online Open Graph & Social Card Creator',
+  title: { absolute: 'OG Image Generator - Free Online Open Graph & Social Card Creator | Online Toolbox' },
   description:
     'Free online Open Graph (OG) image generator. Create social share cards with 4 modern templates, custom typography, logo and feature image upload, 2x Retina supersampling, and PNG/JPEG/WebP/SVG multi-format export.',
   keywords:
@@ -21,6 +21,8 @@ export const metadata: Metadata = {
     description:
       'Instantly generate custom Open Graph social cards with 4 templates, logo embed, custom colors, and PNG/JPEG/WEBP/SVG exports.',
     url: 'https://tools.cjkuo.net/og-generator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

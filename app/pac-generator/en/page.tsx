@@ -3,7 +3,7 @@ import PacGeneratorClient from '../PacGeneratorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'PAC Script Generator - Free Online Proxy Auto-Config File Builder',
+  title: { absolute: 'PAC Script Generator - Free Online Proxy Auto-Config File Builder | Online Toolbox' },
   description:
     'Free online visual PAC (Proxy Auto-Config) generator. Build routing rules, IPv4/IPv6 dual-stack subnets (isInNetEx), proxy pools, failover fallback chains, and one-click Data URI exports.',
   keywords: 'PAC generator,proxy auto config,PAC file builder,FindProxyForURL,isInNetEx,SOCKS5,HTTP proxy,failover routing',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'PAC Script Generator - Free Online Proxy Auto-Config Builder',
     description: 'Visual PAC rule builder with IPv4/IPv6 dual-stack support and one-click Data URI export. 100% private in-browser generation.',
     url: 'https://tools.cjkuo.net/pac-generator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

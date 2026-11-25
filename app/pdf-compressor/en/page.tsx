@@ -3,7 +3,7 @@ import PdfCompressorClient from '../PdfCompressorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'PDF Compressor Master - Free Online PDF Compression & Privacy Protection',
+  title: { absolute: 'PDF Compressor Master - Free Online PDF Compression & Privacy Protection | Online Toolbox' },
   description:
     'Free online PDF Compressor Master! Deeply compresses & downsamples embedded bitmap images while preserving 100% original crisp text & vector graphics. Supports multi-file batch processing and ZIP export.',
   keywords: 'PDF compressor, compress PDF, PDF image compression, reduce PDF size, online PDF compressor, free PDF tool, client-side PDF compression',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'PDF Compressor Master - Free Online PDF Compression & Privacy Protection',
     description: '100% Client-side PDF Compressor Master! Supports multi-file batch processing, instant structure inspection, and ZIP download.',
     url: 'https://tools.cjkuo.net/pdf-compressor/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

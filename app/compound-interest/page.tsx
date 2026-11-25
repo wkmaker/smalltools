@@ -3,10 +3,10 @@ import CompoundInterestClient from './CompoundInterestClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: '複利試算器 - 免費線上定期定額、存股ETF與投資複利計算機',
+  title: '複利計算機 - 免費線上定期定額、存股 ETF 與投資複利試算',
   description:
-    '專業免費的線上複利試算器！支援單筆投資與定期定額投入、年化報酬率設定，精算資產翻倍時間與投資資產成長曲線。',
-  keywords: '複利試算器,定期定額計算機,存股複利試算,ETF定期定額,0050複利計算,投資複利,年化報酬率,資產翻倍,72法則,退休金試算,月複利計算,理財計算機',
+    '免費線上複利計算機！支援單筆與定期定額投入、年化報酬率設定，即時試算存股 ETF 複利成長曲線與資產翻倍時間，無廣告免下載。',
+  keywords: '複利計算機,定期定額複利計算機,複利試算器,存股複利試算,ETF定期定額,0050複利計算,投資複利,年化報酬率,資產翻倍,72法則,退休金試算,月複利計算,理財計算機',
   alternates: {
     canonical: 'https://tools.cjkuo.net/compound-interest/',
     languages: {
@@ -16,14 +16,14 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: '複利試算器 - 免費線上定期定額、存股ETF與投資複利計算機',
-    description: '精算定期定額與單筆投資複利效應，提供年度資產成長圖表與本金利息佔比分析。',
+    title: '複利計算機 - 免費線上定期定額、存股 ETF 與投資複利試算',
+    description: '即時試算定期定額與單筆投資複利效應，提供年度資產成長圖表與本金利息佔比分析。',
     url: 'https://tools.cjkuo.net/compound-interest/',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '複利試算器 - 免費線上定期定額、存股ETF與投資複利計算機',
-    description: '精算定期定額與單筆投資複利效應，提供年度資產成長圖表與本金利息佔比分析。',
+    title: '複利計算機 - 免費線上定期定額、存股 ETF 與投資複利試算',
+    description: '即時試算定期定額與單筆投資複利效應，提供年度資產成長圖表與本金利息佔比分析。',
   },
 };
 

@@ -3,7 +3,7 @@ import CompoundInterestClient from '../CompoundInterestClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Compound Interest Calculator - Free Investment, SIP & Stock Growth Calculator',
+  title: { absolute: 'Compound Interest Calculator - Free Investment, SIP & Stock Growth Calculator | Online Toolbox' },
   description:
     'Free online compound interest calculator. Calculate lump sum and recurring investments (SIP), annual returns, asset growth charts, and breakdown schedules.',
   keywords: 'compound interest calculator, investment calculator, sip calculator, return rate, compound growth, future value calculator, monthly compounding calculator, rule of 72 calculator, stock investment growth',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Compound Interest Calculator - Free Investment, SIP & Stock Growth Calculator',
     description: 'Calculate compound interest for lump sum & recurring investments with visual growth charts.',
     url: 'https://tools.cjkuo.net/compound-interest/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

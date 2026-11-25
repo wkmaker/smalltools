@@ -3,7 +3,7 @@ import TimeClient from '../TimeClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Target Countdown Timer - Free Online Event Countdown & Accumulator',
+  title: { absolute: 'Target Countdown Timer - Free Online Event Countdown & Accumulator | Online Toolbox' },
   description:
     'A beautiful online target countdown timer & time accumulator! Customize event title, choose time units (years, months, days, hours, mins, secs), view in full screen, and share via direct link.',
   keywords: 'target countdown timer, online timer, event countdown, time accumulator, anniversary countdown, time management, full screen timer',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Target Countdown Timer - Free Online Event Countdown & Accumulator',
     description: 'A beautiful online target countdown timer & time accumulator with customizable event titles and fullscreen mode.',
     url: 'https://tools.cjkuo.net/time/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

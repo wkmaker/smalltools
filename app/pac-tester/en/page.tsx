@@ -3,7 +3,7 @@ import PacTesterClient from '../PacTesterClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'PAC Tester & Simulator - Free Online Proxy Auto-Config Sandbox Debugger',
+  title: { absolute: 'PAC Tester & Simulator - Free Online Proxy Auto-Config Sandbox Debugger | Online Toolbox' },
   description:
     'Free online PAC (Proxy Auto-Config) tester and debugger. Simulate FindProxyForURL in an in-browser sandbox with step-by-step trace logs, batch regression testing, and IPv6 (isInNetEx) support.',
   keywords: 'PAC tester,PAC debugger,proxy auto config,FindProxyForURL,isInNetEx,PAC simulator,batch URL test,IPv6 PAC',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'PAC Tester & Simulator - Free Online Proxy Auto-Config Debugger',
     description: 'In-browser sandbox simulation for PAC execution with trace logs, batch regression testing, and IPv6 extensions.',
     url: 'https://tools.cjkuo.net/pac-tester/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

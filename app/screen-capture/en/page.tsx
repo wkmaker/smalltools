@@ -4,7 +4,7 @@ import { generateFaqSchema } from '@/app/utils/faqSchema';
 import { TRANSLATIONS } from '../translations';
 
 export const metadata: Metadata = {
-  title: 'Free Online Screen Recorder - Screen Capture with Audio, No Install & No Watermark',
+  title: { absolute: 'Free Online Screen Recorder - Screen Capture with Audio, No Install & No Watermark | Online Toolbox' },
   description:
     'Free, minimalist, zero-install, and watermark-free online screen recorder running 100% locally in your browser. Real-time audio mixing for system sound and microphone voiceover, with direct download and PRV5 private sharing.',
   keywords:
@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     description:
       'Minimalist in-browser screen recorder with simultaneous system & mic audio mixing, high quality encoding, zero watermark, and secure PRV5 sharing.',
     url: 'https://tools.cjkuo.net/screen-capture/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

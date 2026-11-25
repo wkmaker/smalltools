@@ -3,7 +3,7 @@ import Base64Client from '../Base64Client';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Base64 Encoder & Decoder - Free Online Text & URL-Safe Base64 Converter',
+  title: { absolute: 'Base64 Encoder & Decoder - Free Online Text & URL-Safe Base64 Converter | Online Toolbox' },
   description:
     'Free online Base64 encoder and decoder tool! Supports UTF-8 Chinese characters, URL-Safe format, instant bidirectional conversion, and file preview/conversion.',
   keywords: 'Base64,Base64 encoder,Base64 decoder,Base64 converter,URL Safe Base64,UTF-8 Base64,online Base64',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Base64 Encoder & Decoder - Free Online Text & URL-Safe Base64 Converter',
     description: 'Fast client-side Base64 encoder and decoder tool supporting UTF-8 & URL-Safe modes.',
     url: 'https://tools.cjkuo.net/base64/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

@@ -4,7 +4,7 @@ import { generateFaqSchema } from '@/app/utils/faqSchema';
 import { TRANSLATIONS } from '../translations';
 
 export const metadata: Metadata = {
-  title: 'Lucky Wheel & Slot Spinner - Free Online Random Picker & Gala Raffle',
+  title: { absolute: 'Lucky Wheel & Slot Spinner - Free Online Random Picker & Gala Raffle | Online Toolbox' },
   description:
     'Free online Lucky Wheel and Slot Machine prize drawer! Customize prize titles, weights, quantities, award tiers, batch draws, and quick text list paste with fullscreen stage mode.',
   keywords: 'lucky wheel, slot machine spinner, random picker, prize draw, raffle generator, spin wheel online, gala raffle, giveaway wheel',
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'Lucky Wheel & Slot Spinner - Free Online Random Picker & Gala Raffle',
     description: 'Free online prize wheel and slot spinner with customizable items, dual-draw gala mode, batch draws, quick text paste, and CSV export.',
     url: 'https://tools.cjkuo.net/lucky-wheel/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

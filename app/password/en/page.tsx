@@ -3,7 +3,7 @@ import PasswordGeneratorClient from '../PasswordGeneratorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Secure Password Generator - Free Online CSPRNG & Passphrase Tool',
+  title: { absolute: 'Secure Password Generator - Free Online CSPRNG & Passphrase Tool | Online Toolbox' },
   description:
     'Free online CSPRNG cryptographically secure password generator! Customize length, uppercase/lowercase letters, digits, and symbols with live entropy evaluation.',
   keywords: 'Password Generator,CSPRNG,secure password,random password generator,strong password,password strength,passphrase generator,cryptographic random password,random password builder',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Secure Password Generator - Free Online CSPRNG & Passphrase Tool',
     description: 'Cryptographically secure client-side password generator with live strength analysis.',
     url: 'https://tools.cjkuo.net/password/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

@@ -3,7 +3,7 @@ import TextUtilityClient from '../TextUtilityClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Text Utility & Stats - Free Online Character Counter, Case Converter & Text Formatter',
+  title: { absolute: 'Text Utility & Stats - Free Online Character Counter, Case Converter & Text Formatter | Online Toolbox' },
   description:
     'Free professional online Text Utility & Statistics tool! Supports real-time character count, word count, line count, case conversion, removing duplicate/empty lines, and text formatting.',
   keywords:
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'Text Utility & Stats - Free Online Character Counter, Case Converter & Text Formatter',
     description: 'Instant text case conversion, space removal, and multi-dimensional text statistics.',
     url: 'https://tools.cjkuo.net/text-utility/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

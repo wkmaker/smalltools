@@ -3,7 +3,7 @@ import PersonalLoanClient from '../PersonalLoanClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Personal Loan Calculator - Free Online Loan & APR Solver',
+  title: { absolute: 'Personal Loan Calculator - Free Online Loan & APR Solver | Online Toolbox' },
   description:
     'Free online personal loan calculator! Supports equal payment, equal principal, origination fee amortization, APR solver, and monthly repayment schedules.',
   keywords: 'personal loan calculator, loan payment, apr calculator, loan interest, loan amortization schedule',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Personal Loan Calculator - Free Online Loan & APR Solver',
     description: 'Calculate monthly personal loan payments, total interest, and effective APR.',
     url: 'https://tools.cjkuo.net/personal-loan/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

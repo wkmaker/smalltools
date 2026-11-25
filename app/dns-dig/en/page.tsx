@@ -3,7 +3,7 @@ import DnsDigClient from '../DnsDigClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Online DNS DIG Tool - Free Cloudflare & Google DoH DNS Record Lookup',
+  title: { absolute: 'Online DNS DIG Tool - Free Cloudflare & Google DoH DNS Record Lookup | Online Toolbox' },
   description:
     'Free online DNS DIG lookup tool! Query A, AAAA, CNAME, MX, TXT, NS, HTTPS records instantly using Cloudflare, Google, and AliDNS over HTTPS (DoH) APIs.',
   keywords: 'DNS Lookup, DIG Tool, DNS Records, Cloudflare DoH, Google DoH, Domain Diagnostics, MX Record Lookup',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Online DNS DIG Tool - Free Cloudflare & Google DoH DNS Record Lookup',
     description: 'Essential online DNS lookup tool for engineers. Supports Cloudflare/Google DoH, domain parsing, and RFC 9460 decoding.',
     url: 'https://tools.cjkuo.net/dns-dig/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

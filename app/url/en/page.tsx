@@ -3,7 +3,7 @@ import UrlEncoderClient from '../UrlEncoderClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'URL Encoder & Decoder - Free Online encodeURIComponent Tool',
+  title: { absolute: 'URL Encoder & Decoder - Free Online encodeURIComponent Tool | Online Toolbox' },
   description:
     'Free online URL encoder and decoder tool! Supports encodeURIComponent and decodeURIComponent with instant bidirectional query parameter breakdown.',
   keywords: 'URL Encoder,URL Decoder,encodeURIComponent,decodeURIComponent,URL encode,percent encoding',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'URL Encoder & Decoder - Free Online encodeURIComponent Tool',
     description: 'Fast client-side URL encoder and decoder supporting Unicode & query parameter breakdown.',
     url: 'https://tools.cjkuo.net/url/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
