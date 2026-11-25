@@ -3,7 +3,7 @@ import CarLoanClient from '../CarLoanClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Car Loan Calculator - Auto Loan Monthly Payment & Interest Rate',
+  title: { absolute: 'Car Loan Calculator - Auto Loan Monthly Payment & Interest Rate | Online Toolbox' },
   description:
     'Free online car loan calculator. Calculate monthly auto loan payments, total interest, APR, grace periods, stepped low payments, balloon payments, and amortization schedules.',
   keywords: 'car loan calculator, auto loan calculator, car payment, car interest rate, balloon payment, car apr',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Car Loan Calculator - Auto Loan Monthly Payment & Interest Rate',
     description: 'Calculate monthly auto loan payments, interest, APR, and complete amortization schedules.',
     url: 'https://tools.cjkuo.net/car-loan/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

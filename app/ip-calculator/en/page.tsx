@@ -3,7 +3,7 @@ import IpCalculatorClient from '../IpCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'IPv4 Subnet & CIDR Calculator - Free Online IP Range & Usable Host Calculator',
+  title: { absolute: 'IPv4 Subnet & CIDR Calculator - Free Online IP Range & Usable Host Calculator | Online Toolbox' },
   description:
     'Free online IPv4 & CIDR subnet calculator! Calculate network address, broadcast address, subnet mask, wildcard mask, usable IP range, and export full IP lists to TXT or CSV.',
   keywords: 'IP Subnet Calculator, CIDR Calculator, IPv4 Calculator, Subnet Mask, Network Address, Broadcast Address, Usable Host Range',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'IPv4 Subnet & CIDR Calculator - Free Online IP Range Calculator',
     description: 'Accurately calculate IPv4 / CIDR subnets, network & broadcast IPs, usable host ranges, and export TXT/CSV lists.',
     url: 'https://tools.cjkuo.net/ip-calculator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

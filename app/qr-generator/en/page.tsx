@@ -3,7 +3,7 @@ import QrGeneratorClient from '../QrGeneratorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Designer QR Code Generator - Free Online Art QR Code, Logo Embedding & Vector SVG Output',
+  title: { absolute: 'Designer QR Code Generator - Free Online Art QR Code, Logo Embedding & Vector SVG Output | Online Toolbox' },
   description:
     'Free online Designer QR Code Generator! Supports custom dot styles, dual gradients, center logo embedding, automatic 30% error correction, and PNG/SVG/WEBP vector export.',
   keywords:
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'Designer QR Code Generator - Free Online Art QR Code, Logo Embedding & Vector SVG Output',
     description: 'Instantly design your artistic QR Code. Supports dot styles, gradients, center logo, and vector SVG output.',
     url: 'https://tools.cjkuo.net/qr-generator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

@@ -3,7 +3,7 @@ import JsonFormatterClient from '../JsonFormatterClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'JSON Formatter & Validator - Free Online JSON Beautifier & Minifier',
+  title: { absolute: 'JSON Formatter & Validator - Free Online JSON Beautifier & Minifier | Online Toolbox' },
   description:
     'Free online JSON formatter, validator, beautifier, and minifier tool! Features syntax error positioning, tree view, indentation options, and file export.',
   keywords: 'JSON Formatter,JSON Validator,JSON Beautifier,JSON Minifier,JSON syntax check,JSON parser',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'JSON Formatter & Validator - Free Online JSON Beautifier & Minifier',
     description: 'Fast client-side JSON formatting tool with live syntax linting and interactive tree view.',
     url: 'https://tools.cjkuo.net/json/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

@@ -3,7 +3,7 @@ import PdfProcessorClient from '../PdfProcessorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'PDF Page Composer - Free Online PDF Merge, Sort, Rotate & Delete Pages',
+  title: { absolute: 'PDF Page Composer - Free Online PDF Merge, Sort, Rotate & Delete Pages | Online Toolbox' },
   description:
     'Free online PDF Page Composer! Auto split & preview multi-file PDFs, combine images, drag-and-drop reorder, 90° rotation, single-page deletion, and high-res PDF export. 100% client-side execution.',
   keywords: 'PDF page composer, merge PDF, split PDF, rotate PDF, delete PDF page, convert image to PDF, PNG to PDF, JPG to PDF',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'PDF Page Composer - Free Online PDF Merge, Sort, Rotate & Delete Pages',
     description: '100% Client-side PDF Page Composer! Supports multi-file PDF merging, drag-and-drop page sorting, rotation, deletion, and image conversion.',
     url: 'https://tools.cjkuo.net/pdf-processor/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

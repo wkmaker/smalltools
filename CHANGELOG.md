@@ -4,6 +4,27 @@
 
 ## [Unreleased]
 
+## [1.31.0] - 2026-11-25
+
+### Added
+- **全站工具頁新增「同分類相關工具推薦」內鏈區塊 (`app/components/ToolLayout.tsx`)**：
+  - 於所有工具頁底部自動從中央註冊表 `app/config/tools.tsx` 挑選最多 4 個同分類工具，支援中英雙語與亮暗雙主題毛玻璃卡片，強化跨工具探索與內部權重（PageRank）流動。
+- **強化 SEO 自動化稽核 (`tests/audit-seo.mjs`)**：
+  - 新增英文頁（全站工具頁、英文首頁、時薪 PR 英文排行頁）禁止繼承中文 `title.template`（必須使用 `title: { absolute: ... }`）與英文 `openGraph.locale` / `siteName` 強制驗證，遇到 `CRITICAL` / `HIGH` 項目自動中斷建置。
+
+### Fixed
+- **修復全站 41 個英文路由 `<title>` 被加上中文後綴與缺少英文 OG 語系標記之缺陷**：
+  - 全數 39 個工具英文頁 (`app/[tool]/en/page.tsx`)、英文首頁 (`app/en/page.tsx`) 及英文動態 PR 排行頁 (`app/hourly-rate-calculator/en/rank/[slug]/page.tsx`) 改用 `title: { absolute: '... | Online Toolbox' }`，徹底消除搜尋結果中英文標題結尾夾雜 `| 工具庫 - tools.cjkuo.net` 的問題，並補齊 `openGraph.locale: 'en_US'` 與 `siteName: 'Online Toolbox'`。
+
+### Changed
+- **數據驅動之核心低懸果實頁 Metadata 優化（依據 GSC 真實搜尋表現）**：
+  - **複利計算機 (`/compound-interest/`)**：調整 Title 詞序將高曝光核心詞「複利計算機」移至最前，同步強化 Meta Description 誘因。
+  - **車貸計算機 (`/car-loan/`)**：調整 Title 詞序將「車貸計算機」移至最前並精煉描述。
+  - **股票質押維持率計算機 (`/pledge-calculator/`)**：維持已排名第 1 的主 Title 結構不變，優化 Meta Description 以提升資訊型關鍵字點閱率。
+  - **全站工具數量文案同步**：將首頁與全域 Metadata 文案由「36+」更新為「39+」。
+
+---
+
 ## [1.30.0] - 2026-11-08
 
 ### Added

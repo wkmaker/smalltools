@@ -3,7 +3,7 @@ import MortgageLoanClient from '../MortgageLoanClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Mortgage Loan Calculator - Free Online House Loan & APR Solver',
+  title: { absolute: 'Mortgage Loan Calculator - Free Online House Loan & APR Solver | Online Toolbox' },
   description:
     'Free online mortgage loan calculator! Supports property price down payment sync, grace period, stepped interest rates, combined loans, and APR solver.',
   keywords: 'mortgage calculator, house loan calculator, apr solver, grace period, stepped rate loan, loan schedule',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Mortgage Loan Calculator - Free Online House Loan & APR Solver',
     description: 'Calculate monthly mortgage payments, grace period amortization, stepped interest rates, and APR.',
     url: 'https://tools.cjkuo.net/mortgage-loan/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

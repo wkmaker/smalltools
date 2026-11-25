@@ -3,7 +3,7 @@ import LiarsDiceClient from '../LiarsDiceClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Liar\'s Dice Roller - Anti-Cheat Timer & Top 5 History Logs',
+  title: { absolute: 'Liar\'s Dice Roller - Anti-Cheat Timer & Top 5 History Logs | Online Toolbox' },
   description:
     'Online Liar\'s Dice roller designed for party and bar games! Features an anti-cheat timer showing time elapsed since the last roll, cup cover, and top 5 roll history.',
   keywords: 'Liar\'s Dice, Dice Roller, Anti-cheat Timer, Party Game, Bar Games, Dice Cup Cover, Top 5 History',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Liar\'s Dice Roller - Anti-Cheat Timer & Top 5 History Logs',
     description: 'Online Liar\'s Dice roller with anti-cheat timer showing time elapsed since last roll and top 5 history records.',
     url: 'https://tools.cjkuo.net/liars-dice/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

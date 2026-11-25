@@ -3,7 +3,7 @@ import HourlyRateCalculatorClient from '../HourlyRateCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Real Hourly Rate Calculator - Deduct Commute & Overtime, Taiwan PR Percentile Rank',
+  title: { absolute: 'Real Hourly Rate Calculator - Deduct Commute & Overtime, Taiwan PR Percentile Rank | Online Toolbox' },
   description:
     'Free online Real Hourly Rate Calculator! Deduct commute time, unpaid overtime, and work expenses to accurately calculate your true net hourly earnings and compare with official Taiwan salary percentile ranks.',
   keywords: 'Real Hourly Rate Calculator, Hourly Rate, Minimum Wage, Salary Percentile Rank, Commute Time, Unpaid Overtime, Salary Percentile, Earnings Calculator',
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'Real Hourly Rate Calculator - Deduct Commute & Overtime, Taiwan PR Percentile Rank',
     description: 'Deduct commute time, unpaid overtime, and work expenses to accurately calculate your true net hourly earnings.',
     url: 'https://tools.cjkuo.net/hourly-rate-calculator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

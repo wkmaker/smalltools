@@ -4,7 +4,7 @@ import { generateFaqSchema } from '@/app/utils/faqSchema';
 import { FAQ_ITEMS } from '../translations';
 
 export const metadata: Metadata = {
-  title: 'Fetal Kick Counter - Free Online Fetal Movement Tracker & Cardiff 10-Kick Timer',
+  title: { absolute: 'Fetal Kick Counter - Free Online Fetal Movement Tracker & Cardiff 10-Kick Timer | Online Toolbox' },
   description:
     'Free online fetal kick counter. Supports Count to 10 (Cardiff) and 1-Hour Observation methods, automatically tagging combo kicks within 2 minutes. Track distinct episodes vs total taps with 14-day vitality charts and emergency phone scripts. Data stays on your device.',
   keywords: 'kick counter, fetal movement tracker, count to 10 kicks, baby kicks, cardiff kick count, 28 weeks fetal movement, pregnancy kick counter',
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'Fetal Kick Counter - Free Online Fetal Movement Tracker',
     description: 'Track baby kicks with ease! Auto-tags combo movements, tracks time to 10 kicks, and offers quick scripts to read.',
     url: 'https://tools.cjkuo.net/kick-counter/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

@@ -3,7 +3,7 @@ import CertGeneratorClient from '../CertGeneratorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'CA & Server Certificate Generator - Free Self-Signed RSA/ECDSA/Ed25519 SSL Tool',
+  title: { absolute: 'CA & Server Certificate Generator - Free Self-Signed RSA/ECDSA/Ed25519 SSL Tool | Online Toolbox' },
   description:
     'Free online self-signed certificate generator! Supports a direct self-signed mode or a CA + server certificate mode, RSA 2048/4096, ECDSA P-256/P-384, or Ed25519 key algorithms, and PEM, DER, or PKCS#12 output — ideal for local development and internal testing.',
   keywords: 'CA generator,self-signed certificate,server certificate,root certificate,SAN,RSA,ECDSA,Ed25519,PKCS12,DER,localhost https,dev certificate generator',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'CA & Server Certificate Generator - Free Self-Signed RSA/ECDSA/Ed25519 SSL Tool',
     description: 'Pure client-side self-signed certificate generator with a direct or CA-issued mode, multiple key algorithms, and PEM/DER/PKCS#12 output.',
     url: 'https://tools.cjkuo.net/cert-generator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

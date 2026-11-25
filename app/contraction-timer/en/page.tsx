@@ -4,7 +4,7 @@ import { generateFaqSchema } from '@/app/utils/faqSchema';
 import { FAQ_ITEMS } from '../translations';
 
 export const metadata: Metadata = {
-  title: 'Contraction Timer - Free Online Labor Contraction Tracker & Frequency Calculator',
+  title: { absolute: 'Contraction Timer - Free Online Labor Contraction Tracker & Frequency Calculator | Online Toolbox' },
   description:
     'Free online contraction timer. Tap to start and stop; it uses your latest 5 contractions to calculate how often they come, how long they last, how regular they are and how long the pattern has lasted, with a 6-hour trend chart and a one-tap summary to share. Data stays on your device and is deleted after 6 hours.',
   keywords: 'contraction timer, contraction tracker, labor contractions, contraction frequency, contraction duration, labor timer, early labor',
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     title: 'Contraction Timer - Free Labor Contraction Tracker',
     description: 'Time contractions with one tap and see frequency, duration, regularity and how long the pattern has lasted.',
     url: 'https://tools.cjkuo.net/contraction-timer/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

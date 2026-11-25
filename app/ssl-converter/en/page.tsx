@@ -3,7 +3,7 @@ import SslConverterClient from '../SslConverterClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'SSL Certificate Converter - Free Online PFX/P12/PEM/DER Converter & Chain Fixer',
+  title: { absolute: 'SSL Certificate Converter - Free Online PFX/P12/PEM/DER Converter & Chain Fixer | Online Toolbox' },
   description:
     'Free online SSL certificate converter tool! Convert PFX/P12, PEM, and DER certificates bi-directionally with client-side privacy, key matching hash check, and expiration warnings.',
   keywords: 'SSL Certificate Converter,PFX to PEM,PEM to PFX,DER to PEM,P12 converter,SSL cert chain fix,private key converter',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'SSL Certificate Converter - Free Online PFX/P12/PEM/DER Converter & Chain Fixer',
     description: 'Secure client-side SSL certificate format converter tool with certificate chain fixing and expiration analysis.',
     url: 'https://tools.cjkuo.net/ssl-converter/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

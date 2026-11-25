@@ -3,7 +3,7 @@ import FuturesCalculatorClient from '../FuturesCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Futures Risk & Margin Calculator - Taiwan Index Futures Leverage Estimator',
+  title: { absolute: 'Futures Risk & Margin Calculator - Taiwan Index Futures Leverage Estimator | Online Toolbox' },
   description:
     'Free online Taiwan futures risk & margin calculator! Supports Long/Short positions, actual leverage, 0-60% adverse stress testing, and margin call threshold estimation.',
   keywords: 'Futures Calculator, Taiwan Index Futures, TX Futures, MTX Futures, TMF Futures, Futures Margin Call, Liquidation Calculator, Futures Risk Level',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Futures Risk & Margin Calculator - Taiwan Index Futures Leverage Estimator',
     description: 'Essential risk control calculator for futures traders. Real-time adverse stress simulation, actual leverage, and margin call thresholds.',
     url: 'https://tools.cjkuo.net/futures-calculator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

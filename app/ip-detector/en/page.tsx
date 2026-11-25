@@ -3,7 +3,7 @@ import IpDetectorClient from '../IpDetectorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'My IP Address & Network Diagnostics Tool - Free IPv4/IPv6 & Cloud Latency Test',
+  title: { absolute: 'My IP Address & Network Diagnostics Tool - Free IPv4/IPv6 & Cloud Latency Test | Online Toolbox' },
   description:
     'Free online IP address detector & network diagnostic tool! Instant lookup for public IPv4/IPv6 address, IP geolocation, Cloudflare Trace, and latency tests for AWS, GCP, Azure, and CDNs.',
   keywords: 'My IP Address, IP Lookup, IPv4 Lookup, IPv6 Test, IP Geolocation, Network Diagnostics, Cloud Latency Test, Cloudflare Trace',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'My IP Address & Network Diagnostics Tool - Free IPv4/IPv6 & Cloud Latency Test',
     description: 'Instant public IPv4/IPv6 lookup, Cloudflare Trace analysis, IP geolocation, and cloud latency diagnostics.',
     url: 'https://tools.cjkuo.net/ip-detector/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

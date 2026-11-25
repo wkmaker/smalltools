@@ -3,7 +3,7 @@ import EpochClient from '../EpochClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Epoch Timestamp Converter - Free Online Unix Timestamp & Date Converter',
+  title: { absolute: 'Epoch Timestamp Converter - Free Online Unix Timestamp & Date Converter | Online Toolbox' },
   description:
     'Free online Unix Epoch timestamp converter tool! Auto second/millisecond detection, instant 2-way conversion, multi-timezone comparison (Taipei, UTC, PST), and conversion history.',
   keywords: 'epoch timestamp converter, unix timestamp, timestamp converter, epoch converter, unix time, timestamp to date, date to timestamp',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Epoch Timestamp Converter - Free Online Unix Timestamp & Date Converter',
     description: 'Free online Unix Epoch timestamp converter with multi-timezone comparison and history.',
     url: 'https://tools.cjkuo.net/epoch/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

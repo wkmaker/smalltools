@@ -3,7 +3,7 @@ import ResignationCalculatorClient from '../ResignationCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'Resignation & Notice Period Calculator - Free Taiwan Labor Law Tool',
+  title: { absolute: 'Resignation & Notice Period Calculator - Free Taiwan Labor Law Tool | Online Toolbox' },
   description:
     'Calculate official notice periods, last working days, resignation effective dates, and unused annual leave payouts based on Article 16 of the Taiwan Labor Standards Act.',
   keywords: 'resignation calculator, notice period Taiwan, Labor Standards Act Article 16, last working day, effective resignation date, annual leave payout',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: 'Resignation & Notice Period Calculator - Free Taiwan Labor Law Tool',
     description: 'Calculate official notice periods, last working days, and effective dates in Taiwan.',
     url: 'https://tools.cjkuo.net/resignation-calculator/en/',
+    siteName: 'Online Toolbox',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',

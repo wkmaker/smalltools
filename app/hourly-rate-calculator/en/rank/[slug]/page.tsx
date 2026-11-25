@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: RankPageProps): Promise<Metad
   const canonicalUrl = `https://tools.cjkuo.net/hourly-rate-calculator/en/rank/${slug}/`;
 
   return {
-    title,
+    title: { absolute: `${title} | Online Toolbox` },
     description,
     alternates: {
       canonical: canonicalUrl,

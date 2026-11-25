@@ -5,7 +5,7 @@ import { generateFaqSchema } from '@/app/utils/faqSchema';
 export const metadata: Metadata = {
   title: '股票質押維持率計算機 - 免費線上台股斷頭價與壓力測試工具',
   description:
-    '專業免費的線上台股股票質押借款與維持率試算工具！支援多檔股票質押成數試算、130% 斷頭追繳臨界股價計算、大盤大跌壓力測試與補繳保證金評估。',
+    '免費線上股票質押維持率計算機！輸入股價、張數與借款金額，一秒算出即時維持率、130% 追繳斷頭股價與補繳保證金，支援大盤大跌壓力測試。',
   keywords: '股票質押,維持率計算機,斷頭價,追繳股價,股票貸款,維持率130,股票借款,台股槓桿',
   alternates: {
     canonical: 'https://tools.cjkuo.net/pledge-calculator/',
