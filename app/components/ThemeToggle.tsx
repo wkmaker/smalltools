@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from './ThemeProvider';
+import { useIsMounted } from '@/app/utils/useIsMounted';
 
 interface ThemeToggleProps {
   className?: string;
@@ -10,13 +11,9 @@ interface ThemeToggleProps {
 
 export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const pathname = usePathname();
   const isEn = pathname?.includes('/en') ?? false;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const isLight = mounted && theme === 'light';
 

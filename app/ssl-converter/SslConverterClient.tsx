@@ -3,18 +3,24 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
-import forge from 'node-forge';
+import type ForgeNamespace from 'node-forge';
 import styles from './ssl-converter.module.css';
-import {
-  sanitizeDomainName,
-  generateCertFilename,
-  parseDistinguishedName,
-  verifyCertIssuerMatch,
-  extractPemCertificates,
-  parseSslPayload,
-  buildUnifiedCertAnalysis,
-} from './engine';
 import { downloadBlob } from '../utils/downloadBlob';
+
+let sslRuntimePromise: Promise<{
+  forge: typeof ForgeNamespace;
+  engine: typeof import('./engine');
+}> | null = null;
+
+async function loadSslRuntime() {
+  if (!sslRuntimePromise) {
+    sslRuntimePromise = Promise.all([import('node-forge'), import('./engine')]).then(([forgeMod, engine]) => ({
+      forge: forgeMod.default ?? (forgeMod as unknown as typeof ForgeNamespace),
+      engine,
+    }));
+  }
+  return sslRuntimePromise;
+}
 import { TRANSLATIONS } from './translations';
 import {
   TabType,
@@ -159,6 +165,8 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       return;
     }
     try {
+      const { engine } = await loadSslRuntime();
+      const { parseSslPayload, buildUnifiedCertAnalysis, generateCertFilename } = engine;
       const parsed = await parseSslPayload({ file: cerFile, text: cerTextInput }, cerPassword);
       if (parsed.isPfx && !parsed.pfxDecrypted) {
         showAlertMsg(t.alertPfxDecryptFailed, 'error');
@@ -213,6 +221,8 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       return;
     }
     try {
+      const { forge, engine } = await loadSslRuntime();
+      const { parseSslPayload, verifyCertIssuerMatch, buildUnifiedCertAnalysis, generateCertFilename } = engine;
       const parsedAia = await parseSslPayload({ file });
       if (parsedAia.certs.length === 0) {
         setAiaError(t.aiaErrorInvalidCert);
@@ -263,6 +273,8 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
       return;
     }
     try {
+      const { engine } = await loadSslRuntime();
+      const { parseSslPayload, buildUnifiedCertAnalysis, generateCertFilename } = engine;
       const parsed = await parseSslPayload({ file: pfxFile }, pfxPassword);
       if (parsed.isPfx && !parsed.pfxDecrypted) {
         showAlertMsg(t.alertPfxWrongPass, 'error');
@@ -305,11 +317,13 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     }
 
     try {
+      const { forge, engine } = await loadSslRuntime();
+      const { extractPemCertificates, parseDistinguishedName, sanitizeDomainName, buildUnifiedCertAnalysis } = engine;
       const keyObj = forge.pki.privateKeyFromPem(pemKey.trim());
       const certObj = forge.pki.certificateFromPem(pemCert.trim());
 
-      const keyRSA = keyObj as forge.pki.rsa.PrivateKey;
-      const certRSA = certObj.publicKey as forge.pki.rsa.PublicKey;
+      const keyRSA = keyObj as ForgeNamespace.pki.rsa.PrivateKey;
+      const certRSA = certObj.publicKey as ForgeNamespace.pki.rsa.PublicKey;
 
       if (!keyRSA.n || !certRSA.n) {
         showAlertMsg(t.alertRsaOnly, 'warning');
@@ -332,7 +346,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
         return;
       }
 
-      const caCertObjs: forge.pki.Certificate[] = [];
+      const caCertObjs: ForgeNamespace.pki.Certificate[] = [];
       if (pemCaBundle.trim()) {
         const { certs: parsedCaCerts } = extractPemCertificates(pemCaBundle);
         parsedCaCerts.forEach(c => caCertObjs.push(c));
@@ -393,6 +407,8 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     }
 
     try {
+      const { engine } = await loadSslRuntime();
+      const { parseSslPayload, buildUnifiedCertAnalysis, generateCertFilename } = engine;
       const parsed = await parseSslPayload({ file: derFile });
       if (parsed.certs.length === 0 && !parsed.privateKeyPemPkcs8) {
         showAlertMsg(t.alertDerParseError, 'error');
@@ -465,7 +481,7 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     }
   };
 
-  const convertPemToDer = () => {
+  const convertPemToDer = async () => {
     hideAlertMsg();
     if (!pemDerInput.trim()) {
       showAlertMsg(t.alertPastePem, 'warning');
@@ -473,6 +489,8 @@ export default function SslConverterClient({ lang = 'zh-TW' }: Props) {
     }
 
     try {
+      const { forge, engine } = await loadSslRuntime();
+      const { parseDistinguishedName, generateCertFilename } = engine;
       let derBytes = '';
       let filename = 'converted.der';
 

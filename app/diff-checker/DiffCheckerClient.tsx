@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, useId } from 'react';
-import * as Diff from 'diff';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import IdbRestoreBanner from '../components/IdbRestoreBanner';
 import { safeIdb } from '../utils/idb';
 import styles from './diff-checker.module.css';
 import { TRANSLATIONS } from './translations';
+import {
+  computeDiffAnalysis,
+  type SplitRow,
+  type UnifiedDecision,
+} from './engine';
 
 // 合計字元數在此門檻內即時比對，超過則防抖延遲
 const DIFF_INSTANT_MAX_CHARS = 20_000;
@@ -21,27 +25,6 @@ interface DiffDraftPayload {
   modifiedText: string;
   viewMode: 'split' | 'unified';
   ignoreCase: boolean;
-}
-
-// Split 視窗單列型態
-interface SplitRow {
-  leftLineNum?: number;
-  leftContent?: string;
-  leftType?: 'removed' | 'unchanged' | 'empty';
-  rightLineNum?: number;
-  rightContent?: string;
-  rightType?: 'added' | 'unchanged' | 'empty';
-}
-
-// Unified 視窗互動式決策列型態
-interface UnifiedDecision {
-  id: number;
-  type: 'keep' | 'removed' | 'added';
-  text: string;
-  leftLineNum?: number;
-  rightLineNum?: number;
-  state: 'active' | 'skipped';
-  defaultState: 'active' | 'skipped';
 }
 
 interface DiffCheckerClientProps {
@@ -183,143 +166,14 @@ export default function DiffCheckerClient({ lang = 'zh-TW' }: DiffCheckerClientP
     toastTimerRef.current = setTimeout(() => setToast(''), 2500);
   }, []);
 
-  const normalizeNewlines = (str: string): string => {
-    if (!str) return '';
-    return str.replace(/\r\n/g, '\n').replace(/\n*$/, '\n');
-  };
-
-  const getLines = (str: string): string[] => {
-    const lines = str.split(/\r?\n/);
-    if (lines.length > 0 && lines[lines.length - 1] === '') {
-      lines.pop();
-    }
-    return lines;
-  };
-
   // 核心比對處理
   const runDiff = useCallback(() => {
-    const safeOldStr = originalText.length > 3000000 ? originalText.substring(0, 3000000) : originalText;
-    const safeNewStr = modifiedText.length > 3000000 ? modifiedText.substring(0, 3000000) : modifiedText;
-
-    const oldStr = normalizeNewlines(safeOldStr);
-    const newStr = normalizeNewlines(safeNewStr);
-
-    const diffParts = (Diff.diffLines as any)(oldStr, newStr, { ignoreCase });
-
-    let totalAdd = 0;
-    let totalRem = 0;
-
-    const newSplitRows: SplitRow[] = [];
-    let leftLineNum = 1;
-    let rightLineNum = 1;
-
-    let pendingRemoved: string[] = [];
-    let pendingAdded: string[] = [];
-
-    const flushPending = () => {
-      const maxLen = Math.max(pendingRemoved.length, pendingAdded.length);
-      for (let i = 0; i < maxLen; i++) {
-        const row: SplitRow = {};
-        if (i < pendingRemoved.length) {
-          row.leftLineNum = leftLineNum++;
-          row.leftContent = pendingRemoved[i];
-          row.leftType = 'removed';
-        } else {
-          row.leftType = 'empty';
-        }
-
-        if (i < pendingAdded.length) {
-          row.rightLineNum = rightLineNum++;
-          row.rightContent = pendingAdded[i];
-          row.rightType = 'added';
-        } else {
-          row.rightType = 'empty';
-        }
-        newSplitRows.push(row);
-      }
-      pendingRemoved = [];
-      pendingAdded = [];
-    };
-
-    diffParts.forEach((part: Diff.Change) => {
-      const lines = getLines(part.value);
-      if (part.removed) {
-        pendingRemoved.push(...lines);
-        totalRem += lines.length;
-      } else if (part.added) {
-        pendingAdded.push(...lines);
-        totalAdd += lines.length;
-      } else {
-        flushPending();
-        lines.forEach((line) => {
-          newSplitRows.push({
-            leftLineNum: leftLineNum++,
-            leftContent: line,
-            leftType: 'unchanged',
-            rightLineNum: rightLineNum++,
-            rightContent: line,
-            rightType: 'unchanged',
-          });
-        });
-      }
-    });
-    flushPending();
-
-    setSplitRows(newSplitRows);
-    setAddedCount(totalAdd);
-    setRemovedCount(totalRem);
-
-    const newDecisions: UnifiedDecision[] = [];
-    let uLeftNum = 1;
-    let uRightNum = 1;
-    let decIndex = 0;
-
-    diffParts.forEach((part: Diff.Change) => {
-      const lines = getLines(part.value);
-      if (part.removed) {
-        lines.forEach((line) => {
-          newDecisions.push({
-            id: decIndex++,
-            type: 'removed',
-            text: line,
-            leftLineNum: uLeftNum++,
-            state: 'skipped',
-            defaultState: 'skipped',
-          });
-        });
-      } else if (part.added) {
-        lines.forEach((line) => {
-          newDecisions.push({
-            id: decIndex++,
-            type: 'added',
-            text: line,
-            rightLineNum: uRightNum++,
-            state: 'active',
-            defaultState: 'active',
-          });
-        });
-      } else {
-        lines.forEach((line) => {
-          newDecisions.push({
-            id: decIndex++,
-            type: 'keep',
-            text: line,
-            leftLineNum: uLeftNum++,
-            rightLineNum: uRightNum++,
-            state: 'active',
-            defaultState: 'active',
-          });
-        });
-      }
-    });
-
-    setUnifiedDecisions(newDecisions);
-
-    const initialMergedText = newDecisions
-      .filter((d) => d.state === 'active')
-      .map((d) => d.text)
-      .join('\n');
-    setMergeResultText(initialMergedText);
+    const analysis = computeDiffAnalysis(originalText, modifiedText, { ignoreCase });
+    setSplitRows(analysis.splitRows);
+    setAddedCount(analysis.addedCount);
+    setRemovedCount(analysis.removedCount);
+    setUnifiedDecisions(analysis.unifiedDecisions);
+    setMergeResultText(analysis.mergedText);
   }, [originalText, modifiedText, ignoreCase]);
 
   // 防抖：小文字即時比對；大文字（合計超過門檻）延遲執行，避免每次按鍵都在主執行緒跑 O(N*D) 比對

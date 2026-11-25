@@ -252,3 +252,24 @@
   color: #a21caf;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
 }
+
+/* ── 雙主題語意狀態色 ── */
+.savingRateText {
+  color: #34d399;
+}
+
+:global([data-theme='light']) .savingRateText {
+  color: #047857;
+}
+
+.statusDoneBadge {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+:global([data-theme='light']) .statusDoneBadge {
+  background: rgba(5, 150, 105, 0.1);
+  color: #047857;
+  border-color: rgba(5, 150, 105, 0.3);
+}

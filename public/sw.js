@@ -8,12 +8,12 @@ const PRECACHE_ASSETS = [
   '/offline.html',
 ];
 
-// 1. 安裝階段：預快取靜態資源（不快取 HTML 頁面）
+// 1. 安裝階段：預快取靜態資源（不主動 skipWaiting，交由使用者點擊更新或下次開啟分頁生效）
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 

@@ -1,4 +1,4 @@
-import { AspectRatio, PresetColor, PresetIcon, RatioDimension } from './types';
+import type { AspectRatio, PresetColor, PresetIcon, RatioDimension } from './types';
 
 export const PRESET_COLORS: PresetColor[] = [
   {

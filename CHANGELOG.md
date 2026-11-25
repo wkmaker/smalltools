@@ -4,6 +4,33 @@
 
 ## [Unreleased]
 
+## [1.32.0] - 2026-11-25
+
+### Added
+- **新增 PR 階段自動化 CI 品質把關流程 (`.github/workflows/ci.yml`)**：
+  - 於 Pull Request 合併至 `main` 前自動執行 `npx tsc --noEmit`、`npm run lint`、`npm test`（UI / SEO / FAQ / i18n / Engine）與 `npm run audit:aria`。
+- **補齊全站 39 個工具核心引擎單元測試覆蓋率達 100%**：
+  - 抽離 `app/base64/engine.ts`、`app/diff-checker/engine.ts`、`app/ip-detector/engine.ts`、`app/pdf-processor/engine.ts` 純函式引擎，並新增 `tests/engine/base64.test.mjs`、`tests/engine/diff-checker.test.mjs`、`tests/engine/ip-detector.test.mjs`、`tests/engine/og-generator.test.mjs`、`tests/engine/pdf-processor.test.mjs` 五套引擎測試。
+- **新增 React 19 Hydration-safe 共用掛載 Hook (`app/utils/useIsMounted.ts`)**：
+  - 以 `useSyncExternalStore` 實作零二次渲染的 `useIsMounted()`，取代 `ThemeToggle`、`ThemeProvider`、`HourlyRateCalculatorClient`、`PdfProcessorClient` 等元件中的 `useEffect(() => setMounted(true), [])`。
+
+### Fixed
+- **修復 Service Worker 自動強制重整與 `load` 事件註冊競態 (`public/sw.js`、`app/components/ServiceWorkerRegister.tsx`)**：
+  - 移除 `install` 階段自動 `self.skipWaiting()` 與 `controllerchange` 無條件重整，改於更新提示橫幅提供「立即更新 / 稍後」操作按鈕，防止錄影、計時器或填寫複雜表單時遭發版強制刷新中斷。
+  - 修復 Hydration 晚於 `window.load` 事件導致 Service Worker 未註冊的競態問題，並將 Toast 改用專案語意 Token 與 `role="status"` / `aria-live="polite"`。
+
+### Changed
+- **重型加密與雜湊套件全面改為動態載入 (Dynamic Import)**：
+  - `checksum-verifier`（`hash-wasm`）、`cert-generator`（`@peculiar/x509`、`reflect-metadata`、`node-forge`）與 `ssl-converter`（`node-forge`）改為於使用者觸發運算或上傳時按需載入，降低首屏 JS Bundle 體積與 Hydration 負擔。
+- **拆解 6 個超過 900 行的單體 Client 元件**：
+  - `image-processor`（1,139 → 623 行）、`lucky-wheel`（1,129 → 413 行）、`futures-calculator`（994 → 377 行）、`pac-generator`（986 → 447 行）、`pdf-compressor`（993 → 585 行）、`hourly-rate-calculator`（981 → 414 行）均完成高內聚子元件／Hook 拆分。
+- **架構整潔與檔案目錄統一**：
+  - 將 `app/config/tools.tsx` 拆離為純資料註冊表 `app/config/tools-meta.ts`（供 `sitemap.ts`、`translations.ts`、`og-generator.tsx` 零 JSX 引用）與圖示表 `app/config/tool-icons.tsx`，保留 `app/config/tools.tsx` 向下相容組合層。
+  - 將根目錄 `components/` 下 6 個檔案全數收攏至 `app/components/`，並同步更新稽核腳本與部署工作流。
+  - 同步 `README.md` 技術棧版本 Badge 與 `Node.js >= 22.0.0` 需求、更新 `todolist.md` 版本資訊，並移除已歸檔的歷史施工文件 `plantodo.md`。
+
+---
+
 ## [1.31.1] - 2026-11-25
 
 ### Security

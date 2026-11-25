@@ -366,13 +366,13 @@ export default function CertGeneratorClient({ lang = 'zh-TW' }: Props) {
     }
   };
 
-  const downloadPkcs12 = (identity: IdentityOutput) => {
+  const downloadPkcs12 = async (identity: IdentityOutput) => {
     if (!pkcs12Password) {
       setErrorMsg(t.errorPkcs12PasswordRequired);
       return;
     }
     try {
-      const bytes = buildPkcs12(identity.certPem, identity.privateKeyPem, pkcs12Password);
+      const bytes = await buildPkcs12(identity.certPem, identity.privateKeyPem, pkcs12Password);
       downloadBlob(new Blob([bytes as BlobPart], { type: 'application/x-pkcs12' }), `${identity.fileBaseName}.p12`);
     } catch (e) {
       console.error('[CertGenerator] Download PKCS12 failed:', e);

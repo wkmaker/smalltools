@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { getGoogleFont } from '@/app/utils/og-font';
 import { OgImageTemplate, OgTemplateProps } from '@/app/utils/og-template';
-import { CATEGORIES, Tool } from '@/app/config/tools';
+import { CATEGORIES_META as CATEGORIES, type ToolMeta as Tool } from '@/app/config/tools-meta';
 
 export const ogImageExports = {
   dynamic: 'force-static' as const,

@@ -6,7 +6,6 @@ import { rules } from './ui-rules/index.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const appDir = path.resolve(__dirname, '../app');
-const componentsDir = path.resolve(__dirname, '../components');
 
 function getAllTsxFiles(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -26,7 +25,7 @@ function getAllTsxFiles(dir) {
   return results;
 }
 
-const tsxFiles = [...getAllTsxFiles(appDir), ...getAllTsxFiles(componentsDir)];
+const tsxFiles = getAllTsxFiles(appDir);
 let hasErrors = false;
 let errorCount = 0;
 

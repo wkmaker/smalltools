@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
-const scanDirs = ['app', 'components'].map((d) => path.join(rootDir, d));
+const scanDirs = ['app'].map((d) => path.join(rootDir, d));
 
 function getAllTsxFiles(dir) {
   let results = [];

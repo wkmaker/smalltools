@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useId, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import Link from 'next/link';
 import ToolLayout from '@/app/components/ToolLayout';
 import FaqSection from '@/app/components/FaqSection';
+import { useIsMounted } from '@/app/utils/useIsMounted';
 import taiwanStatsData from './config/taiwan_statistics.json';
 import globalStatsData from './config/global_statistics.json';
 import milestoneData from './config/percentile_milestones.json';
 import countrySuitabilityData from './config/country_suitability.json';
 import styles from './hourly-rate-calculator.module.css';
 import RankHeroBanner from './RankHeroBanner';
+import HourlyRateInputPanel from './components/HourlyRateInputPanel';
+import HourlyRateResultPanel from './components/HourlyRateResultPanel';
+import HourlyRateDataSources from './components/HourlyRateDataSources';
 import {
   Milestone,
   CountryMatch,
@@ -31,37 +34,17 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
   const isEn = lang === 'en';
   const t = TRANSLATIONS[lang];
   // ─── 主題色初始化 ─────────────────────────────────────────────────────────
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
 
   useEffect(() => {
-    setMounted(true);
     document.documentElement.style.setProperty('--theme-color', '#00f5a0');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 245, 160, 0.6)');
   }, []);
 
-  // Fix #3: 統一使用 isMountedRef 作為 URL sync 防護，移除重複的 isHydrated state
-  const isMountedRef = useRef(false);
-
-  // Fix #6: 用 ref 追蹤 toast timer ID，在 unmount 時清除防止記憶體洩漏
+  // 用 ref 追蹤 toast timer ID，在 unmount 時清除防止記憶體洩漏
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ─── 無障礙 Form IDs ──────────────────────────────────────────────────────
-  const yearSelectId = useId();
-  const calcModeSelectId = useId();
-  const monthlySalaryId = useId();
-  const monthlyHoursId = useId();
-  const overtimeHoursId = useId();
-  const commuteHoursId = useId();
-  const monthlyExpensesId = useId();
-  const projectFeeId = useId();
-  const projectHoursId = useId();
-  const extraHoursId = useId();
-  const projectExpensesId = useId();
-
   // ─── States ───────────────────────────────────────────────────────────────
-  // showCalculator 從 state 改為 const（setter 從未被呼叫，避免不必要的 state）
-  const showCalculator = !initialSlug && initialPr === undefined;
-
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [calcMode, setCalcMode] = useState<'monthly' | 'project'>('monthly');
 
@@ -80,10 +63,8 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
 
   // Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  // Tooltip
-  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
 
-  // Fix #6: Cleanup timer on unmount
+  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -99,7 +80,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
     }, 3000);
   };
 
-  // Fix #3 & URL Parsing Bug: 記錄是否完成 URL Hydration 讀取
+  // 記錄是否完成 URL Hydration 讀取
   const isHydratedRef = useRef(false);
   const [hasCustomParams, setHasCustomParams] = useState(false);
 
@@ -172,7 +153,6 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
     }, 50);
   }, [initialSlug, initialPr]);
 
-
   // ─── 靜態資料衍生值 ───────────────────────────────────────────────────────
   const yearKey = String(selectedYear) as keyof typeof taiwanStatsData.statistics;
   const currentTaiwanStat = taiwanStatsData.statistics[yearKey] || taiwanStatsData.statistics['2026'];
@@ -240,7 +220,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
     matchedCountry = countryMatches[countryMatches.length - 1];
   }
 
-  // Fix #4: queryParamsString 改為 useMemo，消除 5+ 次重複呼叫 getQueryParamsString()
+  // queryParamsString 改為 useMemo，消除重複計算
   const queryParamsString = useMemo(() => {
     const params = new URLSearchParams();
     params.set('year', String(selectedYear));
@@ -270,7 +250,7 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
     taiwanPR, globalPR, realHourlyRate,
   ]);
 
-  // Fix #3: URL sync 改用 isHydratedRef.current，防止初始載入時誤蓋 URL
+  // URL sync 使用 isHydratedRef.current，防止初始載入時誤蓋 URL
   useEffect(() => {
     if (!isHydratedRef.current) return;
     window.history.replaceState(null, '', `${window.location.pathname}?${queryParamsString}`);
@@ -278,7 +258,6 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
 
   // 計算器表單僅在非 Rank 頁面展示（Rank 卡片頁保持乾淨純淨，點擊下方「試算我的時薪與 PR」即可跳轉試算）
   const shouldShowCalculator = !heroMilestone;
-
 
   // ─── 分享處理器 ───────────────────────────────────────────────────────────
   const handleShare = async (overrideText?: string) => {
@@ -311,15 +290,6 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
     }
   };
 
-  // ─── 數字輸入 Helper ──────────────────────────────────────────────────────
-  const handleNumberInput = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setter: (val: number | '') => void
-  ) => {
-    const raw = e.target.value.replace(/[^\d]/g, '');
-    setter(raw === '' ? '' : parseInt(raw, 10));
-  };
-
   // ─── JSX ──────────────────────────────────────────────────────────────────
   return (
     <ToolLayout
@@ -332,9 +302,8 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
       backText={heroMilestone ? t.backToCalculator : undefined}
       backTitle={heroMilestone ? t.backToCalculatorHome : undefined}
     >
-
       <div className={styles.container}>
-        {/* Fix #1: IIFE 完全移除，改用獨立元件 <RankHeroBanner /> */}
+        {/* Rank 專屬頁 Hero Banner */}
         {heroMilestone && (
           <RankHeroBanner
             heroMilestone={heroMilestone}
@@ -373,598 +342,64 @@ export default function HourlyRateCalculatorClient({ initialSlug, initialPr, lan
 
         {/* Main Grid: Left Controls, Right Results */}
         {shouldShowCalculator && (
-
           <div id="calculator-section" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
-          {/* Controls Card */}
-          <div className={`lg:col-span-6 p-6 ${styles.calcCard}`}>
-            <div className="flex items-center justify-between border-b border-border-glass pb-4 mb-6">
-              <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
-                <svg className={`w-5 h-5 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                {t.calcSettingsTitle}
-              </h2>
+            <HourlyRateInputPanel
+              t={t}
+              selectedYear={selectedYear}
+              onSelectedYearChange={setSelectedYear}
+              calcMode={calcMode}
+              onCalcModeChange={setCalcMode}
+              monthlySalary={monthlySalary}
+              onMonthlySalaryChange={setMonthlySalary}
+              monthlyHours={monthlyHours}
+              onMonthlyHoursChange={setMonthlyHours}
+              overtimeHours={overtimeHours}
+              onOvertimeHoursChange={setOvertimeHours}
+              commuteHours={commuteHours}
+              onCommuteHoursChange={setCommuteHours}
+              monthlyExpenses={monthlyExpenses}
+              onMonthlyExpensesChange={setMonthlyExpenses}
+              projectFee={projectFee}
+              onProjectFeeChange={setProjectFee}
+              projectHours={projectHours}
+              onProjectHoursChange={setProjectHours}
+              extraHours={extraHours}
+              onExtraHoursChange={setExtraHours}
+              projectExpenses={projectExpenses}
+              onProjectExpensesChange={setProjectExpenses}
+            />
 
-              {/* Fix #5: 年份選單動態由 SUPPORTED_YEARS 渲染，與 URL 驗證邏輯共用同一來源 */}
-              <div className="flex items-center gap-2">
-                <label htmlFor={yearSelectId} className="text-xs font-semibold text-text-sub">
-                  {t.applicableYearLabel}
-                </label>
-                <select
-                  id={yearSelectId}
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="bg-select-bg border border-border-glass rounded-lg px-2.5 py-1 text-sm text-text-main font-medium outline-none focus:border-[var(--theme-color)]"
-                >
-                  {SUPPORTED_YEARS.map((year) => {
-                    const stat = taiwanStatsData.statistics[String(year) as keyof typeof taiwanStatsData.statistics];
-                    return (
-                      <option key={year} value={year}>
-                        {t.yearOption(year, stat.minimum_wage.hourly)}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            </div>
-
-            {/* Mode Switcher */}
-            <div className="mb-6">
-              <legend id={calcModeSelectId} className="text-sm font-medium text-text-sub mb-2 block">
-                {t.calcModeLabel}
-              </legend>
-              <div className="grid grid-cols-2 gap-2 bg-surface-glass p-1.5 rounded-xl border border-border-glass">
-                <button
-                  type="button"
-                  onClick={() => setCalcMode('monthly')}
-                  className={`${styles.tabBtn} ${calcMode === 'monthly' ? styles.tabBtnActive : ''}`}
-                >
-                  {t.modeMonthly}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCalcMode('project')}
-                  className={`${styles.tabBtn} ${calcMode === 'project' ? styles.tabBtnActive : ''}`}
-                >
-                  {t.modeProject}
-                </button>
-              </div>
-            </div>
-
-            {/* Inputs based on Mode */}
-            {calcMode === 'monthly' ? (
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor={monthlySalaryId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                    {t.monthlySalaryLabel}
-                  </label>
-                  <input
-                    id={monthlySalaryId}
-                    type="text"
-                    inputMode="numeric"
-                    value={monthlySalary === '' ? '' : monthlySalary.toLocaleString(t.numberLocale)}
-                    onChange={(e) => handleNumberInput(e, setMonthlySalary)}
-                    className={styles.inputField}
-                    placeholder={t.monthlySalaryPlaceholder}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor={monthlyHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      {t.monthlyHoursLabel}
-                    </label>
-                    <input
-                      id={monthlyHoursId}
-                      type="text"
-                      inputMode="numeric"
-                      value={monthlyHours === '' ? '' : monthlyHours}
-                      onChange={(e) => handleNumberInput(e, setMonthlyHours)}
-                      className={styles.inputField}
-                      placeholder={t.monthlyHoursPlaceholder}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={overtimeHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      {t.overtimeHoursLabel}
-                    </label>
-                    <input
-                      id={overtimeHoursId}
-                      type="text"
-                      inputMode="numeric"
-                      value={overtimeHours === '' ? '' : overtimeHours}
-                      onChange={(e) => handleNumberInput(e, setOvertimeHours)}
-                      className={styles.inputField}
-                      placeholder={t.overtimeHoursPlaceholder}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor={commuteHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      {t.commuteHoursLabel}
-                    </label>
-                    <input
-                      id={commuteHoursId}
-                      type="text"
-                      inputMode="numeric"
-                      value={commuteHours === '' ? '' : commuteHours}
-                      onChange={(e) => handleNumberInput(e, setCommuteHours)}
-                      className={styles.inputField}
-                      placeholder={t.commuteHoursPlaceholder}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={monthlyExpensesId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      {t.monthlyExpensesLabel}
-                    </label>
-                    <input
-                      id={monthlyExpensesId}
-                      type="text"
-                      inputMode="numeric"
-                      value={monthlyExpenses === '' ? '' : monthlyExpenses.toLocaleString(t.numberLocale)}
-                      onChange={(e) => handleNumberInput(e, setMonthlyExpenses)}
-                      className={styles.inputField}
-                      placeholder={t.monthlyExpensesPlaceholder}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor={projectFeeId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                    {t.projectFeeLabel}
-                  </label>
-                  <input
-                    id={projectFeeId}
-                    type="text"
-                    inputMode="numeric"
-                    value={projectFee === '' ? '' : projectFee.toLocaleString(t.numberLocale)}
-                    onChange={(e) => handleNumberInput(e, setProjectFee)}
-                    className={styles.inputField}
-                    placeholder={t.projectFeePlaceholder}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor={projectHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      {t.projectHoursLabel}
-                    </label>
-                    <input
-                      id={projectHoursId}
-                      type="text"
-                      inputMode="numeric"
-                      value={projectHours === '' ? '' : projectHours}
-                      onChange={(e) => handleNumberInput(e, setProjectHours)}
-                      className={styles.inputField}
-                      placeholder={t.projectHoursPlaceholder}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={extraHoursId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                      {t.extraHoursLabel}
-                    </label>
-                    <input
-                      id={extraHoursId}
-                      type="text"
-                      inputMode="numeric"
-                      value={extraHours === '' ? '' : extraHours}
-                      onChange={(e) => handleNumberInput(e, setExtraHours)}
-                      className={styles.inputField}
-                      placeholder={t.extraHoursPlaceholder}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor={projectExpensesId} className="text-sm font-semibold text-text-sub mb-1.5 block">
-                    {t.projectExpensesLabel}
-                  </label>
-                  <input
-                    id={projectExpensesId}
-                    type="text"
-                    inputMode="numeric"
-                    value={projectExpenses === '' ? '' : projectExpenses.toLocaleString(t.numberLocale)}
-                    onChange={(e) => handleNumberInput(e, setProjectExpenses)}
-                    className={styles.inputField}
-                    placeholder={t.projectExpensesPlaceholder}
-                  />
-                </div>
-              </div>
-            )}
+            <HourlyRateResultPanel
+              t={t}
+              isEn={isEn}
+              realHourlyRate={realHourlyRate}
+              totalHours={totalHours}
+              netIncome={netIncome}
+              isLegal={isLegal}
+              diffPercent={diffPercent}
+              taiwanPR={taiwanPR}
+              globalPR={globalPR}
+              matchedCountry={matchedCountry}
+              matchedMilestone={matchedMilestone}
+              queryParamsString={queryParamsString}
+              onShare={() => handleShare()}
+            />
           </div>
-
-          {/* Result Card */}
-          <div className="lg:col-span-6 space-y-6">
-            {/* Real Hourly Rate Highlight */}
-            <div className={`p-6 ${styles.calcCard} relative overflow-hidden`}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-semibold text-text-sub">{t.realHourlyRateLabel}</span>
-                {/* Legality Badge & Tooltip Container */}
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                      isLegal ? styles.passBadge : styles.failBadge
-                    }`}
-                  >
-                    {isLegal ? (
-                      <>
-                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        {t.rateAboveBase(diffPercent.toFixed(1))}
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        {t.rateBelowBase(diffPercent.toFixed(1))}
-                      </>
-                    )}
-                  </span>
-
-                  {/* Info Tooltip Button */}
-                  <div className="relative inline-block">
-                    <button
-                      type="button"
-                      onClick={() => setShowInfoTooltip((prev) => !prev)}
-                      onMouseEnter={() => setShowInfoTooltip(true)}
-                      onMouseLeave={() => setShowInfoTooltip(false)}
-                      aria-label={t.calcLogicInfoAria}
-                      className="p-1 rounded-full text-text-sub hover:text-text-main hover:bg-white/10 transition-colors focus:outline-none flex items-center justify-center"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-
-                    {showInfoTooltip && (
-                      <div className={`absolute right-0 top-full mt-2 w-72 sm:w-80 p-3.5 z-20 text-xs rounded-xl shadow-xl ${styles.tooltipContainer}`}>
-                        <p className="font-bold mb-1.5 text-text-main flex items-center gap-1.5">
-                          <svg className="w-4 h-4 text-themeAccentText" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 01-2 2h-4a2 2 0 01-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                          {t.calcComplianceTitle}
-                        </p>
-                        <p className="text-text-sub leading-relaxed">
-                          {isEn ? (
-                            <>
-                              This tool deducts <strong>commute time, unpaid overtime, and work expenses</strong>.
-                              <br />
-                              Under Taiwan Labor Law, monthly salary compliance is determined by <code className="bg-white/10 px-1 py-0.5 rounded">Monthly Salary ÷ 240 hrs</code>. A lower real hourly rate reflects net time earnings rather than an employer violation.
-                            </>
-                          ) : (
-                            <>
-                              本工具「真實時薪」已扣除<strong>通勤時間、無酬加班與工作自費開銷</strong>。
-                              <br />
-                              依勞基法規定，月薪制勞工合規判定以「<code className="bg-white/10 px-1 py-0.5 rounded">月薪 ÷ 240小時</code>」為準，因此真實時薪低於法定時薪<strong>不代表僱主違法</strong>，而是反映扣除隱形成本後的個人時間淨收益。
-                            </>
-                          )}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-4xl sm:text-5xl font-black text-text-main font-mono tracking-tight">
-                  ${Math.round(realHourlyRate).toLocaleString(t.numberLocale)}
-                </span>
-                <span className="text-base font-semibold text-text-sub">/ hr</span>
-              </div>
-
-              {/* Work Breakdown Stats */}
-              <div className="grid grid-cols-2 gap-4 border-t border-border-glass pt-4">
-                <div>
-                  <span className="text-xs text-text-sub block mb-1">{t.totalHoursInvestedLabel}</span>
-                  <span className="text-sm font-semibold text-text-main font-mono">{totalHours} {t.hrsUnit}</span>
-                </div>
-                <div>
-                  <span className="text-xs text-text-sub block mb-1">{t.netIncomeLabel}</span>
-                  <span className="text-sm font-semibold text-text-main font-mono">
-                    ${Math.max(0, netIncome).toLocaleString(t.numberLocale)} {t.currencyUnit}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Dual PR Ranking Cards (Taiwan & Worldwide) */}
-            <div className={`p-6 ${styles.calcCard} space-y-6`}>
-              <div className="flex items-center justify-between border-b border-border-glass pb-3">
-                <h3 className="text-base font-bold text-text-main flex items-center gap-2">
-                  <svg className={`w-5 h-5 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  {t.leaderboardTitle}
-                </h3>
-              </div>
-
-              {/* Taiwan PR Section */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-text-main flex items-center gap-1.5">
-                    <svg className="w-4 h-4" viewBox="0 0 48 48"><path fill="#f0f0f0" d="M44 36c0 4.418-3.582 8-8 8H12c-4.418 0-8-3.582-8-8V12c0-4.418 3.582-8 8-8h24c4.418 0 8 3.582 8 8v24z"/><path fill="#d52b1e" d="M4 12v24c0 4.418 3.582 8 8 8h24c4.418 0 8-3.582-8-8V12c0-4.418-3.582-8-8-8H12c-4.418 0-8 3.582-8 8z"/><path fill="#fff" d="M24 8l-4 8h8l-4 8 4 8h-8l4 8M12 4l12 12 12-12M12 44l12-12 12 12"/></svg>
-                    {t.taiwanWorkerPrLabel}
-                  </span>
-                  <span className={`text-base font-extrabold font-mono ${styles.themeAccentText}`}>
-                    PR {taiwanPR.toFixed(1)}
-                  </span>
-                </div>
-                <div className={styles.progressBarTrack}>
-                  <div
-                    className={styles.progressBarFill}
-                    style={{ width: `${Math.max(3, Math.min(100, taiwanPR))}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-text-sub mt-1 font-mono">
-                  <span>PR 10 {t.pr10Label}</span>
-                  <span>PR 50 {t.pr50Label}</span>
-                  <span>PR 90 {t.pr90Label}</span>
-                </div>
-              </div>
-
-              {/* Worldwide PR Section */}
-              <div className="pt-3 border-t border-border-glass">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-text-main flex items-center gap-1.5">
-                    <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {t.globalPopulationPrLabel}
-                  </span>
-                  <span className={`text-base font-extrabold font-mono ${styles.globalPrText}`}>
-                    PR {globalPR.toFixed(1)}
-                  </span>
-                </div>
-                <div className={styles.progressBarTrack}>
-                  <div
-                    className={styles.globalProgressBarFill}
-                    style={{ width: `${Math.max(3, Math.min(100, globalPR))}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-text-sub mt-1 font-mono">
-                  <span>P50 {t.globalP50Label}</span>
-                  <span>P90 ($26,500 USD)</span>
-                  <span>P99 Top 1% ($109,000 USD)</span>
-                </div>
-                <p className="text-xs text-text-sub mt-2 flex items-center gap-1">
-                  <svg className={`w-3.5 h-3.5 ${styles.themeAccentText} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
-                  {isEn ? (
-                    <>Your income outperforms <span className="font-bold text-text-main">{globalPR.toFixed(1)}%</span> of the global population! (Source: WID Global Income Distribution)</>
-                  ) : (
-                    <>您的收入擊敗了全球 <span className="font-bold text-text-main">{globalPR.toFixed(1)}%</span> 的人口！ (資料源：WID 全球所得分佈)</>
-                  )}
-                </p>
-              </div>
-
-              {/* Country Lifestyle Compatibility Card */}
-              {matchedCountry && (
-                <div className="pt-3 border-t border-border-glass">
-                  <div className="p-4 rounded-xl bg-surface-glass border border-border-glass relative space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${styles.countryBadge} flex items-center gap-1`}>
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {t.bestMigrationMatchLabel}
-                      </span>
-                      <span className="text-sm font-bold text-text-main">
-                        {isEn && matchedCountry.name_en ? matchedCountry.name_en : matchedCountry.name}
-                      </span>
-                    </div>
-                    <div className={`text-sm font-extrabold ${styles.themeAccentText}`}>
-                      【{isEn && matchedCountry.tag_en ? matchedCountry.tag_en : matchedCountry.tag}】
-                    </div>
-                    <p className="text-sm text-text-sub leading-relaxed">
-                      {isEn && matchedCountry.description_en ? matchedCountry.description_en : matchedCountry.description}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Exclusive Milestone Card */}
-              {matchedMilestone && (
-                <div className={`${styles.exclusiveMilestoneCard} space-y-3`}>
-                  <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-1 text-xs font-bold rounded-md ${styles.milestoneBadge} flex items-center gap-1`}>
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
-                      {t.workerPersonaUnlockedLabel}
-                    </span>
-                    <span className="text-xs font-mono text-text-sub font-bold">
-                      {t.taiwanPrShortLabel} {taiwanPR.toFixed(1)}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xl font-black text-text-main flex items-center gap-2 mb-1">
-                      【{isEn && matchedMilestone.label_en ? matchedMilestone.label_en : matchedMilestone.label}】
-                    </h4>
-                    <p className="text-sm text-text-sub leading-relaxed">
-                      {isEn && matchedMilestone.desc_en ? matchedMilestone.desc_en : matchedMilestone.desc}
-                    </p>
-                  </div>
-
-                  {/* Shiny CTA Button to open the dedicated PRXX page */}
-                  <div className="pt-2">
-                    <Link
-                      href={`/hourly-rate-calculator/${t.urlLangPrefix}rank/${formatPrCode(matchedMilestone.pr)}/?${queryParamsString}`}
-                      prefetch={false}
-                      className={styles.milestoneCardCTA}
-                    >
-                      <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                      </svg>
-                      {t.viewExclusiveCard(formatPrCode(matchedMilestone.pr).toUpperCase())}
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-              {/* Share Action */}
-              <div className="mt-6 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => handleShare()}
-                  className={styles.shareBtn}
-                >
-                  <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                  {t.shareCardBtn}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
         )}
-          <div className="border-t border-border-glass pt-6 mt-4">
-            <h3 className="font-semibold text-text-main mb-3 text-base flex items-center gap-2">
-              <svg className={`w-5 h-5 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              {t.referenceDataSourcesTitle}
-            </h3>
-            <ul className="space-y-2 text-xs text-text-sub list-disc list-inside leading-relaxed">
-              <li>
-                <strong className="text-text-main inline-flex items-center gap-1">
-                  <svg className={`w-4 h-4 ${styles.themeAccentText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  {t.taiwanSalaryDataLabel}
-                </strong>：
-                {isEn ? (
-                  <>
-                    <a
-                      href="https://www.dgbas.gov.tw/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      DGBAS Executive Yuan
-                    </a>
-                    {' "Employee Annual Earnings Distribution & Percentile Statistics" & Ministry of Labor Minimum Wage Announcements.'}
-                  </>
-                ) : (
-                  <>
-                    <a
-                      href="https://www.dgbas.gov.tw/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      行政院主計總處
-                    </a>
-                    《受僱員工全年總薪資中位數及分位數統計表》與勞動部《法定最低工資發布公告》。
-                  </>
-                )}
-              </li>
-              <li>
-                <strong className="text-text-main inline-flex items-center gap-1">
-                  <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2v1.5a2.5 2.5 0 002.5 2.5h.5a2 2 0 012 2v.5h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {t.globalIncomeDataLabel}
-                </strong>：
-                {isEn ? (
-                  <>
-                    <a
-                      href="https://wid.world/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      World Inequality Database (WID)
-                    </a>
-                    & World Bank Global Income Distribution Reports.
-                  </>
-                ) : (
-                  <>
-                    <a
-                      href="https://wid.world/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      World Inequality Database (WID 全球不平等資料庫)
-                    </a>
-                    與 World Bank (世界銀行全球個人所得分佈報告)。
-                  </>
-                )}
-              </li>
-              <li>
-                <strong className="text-text-main inline-flex items-center gap-1">
-                  <svg className="w-4 h-4 text-text-sub" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m0 0l-3 9m3-9l3 2m0 0l-3 9m3-9l3 9m-6-9l6 2m0 0l-3 9m3-9l3 9" />
-                  </svg>
-                  {t.pppIndexLabel}
-                </strong>：
-                {isEn ? (
-                  <>
-                    <a
-                      href="https://www.oecd.org/en/data/datasets/purchasing-power-parities.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      OECD Purchasing Power Parities
-                    </a>
-                    &
-                    <a
-                      href="https://www.numbeo.com/cost-of-living/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      Numbeo Global Cost of Living Index
-                    </a>
-                    .
-                  </>
-                ) : (
-                  <>
-                    <a
-                      href="https://www.oecd.org/en/data/datasets/purchasing-power-parities.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      OECD Purchasing Power Parities
-                    </a>
-                    與
-                    <a
-                      href="https://www.numbeo.com/cost-of-living/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`underline ${styles.themeAccentText} transition-colors ml-1`}
-                    >
-                      Numbeo Global Cost of Living Index
-                    </a>
-                    。
-                  </>
-                )}
-              </li>
-            </ul>
-          </div>
-        </div>
 
-        {/* 常見問題 FAQ 區塊 */}
-        <div className="mt-8">
-          <FaqSection
-            title={FAQ_DATA[lang].title}
-            subtitle={FAQ_DATA[lang].subtitle}
-            items={FAQ_DATA[lang].items}
-            accentColor="#00f5a0"
-          />
-        </div>
+        {/* 參考數據來源 */}
+        <HourlyRateDataSources t={t} isEn={isEn} />
+      </div>
+
+      {/* 常見問題 FAQ 區塊 */}
+      <div className="mt-8">
+        <FaqSection
+          title={FAQ_DATA[lang].title}
+          subtitle={FAQ_DATA[lang].subtitle}
+          items={FAQ_DATA[lang].items}
+          accentColor="#00f5a0"
+        />
+      </div>
 
       {/* Toast Notification */}
       {mounted && toastMessage && createPortal(

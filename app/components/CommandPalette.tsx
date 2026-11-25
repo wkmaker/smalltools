@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { CATEGORIES, type Tool } from '@/app/config/tools';
-import { useTheme } from '@/components/ThemeProvider';
+import { useTheme } from '@/app/components/ThemeProvider';
 import styles from './CommandPalette.module.css';
 
 interface PaletteItem {

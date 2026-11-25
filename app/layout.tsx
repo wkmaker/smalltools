@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
-import ParticleCanvas from '@/components/ParticleCanvas';
-import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import CommandPalette from '@/components/CommandPalette';
+import ParticleCanvas from '@/app/components/ParticleCanvas';
+import ServiceWorkerRegister from '@/app/components/ServiceWorkerRegister';
+import { ThemeProvider } from '@/app/components/ThemeProvider';
+import CommandPalette from '@/app/components/CommandPalette';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tools.cjkuo.net';
 

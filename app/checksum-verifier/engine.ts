@@ -10,7 +10,7 @@
  *   記憶體用量固定，可處理數 GB 以上的大型檔案；上述整份緩衝區函式保留供小量資料與測試使用。
  */
 
-import { createCRC32, createMD5, createSHA1, createSHA256, createSHA512, type IHasher } from 'hash-wasm';
+import type { IHasher } from 'hash-wasm';
 
 export type HashAlgorithm = 'CRC32' | 'MD5' | 'SHA-1' | 'SHA-256' | 'SHA-512';
 
@@ -211,12 +211,20 @@ export async function computeAllHashes(
 /** 每次從檔案讀取的區塊大小；記憶體用量固定在此量級，與檔案總大小無關。 */
 export const STREAM_CHUNK_SIZE = 16 * 1024 * 1024;
 
+let hashWasmPromise: Promise<typeof import('hash-wasm')> | null = null;
+function loadHashWasm(): Promise<typeof import('hash-wasm')> {
+  if (!hashWasmPromise) {
+    hashWasmPromise = import('hash-wasm');
+  }
+  return hashWasmPromise;
+}
+
 const HASHER_FACTORIES: Record<HashAlgorithm, () => Promise<IHasher>> = {
-  CRC32: () => createCRC32(),
-  MD5: createMD5,
-  'SHA-1': createSHA1,
-  'SHA-256': createSHA256,
-  'SHA-512': createSHA512,
+  CRC32: async () => (await loadHashWasm()).createCRC32(),
+  MD5: async () => (await loadHashWasm()).createMD5(),
+  'SHA-1': async () => (await loadHashWasm()).createSHA1(),
+  'SHA-256': async () => (await loadHashWasm()).createSHA256(),
+  'SHA-512': async () => (await loadHashWasm()).createSHA512(),
 };
 
 /** 可分段讀取的資料來源（瀏覽器 File / Blob 皆符合）。 */

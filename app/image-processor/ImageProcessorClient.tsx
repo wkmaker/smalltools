@@ -1,30 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useId } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
+import IdbRestoreBanner from '../components/IdbRestoreBanner';
 import styles from './image-processor.module.css';
-
-interface BatchItem {
-  file: File;
-  id: string;
-  thumbUrl: string;
-  estimatedSize: number | null;
-  status: 'pending' | 'processing' | 'done' | 'error';
-}
+import { createSimpleZip } from './utils/zipBuilder';
+import { safeLoadImage, renderProcessedCanvas } from './utils/canvasProcessor';
+import { formatBytes } from '../utils/formatBytes';
+import { downloadBlob } from '../utils/downloadBlob';
+import { safeIdb } from '../utils/idb';
+import { calculateBatchDimensions } from './engine';
+import { TRANSLATIONS } from './translations';
+import ImageWorkspaceHeader from './components/ImageWorkspaceHeader';
+import ImageDropzone from './components/ImageDropzone';
+import ImageControlPanel from './components/ImageControlPanel';
+import BatchImageList, { BatchItem } from './components/BatchImageList';
+import SingleImagePreview from './components/SingleImagePreview';
 
 interface ImageProcessorClientProps {
   lang?: 'zh-TW' | 'en';
 }
-
-
-import { createSimpleZip } from './utils/zipBuilder';
-import { formatBytes } from '../utils/formatBytes';
-import { downloadBlob } from '../utils/downloadBlob';
-import IdbRestoreBanner from '../components/IdbRestoreBanner';
-import { safeIdb } from '../utils/idb';
-import { calculateBatchDimensions } from './engine';
-import { TRANSLATIONS } from './translations';
 
 const IMG_IDB_NAMESPACE = 'image-processor';
 const IMG_IDB_KEY = 'last_workspace_v1';
@@ -39,30 +35,8 @@ interface CachedImageItem {
   lastModified: number;
 }
 
-const safeLoadImage = (src: string, timeoutMs = 10000): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const timer = setTimeout(() => {
-      img.src = '';
-      reject(new Error('圖片載入逾時'));
-    }, timeoutMs);
-
-    img.onload = () => {
-      clearTimeout(timer);
-      resolve(img);
-    };
-    img.onerror = () => {
-      clearTimeout(timer);
-      reject(new Error('無法載入圖片或圖檔已毀損'));
-    };
-    img.src = src;
-  });
-};
-
 export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorClientProps) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
-
-  const [isMounted, setIsMounted] = useState<boolean>(false);
 
   // 全域 Drag & Drop Overlay 狀態
   const [isDraggingGlobal, setIsDraggingGlobal] = useState<boolean>(false);
@@ -109,20 +83,8 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
   // Toast 提示
   const [toast, setToast] = useState<string>('');
 
-  // HTML IDs for W3C Accessibility
-  const fileInputId = useId();
-  const appendFileInputId = useId();
-  const formatSelectId = useId();
-  const widthInputId = useId();
-  const heightInputId = useId();
-  const keepAspectId = useId();
-  const qualityRangeId = useId();
-  const scaleRangeId = useId();
-  const compRangeId = useId();
-
   // 初始化主題顏色與 URL 讀取
   useEffect(() => {
-    setIsMounted(true);
     document.documentElement.style.setProperty('--theme-color', '#d946ef');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(217, 70, 239, 0.6)');
 
@@ -377,52 +339,17 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     };
   }, []);
 
-  // 核心圖片 Canvas 繪製處理 (含旋轉、翻轉與最大像素安全限制)
-  const renderProcessedCanvas = useCallback(
-    (img: HTMLImageElement, w: number, h: number) => {
-      const MAX_PIXELS = 16777216; // 16MP 防爆框/溢出防護
-      const currentPixels = w * h;
-      let finalW = w;
-      let finalH = h;
-      if (currentPixels > MAX_PIXELS && currentPixels > 0) {
-        const ratio = Math.sqrt(MAX_PIXELS / currentPixels);
-        finalW = Math.floor(w * ratio);
-        finalH = Math.floor(h * ratio);
-      }
-
-      const isRotated = rotation === 90 || rotation === 270;
-      const canvasW = isRotated ? finalH : finalW;
-      const canvasH = isRotated ? finalW : finalH;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, canvasW);
-      canvas.height = Math.max(1, canvasH);
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return canvas;
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      ctx.save();
-      ctx.translate(canvasW / 2, canvasH / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-
-      ctx.drawImage(img, -finalW / 2, -finalH / 2, finalW, finalH);
-      ctx.restore();
-
-      return canvas;
-    },
-    [rotation, flipH, flipV]
-  );
-
   const previewDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 單圖即時渲染與對比更新 (消除重複計算原圖 DataURL 與加入防抖)
   const updateSinglePreview = useCallback(() => {
     if (!singleImgElement || targetWidth <= 0 || targetHeight <= 0) return;
 
-    const canvas = renderProcessedCanvas(singleImgElement, targetWidth, targetHeight);
+    const canvas = renderProcessedCanvas(singleImgElement, targetWidth, targetHeight, {
+      rotation,
+      flipH,
+      flipV,
+    });
     const dataUrl = canvas.toDataURL(format, quality);
     setAfterDataUrl(dataUrl);
 
@@ -430,7 +357,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     const head = `data:${format};base64,`;
     const sizeInBytes = Math.round(((dataUrl.length - head.length) * 3) / 4);
     setProcessedSize(sizeInBytes);
-  }, [singleImgElement, targetWidth, targetHeight, format, quality, renderProcessedCanvas]);
+  }, [singleImgElement, targetWidth, targetHeight, format, quality, rotation, flipH, flipV]);
 
   useEffect(() => {
     if (isBatchMode || !singleImgElement || targetWidth <= 0 || targetHeight <= 0) return;
@@ -460,7 +387,11 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
   // 下載原始解析度圖片
   const downloadOriginalSizeImage = () => {
     if (!singleImgElement || !files[0]) return;
-    const canvas = renderProcessedCanvas(singleImgElement, origWidth, origHeight);
+    const canvas = renderProcessedCanvas(singleImgElement, origWidth, origHeight, {
+      rotation,
+      flipH,
+      flipV,
+    });
     const dataUrl = canvas.toDataURL(format, quality);
     const ext = format === 'image/webp' ? 'webp' : format === 'image/jpeg' ? 'jpg' : 'png';
     const baseName = files[0].name.substring(0, files[0].name.lastIndexOf('.')) || files[0].name;
@@ -509,7 +440,7 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
           keepAspect
         );
 
-        const canvas = renderProcessedCanvas(img, w, h);
+        const canvas = renderProcessedCanvas(img, w, h, { rotation, flipH, flipV });
         const dataUrl = canvas.toDataURL(format, quality);
         const base64Data = dataUrl.split(',')[1];
         const binaryStr = atob(base64Data);
@@ -546,6 +477,17 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
     }
   };
 
+  const resetWorkspace = () => {
+    batchItemsRef.current.forEach((item) => {
+      if (item.thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(item.thumbUrl);
+      }
+    });
+    setFiles([]);
+    setSingleImgElement(null);
+    setBatchItems([]);
+  };
+
   const isUpscaled = targetWidth > origWidth || targetHeight > origHeight;
   const savingRate =
     files[0] && processedSize > 0
@@ -574,55 +516,16 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
 
       <div className="flex flex-col gap-8 text-left w-full px-4 max-sm:px-0">
         {/* 頂部控制與語系切換橫幅 */}
-        <div className="bg-surface-glass border border-border-glass rounded-2xl p-3.5 sm:px-6 sm:py-3 text-text-main flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 shadow-[var(--glass-shadow)] min-w-0">
-          <div className="flex items-center gap-2.5 min-w-0 max-w-full overflow-hidden">
-            <span className="bg-[#d946ef]/15 text-[#d946ef] border border-[#d946ef]/30 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide shrink-0">
-              {t.tagline}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-text-main min-w-0 truncate">
-              {files.length === 0
-                ? t.uploadPrompt
-                : isBatchMode
-                ? t.selectedMulti(files.length)
-                : t.editingSingle(files[0].name, origWidth, origHeight)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
-            <button
-              type="button"
-              onClick={copyConfigLink}
-              className="px-3 py-1.5 text-xs font-medium bg-select-bg border border-border-glass text-text-sub hover:text-text-main rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-            >
-              <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
-                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
-              </svg>
-              {t.copyConfig}
-            </button>
-
-            {files.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  batchItemsRef.current.forEach((item) => {
-                    if (item.thumbUrl.startsWith('blob:')) {
-                      URL.revokeObjectURL(item.thumbUrl);
-                    }
-                  });
-                  setFiles([]);
-                  setSingleImgElement(null);
-                  setBatchItems([]);
-                }}
-                className="px-3 py-1.5 text-xs font-bold bg-[#d946ef]/10 text-[#d946ef] border border-[#d946ef]/30 rounded-xl hover:bg-[#d946ef]/20 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-              >
-                <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
-                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                </svg>
-                {t.reupload}
-              </button>
-            )}
-          </div>
-        </div>
+        <ImageWorkspaceHeader
+          filesCount={files.length}
+          firstFileName={files[0]?.name || ''}
+          isBatchMode={isBatchMode}
+          origWidth={origWidth}
+          origHeight={origHeight}
+          onCopyConfigLink={copyConfigLink}
+          onResetWorkspace={resetWorkspace}
+          t={t}
+        />
 
         {/* 初始檔案上傳 Dropzone */}
         {files.length === 0 && cachedWorkspace.length > 0 && (
@@ -648,468 +551,59 @@ export default function ImageProcessorClient({ lang = 'zh-TW' }: ImageProcessorC
         )}
 
         {files.length === 0 ? (
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (e.dataTransfer.files.length > 0) handleFilesLoad(e.dataTransfer.files);
-            }}
-            onClick={() => document.getElementById(fileInputId)?.click()}
-            className={`p-14 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer text-center ${styles.dropzone}`}
-          >
-            <input
-              id={fileInputId}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files) handleFilesLoad(e.target.files);
-                e.target.value = '';
-              }}
-            />
-            <div className="w-20 h-20 rounded-3xl bg-[#d946ef]/15 text-[#d946ef] flex items-center justify-center border border-[#d946ef]/30 shadow-[0_0_30px_rgba(217,70,239,0.2)]">
-              <svg viewBox="0 0 24 24" width={36} height={36} fill="currentColor" className="text-[#d946ef]">
-                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-              </svg>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-lg font-bold text-text-main">{t.dropzoneTitle}</span>
-              <span className="text-xs text-text-sub">{t.dropzoneSub}</span>
-            </div>
-          </div>
+          <ImageDropzone onFilesLoad={(fileList) => handleFilesLoad(fileList)} t={t} />
         ) : (
           /* 主 Layout (兩欄式) */
           <div className="grid grid-cols-[1.1fr_1fr] gap-8 max-lg:grid-cols-1 items-start">
             {/* 左欄：設定與控制面板 */}
-            <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-[var(--glass-shadow)] backdrop-blur-[24px]">
-              <h3 className="text-sm font-bold text-text-main flex items-center gap-2 border-b border-border-glass pb-3">
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
-                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-                </svg>
-                {t.outputSettings}
-              </h3>
-
-              {/* 輸出格式 */}
-              <div className="flex flex-col gap-2 text-left">
-                <label htmlFor={formatSelectId} className="text-sm font-medium text-text-sub">
-                  {t.outputFormat}
-                </label>
-                <select
-                  id={formatSelectId}
-                  value={format}
-                  onChange={(e) => setFormat(e.target.value as 'image/webp' | 'image/jpeg' | 'image/png')}
-                  className="bg-select-bg text-text-main border border-border-glass rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer"
-                >
-                  <option value="image/webp">WebP (WebP)</option>
-                  <option value="image/jpeg">JPEG (JPG)</option>
-                  <option value="image/png">PNG (PNG)</option>
-                </select>
-              </div>
-
-              {/* 壓縮品質 */}
-              {format !== 'image/png' && (
-                <div className="flex flex-col gap-2 text-left">
-                  <div className="flex justify-between items-center">
-                    <label htmlFor={qualityRangeId} className="text-sm font-medium text-text-sub">
-                      {t.quality}
-                    </label>
-                    <span className="text-[#d946ef] font-mono font-bold text-sm">
-                      {Math.round(quality * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    id={qualityRangeId}
-                    type="range"
-                    min="0.1"
-                    max="1"
-                    step="0.05"
-                    value={quality}
-                    onChange={(e) => setQuality(parseFloat(e.target.value))}
-                    aria-label={t.srQuality}
-                    className="accent-[#d946ef] cursor-pointer h-2 bg-select-bg rounded-lg border border-border-glass"
-                  />
-                </div>
-              )}
-
-              {/* Transform 旋轉與翻轉 */}
-              {!isBatchMode && (
-                <div className="flex flex-col gap-3 border-t border-border-glass pt-4 text-left">
-                  <span className="text-sm font-medium text-text-sub">{t.transformTools}</span>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => setRotation((prev) => (prev + 270) % 360)}
-                      className="px-3 py-1.5 text-sm font-medium bg-select-bg border border-border-glass text-text-sub rounded-lg hover:bg-[#d946ef]/20 hover:border-[#d946ef]/40 hover:text-text-main transition-all cursor-pointer flex items-center gap-1.5"
-                    >
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
-                        <path d="M7.11 8.53L5.7 7.11C4.04 8.77 3 11.01 3 13.5 3 18.2 6.8 22 11.5 22S20 18.2 20 13.5C20 8.8 16.2 5 11.5 5c-2.49 0-4.73 1.04-6.39 2.71L3.7 6.3V11h4.7L7.11 8.53z" />
-                      </svg>
-                      {t.rotateLeft}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                      className="px-3 py-1.5 text-sm font-medium bg-select-bg border border-border-glass text-text-sub rounded-lg hover:bg-[#d946ef]/20 hover:border-[#d946ef]/40 hover:text-text-main transition-all cursor-pointer flex items-center gap-1.5"
-                    >
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
-                        <path d="M16.89 8.53L18.3 7.11C19.96 8.77 21 11.01 21 13.5 21 18.2 17.2 22 12.5 22S4 18.2 4 13.5C4 8.8 7.8 5 12.5 5c2.49 0 4.73 1.04 6.39 2.71L20.3 6.3V11h-4.7l1.29-2.47z" />
-                      </svg>
-                      {t.rotateRight}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFlipH(!flipH)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                        flipH
-                          ? 'bg-[#d946ef]/20 border-[#d946ef]/50 text-[#d946ef]'
-                          : 'bg-select-bg border-border-glass text-text-sub hover:text-text-main'
-                      }`}
-                    >
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
-                        <path d="M15 21h2v-2h-2v2zm4-12h2V7h-2v2zM3 5v14c0 1.1.9 2 2 2h4v-2H5V5h4V3H5c-1.1 0-2 .9-2 2zm16-2v2h2c0-1.1-.9-2-2-2zm-4 18h2v-2h-2v2zm4-4h2v-2h-2v2zm0-4h2v-2h-2v2zm-4-8h2V3h-2v2z" />
-                      </svg>
-                      {t.flipH}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFlipV(!flipV)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                        flipV
-                          ? 'bg-[#d946ef]/20 border-[#d946ef]/50 text-[#d946ef]'
-                          : 'bg-select-bg border-border-glass text-text-sub hover:text-text-main'
-                      }`}
-                    >
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
-                        <path d="M5 15v2h14v-2H5zM3 5v4h2V5h14v4h2V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2zm16 14H5v-4H3v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h-2v4z" />
-                      </svg>
-                      {t.flipV}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* 尺寸調整與比例 Preset */}
-              <div className="flex flex-col gap-4 border-t border-border-glass pt-4 text-left">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-text-sub">{t.targetRes}</span>
-                  <label htmlFor={keepAspectId} className="flex items-center gap-2 text-xs font-medium text-text-sub cursor-pointer">
-                    <input
-                      id={keepAspectId}
-                      type="checkbox"
-                      checked={keepAspect}
-                      onChange={(e) => setKeepAspect(e.target.checked)}
-                      className="w-4 h-4 rounded cursor-pointer accent-[#d946ef]"
-                    />
-                    {t.keepAspect}
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor={widthInputId} className="text-sm font-medium text-text-sub">
-                      {t.widthLabel}
-                    </label>
-                    <input
-                      id={widthInputId}
-                      type="number"
-                      value={targetWidth || ''}
-                      onChange={(e) => handleWidthChange(parseInt(e.target.value, 10) || 0)}
-                      className="w-full bg-select-bg border border-border-glass text-text-main px-3.5 py-2 rounded-xl text-sm outline-none focus:border-[#d946ef] font-mono"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor={heightInputId} className="text-sm font-medium text-text-sub">
-                      {t.heightLabel}
-                    </label>
-                    <input
-                      id={heightInputId}
-                      type="number"
-                      value={targetHeight || ''}
-                      onChange={(e) => handleHeightChange(parseInt(e.target.value, 10) || 0)}
-                      className="w-full bg-select-bg border border-border-glass text-text-main px-3.5 py-2 rounded-xl text-sm outline-none focus:border-[#d946ef] font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* 比例 Preset 按鈕 */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-sub">{t.aspectPreset}</span>
-                  {(['free', '1:1', '4:3', '16:9'] as const).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => applyAspectPreset(p)}
-                      className={`px-2.5 py-1 text-sm rounded-lg border transition-all cursor-pointer font-medium ${
-                        aspectPreset === p
-                          ? 'bg-[#d946ef]/20 border-[#d946ef]/50 text-[#d946ef]'
-                          : 'bg-select-bg border-border-glass text-text-sub hover:text-text-main'
-                      }`}
-                    >
-                      {p === 'free' ? t.free : p}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 按百分比縮放 */}
-                <div className="flex flex-col gap-2 mt-1">
-                  <div className="flex justify-between items-center">
-                    <label htmlFor={scaleRangeId} className="text-xs text-text-sub font-semibold">
-                      {t.scalePct}
-                    </label>
-                    <span className="text-[#d946ef] font-mono font-bold text-xs">
-                      {scalePercent}%
-                    </span>
-                  </div>
-                  <input
-                    id={scaleRangeId}
-                    type="range"
-                    min="10"
-                    max="100"
-                    step="5"
-                    value={scalePercent}
-                    onChange={(e) => handleScalePercentChange(parseInt(e.target.value, 10))}
-                    aria-label={t.srScale}
-                    className="accent-[#d946ef] cursor-pointer h-2 bg-select-bg rounded-lg border border-border-glass"
-                  />
-                </div>
-              </div>
-
-              {/* 統計與節省率 */}
-              {!isBatchMode && files[0] && (
-                <div className="grid grid-cols-2 gap-3 bg-select-bg border border-border-glass rounded-xl p-4 text-xs">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-text-sub">{t.origSize}</span>
-                    <span className="font-mono font-bold text-text-main">{formatBytes(files[0].size)}</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-text-sub">{t.estSize}</span>
-                    <span className="font-mono font-bold text-[#d946ef]">{formatBytes(processedSize)}</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-text-sub">{t.res}</span>
-                    <span className="font-mono font-bold text-text-main">
-                      {targetWidth} × {targetHeight} px
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-text-sub">{t.savingRate}</span>
-                    <span className="font-mono font-bold text-emerald-500 dark:text-emerald-400">
-                      {savingRate > 0 ? `-${savingRate}%` : '0%'}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* 強行放大模糊警告 */}
-              {!isBatchMode && isUpscaled && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-col gap-2 text-left">
-                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-xs font-bold">
-                    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="shrink-0">
-                      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-                    </svg>
-                    {t.upscaleWarn(targetWidth, targetHeight, origWidth, origHeight)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={downloadOriginalSizeImage}
-                    className="w-full py-2 text-xs font-bold text-slate-900 bg-amber-400 rounded-lg hover:bg-amber-300 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" className="shrink-0">
-                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                    </svg>
-                    {t.downloadOrig(origWidth, origHeight)}
-                  </button>
-                </div>
-              )}
-
-              {/* 追加圖片 Dropzone（持續性 Dropzone UX） */}
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (e.dataTransfer.files.length > 0) handleFilesLoad(e.dataTransfer.files, true);
-                }}
-                onClick={() => document.getElementById(appendFileInputId)?.click()}
-                className={`p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer text-center ${styles.miniDropzone}`}
-              >
-                <input
-                  id={appendFileInputId}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                  if (e.target.files) handleFilesLoad(e.target.files, true);
-                  e.target.value = '';
-                }}
-                />
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
-                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                </svg>
-                <span className="text-xs font-semibold text-text-sub hover:text-text-main">
-                  {t.appendDropzone}
-                </span>
-              </div>
-
-              {/* 下載按鈕 */}
-              {isBatchMode ? (
-                <button
-                  type="button"
-                  onClick={downloadBatchZip}
-                  disabled={isProcessing}
-                  className="w-full h-[52px] bg-[#d946ef]/20 border border-[#d946ef]/50 text-[#d946ef] font-bold text-base rounded-xl cursor-pointer hover:bg-[#d946ef] hover:text-[#030305] hover:shadow-[0_0_20px_rgba(217,70,239,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
-                >
-                  {isProcessing ? (
-                    <>
-                      <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="animate-spin shrink-0">
-                        <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8z" />
-                      </svg>
-                      {t.batchProcessing}
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
-                        <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
-                      </svg>
-                      {t.batchZipBtn}
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={downloadSingleImage}
-                  className="w-full h-[52px] bg-[#d946ef]/20 border border-[#d946ef]/50 text-[#d946ef] font-bold text-base rounded-xl cursor-pointer hover:bg-[#d946ef] hover:text-[#030305] hover:shadow-[0_0_20px_rgba(217,70,239,0.5)] transition-all flex items-center justify-center gap-2"
-                >
-                  <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" className="shrink-0">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                  </svg>
-                  {t.downloadSingleBtn}
-                </button>
-              )}
-            </div>
+            <ImageControlPanel
+              format={format}
+              onFormatChange={setFormat}
+              quality={quality}
+              onQualityChange={setQuality}
+              isBatchMode={isBatchMode}
+              onRotateLeft={() => setRotation((prev) => (prev + 270) % 360)}
+              onRotateRight={() => setRotation((prev) => (prev + 90) % 360)}
+              flipH={flipH}
+              onToggleFlipH={() => setFlipH(!flipH)}
+              flipV={flipV}
+              onToggleFlipV={() => setFlipV(!flipV)}
+              keepAspect={keepAspect}
+              onKeepAspectChange={setKeepAspect}
+              targetWidth={targetWidth}
+              onWidthChange={handleWidthChange}
+              targetHeight={targetHeight}
+              onHeightChange={handleHeightChange}
+              aspectPreset={aspectPreset}
+              onApplyAspectPreset={applyAspectPreset}
+              scalePercent={scalePercent}
+              onScalePercentChange={handleScalePercentChange}
+              firstFile={files[0]}
+              origWidth={origWidth}
+              origHeight={origHeight}
+              processedSize={processedSize}
+              savingRate={savingRate}
+              isUpscaled={isUpscaled}
+              onDownloadOriginalSize={downloadOriginalSizeImage}
+              onAppendFiles={(fileList) => handleFilesLoad(fileList, true)}
+              isProcessing={isProcessing}
+              onDownloadBatchZip={downloadBatchZip}
+              onDownloadSingle={downloadSingleImage}
+              t={t}
+            />
 
             {/* 右欄：預覽區（單圖對比器 / 多圖批次清單） */}
             <div className="bg-surface-glass border border-border-glass rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-[var(--glass-shadow)] backdrop-blur-[24px]">
               {isBatchMode ? (
-                /* 多圖批次清單 */
-                <div className="flex flex-col gap-4 text-left">
-                  <div className="flex justify-between items-center border-b border-border-glass pb-3">
-                    <h4 className="text-sm font-bold text-text-main flex items-center gap-2">
-                      <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
-                        <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
-                      </svg>
-                      {t.batchListTitle}
-                    </h4>
-                    <span className="text-xs text-text-sub">{t.totalImages(batchItems.length)}</span>
-                  </div>
-
-                  <div className="flex flex-col gap-3 max-h-[480px] overflow-y-auto pr-1">
-                    {batchItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between gap-3 bg-select-bg p-3 rounded-xl border border-border-glass"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={item.thumbUrl}
-                            alt={item.file.name}
-                            className="w-12 h-12 rounded-lg object-cover bg-slate-900 border border-border-glass shrink-0"
-                          />
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-semibold text-text-main truncate">{item.file.name}</span>
-                            <span className="text-xs font-mono text-text-sub">
-                              {formatBytes(item.file.size)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
-                            item.status === 'done'
-                              ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/30'
-                              : item.status === 'processing'
-                              ? 'bg-[#d946ef]/10 text-[#d946ef] border-[#d946ef]/30 animate-pulse'
-                              : 'bg-select-bg text-text-sub border-border-glass'
-                          }`}
-                        >
-                          {item.status === 'done' ? (
-                            <span className="flex items-center gap-1">
-                              <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                              </svg>
-                              {t.statusDone}
-                            </span>
-                          ) : item.status === 'processing' ? (
-                            <span className="flex items-center gap-1">
-                              <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor" className="animate-spin">
-                                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8z" />
-                              </svg>
-                              {t.statusProcessing}
-                            </span>
-                          ) : (
-                            t.statusPending
-                          )}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <BatchImageList batchItems={batchItems} t={t} />
               ) : (
-                /* 左右滑動雙圖即時比對器 */
-                <div className="flex flex-col gap-4 text-left">
-                  <div className="flex justify-between items-center border-b border-border-glass pb-3">
-                    <h4 className="text-sm font-bold text-text-main flex items-center gap-2">
-                      <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className="text-[#d946ef] shrink-0">
-                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                      </svg>
-                      {t.compTitle}
-                    </h4>
-                  </div>
-
-                  <div className={styles.comparisonContainer}>
-                    {/* 原圖 */}
-                    {beforeDataUrl && (
-                      <img src={beforeDataUrl} alt={t.compBefore} className={`${styles.compImg} ${styles.compImgBefore}`} />
-                    )}
-                    {/* 處理後圖 (帶 clip-path) */}
-                    {afterDataUrl && (
-                      <img
-                        src={afterDataUrl}
-                        alt={t.compAfter}
-                        className={`${styles.compImg} ${styles.compImgAfter}`}
-                        style={{ clipPath: `inset(0 0 0 ${compSliderPos}%)` }}
-                      />
-                    )}
-
-                    {/* 分割線與按鈕 */}
-                    <div className={styles.compSeparator} style={{ left: `${compSliderPos}%` }} />
-                    <div className={styles.compButton} style={{ left: `${compSliderPos}%` }}>
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
-                        <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
-                      </svg>
-                    </div>
-
-                    {/* 標籤 */}
-                    <div className={`${styles.compLabel} ${styles.compLabelBefore}`}>{t.compBefore}</div>
-                    <div className={`${styles.compLabel} ${styles.compLabelAfter}`}>{t.compAfter}</div>
-
-                    {/* 拖曳輸入條 */}
-                    <label htmlFor={compRangeId} className="sr-only">{t.srComp}</label>
-                    <input
-                      id={compRangeId}
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={compSliderPos}
-                      onChange={(e) => setCompSliderPos(parseFloat(e.target.value))}
-                      aria-label={t.srComp}
-                      className={styles.compSlider}
-                    />
-                  </div>
-                </div>
+                <SingleImagePreview
+                  beforeDataUrl={beforeDataUrl}
+                  afterDataUrl={afterDataUrl}
+                  compSliderPos={compSliderPos}
+                  onSliderPosChange={setCompSliderPos}
+                  t={t}
+                />
               )}
             </div>
           </div>
