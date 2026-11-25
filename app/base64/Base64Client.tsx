@@ -5,23 +5,12 @@ import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './base64.module.css';
 import { TRANSLATIONS } from './translations';
-
-function utf8ToB64(str: string): string {
-  const safeStr = typeof str.toWellFormed === 'function' ? str.toWellFormed() : str;
-  return btoa(
-    encodeURIComponent(safeStr).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-      String.fromCharCode(parseInt(p1, 16))
-    )
-  );
-}
-
-function b64ToUtf8(str: string): string {
-  return decodeURIComponent(
-    Array.prototype.map
-      .call(atob(str), (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-      .join('')
-  );
-}
+import {
+  b64ToUtf8,
+  encodeBase64Text,
+  decodeBase64Text,
+  type EncodingType,
+} from './engine';
 
 function formatBytes(bytes: number, decimals = 2): string {
   if (bytes === 0) return '0 Bytes';
@@ -32,7 +21,6 @@ function formatBytes(bytes: number, decimals = 2): string {
 }
 
 type TabType = 'text' | 'file';
-type EncodingType = 'UTF-8' | 'ASCII';
 
 interface FileState {
   file: File | null;
@@ -101,12 +89,7 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
       return;
     }
     try {
-      let encoded = enc === 'UTF-8' ? utf8ToB64(text) : btoa(text);
-      if (safe) encoded = encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      if (wrap) {
-        const chunks = encoded.match(/.{1,76}/g);
-        encoded = chunks ? chunks.join('\n') : encoded;
-      }
+      const encoded = encodeBase64Text(text, { encoding: enc, urlSafe: safe, rfc2045: wrap });
       setBase64Text(encoded);
       setBase64Error(false);
     } catch {
@@ -121,12 +104,8 @@ export default function Base64Client({ lang = 'zh-TW' }: Props) {
       setBase64Error(false);
       return;
     }
-    let str = b64.trim().replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
-    while (str.length % 4 !== 0) {
-      str += '=';
-    }
     try {
-      const decoded = enc === 'UTF-8' ? b64ToUtf8(str) : atob(str);
+      const decoded = decodeBase64Text(b64, enc);
       setPlainText(decoded);
       setBase64Error(false);
     } catch {

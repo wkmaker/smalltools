@@ -24,7 +24,7 @@
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import ThemeToggle from '@/components/ThemeToggle';
+import ThemeToggle from '@/app/components/ThemeToggle';
 import { CATEGORIES } from '@/app/config/tools';
 import { generateBreadcrumbSchema, type BreadcrumbItem } from '@/app/utils/breadcrumbSchema';
 import { safeLocalStorage, safeSessionStorage } from '@/app/utils/storage';

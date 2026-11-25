@@ -127,7 +127,7 @@ test('buildPkcs12：RSA 金鑰可成功打包，非 RSA 演算法（supportsPkcs
     algorithm: 'RSA-2048',
   });
   assert.equal(supportsPkcs12('RSA-2048'), true);
-  const p12Bytes = buildPkcs12(rsaCert.certPem, rsaCert.privateKeyPem, 'test-password');
+  const p12Bytes = await buildPkcs12(rsaCert.certPem, rsaCert.privateKeyPem, 'test-password');
   assert.ok(p12Bytes.length > 0);
 
   const ecCert = await generateSelfSignedCertificate({
@@ -137,7 +137,7 @@ test('buildPkcs12：RSA 金鑰可成功打包，非 RSA 演算法（supportsPkcs
     algorithm: 'ECDSA-P256',
   });
   assert.equal(supportsPkcs12('ECDSA-P256'), false);
-  assert.throws(() => buildPkcs12(ecCert.certPem, ecCert.privateKeyPem, 'test-password'));
+  await assert.rejects(() => buildPkcs12(ecCert.certPem, ecCert.privateKeyPem, 'test-password'));
 });
 
 test('importCaCertificate：貼上先前產生的 CA 憑證與私鑰 PEM，可重建 CA 並繼續簽發新的伺服器憑證', async () => {

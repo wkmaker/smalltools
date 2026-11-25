@@ -10,30 +10,13 @@ import TopBannerControls from './components/TopBannerControls';
 import WheelControlsBar from './components/WheelControlsBar';
 import StageView from './components/StageView';
 import styles from './lucky-wheel.module.css';
-import type { PrizeItem, AwardTier, HistoryRecord, SpinSpeed, SaveSlot } from './types';
-import { PRESET_COLORS, PRIZE_TEMPLATES, DEFAULT_AWARD_TIERS, SPIN_SPEED_MS, type PrizeTemplateKey } from './constants';
-import {
-  calculateSectors as calculateSectorsEngine,
-  computeTargetSpinAngle,
-  drawBatchWinners,
-  revertWinnerRecords,
-  parseBatchText,
-  encodeWheelShareState,
-  decodeWheelShareState,
-  formatHistoryCsv,
-  secureRandomFloat,
-  generateId,
-  getAvailablePrizes,
-} from './engine';
-import { renderWheelOnCanvas, triggerConfettiAnimation, stopConfettiAnimation } from './utils/canvasRenderer';
+import type { PrizeItem, AwardTier, SpinSpeed } from './types';
+import { PRESET_COLORS } from './constants';
+import { generateId } from './engine';
 import { useWheelAudio } from './hooks/useWheelAudio';
-import { downloadBlob } from '../utils/downloadBlob';
-import { getLocalDateString } from '../utils/dateUtils';
-import { safeIdb } from '../utils/idb';
+import { useWheelPersistence } from './hooks/useWheelPersistence';
+import { useWheelSpin, type WinnerModalData } from './hooks/useWheelSpin';
 import { TRANSLATIONS } from './translations';
-
-const LW_IDB_NAMESPACE = 'lucky-wheel';
-const LW_SLOTS_IDB_KEY = 'save_slots_v1';
 
 interface LuckyWheelClientProps {
   lang?: 'zh-TW' | 'en';
@@ -41,53 +24,16 @@ interface LuckyWheelClientProps {
 
 export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientProps) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS['zh-TW'];
-  const [isMounted, setIsMounted] = useState<boolean>(false);
   const [displayMode, setDisplayMode] = useState<'wheel' | 'slot'>('wheel');
-  const [enableQuantityLimit, setEnableQuantityLimit] = useState<boolean>(true);
-  const [enableAwardMode, setEnableAwardMode] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [spinSpeed, setSpinSpeed] = useState<SpinSpeed>('normal');
   const [drawCount, setDrawCount] = useState<number>(1);
 
-  // 核心資料狀態
-  const [prizes, setPrizes] = useState<PrizeItem[]>([]);
-  const [awardTiers, setAwardTiers] = useState<AwardTier[]>([]);
-  const [selectedAwardId, setSelectedAwardId] = useState<string>('');
-  const [history, setHistory] = useState<HistoryRecord[]>([]);
-  const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([]);
-
   // 彈窗與舞台狀態
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
-  const [winnerModalData, setWinnerModalData] = useState<{
-    winners: PrizeItem[];
-    recordIds: string[];
-    awardName?: string;
-    timestamp: number;
-  } | null>(null);
+  const [winnerModalData, setWinnerModalData] = useState<WinnerModalData | null>(null);
 
-  // 轉盤動畫與指針物理彈動控制
-  const [isSpinning, setIsSpinning] = useState<boolean>(false);
-  const [multiSpinProgress, setMultiSpinProgress] = useState<{
-    current: number;
-    total: number;
-    revealed: PrizeItem[];
-  } | null>(null);
-  const [currentRotationAngle, setCurrentRotationAngle] = useState<number>(0);
-  const currentRotationAngleRef = useRef<number>(0);
-  const pointerDeflectionRef = useRef<number>(0);
-  const animFrameIdRef = useRef<number | null>(null);
-  // 抽獎流程中的逐輪排程，卸載時一併清除，避免背景持續 setState 與播放音效
-  const spinTimeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
-
-  // 拉霸機動畫控制
-  const [slotStripItems, setSlotStripItems] = useState<PrizeItem[]>([]);
-  const [slotTranslateY, setSlotTranslateY] = useState<number>(0);
-
-  // DOM & Canvas Refs
-  const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const fullscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const qtyLimitToggleId = useId();
@@ -104,563 +50,95 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     document.documentElement.style.setProperty('--accent-glow', 'rgba(245, 158, 11, 0.6)');
   }, []);
 
-  const scheduleSpinTimeout = (fn: () => void, ms: number) => {
-    const id = setTimeout(() => {
-      spinTimeoutsRef.current.delete(id);
-      fn();
-    }, ms);
-    spinTimeoutsRef.current.add(id);
-  };
-
-  // 卸載時取消進行中的動畫與逐輪排程
-  useEffect(() => {
-    const timeouts = spinTimeoutsRef.current;
-    return () => {
-      if (animFrameIdRef.current !== null) cancelAnimationFrame(animFrameIdRef.current);
-      timeouts.forEach(clearTimeout);
-      timeouts.clear();
-      stopConfettiAnimation();
-    };
+  const showToast = useCallback((msg: string) => {
+    const isLight = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
+    const toastEl = document.createElement('div');
+    toastEl.className = isLight
+      ? 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-[#d97706] bg-white/95 border border-[#d97706]/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md'
+      : 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-amber-500/20 border border-amber-500/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md';
+    toastEl.insertAdjacentHTML(
+      'afterbegin',
+      '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+    );
+    const msgEl = document.createElement('span');
+    msgEl.textContent = msg;
+    toastEl.appendChild(msgEl);
+    document.body.appendChild(toastEl);
+    setTimeout(() => {
+      if (document.body.contains(toastEl)) document.body.removeChild(toastEl);
+    }, 2200);
   }, []);
 
-  // 讀取 LocalStorage 與 URL 分享參數
-  useEffect(() => {
-    setIsMounted(true);
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const sharedWheel = params.get('wheel');
-      if (sharedWheel) {
-        const decoded = decodeWheelShareState(sharedWheel);
-        if (decoded) {
-          setPrizes(decoded.prizes);
-          setEnableQuantityLimit(decoded.enableQuantityLimit);
-          setEnableAwardMode(decoded.enableAwardMode);
-          if (decoded.awardTiers.length > 0) {
-            setAwardTiers(decoded.awardTiers);
-            setSelectedAwardId(decoded.awardTiers[0].id);
-          } else {
-            const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
-              ...a,
-              id: generateId(),
-            }));
-            setAwardTiers(defAwards);
-            setSelectedAwardId(defAwards[0].id);
-          }
-          return;
-        }
-      }
-
-      const defaultTemplate = PRIZE_TEMPLATES.annual[lang] || PRIZE_TEMPLATES.annual['zh-TW'];
-      const cachedPrizes = localStorage.getItem('lw_prizes');
-      if (cachedPrizes) {
-        const parsed = JSON.parse(cachedPrizes);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setPrizes(parsed);
-        } else {
-          setPrizes(defaultTemplate.map((p) => ({ ...p, id: generateId() })));
-        }
-      } else {
-        setPrizes(defaultTemplate.map((p) => ({ ...p, id: generateId() })));
-      }
-
-      const cachedHistory = localStorage.getItem('lw_history');
-      if (cachedHistory) {
-        const parsed = JSON.parse(cachedHistory);
-        if (Array.isArray(parsed)) setHistory(parsed);
-      }
-
-      const cachedAwards = localStorage.getItem('lw_awards');
-      if (cachedAwards) {
-        const parsed = JSON.parse(cachedAwards);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAwardTiers(parsed);
-          setSelectedAwardId(parsed[0].id);
-        } else {
-          const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
-            ...a,
-            id: generateId(),
-          }));
-          setAwardTiers(defAwards);
-          setSelectedAwardId(defAwards[0].id);
-        }
-      } else {
-        const defAwards = (DEFAULT_AWARD_TIERS[lang] || DEFAULT_AWARD_TIERS['zh-TW']).map((a) => ({
-          ...a,
-          id: generateId(),
-        }));
-        setAwardTiers(defAwards);
-        setSelectedAwardId(defAwards[0].id);
-      }
-
-      const cachedAwardMode = localStorage.getItem('lw_enable_award_mode');
-      if (cachedAwardMode !== null) setEnableAwardMode(cachedAwardMode === 'true');
-
-      const cachedQtyLimit = localStorage.getItem('lw_enable_qty_limit');
-      if (cachedQtyLimit !== null) setEnableQuantityLimit(cachedQtyLimit === 'true');
-
-      const cachedSlots = localStorage.getItem('lw_save_slots');
-      if (cachedSlots) {
-        const parsed = JSON.parse(cachedSlots);
-        if (Array.isArray(parsed)) setSaveSlots(parsed);
-      }
-      void safeIdb.get<SaveSlot[]>(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY).then((idbSlots) => {
-        if (Array.isArray(idbSlots) && idbSlots.length > 0) {
-          setSaveSlots(idbSlots);
-        } else if (cachedSlots) {
-          try {
-            const parsed = JSON.parse(cachedSlots);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              void safeIdb.set(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY, parsed);
-            }
-          } catch (err) {
-            console.warn('[lucky-wheel] 遷移存檔槽至 IndexedDB 失敗', err);
-          }
-        }
-      });
-    } catch (err) {
-      console.warn('[lucky-wheel] 初始化讀取本地狀態失敗', err);
-    }
-  }, [lang]);
-
-  // 同步保存最新狀態至 LocalStorage
-  const saveState = useCallback(
-    (
-      newPrizes?: PrizeItem[],
-      newHistory?: HistoryRecord[],
-      newAwards?: AwardTier[],
-      newAwardMode?: boolean,
-      newQtyLimit?: boolean
-    ) => {
-      try {
-        if (newPrizes) localStorage.setItem('lw_prizes', JSON.stringify(newPrizes));
-        if (newHistory) localStorage.setItem('lw_history', JSON.stringify(newHistory));
-        if (newAwards) localStorage.setItem('lw_awards', JSON.stringify(newAwards));
-        if (newAwardMode !== undefined) localStorage.setItem('lw_enable_award_mode', String(newAwardMode));
-        if (newQtyLimit !== undefined) localStorage.setItem('lw_enable_qty_limit', String(newQtyLimit));
-      } catch {
-        // ignore
-      }
-    },
-    []
-  );
-
-  const getUnfinishedPrizes = useCallback(() => {
-    return getAvailablePrizes(prizes, enableQuantityLimit);
-  }, [prizes, enableQuantityLimit]);
-
-  const calculateSectors = useCallback(
-    () => calculateSectorsEngine(getUnfinishedPrizes()),
-    [getUnfinishedPrizes]
-  );
-
-  // 繪製轉盤 Canvas (支援 overrideAngle 以在旋轉動畫 RAF 中直接重繪，免除整樹 Re-render)
-  const drawWheelOnCanvas = useCallback(
-    (canvas: HTMLCanvasElement | null, overrideAngle?: number) => {
-      const { sectors, totalWeight } = calculateSectors();
-      renderWheelOnCanvas({
-        canvas,
-        sectors,
-        totalWeight,
-        currentRotationAngle: overrideAngle !== undefined ? overrideAngle : currentRotationAngleRef.current,
-        pointerDeflection: pointerDeflectionRef.current,
-        emptyLabel: t.allDrawn,
-      });
-    },
-    [calculateSectors, t.allDrawn]
-  );
-
-  useEffect(() => {
-    if (!isSpinning) {
-      const validPrizes = getUnfinishedPrizes();
-      if (validPrizes.length === 0) {
-        setSlotStripItems([]);
-      } else {
-        const displayList: PrizeItem[] = [];
-        for (let r = 0; r < 6; r++) {
-          displayList.push(...validPrizes);
-        }
-        setSlotStripItems(displayList);
-        setSlotTranslateY(0);
-      }
-    }
-  }, [prizes, enableQuantityLimit, displayMode, isSpinning, getUnfinishedPrizes]);
-
-  useEffect(() => {
-    drawWheelOnCanvas(previewCanvasRef.current);
-    if (isFullscreen) {
-      drawWheelOnCanvas(fullscreenCanvasRef.current);
-    }
-  }, [drawWheelOnCanvas, isFullscreen, displayMode]);
-
-  const triggerConfetti = useCallback(() => {
-    triggerConfettiAnimation(confettiCanvasRef.current);
-  }, []);
-
-  const getEffectiveDrawCount = useCallback(() => {
-    return Math.max(1, drawCount);
-  }, [drawCount]);
-
-  // 抽獎結束統一結算
-  const finalizeSpinBatch = useCallback(
-    (winners: PrizeItem[], updatedPrizes: PrizeItem[]) => {
-      pointerDeflectionRef.current = 0;
-      setIsSpinning(false);
-      playWinFanfare();
-
-      const now = Date.now();
-      const batchId = 'b_' + now;
-      const activeAward = enableAwardMode ? awardTiers.find((a) => a.id === selectedAwardId) : undefined;
-
-      const newRecords: HistoryRecord[] = winners.map((w, idx) => ({
-        id: `h_${now}_${idx}_${w.id}`,
-        prizeId: w.id,
-        prizeTitle: w.title,
-        awardId: activeAward?.id,
-        awardName: activeAward?.name,
-        batchId,
-        timestamp: now,
-      }));
-
-      let nextAwards = awardTiers;
-      if (activeAward) {
-        nextAwards = awardTiers.map((a) => {
-          if (a.id !== activeAward.id) return a;
-          const nextDrawn = a.drawnCount + winners.length;
-          return {
-            ...a,
-            quantity: Math.max(a.quantity, nextDrawn),
-            drawnCount: nextDrawn,
-          };
-        });
-        const currentAfter = nextAwards.find((a) => a.id === activeAward.id);
-        if (currentAfter && currentAfter.drawnCount >= currentAfter.quantity) {
-          const nextAvailableAward = nextAwards.find((a) => a.drawnCount < a.quantity);
-          if (nextAvailableAward) setSelectedAwardId(nextAvailableAward.id);
-        }
-      }
-
-      const updatedHistory = [...newRecords, ...history];
-      setPrizes(updatedPrizes);
-      setAwardTiers(nextAwards);
-      setHistory(updatedHistory);
-      saveState(updatedPrizes, updatedHistory, nextAwards);
-
-      setWinnerModalData({
-        winners,
-        recordIds: newRecords.map((r) => r.id),
-        awardName: activeAward?.name,
-        timestamp: now,
-      });
-
-      triggerConfetti();
-    },
-    [
-      enableAwardMode,
-      awardTiers,
-      selectedAwardId,
-      history,
-      playWinFanfare,
-      saveState,
-      triggerConfetti,
-    ]
-  );
-
-  // 啟動轉盤抽獎
-  const startWheelSpin = useCallback(() => {
-    const initialAvailable = getAvailablePrizes(prizes, enableQuantityLimit);
-    if (initialAvailable.length === 0 || isSpinning) return;
-
-    const activeAward = enableAwardMode ? awardTiers.find((a) => a.id === selectedAwardId) : undefined;
-    if (enableAwardMode && activeAward && activeAward.drawnCount >= activeAward.quantity) return;
-
-    const effectiveCount = getEffectiveDrawCount();
-    const { winners, updatedPrizes } = drawBatchWinners(
-      prizes,
-      effectiveCount,
-      enableQuantityLimit,
-      secureRandomFloat
-    );
-    if (winners.length === 0) return;
-
-    setIsSpinning(true);
-
-    const isMulti = winners.length > 1;
-    const subDuration = isMulti
-      ? spinSpeed === 'fast'
-        ? 1200
-        : spinSpeed === 'normal'
-        ? 2200
-        : 3400
-      : SPIN_SPEED_MS[spinSpeed].wheel;
-
-    const runStep = (
-      stepIdx: number,
-      baseAngle: number,
-      stepWorkingPrizes: PrizeItem[],
-      revealedSoFar: PrizeItem[]
-    ) => {
-      const currentWinner = winners[stepIdx];
-      if (isMulti) {
-        setMultiSpinProgress({
-          current: stepIdx + 1,
-          total: winners.length,
-          revealed: revealedSoFar,
-        });
-      }
-
-      const stepAvailable = getAvailablePrizes(stepWorkingPrizes, enableQuantityLimit);
-      const { sectors } = calculateSectorsEngine(stepAvailable);
-      const selectedSector = sectors.find((s) => s.prize.id === currentWinner.id) || sectors[0];
-      if (!selectedSector) {
-        setMultiSpinProgress(null);
-        finalizeSpinBatch(winners, updatedPrizes);
-        return;
-      }
-
-      const extraRounds = isMulti ? 3 + Math.floor(secureRandomFloat() * 2) : 5 + Math.floor(secureRandomFloat() * 4);
-      const finalAngle = computeTargetSpinAngle(
-        baseAngle,
-        selectedSector,
-        extraRounds,
-        secureRandomFloat()
-      );
-
-      const startTime = performance.now();
-      let lastTickAngle = baseAngle;
-
-      const animate = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(1, elapsed / subDuration);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const currentAngle = baseAngle + (finalAngle - baseAngle) * easeOut;
-
-        if (currentAngle - lastTickAngle >= 24) {
-          playTickSound();
-          lastTickAngle = currentAngle;
-          pointerDeflectionRef.current = -18 * (1 - progress * 0.7);
-        } else {
-          pointerDeflectionRef.current *= 0.82;
-        }
-
-        currentRotationAngleRef.current = currentAngle;
-        drawWheelOnCanvas(previewCanvasRef.current, currentAngle);
-        if (isFullscreen) {
-          drawWheelOnCanvas(fullscreenCanvasRef.current, currentAngle);
-        }
-
-        if (progress < 1) {
-          animFrameIdRef.current = requestAnimationFrame(animate);
-        } else {
-          setCurrentRotationAngle(currentAngle);
-          pointerDeflectionRef.current = 0;
-          const nextRevealed = [...revealedSoFar, currentWinner];
-
-          if (stepIdx < winners.length - 1) {
-            playSubWinDing();
-            setMultiSpinProgress({
-              current: stepIdx + 1,
-              total: winners.length,
-              revealed: nextRevealed,
-            });
-
-            const nextStepPrizes = stepWorkingPrizes.map((p) => {
-              if (p.id !== currentWinner.id) return p;
-              const nextDrawn = p.drawnCount + 1;
-              return {
-                ...p,
-                drawnCount: nextDrawn,
-                isFinished: enableQuantityLimit ? nextDrawn >= p.quantity : false,
-              };
-            });
-
-            scheduleSpinTimeout(() => {
-              setPrizes(nextStepPrizes);
-              runStep(stepIdx + 1, finalAngle, nextStepPrizes, nextRevealed);
-            }, 680);
-          } else {
-            if (isMulti) {
-              setMultiSpinProgress({
-                current: winners.length,
-                total: winners.length,
-                revealed: nextRevealed,
-              });
-              scheduleSpinTimeout(() => {
-                setMultiSpinProgress(null);
-                finalizeSpinBatch(winners, updatedPrizes);
-              }, 450);
-            } else {
-              setMultiSpinProgress(null);
-              finalizeSpinBatch(winners, updatedPrizes);
-            }
-          }
-        }
-      };
-
-      animFrameIdRef.current = requestAnimationFrame(animate);
-    };
-
-    runStep(0, currentRotationAngle, prizes, []);
-  }, [
-    prizes,
+  // 狀態持久化、存檔槽與匯入／匯出 Hook
+  const {
+    isMounted,
     enableQuantityLimit,
-    isSpinning,
+    setEnableQuantityLimit,
     enableAwardMode,
+    setEnableAwardMode,
+    prizes,
+    setPrizes,
     awardTiers,
+    setAwardTiers,
     selectedAwardId,
-    getEffectiveDrawCount,
-    currentRotationAngle,
+    setSelectedAwardId,
+    history,
+    setHistory,
+    saveSlots,
+    saveState,
+    handleRevertRecords,
+    loadTemplate,
+    handleApplyBatchText,
+    handleFileUpload,
+    handleShufflePrizes,
+    handleDeduplicatePrizes,
+    handleShareUrl,
+    exportTxt,
+    exportHistoryCsv,
+    copyWinnersText,
+    handleSaveSlot,
+    handleLoadSlot,
+    handleDeleteSlot,
+  } = useWheelPersistence({
+    lang,
+    t,
+    showToast,
+    onAfterRevert: () => setWinnerModalData(null),
+  });
+
+  // 轉盤 / 拉霸機動畫與抽獎結算 Hook
+  const {
+    isSpinning,
+    multiSpinProgress,
+    slotStripItems,
+    slotTranslateY,
+    previewCanvasRef,
+    fullscreenCanvasRef,
+    confettiCanvasRef,
+    getUnfinishedPrizes,
+    handleStartSpin,
+  } = useWheelSpin({
+    prizes,
+    setPrizes,
+    awardTiers,
+    setAwardTiers,
+    selectedAwardId,
+    setSelectedAwardId,
+    history,
+    setHistory,
+    displayMode,
+    enableQuantityLimit,
+    enableAwardMode,
     spinSpeed,
+    drawCount,
+    isFullscreen,
+    allDrawnLabel: t.allDrawn,
     playTickSound,
     playSubWinDing,
-    finalizeSpinBatch,
-  ]);
-
-  // 啟動拉霸機抽獎
-  const startSlotSpin = useCallback(() => {
-    const initialAvailable = getAvailablePrizes(prizes, enableQuantityLimit);
-    if (initialAvailable.length === 0 || isSpinning) return;
-
-    const activeAward = enableAwardMode ? awardTiers.find((a) => a.id === selectedAwardId) : undefined;
-    if (enableAwardMode && activeAward && activeAward.drawnCount >= activeAward.quantity) return;
-
-    const effectiveCount = getEffectiveDrawCount();
-    const { winners, updatedPrizes } = drawBatchWinners(
-      prizes,
-      effectiveCount,
-      enableQuantityLimit,
-      secureRandomFloat
-    );
-    if (winners.length === 0) return;
-
-    setIsSpinning(true);
-
-    const isMulti = winners.length > 1;
-    const subDuration = isMulti
-      ? spinSpeed === 'fast'
-        ? 1050
-        : spinSpeed === 'normal'
-        ? 1900
-        : 2800
-      : SPIN_SPEED_MS[spinSpeed].slot;
-
-    const runSlotStep = (
-      stepIdx: number,
-      stepWorkingPrizes: PrizeItem[],
-      revealedSoFar: PrizeItem[]
-    ) => {
-      const currentWinner = winners[stepIdx];
-      if (isMulti) {
-        setMultiSpinProgress({
-          current: stepIdx + 1,
-          total: winners.length,
-          revealed: revealedSoFar,
-        });
-      }
-
-      const validPrizes = getAvailablePrizes(stepWorkingPrizes, enableQuantityLimit);
-      const poolForStrip = validPrizes.length > 0 ? validPrizes : [currentWinner];
-      const stripPrizes: PrizeItem[] = [];
-      const repeatRounds = Math.max(6, Math.ceil(28 / poolForStrip.length));
-      for (let r = 0; r < repeatRounds; r++) {
-        stripPrizes.push(...poolForStrip);
-      }
-      const winIdx = stripPrizes.length;
-      stripPrizes.push(currentWinner);
-      for (let i = 0; i < 4; i++) {
-        stripPrizes.push(poolForStrip[i % poolForStrip.length]);
-      }
-
-      setSlotStripItems(stripPrizes);
-      setSlotTranslateY(0);
-
-      const targetTranslateY = 92 - winIdx * 76;
-      const startTime = performance.now();
-      let lastSoundTime = 0;
-
-      const animate = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(1, elapsed / subDuration);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const currentY = targetTranslateY * easeOut;
-
-        setSlotTranslateY(currentY);
-
-        if (now - lastSoundTime > 110) {
-          playTickSound();
-          lastSoundTime = now;
-        }
-
-        if (progress < 1) {
-          animFrameIdRef.current = requestAnimationFrame(animate);
-        } else {
-          const nextRevealed = [...revealedSoFar, currentWinner];
-
-          if (stepIdx < winners.length - 1) {
-            playSubWinDing();
-            setMultiSpinProgress({
-              current: stepIdx + 1,
-              total: winners.length,
-              revealed: nextRevealed,
-            });
-
-            const nextStepPrizes = stepWorkingPrizes.map((p) => {
-              if (p.id !== currentWinner.id) return p;
-              const nextDrawn = p.drawnCount + 1;
-              return {
-                ...p,
-                drawnCount: nextDrawn,
-                isFinished: enableQuantityLimit ? nextDrawn >= p.quantity : false,
-              };
-            });
-
-            scheduleSpinTimeout(() => {
-              setPrizes(nextStepPrizes);
-              runSlotStep(stepIdx + 1, nextStepPrizes, nextRevealed);
-            }, 680);
-          } else {
-            if (isMulti) {
-              setMultiSpinProgress({
-                current: winners.length,
-                total: winners.length,
-                revealed: nextRevealed,
-              });
-              scheduleSpinTimeout(() => {
-                setMultiSpinProgress(null);
-                finalizeSpinBatch(winners, updatedPrizes);
-              }, 450);
-            } else {
-              setMultiSpinProgress(null);
-              finalizeSpinBatch(winners, updatedPrizes);
-            }
-          }
-        }
-      };
-
-      animFrameIdRef.current = requestAnimationFrame(animate);
-    };
-
-    runSlotStep(0, prizes, []);
-  }, [
-    prizes,
-    enableQuantityLimit,
-    isSpinning,
-    enableAwardMode,
-    awardTiers,
-    selectedAwardId,
-    getEffectiveDrawCount,
-    spinSpeed,
-    playTickSound,
-    playSubWinDing,
-    finalizeSpinBatch,
-  ]);
-
-  const handleStartSpin = useCallback(() => {
-    if (displayMode === 'wheel') {
-      startWheelSpin();
-    } else {
-      startSlotSpin();
-    }
-  }, [displayMode, startWheelSpin, startSlotSpin]);
+    playWinFanfare,
+    saveState,
+    onShowWinners: setWinnerModalData,
+  });
 
   // 鍵盤快捷鍵：空白鍵啟動抽獎或關閉得獎彈窗、Esc 退出全螢幕舞台
   useEffect(() => {
@@ -683,199 +161,6 @@ export default function LuckyWheelClient({ lang = 'zh-TW' }: LuckyWheelClientPro
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [winnerModalData, showHistoryModal, isSpinning, isFullscreen, handleStartSpin]);
-
-  const showToast = useCallback((msg: string) => {
-    const isLight = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
-    const toastEl = document.createElement('div');
-    toastEl.className = isLight
-      ? 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-[#d97706] bg-white/95 border border-[#d97706]/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md'
-      : 'fixed bottom-8 right-8 px-6 py-3 text-sm font-bold text-white bg-amber-500/20 border border-amber-500/40 rounded-xl shadow-2xl z-[30000] animate-bounce flex items-center gap-2 backdrop-blur-md';
-    toastEl.insertAdjacentHTML(
-      'afterbegin',
-      '<svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" class="shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
-    );
-    const msgEl = document.createElement('span');
-    msgEl.textContent = msg;
-    toastEl.appendChild(msgEl);
-    document.body.appendChild(toastEl);
-    setTimeout(() => {
-      if (document.body.contains(toastEl)) document.body.removeChild(toastEl);
-    }, 2200);
-  }, []);
-
-  // 不在場放棄重抽 / 撤銷單筆或整批紀錄
-  const handleRevertRecords = (recordIds: string[]) => {
-    const { updatedPrizes, updatedAwardTiers, updatedHistory } = revertWinnerRecords(
-      prizes,
-      awardTiers,
-      history,
-      recordIds,
-      enableQuantityLimit
-    );
-    setPrizes(updatedPrizes);
-    setAwardTiers(updatedAwardTiers);
-    setHistory(updatedHistory);
-    saveState(updatedPrizes, updatedHistory, updatedAwardTiers);
-    setWinnerModalData(null);
-    showToast(t.toastRevertedWinner);
-  };
-
-  // 載入快速模板
-  const loadTemplate = (templateKey: string) => {
-    if (templateKey in PRIZE_TEMPLATES) {
-      const validKey = templateKey as PrizeTemplateKey;
-      const templateData = PRIZE_TEMPLATES[validKey][lang] || PRIZE_TEMPLATES[validKey]['zh-TW'];
-      const newItems = templateData.map((p) => ({ ...p, id: generateId() }));
-      setPrizes(newItems);
-      setEnableAwardMode(false);
-      saveState(newItems, undefined, undefined, false);
-      showToast(t.toastLoadedTemplate);
-    } else if (templateKey === 'empty') {
-      setPrizes([]);
-      setEnableAwardMode(false);
-      saveState([], undefined, undefined, false);
-    }
-  };
-
-  // 批次文字套用
-  const handleApplyBatchText = (rawText: string) => {
-    const { items, isParticipantList } = parseBatchText(rawText, PRESET_COLORS);
-    if (items.length > 0) {
-      setPrizes(items);
-      saveState(items);
-      showToast(
-        (isParticipantList ? t.toastImportPeople : t.toastImportPrizes).replace('{n}', String(items.length))
-      );
-    } else {
-      showToast(t.toastInvalidFile);
-    }
-  };
-
-  // 檔案上傳匯入
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) handleApplyBatchText(text);
-    };
-    reader.readAsText(file, 'UTF-8');
-    e.target.value = '';
-  };
-
-  // 隨機打亂與去重
-  const handleShufflePrizes = () => {
-    const copy = [...prizes];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(secureRandomFloat() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    setPrizes(copy);
-    saveState(copy);
-    showToast(t.toastShuffled);
-  };
-
-  const handleDeduplicatePrizes = () => {
-    const seen = new Set<string>();
-    const deduped = prizes.filter((p) => {
-      const key = p.title.trim().toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-    setPrizes(deduped);
-    saveState(deduped);
-    showToast(t.toastDeduped.replace('{n}', String(deduped.length)));
-  };
-
-  // 分享連結與匯出
-  const handleShareUrl = async () => {
-    const encoded = encodeWheelShareState({
-      prizes,
-      enableQuantityLimit,
-      enableAwardMode,
-      awardTiers,
-    });
-    const url = `${window.location.origin}${window.location.pathname}?wheel=${encoded}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast(t.toastCopiedShareLink);
-    } catch {
-      window.history.replaceState(null, '', `?wheel=${encoded}`);
-      showToast(t.toastCopiedShareLink);
-    }
-  };
-
-  const exportTxt = () => {
-    const textContent = prizes.map((p) => `${p.title}\t${p.weight}\t${p.quantity}\t${p.color}`).join('\n');
-    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(blob, `LuckyWheel_Prizes_${getLocalDateString()}.txt`);
-  };
-
-  const exportHistoryCsv = () => {
-    const csv = formatHistoryCsv(history, lang);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, `LuckyWheel_Winners_${getLocalDateString()}.csv`);
-  };
-
-  const copyWinnersText = async () => {
-    const lines = history.map((rec, idx) =>
-      rec.awardName ? `${idx + 1}. ${rec.prizeTitle} — ${rec.awardName}` : `${idx + 1}. ${rec.prizeTitle}`
-    );
-    try {
-      await navigator.clipboard.writeText(lines.join('\n'));
-      showToast(t.toastCopiedWinners);
-    } catch {
-      // ignore
-    }
-  };
-
-  // 本地存檔槽操作
-  const handleSaveSlot = (slotName: string) => {
-    const cleanName = slotName.trim() || `${t.title} #${saveSlots.length + 1}`;
-    const newSlot: SaveSlot = {
-      id: generateId(),
-      name: cleanName,
-      updatedAt: Date.now(),
-      prizes,
-      enableQuantityLimit,
-      enableAwardMode,
-      awardTiers,
-    };
-    const nextSlots = [newSlot, ...saveSlots].slice(0, 30);
-    setSaveSlots(nextSlots);
-    void safeIdb.set(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY, nextSlots);
-    try {
-      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots.slice(0, 12)));
-    } catch {
-      // ignore
-    }
-    showToast(t.toastSavedSlot.replace('{name}', cleanName));
-  };
-
-  const handleLoadSlot = (slot: SaveSlot) => {
-    setPrizes(slot.prizes);
-    setEnableQuantityLimit(slot.enableQuantityLimit);
-    setEnableAwardMode(Boolean(slot.enableAwardMode));
-    if (slot.awardTiers && slot.awardTiers.length > 0) {
-      setAwardTiers(slot.awardTiers);
-      setSelectedAwardId(slot.awardTiers[0].id);
-    }
-    saveState(slot.prizes, undefined, slot.awardTiers, Boolean(slot.enableAwardMode), slot.enableQuantityLimit);
-    showToast(t.toastLoadedSlot.replace('{name}', slot.name));
-  };
-
-  const handleDeleteSlot = (slotId: string) => {
-    const nextSlots = saveSlots.filter((s) => s.id !== slotId);
-    setSaveSlots(nextSlots);
-    void safeIdb.set(LW_IDB_NAMESPACE, LW_SLOTS_IDB_KEY, nextSlots);
-    try {
-      localStorage.setItem('lw_save_slots', JSON.stringify(nextSlots.slice(0, 12)));
-    } catch {
-      // ignore
-    }
-  };
 
   const toggleBrowserFullscreen = () => {
     if (!document.fullscreenElement) {

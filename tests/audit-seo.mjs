@@ -22,12 +22,15 @@ console.log(`📦 偵測到 ${toolDirs.length} 個主要工具模組\n`);
 const issues = [];
 
 // 2. 檢查 sitemap.ts 涵蓋率
-// sitemap.ts 已改為由中央註冊表 app/config/tools.tsx 推導，故此處改驗「工具是否登記於註冊表」與「sitemap 確實引用註冊表」。
+// sitemap.ts 已改為由中央註冊表 app/config/tools-meta.ts（或 tools.tsx）推導，故此處改驗「工具是否登記於註冊表」與「sitemap 確實引用註冊表」。
 const sitemapContent = fs.readFileSync(path.join(appDir, 'sitemap.ts'), 'utf-8');
-const toolsRegistry = fs.readFileSync(path.join(appDir, 'config', 'tools.tsx'), 'utf-8');
+const toolsMetaPath = path.join(appDir, 'config', 'tools-meta.ts');
+const toolsRegistry = fs.existsSync(toolsMetaPath)
+  ? fs.readFileSync(toolsMetaPath, 'utf-8')
+  : fs.readFileSync(path.join(appDir, 'config', 'tools.tsx'), 'utf-8');
 
 const sitemapUsesRegistry =
-  /from '\.\/config\/tools'/.test(sitemapContent) &&
+  /from '\.\/config\/tools(-meta)?'/.test(sitemapContent) &&
   (sitemapContent.includes('ALL_TOOLS') || sitemapContent.includes('CATEGORIES'));
 
 if (!sitemapUsesRegistry) {

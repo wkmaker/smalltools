@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useIsMounted } from '@/app/utils/useIsMounted';
 
 type Theme = 'dark' | 'light';
 
@@ -12,35 +13,35 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function readInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'dark';
+  try {
+    const storedTheme = localStorage.getItem('theme') as Theme | null;
+    if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
+    const domTheme = document.documentElement.getAttribute('data-theme') as Theme | null;
+    if (domTheme === 'light' || domTheme === 'dark') return domTheme;
+  } catch {}
+  return 'dark';
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
-  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<Theme>(readInitialTheme);
+  const mounted = useIsMounted();
 
   useEffect(() => {
-    // 讀取當前 DOM 上的 data-theme (可能已被 head 腳本設定) 或 localStorage
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    const domTheme = document.documentElement.getAttribute('data-theme') as Theme | null;
-    const initialTheme: Theme = storedTheme || domTheme || 'dark';
-
-    setThemeState(initialTheme);
-    document.documentElement.setAttribute('data-theme', initialTheme);
-    if (initialTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'light') {
       document.documentElement.classList.add('light');
     } else {
       document.documentElement.classList.remove('light');
     }
-    setMounted(true);
-  }, []);
+  }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    if (newTheme === 'light') {
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.classList.remove('light');
-    }
+    try {
+      localStorage.setItem('theme', newTheme);
+    } catch {}
   };
 
   const toggleTheme = () => {

@@ -1,7 +1,7 @@
 /**
  * 首頁中英文案（從 HomeClient.tsx 抽離，避免單檔過長）。
  */
-import type { Category } from './config/tools';
+import type { Category } from './config/tools-meta';
 
 type Tab = 'all' | Category;
 

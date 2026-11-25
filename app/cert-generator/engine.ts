@@ -1,6 +1,21 @@
-import 'reflect-metadata';
-import * as x509 from '@peculiar/x509';
-import forge from 'node-forge';
+import type * as X509Namespace from '@peculiar/x509';
+import type ForgeNamespace from 'node-forge';
+
+let x509ModulePromise: Promise<typeof X509Namespace> | null = null;
+async function loadX509(): Promise<typeof X509Namespace> {
+  if (!x509ModulePromise) {
+    x509ModulePromise = import('reflect-metadata').then(() => import('@peculiar/x509'));
+  }
+  return x509ModulePromise;
+}
+
+let forgeModulePromise: Promise<typeof ForgeNamespace> | null = null;
+async function loadForge(): Promise<typeof ForgeNamespace> {
+  if (!forgeModulePromise) {
+    forgeModulePromise = import('node-forge').then((m) => m.default ?? (m as unknown as typeof ForgeNamespace));
+  }
+  return forgeModulePromise;
+}
 
 export type KeyAlgorithm = 'RSA-2048' | 'RSA-4096' | 'ECDSA-P256' | 'ECDSA-P384' | 'Ed25519';
 
@@ -53,7 +68,7 @@ export function parseSanInput(raw: string): SanParseResult {
   return { dnsNames, ipAddresses, invalid };
 }
 
-function buildSanJson(sanEntries: SanParseResult): x509.JsonGeneralNames {
+function buildSanJson(sanEntries: SanParseResult): X509Namespace.JsonGeneralNames {
   return [
     ...sanEntries.dnsNames.map((value) => ({ type: 'dns' as const, value })),
     ...sanEntries.ipAddresses.map((value) => ({ type: 'ip' as const, value })),
@@ -115,10 +130,11 @@ async function generateKeyPair(algorithm: KeyAlgorithm): Promise<CryptoKeyPair> 
 async function buildLeafExtensions(
   publicKey: CryptoKey,
   sanEntries: SanParseResult,
-  authorityPublicKey?: x509.PublicKeyType
-): Promise<x509.Extension[]> {
+  authorityPublicKey?: X509Namespace.PublicKeyType
+): Promise<X509Namespace.Extension[]> {
+  const x509 = await loadX509();
   const pub = await x509.PublicKey.create(publicKey);
-  const extensions: x509.Extension[] = [
+  const extensions: X509Namespace.Extension[] = [
     new x509.BasicConstraintsExtension(false, undefined, true),
     new x509.KeyUsagesExtension(x509.KeyUsageFlags.digitalSignature | x509.KeyUsageFlags.keyEncipherment, true),
     new x509.ExtendedKeyUsageExtension([x509.ExtendedKeyUsage.serverAuth, x509.ExtendedKeyUsage.clientAuth]),
@@ -133,7 +149,8 @@ async function buildLeafExtensions(
   return extensions;
 }
 
-async function buildCaExtensions(publicKey: CryptoKey): Promise<x509.Extension[]> {
+async function buildCaExtensions(publicKey: CryptoKey): Promise<X509Namespace.Extension[]> {
+  const x509 = await loadX509();
   const pub = await x509.PublicKey.create(publicKey);
   return [
     new x509.BasicConstraintsExtension(true, undefined, true),
@@ -146,7 +163,7 @@ async function buildCaExtensions(publicKey: CryptoKey): Promise<x509.Extension[]
 }
 
 export interface CertificateBundle {
-  cert: x509.X509Certificate;
+  cert: X509Namespace.X509Certificate;
   certPem: string;
   certDer: ArrayBuffer;
   privateKey: CryptoKey;
@@ -156,10 +173,11 @@ export interface CertificateBundle {
 }
 
 async function toBundle(
-  cert: x509.X509Certificate,
+  cert: X509Namespace.X509Certificate,
   privateKey: CryptoKey,
   algorithm: KeyAlgorithm
 ): Promise<CertificateBundle> {
+  const x509 = await loadX509();
   const privateKeyDer = await crypto.subtle.exportKey('pkcs8', privateKey);
   return {
     cert,
@@ -183,6 +201,7 @@ export interface SelfSignedCertificateOptions {
 
 /** 產生一張「純自簽」憑證：subject 與 issuer 相同，不經過任何 CA，僅供自己信任這一張。 */
 export async function generateSelfSignedCertificate(options: SelfSignedCertificateOptions): Promise<CertificateBundle> {
+  const x509 = await loadX509();
   const keys = await generateKeyPair(options.algorithm);
   const { notBefore, notAfter } = buildValidity(options.validityDays);
 
@@ -208,6 +227,7 @@ export interface CaCertificateOptions {
 
 /** 產生一張自簽根 CA 憑證與對應私鑰（純前端運算，私鑰不會離開瀏覽器）。 */
 export async function generateCaCertificate(options: CaCertificateOptions): Promise<CertificateBundle> {
+  const x509 = await loadX509();
   const keys = await generateKeyPair(options.algorithm);
   const { notBefore, notAfter } = buildValidity(options.validityDays);
 
@@ -228,13 +248,14 @@ export interface ServerCertificateOptions {
   sanEntries: SanParseResult;
   validityDays: number;
   algorithm: KeyAlgorithm;
-  caCert: x509.X509Certificate;
+  caCert: X509Namespace.X509Certificate;
   caPrivateKey: CryptoKey;
-  caPublicKey: x509.PublicKeyType;
+  caPublicKey: X509Namespace.PublicKeyType;
 }
 
 /** 產生一張由指定 CA 簽發的伺服器憑證與對應私鑰，支援多筆 DNS / IP SAN。 */
 export async function generateServerCertificate(options: ServerCertificateOptions): Promise<CertificateBundle> {
+  const x509 = await loadX509();
   const keys = await generateKeyPair(options.algorithm);
   const { notBefore, notAfter } = buildValidity(options.validityDays);
 
@@ -260,7 +281,8 @@ function detectImportedAlgorithm(publicKeyAlgorithm: KeyAlgorithm | { name: stri
 }
 
 /** 驗證私鑰與憑證公鑰確實成對：簽一張短期有效的探測憑證並用憑證公鑰驗證簽章。 */
-async function assertKeyPairMatches(cert: x509.X509Certificate, privateKey: CryptoKey): Promise<void> {
+async function assertKeyPairMatches(cert: X509Namespace.X509Certificate, privateKey: CryptoKey): Promise<void> {
+  const x509 = await loadX509();
   const mismatchError = new Error('私鑰與憑證的公鑰不匹配，請確認貼上正確的一對 CA 憑證與私鑰');
   try {
     const probeCert = await x509.X509CertificateGenerator.create({
@@ -284,7 +306,8 @@ async function assertKeyPairMatches(cert: x509.X509Certificate, privateKey: Cryp
  * 僅支援本工具產生的金鑰格式：RSA（SHA-256）、ECDSA（P-256/P-384）、Ed25519。
  */
 export async function importCaCertificate(certPem: string, privateKeyPem: string): Promise<CertificateBundle> {
-  let cert: x509.X509Certificate;
+  const x509 = await loadX509();
+  let cert: X509Namespace.X509Certificate;
   try {
     cert = new x509.X509Certificate(certPem.trim());
   } catch {
@@ -314,9 +337,10 @@ export async function importCaCertificate(certPem: string, privateKeyPem: string
 }
 
 /** 將 RSA 憑證與私鑰打包為 PKCS#12 (.p12/.pfx)。僅支援 RSA，其他演算法會拋出錯誤。 */
-export function buildPkcs12(certPem: string, privateKeyPem: string, password: string): Uint8Array {
-  let forgeKey: forge.pki.PrivateKey;
-  let forgeCert: forge.pki.Certificate;
+export async function buildPkcs12(certPem: string, privateKeyPem: string, password: string): Promise<Uint8Array> {
+  const forge = await loadForge();
+  let forgeKey: ForgeNamespace.pki.PrivateKey;
+  let forgeCert: ForgeNamespace.pki.Certificate;
   try {
     forgeKey = forge.pki.privateKeyFromPem(privateKeyPem);
     forgeCert = forge.pki.certificateFromPem(certPem);

@@ -90,7 +90,6 @@ jobs:
           filters: |
             build_and_deploy:
               - 'app/**'
-              - 'components/**'
               - 'public/**'
               - 'package.json'
               - 'package-lock.json'

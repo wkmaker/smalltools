@@ -5,6 +5,13 @@ import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
 import styles from './ip-detector.module.css';
 import { TRANSLATIONS } from './translations';
+import {
+  parseCfTraceText,
+  normalizeIpapiGeo,
+  normalizeIpwhoisGeo,
+  type CfTraceInfo,
+  type GeoInfo,
+} from './engine';
 
 interface CloudTarget {
   key: string;
@@ -12,28 +19,6 @@ interface CloudTarget {
   url: string;
   latency: number | null;
   status: 'loading' | 'connected' | 'failed';
-}
-
-interface CfTraceInfo {
-  ip?: string;
-  colo?: string;
-  loc?: string;
-  http?: string;
-  uag?: string;
-  latency?: number;
-  error?: boolean;
-}
-
-interface GeoInfo {
-  org?: string;
-  asn?: string;
-  network?: string;
-  location?: string;
-  latlon?: string;
-  timezone?: string;
-  currency?: string;
-  source?: string;
-  error?: boolean;
 }
 
 interface IpDetectorClientProps {
@@ -176,23 +161,13 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       const latency = Math.round(performance.now() - start);
       const text = await res.text();
       if (parentSignal?.aborted) return;
-      const lines = text.split('\n');
-      const map: Record<string, string> = {};
-      lines.forEach(line => {
-        const parts = line.split('=');
-        if (parts.length >= 2) {
-          map[parts[0].trim()] = parts.slice(1).join('=').trim();
-        }
-      });
-
-      setCfTrace({
-        ip: map.ip || t.unknown,
-        colo: map.colo || t.unknown,
-        loc: map.loc || t.unknown,
-        http: map.http || t.unknown,
-        uag: map.uag || (typeof navigator !== 'undefined' ? navigator.userAgent : t.unknown),
-        latency,
-      });
+      setCfTrace(
+        parseCfTraceText(text, {
+          latency,
+          unknownLabel: t.unknown,
+          fallbackUserAgent: typeof navigator !== 'undefined' ? navigator.userAgent : t.unknown,
+        })
+      );
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
       console.warn('[IpDetector] Cloudflare trace fetch failed:', err);
@@ -214,21 +189,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
       const raw = await res.json();
       if (raw.error) throw new Error(raw.reason || 'Rate limit');
 
-      const locStr = [raw.city, raw.region, raw.country_name].filter(Boolean).join(', ') || t.unknown;
-      const latlonStr = raw.latitude != null && raw.longitude != null ? `${raw.longitude}, ${raw.latitude}` : t.unknown;
-      const tzStr = raw.timezone ? `${raw.timezone} (UTC${raw.utc_offset || ''})` : t.unknown;
-      const currStr = raw.currency ? `${raw.currency} (${raw.currency_name || ''})` : t.unknown;
-
-      setGeoInfo({
-        org: raw.org || t.unknown,
-        asn: raw.asn || t.unknown,
-        network: raw.network || undefined,
-        location: locStr,
-        latlon: latlonStr,
-        timezone: tzStr,
-        currency: currStr,
-        source: 'ipapi.co',
-      });
+      setGeoInfo(normalizeIpapiGeo(raw, t.unknown));
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
       console.warn('[IpDetector] Primary GeoIP lookup failed, trying fallback:', err);
@@ -238,24 +199,7 @@ export default function IpDetectorClient({ lang = 'zh-TW' }: IpDetectorClientPro
         const rawFallback = await resFallback.json();
         if (!rawFallback.success) throw new Error('ipwhois failed');
 
-        const locStr = [rawFallback.city, rawFallback.region, rawFallback.country].filter(Boolean).join(', ') || t.unknown;
-        const latlonStr =
-          rawFallback.latitude != null && rawFallback.longitude != null
-            ? `${rawFallback.longitude}, ${rawFallback.latitude}`
-            : t.unknown;
-        const tzStr = rawFallback.timezone ? `${rawFallback.timezone} (UTC${rawFallback.timezone_gmt || ''})` : t.unknown;
-        const currStr = rawFallback.currency_code ? `${rawFallback.currency_code} (${rawFallback.currency || ''})` : t.unknown;
-
-        setGeoInfo({
-          org: rawFallback.org || rawFallback.isp || t.unknown,
-          asn: rawFallback.asn || t.unknown,
-          network: undefined,
-          location: locStr,
-          latlon: latlonStr,
-          timezone: tzStr,
-          currency: currStr,
-          source: 'ipwhois.app',
-        });
+        setGeoInfo(normalizeIpwhoisGeo(rawFallback, t.unknown));
       } catch (fallbackErr: unknown) {
         if ((fallbackErr as Error)?.name === 'AbortError' && parentSignal?.aborted) return;
         console.error('[IpDetector] Fallback GeoIP lookup failed:', fallbackErr);

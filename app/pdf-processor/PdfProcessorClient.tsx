@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useId, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import ToolLayout from '../components/ToolLayout';
+import { useIsMounted } from '../utils/useIsMounted';
 import FaqSection from '../components/FaqSection';
 import {
   renderPdfPagesProgressive,
@@ -43,7 +44,7 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
   const [highResUrl, setHighResUrl] = useState<string>('');
   const [zoomScale, setZoomScale] = useState<number>(1);
   const [isLoadingHighRes, setIsLoadingHighRes] = useState<boolean>(false);
-  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const isMounted = useIsMounted();
   const [toast, setToast] = useState<string>('');
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,7 +64,6 @@ export default function PdfProcessorClient({ lang = 'zh-TW' }: PdfProcessorClien
   const pwdInputId = useId();
 
   useEffect(() => {
-    setIsMounted(true);
     document.documentElement.style.setProperty('--theme-color', '#ef4444');
     document.documentElement.style.setProperty('--accent-glow', 'rgba(239, 68, 68, 0.6)');
   }, []);

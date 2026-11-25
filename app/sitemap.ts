@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { ALL_TOOLS } from './config/tools';
+import { ALL_TOOLS_META } from './config/tools-meta';
 import milestoneData from './hourly-rate-calculator/config/percentile_milestones.json';
 
 export const dynamic = 'force-static';
@@ -15,8 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/en/`, lastModified: LAST_MODIFIED, changeFrequency: 'monthly', priority: 1.0 },
   ];
 
-  // 工具頁一律由中央註冊表 app/config/tools.tsx 推導，新增工具無需再改本檔。
-  for (const tool of ALL_TOOLS) {
+  // 工具頁一律由中央註冊表 app/config/tools-meta.ts 推導，新增工具無需再改本檔。
+  for (const tool of ALL_TOOLS_META) {
     entries.push(
       { url: `${BASE_URL}${tool.href}`, lastModified: LAST_MODIFIED, changeFrequency: 'monthly', priority: 0.8 },
       { url: `${BASE_URL}${tool.hrefEn}`, lastModified: LAST_MODIFIED, changeFrequency: 'monthly', priority: 0.8 },

@@ -2,9 +2,9 @@
 
 [![Online Tools](https://img.shields.io/badge/Online%20Tools-tools.cjkuo.net-00f0ff?style=for-the-badge&logo=vercel)](https://tools.cjkuo.net/)
 [![Donate Stripe](https://img.shields.io/badge/Donate-Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://donate.stripe.com/fZufZh4sI3xf4KheFc3ZK00?client_reference_id=smalltools)
-[![Next.js](https://img.shields.io/badge/Next.js-16.4.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.6-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.3.1-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4.3.3-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4.3.5-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
 
 **Smalltools** 是一個集結金融理財試算、網路與安全診斷、文件圖片處理、開發者實用工具及生活時間應用的免費線上工具庫。
 
@@ -103,8 +103,8 @@
 ## 🚀 本地開發與建置指南 (Getting Started)
 
 ### 前置需求
-* Node.js >= 18.0.0
-* npm >= 9.0.0
+* Node.js >= 22.0.0
+* npm >= 10.0.0
 
 ### 1. 安裝套件依賴
 ```bash

@@ -1,0 +1,43 @@
+name: CI 品質驗證
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 檢出儲存庫代碼
+        uses: actions/checkout@v7
+
+      - name: 安裝 Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: 安裝專案依賴
+        run: npm ci
+
+      - name: 執行 TypeScript 型別檢查
+        run: npx tsc --noEmit
+
+      - name: 執行 ESLint 靜態檢查
+        run: npm run lint
+
+      - name: 執行全套自動化測試（UI / SEO / FAQ / i18n / Engine）
+        run: npm test
+
+      - name: 執行 ARIA 無障礙按鈕稽核
+        run: npm run audit:aria

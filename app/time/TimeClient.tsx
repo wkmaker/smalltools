@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import Link from 'next/link';
 import ToolLayout from '../components/ToolLayout';
 import FaqSection from '../components/FaqSection';
-import { useTheme } from '@/components/ThemeProvider';
+import { useTheme } from '@/app/components/ThemeProvider';
 import styles from './time.module.css';
 import { TRANSLATIONS } from './translations';
 

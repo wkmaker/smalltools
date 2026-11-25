@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { safeLocalStorage, safeSessionStorage } from '@/app/utils/storage';
-import ThemeToggle from '@/components/ThemeToggle';
+import ThemeToggle from '@/app/components/ThemeToggle';
 
 import { CATEGORIES, Category, Tool, type CategorySection } from './config/tools';
 import { version as appVersion } from '@/package.json';
