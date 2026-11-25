@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.35.1] - 2026-11-25
+
+### Fixed
+- **修正 GA4 首次載入脫敏執行順序（#112）**：
+  - 將 `gtag('set', baseParams)` 移至 `gtag('js', new Date())` 之前，並將 `ga4-init` 排於外部 `gtag/js` 腳本之前，防止 GTM 容器化 GA4 的 `__gct` 在 `gtm.js` 觸發時搶先以未脫敏網址送出首發 `page_view`。
+
 ## [1.35.0] - 2026-11-25
 
 ### Added

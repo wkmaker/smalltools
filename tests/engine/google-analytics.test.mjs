@@ -70,26 +70,26 @@ describe('GA4 極簡脫敏邏輯 (app/utils/analytics.ts)', () => {
       calls.push(Array.from(args));
     }
 
-    const setCall = calls.find((c) => c[0] === 'set');
-    const configCall = calls.find((c) => c[0] === 'config');
-    assert.ok(setCall, '應呼叫 gtag("set", ...)');
-    assert.ok(configCall, '應呼叫 gtag("config", ...)');
+    const setIdx = calls.findIndex((c) => c[0] === 'set');
+    const jsIdx = calls.findIndex((c) => c[0] === 'js');
+    const configIdx = calls.findIndex((c) => c[0] === 'config');
+    assert.ok(setIdx !== -1, '應呼叫 gtag("set", ...)');
+    assert.ok(jsIdx !== -1, '應呼叫 gtag("js", ...)');
+    assert.ok(configIdx !== -1, '應呼叫 gtag("config", ...)');
+    assert.ok(setIdx < jsIdx && jsIdx < configIdx, 'gtag("set") 必須在 gtag("js") 之前執行，避免 GTM 容器化 GA4 的 __gct 搶先送出未脫敏 page_view');
 
-    assert.deepEqual({ ...setCall[1] }, {
-      page_location: 'https://tools.cjkuo.net/loan-calculator/',
-      page_path: '/loan-calculator/',
-      page_title: '/loan-calculator/',
-    });
-
-    assert.equal(configCall[1], 'G-4WBEYWFEYD');
-    assert.deepEqual({ ...configCall[2] }, {
+    const expectedParams = {
       page_location: 'https://tools.cjkuo.net/loan-calculator/',
       page_path: '/loan-calculator/',
       page_title: '/loan-calculator/',
       page_referrer: 'https://tools.cjkuo.net/mortgage/',
       allow_google_signals: false,
       allow_ad_personalization_signals: false,
-    });
+    };
+
+    assert.deepEqual({ ...calls[setIdx][1] }, expectedParams);
+    assert.equal(calls[configIdx][1], 'G-4WBEYWFEYD');
+    assert.deepEqual({ ...calls[configIdx][2] }, expectedParams);
   });
 
   it('buildGaInitScript 拒絕不合法 Measurement ID', () => {
