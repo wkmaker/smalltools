@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import styles from './ServiceWorkerRegister.module.css';
 
 export default function ServiceWorkerRegister() {
   const [showUpdateToast, setShowUpdateToast] = useState(false);
@@ -115,11 +116,11 @@ export default function ServiceWorkerRegister() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-5 right-5 z-50 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg-solid)] p-4 shadow-2xl backdrop-blur-md text-[var(--text-primary)] text-sm max-w-[calc(100vw-2.5rem)]"
+      className={`${styles.toastCard} fixed bottom-5 right-5 z-50 flex flex-wrap items-center gap-3 rounded-xl p-4 backdrop-blur-md text-sm max-w-[calc(100vw-2.5rem)]`}
     >
       <div className="flex h-3 w-3 relative shrink-0" aria-hidden="true">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-cyan)] opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--accent-cyan)]"></span>
+        <span className={`${styles.statusDotPing} animate-ping absolute inline-flex h-full w-full rounded-full opacity-75`}></span>
+        <span className={`${styles.statusDot} relative inline-flex rounded-full h-3 w-3`}></span>
       </div>
       <div className="min-w-0">
         <p className="font-semibold text-[var(--text-primary)]">
@@ -140,7 +141,7 @@ export default function ServiceWorkerRegister() {
           type="button"
           onClick={handleApplyUpdate}
           disabled={isUpdating}
-          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent-cyan)] text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-60 cursor-pointer"
+          className={`${styles.updateBtn} px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60 cursor-pointer`}
         >
           {isUpdating ? (isEn ? 'Updating...' : '更新中...') : isEn ? 'Update Now' : '立即更新'}
         </button>
@@ -149,7 +150,7 @@ export default function ServiceWorkerRegister() {
           onClick={() => setShowUpdateToast(false)}
           disabled={isUpdating}
           aria-label={isEn ? 'Dismiss update notification' : '稍後再更新'}
-          className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--card-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-50 cursor-pointer"
+          className={`${styles.dismissBtn} px-2.5 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 cursor-pointer`}
         >
           {isEn ? 'Later' : '稍後'}
         </button>
