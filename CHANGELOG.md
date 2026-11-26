@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [1.35.3] - 2026-11-27
+
+### Fixed
+- **修正暗色模式下 PWA 新版本通知「立即更新」按鈕隱形問題 (`ServiceWorkerRegister`)**：
+  - 移除 `app/components/ServiceWorkerRegister.tsx` 中未定義的 CSS 變數 `var(--accent-cyan)`（該變數解析失敗導致按鈕背景變透明，極深黑字疊在暗色卡片底色上無法辨識，連帶使左側狀態圓點消失）。
+  - 新增 `app/components/ServiceWorkerRegister.module.css`，為暗色模式套用高對比 `--neon-cyan` (`#38bdf8`) 底配深黑字、亮色模式依 WCAG AA 降階規範套用深海天藍 (`#0369a1`) 配白字，並補齊「稍後」按鈕與狀態圓點的雙主題高對比樣式。
+  - 新增回歸測試 `tests/engine/service-worker-toast.test.mjs`，驗證元件引用的無 fallback CSS 變數皆有定義且具備雙主題樣式覆寫。
+
 ## [1.35.2] - 2026-11-25
 
 ### Added
