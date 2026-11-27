@@ -34,6 +34,9 @@ interface PregnancyInputPanelProps {
   setMonthlySalary: (val: number | '') => void;
   leaveStartWeeksOption: number;
   setLeaveStartWeeksOption: (val: number) => void;
+  leaveDaysAdjustment: number | '';
+  setLeaveDaysAdjustment: (val: number | '') => void;
+  totalLeaveDays: number;
   showSalaryTooltip: boolean;
   setShowSalaryTooltip: React.Dispatch<React.SetStateAction<boolean>>;
   shareLinkToast: boolean;
@@ -52,6 +55,7 @@ interface PregnancyInputPanelProps {
   ivfTypeId: string;
   salaryInputId: string;
   leaveStartId: string;
+  leaveDaysAdjustId: string;
 }
 
 export default function PregnancyInputPanel(props: PregnancyInputPanelProps) {
@@ -372,6 +376,60 @@ export default function PregnancyInputPanel(props: PregnancyInputPanelProps) {
               <option value={4}>{t.leaveStartOpt4Weeks}</option>
               <option value={0}>{t.leaveStartOptDue}</option>
             </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor={props.leaveDaysAdjustId} className="text-xs font-semibold text-text-sub">
+                {t.leaveDaysAdjustLabel}
+              </label>
+              <span className={`text-xs font-bold ${styles.accentText}`}>
+                {t.leaveDaysTotalSummary.replace('{days}', props.totalLeaveDays.toString())}
+              </span>
+            </div>
+            <input
+              id={props.leaveDaysAdjustId}
+              type="number"
+              step="1"
+              min={-97}
+              max={267}
+              placeholder="0"
+              value={props.leaveDaysAdjustment}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === '') {
+                  props.setLeaveDaysAdjustment('');
+                  return;
+                }
+                const parsed = parseInt(raw, 10);
+                if (!Number.isNaN(parsed)) {
+                  props.setLeaveDaysAdjustment(parsed);
+                }
+              }}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-select-bg border border-border-glass text-text-main text-sm focus:outline-none focus:border-[var(--theme-color)] transition-colors"
+            />
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {[
+                { value: 0, label: t.leaveAdjustPresetNew },
+                { value: -42, label: t.leaveAdjustPresetOld },
+                { value: 14, label: t.leaveAdjustPresetPlus14 },
+              ].map((preset) => {
+                const isActive = (props.leaveDaysAdjustment === '' ? 0 : props.leaveDaysAdjustment) === preset.value;
+                return (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => props.setLeaveDaysAdjustment(preset.value)}
+                    className={`${styles.presetChip} ${isActive ? styles.presetChipActive : ''}`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="text-xs text-text-sub leading-relaxed">
+              {t.leaveDaysAdjustHelper}
+            </span>
           </div>
         </div>
       </div>

@@ -42,6 +42,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   const ivfTypeId = useId();
   const salaryInputId = useId();
   const leaveStartId = useId();
+  const leaveDaysAdjustId = useId();
 
   // 狀態管理
   const [calcMode, setCalcMode] = useState<CalcMode>('lmp');
@@ -70,6 +71,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
   // 薪資、產假與摺疊設定
   const [monthlySalary, setMonthlySalary] = useState<number | ''>(45800);
   const [leaveStartWeeksOption, setLeaveStartWeeksOption] = useState<number>(2); // 產前 2 週開始請
+  const [leaveDaysAdjustment, setLeaveDaysAdjustment] = useState<number | ''>(0); // 相對 2027 新制 14 週（98 天）的增減天數
   const [showSalaryTooltip, setShowSalaryTooltip] = useState<boolean>(false);
   const [isBenefitsExpanded, setIsBenefitsExpanded] = useState<boolean>(true);
   const [isTemplateExpanded, setIsTemplateExpanded] = useState<boolean>(false);
@@ -116,6 +118,9 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
           if (data.ivfType) setIvfType(data.ivfType);
           if (data.monthlySalary !== undefined) setMonthlySalary(data.monthlySalary);
           if (typeof data.leaveStartWeeksOption === 'number') setLeaveStartWeeksOption(data.leaveStartWeeksOption);
+          if (typeof data.leaveDaysAdjustment === 'number' || data.leaveDaysAdjustment === '') {
+            setLeaveDaysAdjustment(data.leaveDaysAdjustment);
+          }
           if (data.checkedItems) setCheckedItems(data.checkedItems);
           if (typeof data.isBenefitsExpanded === 'boolean') setIsBenefitsExpanded(data.isBenefitsExpanded);
           if (typeof data.isTemplateExpanded === 'boolean') setIsTemplateExpanded(data.isTemplateExpanded);
@@ -183,6 +188,10 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
       const parsed = parseInt(params.get('leaveStart') || '2', 10);
       if (!isNaN(parsed)) setLeaveStartWeeksOption(parsed);
     }
+    if (params.has('leaveAdjust')) {
+      const parsed = parseInt(params.get('leaveAdjust') || '0', 10);
+      if (!isNaN(parsed)) setLeaveDaysAdjustment(parsed);
+    }
 
     isMountedRef.current = true;
   }, [defaultLmp]);
@@ -205,6 +214,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
       ivfType,
       monthlySalary,
       leaveStartWeeksOption,
+      leaveDaysAdjustment,
       checkedItems,
       isBenefitsExpanded,
       isTemplateExpanded,
@@ -230,6 +240,7 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     ivfType,
     monthlySalary,
     leaveStartWeeksOption,
+    leaveDaysAdjustment,
     checkedItems,
     isBenefitsExpanded,
     isTemplateExpanded,
@@ -265,6 +276,9 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
     }
     if (leaveStartWeeksOption !== 2) {
       params.set('leaveStart', leaveStartWeeksOption.toString());
+    }
+    if (typeof leaveDaysAdjustment === 'number' && leaveDaysAdjustment !== 0) {
+      params.set('leaveAdjust', leaveDaysAdjustment.toString());
     }
 
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
@@ -361,8 +375,14 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
 
   // 產假與津貼試算（純函數引擎）
   const benefits = useMemo(
-    () => calculateMaternityBenefits(estimatedDueDate, leaveStartWeeksOption, monthlySalary),
-    [estimatedDueDate, leaveStartWeeksOption, monthlySalary],
+    () =>
+      calculateMaternityBenefits(
+        estimatedDueDate,
+        leaveStartWeeksOption,
+        monthlySalary,
+        typeof leaveDaysAdjustment === 'number' ? leaveDaysAdjustment : 0,
+      ),
+    [estimatedDueDate, leaveStartWeeksOption, monthlySalary, leaveDaysAdjustment],
   );
 
   // 一鍵複製範本文字
@@ -376,8 +396,8 @@ export default function PregnancyCalculatorClient({ lang = 'zh-TW' }: { lang?: '
 
 1. 預估預產期 (EDD)：${formatDate(estimatedDueDate)}
 2. 目前孕期：第 ${currentWeeks} 週 + ${currentDays} 天
-3. 法定產檢假：依法享有 8 天全薪產檢假，將依產檢時程分次提前提出。
-4. 預計產假休假區間（共 56 日曆天）：
+3. 法定產檢假：依法享有 7 天全薪產檢假，將依產檢時程分次提前提出（未休完日數可依新制於產假後工作日續請）。
+4. 預計產假休假區間（共 ${benefits.totalLeaveDays} 日曆天）：
    - 預計產假開始日：${formatDate(benefits.leaveStart)}
    - 預計產假結束日：${formatDate(benefits.leaveEnd)}
    - 預計產後復職工作日：${formatDate(benefits.returnDate)}
@@ -398,8 +418,8 @@ I am writing to formally request maternity leave in preparation for the birth of
 
 1. Estimated Due Date (EDD): ${formatDate(estimatedDueDate)}
 2. Current Gestational Age: Week ${currentWeeks} + ${currentDays} days
-3. Statutory Prenatal Checkup Leave: 8 days of paid checkup leave to be taken as needed.
-4. Planned Maternity Leave Period (56 consecutive calendar days):
+3. Statutory Prenatal Checkup Leave: 7 days of paid checkup leave to be taken as needed (any unused days may be taken on workdays following maternity leave under the 2027 amendment).
+4. Planned Maternity Leave Period (${benefits.totalLeaveDays} consecutive calendar days):
    - Leave Start Date: ${formatDate(benefits.leaveStart)}
    - Leave End Date: ${formatDate(benefits.leaveEnd)}
    - Expected Return to Work Date: ${formatDate(benefits.returnDate)}
@@ -471,6 +491,9 @@ Date: ${formatDate(new Date())}`;
             setMonthlySalary={setMonthlySalary}
             leaveStartWeeksOption={leaveStartWeeksOption}
             setLeaveStartWeeksOption={setLeaveStartWeeksOption}
+            leaveDaysAdjustment={leaveDaysAdjustment}
+            setLeaveDaysAdjustment={setLeaveDaysAdjustment}
+            totalLeaveDays={benefits.totalLeaveDays}
             showSalaryTooltip={showSalaryTooltip}
             setShowSalaryTooltip={setShowSalaryTooltip}
             shareLinkToast={shareLinkToast}
@@ -488,6 +511,7 @@ Date: ${formatDate(new Date())}`;
             ivfTypeId={ivfTypeId}
             salaryInputId={salaryInputId}
             leaveStartId={leaveStartId}
+            leaveDaysAdjustId={leaveDaysAdjustId}
           />
 
           {/* 右側：核心看板與胎兒成長 */}

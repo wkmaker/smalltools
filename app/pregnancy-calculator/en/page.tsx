@@ -51,27 +51,27 @@ const faqJsonLd = generateFaqSchema([
   },
   {
     q: 'How many days of paid prenatal checkup leave are granted by law?',
-    a: 'Under gender equality labor laws (such as Taiwan Act of Gender Equality in Employment Article 15):\n\n① Duration: Female employees are entitled to 8 days of paid prenatal checkup leave.\n② Wage: Full salary is paid during checkup leaves.\n③ Flexibility: Checkup leave can be taken in increments of full days, half days, or hours.',
+    a: 'Under Taiwan Act of Gender Equality in Employment Article 15:\n\n① Duration: General employees are entitled to 7 days of fully paid prenatal checkup leave (civil servants receive 8 days of pre-maternity leave).\n② Wage: Full salary is paid during checkup leave.\n③ Flexibility & 2027 Update: Checkup leave can be taken in full days, half days, or hours, and under the 2027 amendment any unused days may be taken on workdays following maternity leave.',
   },
   {
-    q: 'Does the 8-week (56-day) maternity leave include weekends and holidays?',
-    a: 'Yes, statutory 8-week maternity leave is counted in consecutive calendar days (56 days), including weekends and national holidays.\n\nEmployees with more than 6 months of tenure receive 100% full regular wages, while those with less than 6 months receive 50% wages.',
+    q: 'Does the 2027 14-week (98-day) maternity leave include weekends and holidays?',
+    a: 'Yes. Under the amendment passed on Nov 13, 2026 (effective Jan 1, 2027), statutory maternity leave is extended from 8 weeks (56 days) to 14 consecutive weeks (98 calendar days), including weekends and holidays.\n\nThe first 8 weeks are mandatory for postpartum recovery, while weeks 9-14 allow voluntary early return to work. Employees with 6+ months of tenure receive 100% wages (50% under 6 months), with employer subsidies for weeks 9-14. For legacy 8-week leave or enhanced company policies, use the Custom Adjustment input (-42 or any positive/negative days).',
   },
   {
-    q: 'How many days of paid paternity / partner leave are available?',
-    a: 'Partners and spouses are entitled to 7 days of fully paid paternity and pregnancy checkup companion leave to support prenatal care and childbirth recovery.',
+    q: 'How many days of paid paternity / partner leave are available under the 2027 rules?',
+    a: 'Under the 2027 amendment, spouses and partners are entitled to 14 days (doubled from 7 days) of fully paid paternity and prenatal checkup companion leave, with government wage subsidies for the added days.',
   },
   {
-    q: 'What is the maternity insurance cash benefit and who qualifies?',
-    a: 'Insured working mothers who have maintained active labor insurance for at least 280 days prior to delivery receive a lump-sum grant equivalent to 2 full months (60 days) of average monthly insured salary.',
+    q: 'What is the maternity insurance cash benefit and top-up subsidy?',
+    a: 'Insured working mothers with at least 280 days of labor insurance prior to delivery (181 days for premature birth) receive a lump-sum grant equal to 2 months (60 days) of average monthly insured salary. Eligible ROC nationals also receive an automatic government top-up bringing the combined benefit to TWD 100,000 per birth (scaled proportionally for twins or more).',
   },
   {
-    q: 'How does the 80% parental leave allowance work?',
-    a: 'Eligible parents taking leave of absence to care for children under 3 years old receive up to 6 months of allowance at 80% of average insured wages (60% employment insurance + 20% government subsidy). Both parents can now apply concurrently.',
+    q: 'How do the 2027 parental leave rules and 6+3 allowance work?',
+    a: 'Under the 2027 amendments:\n\n① Age Limit Expanded: Parents may apply for up to 2 years of parental leave before the child turns 9 (previously age 3).\n② 60-Day Flexible Childcare Leave: Up to 60 days per year per child can be taken on a daily basis without breaking seniority.\n③ 6+3 Allowance: Eligible parents receive 80% of average insured wages (60% employment insurance + 20% subsidy) for 6 months each; once both parents complete 6 months, each may extend for 3 more months (up to 18 months combined).',
   },
   {
     q: 'Are the statutory maternity leave and subsidy calculations applicable outside Taiwan?',
-    a: 'The leave entitlements (8 days prenatal checkup leave, 8 weeks maternity leave, 7 days partner leave), maternity cash benefits (2 months), and parental leave allowance (80% wage subsidy) in this tool are based on the labor laws of Taiwan (R.O.C.), including the Labor Standards Act, Act of Gender Equality in Employment, and Employment Insurance Act.\n\n[Medical Timelines & Milestones] The due date estimation, fetal growth size comparisons, and 40-week clinical ultrasound milestones follow universal obstetric standards and are globally applicable.\n\n[Leaves & Government Benefits] If you reside in other countries or regions (such as Hong Kong, Singapore, Malaysia, North America, the UK, or the EU), statutory maternity leave durations, paid paternity leave, and government parental subsidies vary significantly by jurisdiction. Please refer to your local employment regulations and statutory benefit systems for official eligibility.',
+    a: 'The default leave entitlements (7 days prenatal checkup leave, 2027 14-week maternity leave, 14 days partner leave), maternity cash benefits (2 months + top-up to TWD 100,000), and 6+3 parental leave allowance are based on the latest labor laws of Taiwan (R.O.C.).\n\n[Medical Timelines & Milestones] The due date estimation, fetal growth size comparisons, and 40-week clinical ultrasound milestones follow universal obstetric standards and are globally applicable.\n\n[Leaves & Government Benefits] If you reside outside Taiwan or have enhanced company policies, you can use the Custom Maternity Leave Adjustment field to add or subtract days. Always verify official eligibility with your local labor authority.',
   },
   {
     q: 'Why was this pregnancy calculator developed? A message from the developer to parents-to-be [Warm Wishes]',

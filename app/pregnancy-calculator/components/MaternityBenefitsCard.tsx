@@ -10,6 +10,8 @@ interface MaternityBenefitsCardProps {
     leaveStart: Date;
     leaveEnd: Date;
     returnDate: Date;
+    totalLeaveDays: number;
+    leaveAdjustmentDays: number;
     laborBenefit: number;
     parentalAllowanceMonthly: number;
     parentalAllowanceTotal: number;
@@ -71,57 +73,84 @@ export default function MaternityBenefitsCard({
       </div>
 
       {isBenefitsExpanded && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-glass">
-          <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-text-main text-sm">{t.checkupLeaveLabel}</span>
-              <span className={styles.badge}>8 {t.daysUnit}</span>
-            </div>
-            <p className="text-xs text-text-sub">{t.checkupLeaveDesc}</p>
+        <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-border-glass">
+          <div className={styles.policyNoticeBanner}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" className={`${styles.accentText} shrink-0 mt-0.5`}>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            </svg>
+            <span>{t.benefitsNewLawNotice}</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-text-main text-sm">{t.paternityLeaveLabel}</span>
-              <span className={styles.badge}>7 {t.daysUnit}</span>
-            </div>
-            <p className="text-xs text-text-sub">{t.paternityLeaveDesc}</p>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-2 md:col-span-2">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-text-main text-sm">{t.maternityLeaveLabel}</span>
-              <span className={styles.badge}>56 {t.daysUnit} (8 {t.weeksUnit})</span>
-            </div>
-            <p className="text-xs text-text-sub">{t.maternityLeaveDesc}</p>
-            <div className="flex flex-wrap items-center gap-2 pt-1 text-xs border-t border-border-glass">
-              <span className="text-text-sub">{t.maternityLeavePeriod}:</span>
-              <strong className="text-text-main">{formatDate(benefits.leaveStart)} ~ {formatDate(benefits.leaveEnd)}</strong>
-              <span className="text-text-sub ml-auto">{t.expectedReturnDate}: <strong className={styles.accentText}>{formatDate(benefits.returnDate)}</strong></span>
-            </div>
-          </div>
-
-          {typeof monthlySalary === 'number' && monthlySalary > 0 && (
-            <>
-              <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-                <span className="font-semibold text-text-main text-sm">{t.laborInsuranceTitle}</span>
-                <span className={`text-lg font-bold ${styles.accentText}`}>
-                  {t.approxUnit} {benefits.laborBenefit.toLocaleString('zh-TW')}
-                </span>
-                <p className="text-xs text-text-sub">{t.laborInsuranceDesc}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-text-main text-sm">{t.checkupLeaveLabel}</span>
+                <span className={styles.badge}>7 {t.daysUnit}</span>
               </div>
+              <p className="text-xs text-text-sub">{t.checkupLeaveDesc}</p>
+            </div>
 
-              <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
-                <span className="font-semibold text-text-main text-sm">{t.parentalLeaveTitle}</span>
-                <span className={`text-lg font-bold ${styles.accentText}`}>
-                  {t.approxUnit} {benefits.parentalAllowanceTotal.toLocaleString('zh-TW')}
-                </span>
-                <p className="text-xs text-text-sub">
-                  {t.parentalLeaveDesc} (約 {benefits.parentalAllowanceMonthly.toLocaleString('zh-TW')} / 月)
-                </p>
+            <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-text-main text-sm">{t.paternityLeaveLabel}</span>
+                <span className={styles.badge}>14 {t.daysUnit}</span>
               </div>
-            </>
-          )}
+              <p className="text-xs text-text-sub">{t.paternityLeaveDesc}</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-2 md:col-span-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold text-text-main text-sm">{t.maternityLeaveLabel}</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={styles.badge}>
+                    {benefits.totalLeaveDays} {t.daysUnit} (
+                    {benefits.totalLeaveDays % 7 === 0
+                      ? `${benefits.totalLeaveDays / 7} ${t.weeksUnit}`
+                      : `${Math.floor(benefits.totalLeaveDays / 7)} ${t.weeksUnit} + ${benefits.totalLeaveDays % 7} ${t.daysUnit}`}
+                    )
+                  </span>
+                  {benefits.leaveAdjustmentDays !== 0 && (
+                    <span className={`${styles.badge} ${styles.badgeUpcoming}`}>
+                      {t.leaveAdjustedBadge.replace(
+                        '{delta}',
+                        benefits.leaveAdjustmentDays > 0
+                          ? `+${benefits.leaveAdjustmentDays}`
+                          : `${benefits.leaveAdjustmentDays}`,
+                      )}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-text-sub">{t.maternityLeaveDesc}</p>
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs border-t border-border-glass">
+                <span className="text-text-sub">{t.maternityLeavePeriod}:</span>
+                <strong className="text-text-main">{formatDate(benefits.leaveStart)} ~ {formatDate(benefits.leaveEnd)}</strong>
+                <span className="text-text-sub ml-auto">{t.expectedReturnDate}: <strong className={styles.accentText}>{formatDate(benefits.returnDate)}</strong></span>
+              </div>
+            </div>
+
+            {typeof monthlySalary === 'number' && monthlySalary > 0 && (
+              <>
+                <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+                  <span className="font-semibold text-text-main text-sm">{t.laborInsuranceTitle}</span>
+                  <span className={`text-lg font-bold ${styles.accentText}`}>
+                    {t.approxUnit} {benefits.laborBenefit.toLocaleString('zh-TW')}
+                  </span>
+                  <p className="text-xs text-text-sub">{t.laborInsuranceDesc}</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-surface-glass border border-border-glass flex flex-col gap-1">
+                  <span className="font-semibold text-text-main text-sm">{t.parentalLeaveTitle}</span>
+                  <span className={`text-lg font-bold ${styles.accentText}`}>
+                    {t.approxUnit} {benefits.parentalAllowanceTotal.toLocaleString('zh-TW')}
+                  </span>
+                  <p className="text-xs text-text-sub">
+                    {t.parentalLeaveDesc} ({t.approxUnit} {benefits.parentalAllowanceMonthly.toLocaleString('zh-TW')} / {t.monthUnit})
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
