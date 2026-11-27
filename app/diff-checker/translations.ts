@@ -3,10 +3,10 @@
  */
 export const TRANSLATIONS = {
   'zh-TW': {
-    title: '兩份文件比對工具',
+    title: '線上文字與程式碼比對工具',
     subtitle: 'TEXT DIFF CHECKER',
     description:
-      '專業免費的線上文件比對工具 (Text Diff Checker)！支援 Myers 演算法精確對比、雙欄同步滾動鎖定、檔案拖曳匯入與 Unified 互動式逐行合併。',
+      '免費線上文字、程式碼與文件比對工具！支援 Myers 演算法精確對比、雙欄同步滾動鎖定、檔案拖曳匯入與逐行合併，100% 瀏覽器本地運算，機密內容絕不上傳。',
     defaultOriginal:
       '// 原始版本範例程式碼\nfunction calculateTotal(price, tax) {\n  return price + tax;\n}\nconsole.log(calculateTotal(100, 5));',
     defaultModified:

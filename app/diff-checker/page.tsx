@@ -3,10 +3,11 @@ import DiffCheckerClient from './DiffCheckerClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: '兩份文件比對工具 - 免費線上 Text Diff Checker 與程式碼文字差異分析工具',
+  title: '線上文字與程式碼比對工具 - 免費文件／檔案 Diff 差異比對',
   description:
-    '專業免費的線上文件比對工具 (Text Diff Checker)！支援左右雙窗格對比與單窗格混合比對，精確解析程式碼與文字差異，純前端私密安全。',
-  keywords: '文件比對,文字比對,Diff Checker,程式碼比對,Text Diff,差異分析,文本比對',
+    '免費線上文字、程式碼與文件比對工具！支援左右雙欄對照、單欄差異合併與檔案拖曳匯入，100% 瀏覽器本地運算，機密合約與原始碼絕不上傳。',
+  keywords:
+    '程式碼比對,線上文字比對,線上文件比對工具,線上比對,文件比對,檔案比對,文字比對,文本比對,Diff工具,Diff Checker',
   alternates: {
     canonical: 'https://tools.cjkuo.net/diff-checker/',
     languages: {
@@ -16,23 +17,26 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: '兩份文件比對工具 - 免費線上 Text Diff Checker 與程式碼文字差異分析工具',
-    description: '純前端安全文本比對工具，提供 Split 與 Unified 模式，支援大文字與忽略大小寫設定。',
+    title: '線上文字與程式碼比對工具 - 免費文件／檔案 Diff 差異比對',
+    description:
+      '免費線上文字、程式碼與文件比對工具，支援左右雙欄對照與單欄合併，100% 瀏覽器本地運算，機密合約與原始碼絕不上傳。',
     url: 'https://tools.cjkuo.net/diff-checker/',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '兩份文件比對工具 - 免費線上 Text Diff Checker 與程式碼文字差異分析工具',
-    description: '純前端安全文本比對工具，提供 Split 與 Unified 模式，支援大文字與忽略大小寫設定。',
+    title: '線上文字與程式碼比對工具 - 免費文件／檔案 Diff 差異比對',
+    description:
+      '免費線上文字、程式碼與文件比對工具，支援左右雙欄對照與單欄合併，100% 瀏覽器本地運算，機密合約與原始碼絕不上傳。',
   },
 };
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: '兩份文件比對工具',
+  name: '線上文字與程式碼比對工具',
   url: 'https://tools.cjkuo.net/diff-checker/',
-  description: '專業免費的前端文件比對工具 (Document Diff Checker)，支援左右雙窗格與單窗格 PR 混合比對。',
+  description:
+    '免費線上文字、程式碼與文件比對工具，支援左右雙欄與單欄混合差異比對，100% 瀏覽器本地運算。',
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'All',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },
