@@ -3,10 +3,11 @@ import FuturesCalculatorClient from './FuturesCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: '台股期貨槓桿計算機 - 免費線上大台/小台/微台保證金與逆風點數估算器',
+  title: '期貨維持率與斷頭計算機 - 台指期大台/小台/微台槓桿、風險指標試算',
   description:
-    '專業免費的線上台指期 (大台/小台/微台) 槓桿與維持率計算器！支援多空部位切換、實質本金槓桿試算、逆風壓力點數模擬與追繳斷頭臨界點估算。',
-  keywords: '期貨槓桿計算機,台指期計算機,大台保證金,小台保證金,微台保證金,期貨斷頭點數,期貨維持率,期貨保證金',
+    '免費線上台股期貨維持率、風險指標與斷頭點數計算機！支援大台、小台、微台多空試算，一秒算出實質槓桿倍數、追繳金額與 25% 強制砍倉臨界點。',
+  keywords:
+    '期貨維持率計算機,期貨斷頭計算機,期貨風險指標計算機,期貨槓桿計算機,台指期計算機,大台保證金,小台保證金,微台槓桿,微台維持率,期貨維持率',
   alternates: {
     canonical: 'https://tools.cjkuo.net/futures-calculator/',
     languages: {
@@ -16,23 +17,26 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: '台股期貨槓桿計算機 - 免費線上大台/小台/微台保證金與逆風點數估算器',
-    description: '期貨交易者的風控警示器。即時模擬大盤逆風、實質資金槓桿、追繳與斷頭臨界點試算。',
+    title: '期貨維持率與斷頭計算機 - 台指期大台/小台/微台槓桿、風險指標試算',
+    description:
+      '免費線上台股期貨維持率、風險指標與斷頭點數計算機！支援大台、小台、微台多空試算，一秒算出實質槓桿、追繳與 25% 砍倉臨界點。',
     url: 'https://tools.cjkuo.net/futures-calculator/',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '台股期貨槓桿計算機 - 免費線上大台/小台/微台保證金與逆風點數估算器',
-    description: '期貨交易者的風控警示器。即時模擬大盤逆風、實質資金槓桿、追繳與斷頭臨界點試算。',
+    title: '期貨維持率與斷頭計算機 - 台指期大台/小台/微台槓桿、風險指標試算',
+    description:
+      '免費線上台股期貨維持率、風險指標與斷頭點數計算機！支援大台、小台、微台多空試算，一秒算出實質槓桿、追繳與 25% 砍倉臨界點。',
   },
 };
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: '台股期貨槓桿與逆風點數估算器',
+  name: '期貨維持率與斷頭計算機',
   url: 'https://tools.cjkuo.net/futures-calculator/',
-  description: '專業免費的台指期 (大台/小台/微台) 槓桿與維持率計算器，支援逆風壓力點數與斷頭臨界估算。',
+  description:
+    '免費線上台股期貨維持率、風險指標與斷頭點數計算機，支援大台、小台、微台實質槓桿與 25% 強制砍倉臨界估算。',
   applicationCategory: 'FinanceApplication',
   operatingSystem: 'All',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },

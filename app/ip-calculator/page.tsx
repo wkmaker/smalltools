@@ -3,10 +3,11 @@ import IpCalculatorClient from './IpCalculatorClient';
 import { generateFaqSchema } from '@/app/utils/faqSchema';
 
 export const metadata: Metadata = {
-  title: 'IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 子網遮罩運算工具',
+  title: 'IP 計算機與子網路遮罩計算機 - 免費線上 IPv4 / CIDR 網段試算',
   description:
-    '專業免費的線上 IP 子網段與可用 IP 計算器！支援 CIDR 標記與點分十進制切換，精確計算網路位址、廣播位址、子網遮罩、可用 IP 範圍與數量。',
-  keywords: 'IP計算器,子網計算器,IP Subnet Calculator,CIDR計算,子網遮罩,網路位址,廣播位址,可用IP範圍,IPv4',
+    '免費線上 IP 計算機與子網路遮罩計算機！輸入 IPv4 或 CIDR（如 /24），立即算出網路位址、廣播位址、可用 IP 範圍與主機數量，支援一鍵匯出清單。',
+  keywords:
+    'IP計算機,IP計算,子網路遮罩計算機,遮罩計算機,IP網段計算,子網計算機,CIDR計算,網路位址,廣播位址,可用IP範圍,IPv4',
   alternates: {
     canonical: 'https://tools.cjkuo.net/ip-calculator/',
     languages: {
@@ -16,23 +17,26 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 計算工具',
-    description: '毫秒級精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址與可用 IP 列表。',
+    title: 'IP 計算機與子網路遮罩計算機 - 免費線上 IPv4 / CIDR 網段試算',
+    description:
+      '免費線上 IP 計算機與子網路遮罩計算機，毫秒級精確計算 IPv4 / CIDR 網段、網路位址、廣播位址與可用 IP 範圍。',
     url: 'https://tools.cjkuo.net/ip-calculator/',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IP 子網段與可用 IP 計算器 - 免費線上 IPv4 / CIDR 計算工具',
-    description: '毫秒級精確計算 IPv4 / CIDR 子網段、網路位址、廣播位址與可用 IP 列表。',
+    title: 'IP 計算機與子網路遮罩計算機 - 免費線上 IPv4 / CIDR 網段試算',
+    description:
+      '免費線上 IP 計算機與子網路遮罩計算機，毫秒級精確計算 IPv4 / CIDR 網段、網路位址、廣播位址與可用 IP 範圍。',
   },
 };
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'IP 子網段與可用 IP 計算器',
+  name: 'IP 計算機與子網路遮罩計算機',
   url: 'https://tools.cjkuo.net/ip-calculator/',
-  description: '專業免費的線上 IP 子網段與可用 IP 計算器，支援 CIDR 標記法與標準 IP/Subnet Mask 計算。',
+  description:
+    '免費線上 IP 計算機與子網路遮罩計算機，支援 CIDR 標記法與標準 IPv4 子網路遮罩試算及可用 IP 清單匯出。',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'All',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },

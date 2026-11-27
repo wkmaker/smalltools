@@ -3,10 +3,10 @@
  */
 export const TRANSLATIONS = {
   'zh-TW': {
-    title: 'IP 子網段與可用 IP 計算器',
+    title: 'IP 網段與子網路遮罩計算機',
     subtitle: 'IPV4 & CIDR SUBNET CALCULATOR',
     description:
-      '專業免費的線上 IP 子網段與可用 IP 計算器！支援 CIDR 標記與標準點分十進制切換，精確計算網路位址、廣播位址、子網遮罩、可用 IP 範圍與百萬級 TXT/CSV 導出。',
+      '免費線上 IP 計算機與子網路遮罩計算機！支援 CIDR 標記與點分十進制切換，精確計算網路位址、廣播位址、可用 IP 範圍、主機數量與百萬級 TXT/CSV 匯出。',
     paramsTitle: '輸入網段參數',
     modeCidr: 'CIDR 標記法',
     modeStd: '標準 IP + 遮罩',

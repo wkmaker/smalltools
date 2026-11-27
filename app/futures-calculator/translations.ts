@@ -3,10 +3,10 @@
  */
 export const TRANSLATIONS = {
   'zh-TW': {
-    title: '台股期貨槓桿計算機',
+    title: '台股期貨槓桿與維持率計算機',
     subtitle: 'TAIWAN FUTURES RISK & MARGIN CALCULATOR',
     description:
-      '專業免費的線上台指期 (大台/小台/微台/自訂) 槓桿與維持率計算器！支援多空雙向部位切換、實質槓桿試算、0%-60%逆風壓力測試與保證金回補金額估算。',
+      '免費線上台指期（大台／小台／微台／自訂）維持率、風險指標與斷頭點數計算機！支援多空部位切換、實質槓桿倍數試算、0%–60% 逆風壓力測試與 25% 強制砍倉臨界點估算。',
     sectionSettings: '期貨部位與保證金設定',
     scenariosTitle: '快速套用試算情境',
     scenarioConservative: '穩健波段 (微台 2 口・3 倍金)',
