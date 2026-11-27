@@ -757,3 +757,60 @@
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(0, 0, 0, 0.08);
 }
+
+/* 產假天數快捷微調膠囊 */
+.presetChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3125rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--select-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.presetChip:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 64, 129, 0.45);
+}
+
+.presetChipActive {
+  background: rgba(255, 64, 129, 0.16);
+  color: #ff80ab;
+  border-color: rgba(255, 64, 129, 0.5);
+}
+
+:global([data-theme='light']) .presetChip:hover {
+  border-color: rgba(225, 29, 72, 0.45);
+}
+
+:global([data-theme='light']) .presetChipActive {
+  background: rgba(225, 29, 72, 0.12);
+  color: #be123c;
+  border-color: rgba(225, 29, 72, 0.4);
+}
+
+/* 2027 新制公告提示條 */
+.policyNoticeBanner {
+  background: rgba(255, 64, 129, 0.08);
+  border: 1px solid rgba(255, 64, 129, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+:global([data-theme='light']) .policyNoticeBanner {
+  background: rgba(255, 228, 230, 0.55);
+  border-color: rgba(225, 29, 72, 0.28);
+  color: #334155;
+}

@@ -102,14 +102,43 @@ test('當前週數：EDD 已過或尚早時夾在 0 ~ 300 天', () => {
   assert.equal(calculateGestationalAge(edd, addDays(edd, 60)).currentGestationalDays, 300);
 });
 
-test('產假：8 週 56 天連續曆天，復職日為結束隔日', () => {
+test('產假：2027 新制預設 14 週 98 天連續曆天，復職日為結束隔日', () => {
   const edd = parseYmd('2026-10-08');
   const b = calculateMaternityBenefits(edd, 2, 45800);
+  assert.equal(b.totalLeaveDays, 98);
+  assert.equal(b.leaveAdjustmentDays, 0);
   assert.equal(formatDate(b.leaveStart), formatDate(addDays(edd, -14)));
-  assert.equal(formatDate(b.leaveEnd), formatDate(addDays(b.leaveStart, 55)));
+  assert.equal(formatDate(b.leaveEnd), formatDate(addDays(b.leaveStart, 97)));
   assert.equal(formatDate(b.returnDate), formatDate(addDays(b.leaveEnd, 1)));
-  // 產假區間含頭尾為 56 天
-  assert.equal(Math.round((b.leaveEnd.getTime() - b.leaveStart.getTime()) / 86400000) + 1, 56);
+  // 產假區間含頭尾為 98 天
+  assert.equal(Math.round((b.leaveEnd.getTime() - b.leaveStart.getTime()) / 86400000) + 1, 98);
+});
+
+test('產假自訂微調：支援負數（舊制 -42 天 = 56 天）、正數（公司福利 +14 天 = 112 天）與邊界夾緊', () => {
+  const edd = parseYmd('2026-10-08');
+
+  // 舊制 8 週（扣除 6 週 = -42 天）
+  const legacy = calculateMaternityBenefits(edd, 2, 45800, -42);
+  assert.equal(legacy.totalLeaveDays, 56);
+  assert.equal(legacy.leaveAdjustmentDays, -42);
+  assert.equal(formatDate(legacy.leaveEnd), formatDate(addDays(legacy.leaveStart, 55)));
+  assert.equal(formatDate(legacy.returnDate), formatDate(addDays(legacy.leaveEnd, 1)));
+
+  // 優於法令 16 週（+14 天 = 112 天）
+  const enhanced = calculateMaternityBenefits(edd, 2, 45800, 14);
+  assert.equal(enhanced.totalLeaveDays, 112);
+  assert.equal(enhanced.leaveAdjustmentDays, 14);
+  assert.equal(formatDate(enhanced.leaveEnd), formatDate(addDays(enhanced.leaveStart, 111)));
+
+  // 極端負值與極端正值邊界夾緊（1 ~ 365 天）
+  const minClamped = calculateMaternityBenefits(edd, 0, 45800, -999);
+  assert.equal(minClamped.totalLeaveDays, 1);
+  assert.equal(minClamped.leaveAdjustmentDays, -97);
+  assert.equal(formatDate(minClamped.leaveEnd), formatDate(minClamped.leaveStart));
+
+  const maxClamped = calculateMaternityBenefits(edd, 0, 45800, 999);
+  assert.equal(maxClamped.totalLeaveDays, 365);
+  assert.equal(maxClamped.leaveAdjustmentDays, 267);
 });
 
 test('津貼：勞保生育給付 = 2 個月投保薪資；育嬰留停 8 成薪 × 6 個月', () => {

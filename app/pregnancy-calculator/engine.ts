@@ -154,29 +154,52 @@ export function calculateGestationalAge(estimatedDueDate: Date, today: Date = ne
   };
 }
 
+/** 2027 年台灣《性別平等工作法》新制法定分娩產假天數（14 週 = 98 天連續日曆天） */
+export const STATUTORY_MATERNITY_LEAVE_DAYS = 98;
+export const MIN_MATERNITY_LEAVE_DAYS = 1;
+export const MAX_MATERNITY_LEAVE_DAYS = 365;
+
 export interface MaternityBenefits {
   leaveStart: Date;
   leaveEnd: Date;
   returnDate: Date;
+  /** 實際計算之產假總日曆天數（預設 98 天，含使用者正負天數微調） */
+  totalLeaveDays: number;
+  /** 經邊界夾緊後的實際增減天數（相對於 98 天基準） */
+  leaveAdjustmentDays: number;
   /** 勞保生育給付：2 個月平均月投保薪資 */
   laborBenefit: number;
   /** 育嬰留停津貼每月（8 成薪） */
   parentalAllowanceMonthly: number;
-  /** 育嬰留停津貼 6 個月合計 */
+  /** 育嬰留停津貼前 6 個月合計（每人基本 6 個月；雙親滿 6 個月後另可各延 3 個月） */
   parentalAllowanceTotal: number;
 }
 
 /**
- * 台灣法定產假區間（8 週 = 56 天，含例假日）與津貼試算。
+ * 台灣 2027 新制法定產假區間（基準 14 週 = 98 天，含例假日）與津貼試算。
+ * 支援以正負天數微調總產假天數（例如舊制 8 週輸入 -42 天、公司福利更優輸入 +14 天）。
  * @param leaveStartWeeksOption 產前幾週開始請產假（0 = 預產期當日）
+ * @param monthlySalary 前 6 個月平均月投保薪資
+ * @param leaveDaysAdjustment 產假天數增減調整（預設 0，正數增加、負數減少）
  */
 export function calculateMaternityBenefits(
   estimatedDueDate: Date,
   leaveStartWeeksOption: number,
   monthlySalary: number | '',
+  leaveDaysAdjustment: number = 0,
 ): MaternityBenefits {
+  const safeAdj =
+    typeof leaveDaysAdjustment === 'number' && Number.isFinite(leaveDaysAdjustment)
+      ? Math.trunc(leaveDaysAdjustment)
+      : 0;
+  const totalLeaveDays = Math.max(
+    MIN_MATERNITY_LEAVE_DAYS,
+    Math.min(MAX_MATERNITY_LEAVE_DAYS, STATUTORY_MATERNITY_LEAVE_DAYS + safeAdj),
+  );
+  const actualAdjustmentDays = totalLeaveDays - STATUTORY_MATERNITY_LEAVE_DAYS;
+
   const leaveStart = addDays(estimatedDueDate, -(leaveStartWeeksOption * 7));
-  const leaveEnd = addDays(leaveStart, 55);
+  const leaveEnd = addDays(leaveStart, totalLeaveDays - 1);
   const returnDate = addDays(leaveEnd, 1);
 
   const salary = typeof monthlySalary === 'number' && Number.isFinite(monthlySalary) ? monthlySalary : 0;
@@ -186,6 +209,8 @@ export function calculateMaternityBenefits(
     leaveStart,
     leaveEnd,
     returnDate,
+    totalLeaveDays,
+    leaveAdjustmentDays: actualAdjustmentDays,
     laborBenefit: toMoney(D(salary).times(2)),
     parentalAllowanceMonthly: parentalMonthly,
     parentalAllowanceTotal: toMoney(D(parentalMonthly).times(6)),
